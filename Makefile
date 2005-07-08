@@ -38,7 +38,7 @@ DEBUG= -g
 RELEASE= -s -O3
 SLIB= #-lSDL_image
 #events.o needs to become an engine
-ENGINES=graphics.o events.o debug.o xmltool.o nmap.o other.o
+ENGINES=graphics2.o events.o debug.o xmltool.o nmap.o other.o
 OBJECTS=$(ENGINES)
 TARGETS= make-engine
 

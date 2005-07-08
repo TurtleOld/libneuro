@@ -75,8 +75,7 @@
  * for future seeing of how I was offtrack ;P.
  */
 
-#define debug_instruction_buffer 0
-#define last_element_method 1
+#define debug_instruction_buffer 1
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -91,9 +90,17 @@
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
-typedef struct
+
+typedef struct ENGINEBUF
 {
-	char layer; /* if its -1 it is in the INSTRUCTION_ENGINE buffer */
+	void **buffer;
+	u32 mem;
+	u32 total;
+}ENGINEBUF;
+ 
+typedef struct RAW_ENGINE
+{
+	char layer; /* the drawing level that the surface is drawn */
 	SDL_Rect src;
 	SDL_Rect dst; /* will need to memcpy the data because 
 			* this will be used beyond the 
@@ -101,6 +108,7 @@ typedef struct
 			*/
 	SDL_Surface *surface_ptr; /* only the pointer needed cause its "static" */
 }RAW_ENGINE;
+
 /* this linked list will be computed 
  * unless, RAW_ENGINE is empty, every frames. 
  * It will not be possible to change entries 
@@ -108,10 +116,10 @@ typedef struct
  * to the end of this linked list and done
  * stuff r removed, exactly like a fifo pipe.
  */
-typedef struct queue_engine
+typedef struct INSTRUCTION_ENGINE
 {
 	RAW_ENGINE *current;
-	struct queue_engine *next;
+	struct INSTRUCTION_ENGINE *next;
 }INSTRUCTION_ENGINE;
 
 typedef void (*DRAWING_ELEMENTS)(void);
@@ -120,31 +128,27 @@ static SDL_Surface *screen;
 static SDL_Surface *sclScreen;
 
 
-static DRAWING_ELEMENTS ***drawing_elements_buffer;
-static unsigned int drawing_elements_buffer_count = 0;
+static INSTRUCTION_ENGINE **last_element;
 
-static RAW_ENGINE ***raw_engine_instruction;
-static unsigned int raw_engine_instruction_count = 0;
-static unsigned int raw_engine_instruction_mem = 0;
-
-static INSTRUCTION_ENGINE ***queue_engine_instruction;
-static unsigned int queue_engine_instruction_count = 0;
-static unsigned int queue_engine_instruction_mem = 0;
-static INSTRUCTION_ENGINE *last_element;
-
+static ENGINEBUF _Drawing;
+static ENGINEBUF _Raw;
+static ENGINEBUF _Queue;
 
 static Uint32 color_black; /* to fill the screen after each frames */
 
+static int temporary; /* temporary debugging variable, please remove when debugging is done */
 
 /*--- Static Prototypes ---*/
 
-static void clean_drawingelement_buffer();
-static void clean_rawengine();
-static void clean_instructionengine();
-static void clean_lesser_rawengine();
+static void cleanEngineBuffer(ENGINEBUF *eng);
+static void cleanDrawing();
+static void cleanQueue();
+static void cleanRaw();
 
-static void compute_raw_engine(RAW_ENGINE *toadd);
+static void computeRawEngine(RAW_ENGINE *toadd);
+#if obsolete
 static void compute_instructionqueue();
+#endif /* obsolete */
 
 #if debug_instruction_buffer
 static void print_queue();
@@ -177,149 +181,114 @@ updScreen(SDL_Rect *rect)
 	SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
 }
 
+
 static void
-clean_drawingelement_buffer()
+cleanEngineBuffer(ENGINEBUF *eng)
 {
-	unsigned int a = drawing_elements_buffer_count;
-	DRAWING_ELEMENTS ***buf = drawing_elements_buffer;
-	while (a-- > 0)
-	{
-		if (buf[0][a] != NULL)
-		{
-			free(buf[0][a]);
-		}
-	}
-	free(buf[0]);
-}
-
-static void 
-clean_lesser_rawengine()
-{
-	unsigned int a = raw_engine_instruction_count;
-	while (a-- > 0)
-	{
-		/* printf("a %d\n", a); */
-		free(raw_engine_instruction[0][a]);
-		raw_engine_instruction[0][a] = NULL;
-	}
-	raw_engine_instruction_mem += (sizeof(RAW_ENGINE*) * raw_engine_instruction_count);
-	raw_engine_instruction_count = 0;
-}
-
-static void 
-clean_lesser_instructionengine()
-{
-	unsigned int a = queue_engine_instruction_count;
-	while (a-- > 0)
-	{
-		/* printf("a %d\n", a); */
-		free(queue_engine_instruction[0][a]);
-		queue_engine_instruction[0][a] = NULL;
-	}
+	void ***buf;
+	u32 i;
 	
-	queue_engine_instruction_mem += (sizeof(INSTRUCTION_ENGINE*) * queue_engine_instruction_count);
-	queue_engine_instruction_count = 0;
+	buf = &eng->buffer;
+	i = eng->total;
+
+#if cleanDbg
+	printf("total to clean : %d\n", i);
+#endif /* cleanDbg */
+
+	while (i-- > 0)
+	{
+#if cleanDbg
+		printf("cleaning i:%d\nptr %d\n", i, (int)(*buf)[i]);
+#endif /* cleanDbg */
+		if ((*buf)[i])
+			free((*buf)[i]);
+#if cleanDbg
+		else
+			printf("the element %d is NULL\n", i);
+#endif /* cleanDbg */
+	}
+
+	free(*buf);
+	*buf = NULL;
+	
+	eng->total = 0;
+	eng->buffer = NULL;
+	eng->mem = 0;
 	last_element = NULL;
+	/* printf("cleaned the Engine buffers\n"); */
 }
 
 static void
-clean_rawengine()
+cleanDrawing()
 {
-	clean_lesser_rawengine();
-
-	/*
-	 if (*raw_engine_instruction)
-		free(*raw_engine_instruction);
-	*raw_engine_instruction = NULL;
-	*/
+	cleanEngineBuffer(&_Drawing);
 }
 
-static void
-clean_instructionengine()
-{	
-	clean_lesser_instructionengine();
-	
-	/*
-	if (*queue_engine_instruction)
-		free(*queue_engine_instruction);
-	*queue_engine_instruction = NULL;
-	*/
-}
-
-
-
-
-/* compute the raw engine and add the stuff to
- * the instruction engine all at once -obsolete-
- */
-static void
-compute_instructionqueue()
+static void 
+cleanRaw()
 {
-	INSTRUCTION_ENGINE ***buf = queue_engine_instruction;
-	RAW_ENGINE **raw = *raw_engine_instruction;
-	unsigned int indep = raw_engine_instruction_count; /* the current frames to write to the
-        						    * screen	
-							    */
-	unsigned int loo1 = 0, loo2 = 0, loo3 = 0; /* integers used for the loops */
-	unsigned int current = 0; /* current number of elements in instruction */
-	
-		
-	if (*raw_engine_instruction == NULL || raw_engine_instruction_count == 0)
-		return;
+	cleanEngineBuffer(&_Raw);
+}
 
-	if (*buf == NULL)
+static void 
+cleanQueue()
+{
+	cleanEngineBuffer(&_Queue);	
+}
+
+static void
+allocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
+{
+	void ***buf = NULL;
+	u32 total = 0;
+	u32 mem = 0;
+	
+	buf = &eng->buffer;
+	total = eng->total;
+	mem = eng->mem;
+	
+	if (mem > MEMORY_ALLOC_OVERH)
 	{
-		*buf = (INSTRUCTION_ENGINE**)calloc(1, sizeof(INSTRUCTION_ENGINE*));
-		queue_engine_instruction_count = 0;
+		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", mem);
+		return;
+	}
+	/*
+	printf("debug : %d\n", sptp);
+	printf("before mem %d\n", mem);
+	*/
+	if (!*buf)
+	{
+		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
+		total = 0;
+		mem = MEMORY_ALLOC_OVERH;
+	}
+	else if ((mem * sptp) < sptp)
+	{
+		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total));
+		mem = MEMORY_ALLOC_OVERH;
 	}
 	else
-	{
-		clean_instructionengine();
-		compute_instructionqueue();
-		return;
-	}
-
-	while (loo1 < indep)
-	{
-		/* this loop will do another loop 
-		 * which will hold another loop.
-		 * this loop will loop around all the
-		 * elements in the raw_engine buffer.
-		 * and loop to see if theres an element
-		 * of lower level. if theres one, the lowest
-		 * one will be put in the instruction_engine
-		 * buffer.
-		 */
-		
-		buf[0][current] = (INSTRUCTION_ENGINE*)calloc(1, sizeof(INSTRUCTION_ENGINE));
-		
-		while (loo2 < LAYER_CHECK_PER_FRAMES)
-		{
-			while (loo3 < indep)
-			{
-				if (raw[loo3]->layer != -1)
-				{
-					
-				}
-				loo3++;
-			}
-			loo2++;
-		}
-		loo1++;
-	}
-	queue_engine_instruction_count = current;
+		mem -= 1;
+	/*
+	printf("after mem %d\n", mem);
+	*/
+	(*buf)[total] = calloc(1, sobj);
+	
+	total++;
+	eng->total = total;
+	eng->mem = mem;
 }
 
 #if debug_instruction_buffer
 static void
 print_queue()
 {
-	INSTRUCTION_ENGINE *cur = **queue_engine_instruction;
+	INSTRUCTION_ENGINE *cur = *_Queue.buffer;
 	
 	while (cur != NULL)
 	{
 		printf("layer #%d\n", cur->current->layer);
-		if (cur->next == queue_engine_instruction[0][0])
+		if (cur->next == *_Queue.buffer)
 		{
 			printf("Error- this element points to the beginning element\n");
 			break;
@@ -332,161 +301,132 @@ print_queue()
 
 /* compute the instruction_engine everytime
  * a new raw is added.
+ *
+ * convertion : done
+ * testing : TODO
  */
 static void
-compute_raw_engine(RAW_ENGINE *toadd)
+computeRawEngine(RAW_ENGINE *toadd)
 {
-	INSTRUCTION_ENGINE ***buf = queue_engine_instruction, *cur = NULL, *last = NULL, *temp = NULL;
-	unsigned int current = queue_engine_instruction_count; /* current number of elements in instruction */
+	ENGINEBUF *tmp;	
+	INSTRUCTION_ENGINE ***buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
+	u32 current; /* current number of elements in instruction */
 		
-	if (*buf == NULL)
-	{
-		*buf = (INSTRUCTION_ENGINE**)calloc(10, sizeof(INSTRUCTION_ENGINE*));
-		queue_engine_instruction_count = 0;
-		queue_engine_instruction_mem = sizeof(INSTRUCTION_ENGINE*) * 10;
-	}
-	else if (queue_engine_instruction_mem < sizeof(INSTRUCTION_ENGINE*))
-	{
-		/* printf("debug before realloc mem %d count total %d\n", queue_engine_instruction_mem, queue_engine_instruction_count); */
-		*buf = (INSTRUCTION_ENGINE**)realloc(*buf, (sizeof(INSTRUCTION_ENGINE*) * (10 + current)));
-		queue_engine_instruction_mem = sizeof(INSTRUCTION_ENGINE*) * 10;
-
-	}
-
-	if (*buf == NULL)
-	{
-		printf("Out of memory! \n");
-		return;
-	}
-	cur = **buf;
-	/* printf("Cycle\n"); */
+	tmp = &_Queue;
+	allocEngineBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
-	/* printf("compute_raw_engine current mem %d\n", queue_engine_instruction_mem); */
-	/* if (queue_engine_instruction_mem > 0) */
-	queue_engine_instruction_mem -= sizeof(INSTRUCTION_ENGINE*);
-
-	buf[0][current] = (INSTRUCTION_ENGINE*)calloc(1, sizeof(INSTRUCTION_ENGINE));
+	buf = (INSTRUCTION_ENGINE***)&tmp->buffer;	
+	current = tmp->total - 1;
+	
+	/* printf("Raw computing Cycle ptr %d\n", (int)(*buf)[current]); */
 	
 	/* add the data to the end of the queue */
-	buf[0][current]->current = toadd;
-	/* printf("New layer %d\n", toadd->layer); */
-	buf[0][current]->next = NULL;
-#if last_element_method
+	printf("will place layer %d in the correct order\n", toadd->layer);
+	(*buf)[current]->current = toadd;
+	(*buf)[current]->next = NULL;	
+
 	if (last_element != NULL)
 	{
-		if (last_element->current == NULL)
+		if ((*last_element)->current == NULL)
 		{
-			printf("CAUGHT ERROR in last_element current == %d\nDropping this call\n", current);
+			printf("CAUGHT ERROR in last_element current == %d -- debug %d\nDropping this call\n", 
+					current, 
+					(int)(*last_element)->current);
 			return;
 		}
 		/* printf("last_element layer %d\n", last_element->current->layer); */
-		if (last_element->current->layer <= buf[0][current]->current->layer)
+		if ((*last_element)->current->layer <= (*buf)[current]->current->layer)
 		{
-			last_element->next = buf[0][current];
-			queue_engine_instruction_count++;
-			last_element = buf[0][current];
-			/* printf("proof layer %d real layer %d\n",
-					buf[0][current]->current->layer,
-					last_element->current->layer);
-			*/
+			(*last_element)->next = (*buf)[current];
+			last_element = &(*buf)[current];
+			printf("proof layer %d real layer %d ptr %d\n",
+					(*buf)[current]->current->layer,
+					(*last_element)->current->layer,
+					(int)(*last_element)->current);
 			return;
 		}
 	}
 	else
 	{
-		last_element = buf[0][current];
+		last_element = &(*buf)[current];
 		return;
 	}
-#else /* not last_element_method */
-	if (current > 0)
-	{
-		/* search for the last element */
-		while (cur != NULL)
-		{
-			if (cur->next == NULL)
-			{
-				/* to prevent yet another death loop 
-				 * also bail out if the instruction priority
-				 * is not higher than the last one.
-				 * to make things faster, keep a static ptr
-				 * to the last element and refresh it everytime.
-				 */
-				if (cur->current->layer <= buf[0][current]->current->layer)
-				{
-					cur->next = buf[0][current];
-					queue_engine_instruction_count++;
-					return;
-				}
-				break;
-			}
-			cur = cur->next;
-		}
-		/*
-		printf("debug previous layer #%d\n", buf[0][current - 1]->current->layer);
-		buf[0][current - 1]->next = buf[0][current];
-		*/
-	}
-#endif /* not last_element_method */
 
 	cur = **buf;
 	while (cur != NULL)
 	{
-		/* printf("looped\n"); */
-		if (cur->current->layer > toadd->layer)
+		printf("looped %d\n", (int)cur);
+		if (cur->current->layer > (*buf)[current]->current->layer)
 		{
-			/* printf("Event current layer %d > toadd layer %d\n",  
+			printf("Event current layer %d > toadd layer %d\n",  
 					cur->current->layer, 
 					toadd->layer); 
-			*/
+			
 			/* to avoid death loops */
-			if (cur->next == buf[0][current])
+			if (cur->next == (*buf)[current])
 				cur->next = NULL;
 			
-			if (cur == buf[0][0])
+			if (cur == **buf)
 			{
-				temp = cur;
-				buf[0][0] = buf[0][current];
-				buf[0][current] = temp;
+				/* switch **buf with the current position */
+				temp = **buf;
+				**buf = (*buf)[current];
+				(*buf)[current] = temp;
+
 				/*printf("Beginning LL change : cur %d, buf[0][0] %d\n", 
 						(int)cur, 
-						(int)buf[0][0]);
+						(int)buf[0]);
 				*/
-				cur = buf[0][0];
-				cur->next = temp;
+				cur = **buf;
+				if (**buf == (*buf)[current])
+				{
+					printf("huge problem, it is going to put its next element as the same node as itself, creating a death loop!!\n");
+					cur->next = NULL;
+				}
+				else	
+					cur->next = temp;
 			}
 			else
-				buf[0][current]->next = cur;
+				(*buf)[current]->next = cur;
 			if (last != NULL)
 			{
-				last->next = buf[0][current];
+				last->next = (*buf)[current];
 			}
 			break;
+		}
+		else
+		{
+			printf("nothing to be done\n");
 		}
 		last = cur;
 		cur = cur->next;
 	}
 #if debug_instruction_buffer
-	printf("BEGIN inside compute_raw_engine debug print\n");
+	printf("BEGIN inside computeRawEngine debug print\n");
 	print_queue();
-	printf("END inside compute_raw_engine debug print\n");
+	printf("END inside computeRawEngine debug print\n");
 #endif /* debug_instruction_buffer */
 
-	queue_engine_instruction_count++;
 }
 
+/* 
+ * convertion : done
+ * testing : TODO
+ */
 static void
 flush_queue()
 {
+	ENGINEBUF *tmp = &_Queue;
 	SDL_Rect buf;
-	if (*queue_engine_instruction == NULL)
-		return;
-	if (**queue_engine_instruction == NULL)
-		return;
-	INSTRUCTION_ENGINE *cur = **queue_engine_instruction;
-
-	while (cur != NULL)
+	INSTRUCTION_ENGINE *cur;
+	int temporar = 0;
+	
+	cur = *tmp->buffer;
+	/* printf("cycle\n"); */
+	
+	while (cur)
 	{
-		
+		printf("flushing an instruction : layer %d\n", cur->current->layer);
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w - 1;
@@ -500,17 +440,21 @@ flush_queue()
 		{
 			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
 		}
+		if (cur->next == NULL)
+			printf("the next elements seems to be NULL\n");
 		cur = cur->next;
+		temporar++;
 	}
-	/*clean_lesser_rawengine();
-	clean_lesser_instructionengine();*/
+	if (temporar < temporary)
+		printf("theres a problem with the linked list, the number of calls to it doesnt reflect the number of elements in the linked list\n");
+	temporary = 0;
 }
 
 static void
 clean_queue()
 {
-	clean_lesser_rawengine();
-	clean_lesser_instructionengine();
+	cleanRaw();
+	cleanQueue();
 }
 
 /*--- Global Functions ---*/
@@ -520,54 +464,37 @@ clean_queue()
  *     surface has to be drawn(for sprites mostly).
  * - dst is the destination X Y on the screen
  * - surface is the pointer of the loaded image. 
+ *
+ *   convertion : done
+ *   testing : TODO
  */
 void 
 Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 {
-	RAW_ENGINE ***buf = raw_engine_instruction;
-	u32 current = raw_engine_instruction_count;
-	SDL_Rect *src = (SDL_Rect*)isrc;
-	SDL_Rect *dst = (SDL_Rect*)idst;
-	SDL_Surface *surface = (SDL_Surface*)isurface;
-	
-	if (*buf == NULL)
-	{
-		*buf = (RAW_ENGINE**)calloc(9, sizeof(RAW_ENGINE*));
-		raw_engine_instruction_count = 0;
-		raw_engine_instruction_mem = sizeof(RAW_ENGINE*) * 8;
-	}
-	else if (raw_engine_instruction_mem < sizeof(RAW_ENGINE*))
-	{
-		/* printf("current mem %d\n", raw_engine_instruction_mem); */
-		*buf = (RAW_ENGINE**)realloc(*buf, (sizeof(RAW_ENGINE*) * (5 + current)));
-		raw_engine_instruction_mem = sizeof(RAW_ENGINE*) * 3;
-	}
-	
-	if (*buf == NULL)
-	{
-		printf("Out of memory! \n");
-		return;
-	}
-	
-	/* printf("ext current mem %d\n", raw_engine_instruction_mem); */
-	if (raw_engine_instruction_mem > 0)
-		raw_engine_instruction_mem -= sizeof(RAW_ENGINE*);
-	buf[0][current] = (RAW_ENGINE*)calloc(1, sizeof(RAW_ENGINE));
-	if (buf[0][current] == NULL)	
-	{
-		printf("Out of memory! \n");
-		return;
-	}
+	ENGINEBUF *tmp = NULL;
+	RAW_ENGINE ***buf = NULL;
+	u32 current;
+	SDL_Rect *src;
+	SDL_Rect *dst;
+	SDL_Surface *surface;
 
+	printf("new layer %d\n", layer);
+	tmp = &_Raw;
+	allocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
-	buf[0][current]->layer = layer;
-	memcpy(&buf[0][current]->src, src, sizeof(SDL_Rect));
-	memcpy(&buf[0][current]->dst, dst, sizeof(SDL_Rect));
-	buf[0][current]->surface_ptr = surface;
-
-	compute_raw_engine((RAW_ENGINE*)buf[0][current]);
+	buf = (RAW_ENGINE***)&tmp->buffer;
+	current = tmp->total - 1;
 	
-	raw_engine_instruction_count++;
+	src = (SDL_Rect*)isrc;
+	dst = (SDL_Rect*)idst;
+	surface = (SDL_Surface*)isurface;		
+	
+	(*buf)[current]->layer = layer;
+	memcpy(&(*buf)[current]->src, src, sizeof(SDL_Rect));
+	memcpy(&(*buf)[current]->dst, dst, sizeof(SDL_Rect));
+	(*buf)[current]->surface_ptr = surface;
+	computeRawEngine((RAW_ENGINE*)(*buf)[current]);
+	temporary++;
 }
 
 void 
@@ -576,52 +503,56 @@ Graphics_AddDirectDrawing(void *isrc, void *idst, void *isurface)
 	SDL_Rect *dst = (SDL_Rect*)idst;
 	SDL_Rect *src = (SDL_Rect*)isrc;
 	SDL_BlitSurface((SDL_Surface*)isurface, src, screen, dst);
-	SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h);
+	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
 	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
-	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
+	SDL_UpdateRect(screen, 0, 0, 0, 0);
 }
 
-
+/* external modules call this function
+ * to add their callback functions to 
+ * be ran in this engine's loop.
+ *
+ * convertion : done
+ * testing : TODO
+ */
 void 
 Graphics_AddDrawingElement(void (*func)())
 {
-	int current = drawing_elements_buffer_count;
-	DRAWING_ELEMENTS ***buf = (DRAWING_ELEMENTS***)drawing_elements_buffer;
+	ENGINEBUF *tmp = NULL;
+	DRAWING_ELEMENTS ***buf = NULL;
+	u32 current;
+	
+	tmp = &_Drawing;
+	allocEngineBuf(tmp, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
+	
+	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
+	current = tmp->total - 1;
 
-	if (*buf == NULL)
-	{
-		*buf = (DRAWING_ELEMENTS**)calloc(1, sizeof(DRAWING_ELEMENTS*));
-		drawing_elements_buffer_count = 0;
-	}
-	else
-	{
-		*buf = (DRAWING_ELEMENTS**)realloc(*buf, sizeof(DRAWING_ELEMENTS*) * (current + 1));
-	}
-	if (*buf == NULL)
-	{
-		printf("Graphics_AddDrawingElement Out of memory! \n");
-		return;
-	}
-	buf[0][current] = (DRAWING_ELEMENTS*)calloc(1, sizeof(DRAWING_ELEMENTS));
-	/* printf("DEBUG %d %d\n", sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
-	getchar(); */
-	*buf[0][current] = func;
-	/* drawing_elements_buffer[0][current] = func; */
+	*(*buf)[current] = func;
 
-	drawing_elements_buffer_count++;
+	printf("proof %d real %d\n", (int)*(*buf)[current], (int)func);
 }
 
 /*--- Poll ---*/
+
+/* convertion : done
+ * testing : TODO
+ */
 void
 Graphics_Poll()
 {
+	ENGINEBUF *tmp;
+	DRAWING_ELEMENTS ***buf;
 	SDL_Rect rect;
-	unsigned int loo = 0;
-	const int frameSkipMax = 0;
-	static unsigned int frameSkip = 0;
+	u32 loo = 0;
+	const u32 frameSkipMax = 0;
+	static u32 frameSkip = 0;
 	/* printf("Cycle\n"); */
 
-	if (drawing_elements_buffer_count == 0)
+	tmp = &_Drawing;
+	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
+	
+	if (tmp->total == 0)
 		return;
 	
 	rect.x = 0;
@@ -634,13 +565,15 @@ Graphics_Poll()
 	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
 			(int)&Graphics_ShowImage); */
 	/* printf("debug of the Graphics_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
-	while (loo < drawing_elements_buffer_count)
+	while (loo < tmp->total)
 	{
-		if (drawing_elements_buffer[0][loo] != NULL)
+		printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo);
+		if (*(*buf)[loo] != NULL)
 		{
 			/* (*test_ptr)(); */
 			/* Graphics_ShowImage(); */
-			(*drawing_elements_buffer[0][loo])();
+			printf("calling callback #%d on %d\n", loo, tmp->total);
+			(*(*buf)[loo])();
 		}
 		loo++;
 	}
@@ -690,40 +623,18 @@ Graphics_Init()
 	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
-	
-	drawing_elements_buffer = (DRAWING_ELEMENTS ***)calloc(1, sizeof(DRAWING_ELEMENTS**));
-
-	raw_engine_instruction = (RAW_ENGINE ***)calloc(1, sizeof(DRAWING_ELEMENTS**));
-	
-	queue_engine_instruction = (INSTRUCTION_ENGINE ***)calloc(1, sizeof(DRAWING_ELEMENTS**));
-	
-	/*
-	drawing_elements_buffer = (DRAWING_ELEMENTS ***)HVar_CreateBuffer("Drawing_Elements", 
-			clean_drawingelement_buffer);
-
-	raw_engine_instruction = (RAW_ENGINE ***)HVar_CreateBuffer("Raw_Engine", 
-			clean_rawengine);
-	
-	queue_engine_instruction = (INSTRUCTION_ENGINE ***)HVar_CreateBuffer("Instruction_Engine", 
-			clean_instructionengine);
-	*/
 	return 0;
 }
 
+/* convertion : done
+ * testing : TODO
+ */
 void 
 Graphics_Clean()
 {	
-	clean_drawingelement_buffer();
-	clean_rawengine();
-	clean_instructionengine();
-	
-	if (drawing_elements_buffer)
-		free(drawing_elements_buffer);
-	if (raw_engine_instruction)
-		free(raw_engine_instruction);
-	if (queue_engine_instruction)
-		free(queue_engine_instruction);
+	cleanDrawing();
+	cleanRaw();
+	cleanQueue();	
 	
 	SDL_FreeSurface(sclScreen);
 }
-

@@ -15,6 +15,12 @@
  */
 #define FRAMES_PER_SECOND 60
 
+/*! default : 10
+ * the amount of memory that we allocate
+ * in addition to the mem required. 
+ * */
+#define MEMORY_ALLOC_OVERH 10
+
 /*! default : 2
  * how many time the computer has to check 
  * out which one of the image has the lowest
