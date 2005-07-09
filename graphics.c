@@ -136,8 +136,8 @@ static ENGINEBUF _Queue;
 
 static Uint32 color_black; /* to fill the screen after each frames */
 
-static int temporary; /* temporary debugging variable, please remove when debugging is done */
-static int f_count; /* temporary as the above */
+/* temporary debugging variable, please remove when debugging is done */
+static int f_count;
 
 /*--- Static Prototypes ---*/
 
@@ -425,7 +425,6 @@ flush_queue()
 	ENGINEBUF *tmp = &_Queue;
 	SDL_Rect buf;
 	INSTRUCTION_ENGINE *cur;
-	int temporar = 0;
 	
 	if (tmp->buffer)
 		cur = *tmp->buffer;
@@ -453,12 +452,7 @@ flush_queue()
 			printf("the next elements seems to be NULL\n");
 		*/
 		cur = cur->next;
-		temporar++;
 	}
-	if (temporar < temporary)
-		printf("theres a problem with the linked list, the number of calls to it doesnt reflect the number of elements in the linked list\n");
-
-	temporary = 0;
 	f_count = 0;
 }
 
@@ -494,7 +488,7 @@ Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 	tmp = &_Raw;
 	printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total);
 	
-	/*
+	
 	if (f_count < 20)
 	{
 		f_count++;
@@ -502,7 +496,7 @@ Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 	}
 	else
 		return;
-	*/
+	
 		
 	allocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
@@ -518,7 +512,6 @@ Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 	memcpy(&(*buf)[current]->dst, dst, sizeof(SDL_Rect));
 	(*buf)[current]->surface_ptr = surface;
 	computeRawEngine((RAW_ENGINE*)(*buf)[current]);
-	temporary++;
 }
 
 void 
