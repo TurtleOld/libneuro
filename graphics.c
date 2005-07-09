@@ -75,7 +75,7 @@
  * for future seeing of how I was offtrack ;P.
  */
 
-#define debug_instruction_buffer 1
+#define debug_instruction_buffer 0
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -137,6 +137,7 @@ static ENGINEBUF _Queue;
 static Uint32 color_black; /* to fill the screen after each frames */
 
 static int temporary; /* temporary debugging variable, please remove when debugging is done */
+static int f_count; /* temporary as the above */
 
 /*--- Static Prototypes ---*/
 
@@ -303,16 +304,17 @@ print_queue()
  * a new raw is added.
  *
  * convertion : done
- * testing : TODO
+ * testing : seems to work
  */
 static void
 computeRawEngine(RAW_ENGINE *toadd)
 {
 	ENGINEBUF *tmp;	
 	INSTRUCTION_ENGINE ***buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
-	u32 current; /* current number of elements in instruction */
-		
-	tmp = &_Queue;
+	u32 current; /* current number of elements in instruction */	
+
+
+	tmp = &_Queue;	
 	allocEngineBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
 	buf = (INSTRUCTION_ENGINE***)&tmp->buffer;	
@@ -339,28 +341,31 @@ computeRawEngine(RAW_ENGINE *toadd)
 		{
 			(*last_element)->next = (*buf)[current];
 			last_element = &(*buf)[current];
-			printf("proof layer %d real layer %d ptr %d\n",
+			/*printf("proof layer %d real layer %d ptr %d\n",
 					(*buf)[current]->current->layer,
 					(*last_element)->current->layer,
-					(int)(*last_element)->current);
+					(int)(*last_element)->current);*/
+			/* printf("Placed the frame at the end of the queue\n"); */
 			return;
 		}
 	}
 	else
 	{
 		last_element = &(*buf)[current];
+		/* printf("Just placed the frame as the first element, starting the queue\n"); */
 		return;
 	}
 
 	cur = **buf;
 	while (cur != NULL)
 	{
-		printf("looped %d\n", (int)cur);
+		/*  printf("looped %d\n", (int)cur); */
 		if (cur->current->layer > (*buf)[current]->current->layer)
 		{
-			printf("Event current layer %d > toadd layer %d\n",  
+			/*printf("Event current layer %d > toadd layer %d\n",  
 					cur->current->layer, 
 					toadd->layer); 
+			*/
 			
 			/* to avoid death loops */
 			if (cur->next == (*buf)[current])
@@ -396,11 +401,12 @@ computeRawEngine(RAW_ENGINE *toadd)
 		}
 		else
 		{
-			printf("nothing to be done\n");
+			/* printf("nothing to be done\n"); */
 		}
 		last = cur;
 		cur = cur->next;
 	}
+	/* printf("End of the looping process\n"); */
 #if debug_instruction_buffer
 	printf("BEGIN inside computeRawEngine debug print\n");
 	print_queue();
@@ -411,7 +417,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 /* 
  * convertion : done
- * testing : TODO
+ * testing : seems to work
  */
 static void
 flush_queue()
@@ -421,12 +427,15 @@ flush_queue()
 	INSTRUCTION_ENGINE *cur;
 	int temporar = 0;
 	
-	cur = *tmp->buffer;
-	/* printf("cycle\n"); */
+	if (tmp->buffer)
+		cur = *tmp->buffer;
+	else
+		return;
+	printf("cycle\n");
 	
 	while (cur)
 	{
-		printf("flushing an instruction : layer %d\n", cur->current->layer);
+		/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w - 1;
@@ -440,14 +449,17 @@ flush_queue()
 		{
 			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
 		}
-		if (cur->next == NULL)
+		/* if (cur->next == NULL)
 			printf("the next elements seems to be NULL\n");
+		*/
 		cur = cur->next;
 		temporar++;
 	}
 	if (temporar < temporary)
 		printf("theres a problem with the linked list, the number of calls to it doesnt reflect the number of elements in the linked list\n");
+
 	temporary = 0;
+	f_count = 0;
 }
 
 static void
@@ -466,7 +478,7 @@ clean_queue()
  * - surface is the pointer of the loaded image. 
  *
  *   convertion : done
- *   testing : TODO
+ *   testing : seg fault at 22 elements
  */
 void 
 Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
@@ -478,8 +490,20 @@ Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 	SDL_Rect *dst;
 	SDL_Surface *surface;
 
-	printf("new layer %d\n", layer);
+	/* printf("new layer %d\n", layer); */
 	tmp = &_Raw;
+	printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total);
+	
+	/*
+	if (f_count < 20)
+	{
+		f_count++;
+		printf("frame count %d total %d\n", f_count, tmp->total);
+	}
+	else
+		return;
+	*/
+		
 	allocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
 	buf = (RAW_ENGINE***)&tmp->buffer;
@@ -505,7 +529,8 @@ Graphics_AddDirectDrawing(void *isrc, void *idst, void *isurface)
 	SDL_BlitSurface((SDL_Surface*)isurface, src, screen, dst);
 	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
 	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
-	SDL_UpdateRect(screen, 0, 0, 0, 0);
+	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
+	SDL_Flip(screen);
 }
 
 /* external modules call this function
@@ -513,7 +538,7 @@ Graphics_AddDirectDrawing(void *isrc, void *idst, void *isurface)
  * be ran in this engine's loop.
  *
  * convertion : done
- * testing : TODO
+ * testing : works 100%
  */
 void 
 Graphics_AddDrawingElement(void (*func)())
@@ -530,13 +555,13 @@ Graphics_AddDrawingElement(void (*func)())
 
 	*(*buf)[current] = func;
 
-	printf("proof %d real %d\n", (int)*(*buf)[current], (int)func);
+	/* printf("proof %d real %d\n", (int)*(*buf)[current], (int)func); */
 }
 
 /*--- Poll ---*/
 
 /* convertion : done
- * testing : TODO
+ * testing : works
  */
 void
 Graphics_Poll()
@@ -567,12 +592,12 @@ Graphics_Poll()
 	/* printf("debug of the Graphics_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
 	while (loo < tmp->total)
 	{
-		printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo);
+		/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
 		if (*(*buf)[loo] != NULL)
 		{
 			/* (*test_ptr)(); */
 			/* Graphics_ShowImage(); */
-			printf("calling callback #%d on %d\n", loo, tmp->total);
+			/* printf("calling callback #%d on %d\n", loo, tmp->total); */
 			(*(*buf)[loo])();
 		}
 		loo++;
@@ -612,7 +637,7 @@ int
 Graphics_Init()
 {
 	/* will need to be configurable */
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_HWSURFACE);
+	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE | SDL_DOUBLEBUF);
 
 	if (screen == NULL)
 	{
@@ -627,7 +652,7 @@ Graphics_Init()
 }
 
 /* convertion : done
- * testing : TODO
+ * testing : seems to work
  */
 void 
 Graphics_Clean()
@@ -636,5 +661,6 @@ Graphics_Clean()
 	cleanRaw();
 	cleanQueue();	
 	
+	SDL_FreeSurface(screen);
 	SDL_FreeSurface(sclScreen);
 }
