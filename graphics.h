@@ -19,7 +19,7 @@
  * the amount of memory that we allocate
  * in addition to the mem required. 
  * */
-#define MEMORY_ALLOC_OVERH 10
+#define MEMORY_ALLOC_OVERH 100
 
 /*! default : 2
  * how many time the computer has to check 
@@ -45,7 +45,13 @@
  * @param [in] dst the coordinate where the image must be drawn to.
  * @param [in] surface the pointer to the image itself.
  */
-extern void Graphics_AddDrawingInstruction(u8 layer, void *src, void *dst, void *surface);
+extern void Graphics_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void *surface);
+
+#ifdef USE_SDL
+/*! convert Rectan to SDL_Rect 
+ */
+extern SDL_Rect *Graphics_CNtoSDL(Rectan *source);
+#endif /* USE_SDL */
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 
@@ -57,7 +63,7 @@ extern void Graphics_AddDrawingElement(void (*func)());
 /* directly draw a surface on the screen without
  * the layering feature.
  */
-extern void Graphics_AddDirectDrawing(void *src, void *dst, void *surface);
+extern void Graphics_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 
 /*! Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);

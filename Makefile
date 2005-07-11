@@ -28,6 +28,11 @@ TYPE2=0
 # 1 = static
 TYPE3=0
 
+# Use the SDL(put yes or no graphics will be drawn)?
+# 0 = no
+# 1 = yes
+TYPE4=1
+
 OBJ_FLAG=
 FLAGS= -std=gnu99 -pedantic -Wall -I/usr/include/libxml2 -I/usr/include/sdl_lib `sdl-config --cflags`
 # flags that r put at the end of the command
@@ -66,6 +71,9 @@ ifeq ($(TYPE3), 1)
 	LIBS += /usr/lib/libxml2.a
 endif
 
+ifeq ($(TYPE4), 1)
+	DEFINES += -D USE_SDL
+endif
 
 
 all: $(TARGETS)
@@ -87,4 +95,5 @@ endif
 clean: 
 	rm -f $(RNAME) *.o *.da *.bbg *.bb *.out
 
-mrproper:
+mrproper: clean
+	rm -f *~

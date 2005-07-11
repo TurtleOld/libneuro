@@ -79,14 +79,18 @@
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#ifdef USE_SDL
 #include <SDL.h>
+#endif /* USE_SDL */
 
 /*--- Local Headers Including ---*/
+#include "typedef.h"
 
 /*--- Main Module Header ---*/
 #include "graphics.h"
-
+ 
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
@@ -100,13 +104,13 @@ typedef struct ENGINEBUF
  
 typedef struct RAW_ENGINE
 {
-	char layer; /* the drawing level that the surface is drawn */
-	SDL_Rect src;
-	SDL_Rect dst; /* will need to memcpy the data because 
+	u8 layer; /* the drawing level that the surface is drawn */
+	Rectan src;
+	Rectan dst; /* will need to memcpy the data because 
 			* this will be used beyond the 
 			* scope of the calling function.
 			*/
-	SDL_Surface *surface_ptr; /* only the pointer needed cause its "static" */
+	void *surface_ptr; /* only the pointer needed cause its "static" */
 }RAW_ENGINE;
 
 /* this linked list will be computed 
@@ -124,8 +128,10 @@ typedef struct INSTRUCTION_ENGINE
 
 typedef void (*DRAWING_ELEMENTS)(void);
 
+#ifdef USE_SDL
 static SDL_Surface *screen;
 static SDL_Surface *sclScreen;
+#endif /* USE_SDL */
 
 
 static INSTRUCTION_ENGINE **last_element;
@@ -134,7 +140,7 @@ static ENGINEBUF _Drawing;
 static ENGINEBUF _Raw;
 static ENGINEBUF _Queue;
 
-static Uint32 color_black; /* to fill the screen after each frames */
+static u32 color_black; /* to fill the screen after each frames */
 
 /* temporary debugging variable, please remove when debugging is done */
 static int f_count;
@@ -157,18 +163,18 @@ static void print_queue();
 
 static void flush_queue();
 /* update only a part of the screen */
-static void updScreen(SDL_Rect *rect);
+static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
-static int secureBoundsCheck(SDL_Rect *rect);
+static int secureBoundsCheck(Rectan *rect);
 
 /*--- Static Functions ---*/
 
 /* check if the rectangle can be securly blit to the main screen */
 static int
-secureBoundsCheck(SDL_Rect *rect)
+secureBoundsCheck(Rectan *rect)
 {
 	/* normal bounds check */
-	if (rect->x < 0 || rect->y < 0 || rect->x >= SCREEN_X || rect->y >= SCREEN_Y)
+	if (rect->x >= SCREEN_X || rect->y >= SCREEN_Y)
 		return 1;
 	/* now see if the width and height coords are in bound too */
 	if (rect->x + rect->w >= SCREEN_X || rect->y + rect->h >= SCREEN_Y)
@@ -177,9 +183,11 @@ secureBoundsCheck(SDL_Rect *rect)
 }
 
 static void
-updScreen(SDL_Rect *rect)
+updScreen(Rectan *rect)
 {
+#ifdef USE_SDL
 	SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
+#endif /* USE_SDL */
 }
 
 
@@ -265,7 +273,7 @@ allocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 	}
 	else if ((mem * sptp) < sptp)
 	{
-		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total));
+		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total + 1));
 		mem = MEMORY_ALLOC_OVERH;
 	}
 	else
@@ -337,7 +345,8 @@ computeRawEngine(RAW_ENGINE *toadd)
 			return;
 		}
 		/* printf("last_element layer %d\n", last_element->current->layer); */
-		if ((*last_element)->current->layer <= (*buf)[current]->current->layer)
+
+		/* if ((*last_element)->current->layer <= (*buf)[current]->current->layer) */
 		{
 			(*last_element)->next = (*buf)[current];
 			last_element = &(*buf)[current];
@@ -423,7 +432,7 @@ static void
 flush_queue()
 {
 	ENGINEBUF *tmp = &_Queue;
-	SDL_Rect buf;
+	Rectan buf;
 	INSTRUCTION_ENGINE *cur;
 	
 	if (tmp->buffer)
@@ -441,7 +450,11 @@ flush_queue()
 		buf.h = cur->current->src.h - 1;
 		if (!secureBoundsCheck(&buf))
 		{
-			SDL_BlitSurface(cur->current->surface_ptr, &cur->current->src, screen, &cur->current->dst);
+#ifdef USE_SDL
+			SDL_BlitSurface((SDL_Surface*)cur->current->surface_ptr, 
+					Graphics_CNtoSDL(&cur->current->src), screen, 
+					Graphics_CNtoSDL(&cur->current->dst));
+#endif /* USE_SDL */
 			updScreen(&buf);
 		}
 		else
@@ -465,6 +478,25 @@ clean_queue()
 
 /*--- Global Functions ---*/
 
+/* convert native rectangle structure (Rectan) to SDL rectangle structure (SDL_Rect) */
+#if USE_SDL
+SDL_Rect *
+Graphics_CNtoSDL(Rectan *source)
+{
+	/*
+	SDL_Rect out;
+
+	out.x = (i16)source->x;
+	out.y = (i16)source->y;
+	out.w = source->w;
+	out.h = source->h;
+
+	return &out;
+	*/
+	return (SDL_Rect*)source;
+}
+#endif /* USE_SDL */
+
 /* - layer is the priority by which it much be drawn.
  * - src should be used to know which part of the 
  *     surface has to be drawn(for sprites mostly).
@@ -475,20 +507,17 @@ clean_queue()
  *   testing : seg fault at 22 elements
  */
 void 
-Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
+Graphics_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
 {
 	ENGINEBUF *tmp = NULL;
 	RAW_ENGINE ***buf = NULL;
 	u32 current;
-	SDL_Rect *src;
-	SDL_Rect *dst;
-	SDL_Surface *surface;
 
 	/* printf("new layer %d\n", layer); */
 	tmp = &_Raw;
 	printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total);
 	
-	
+	/*
 	if (f_count < 20)
 	{
 		f_count++;
@@ -496,34 +525,31 @@ Graphics_AddDrawingInstruction(u8 layer, void *isrc, void *idst, void *isurface)
 	}
 	else
 		return;
-	
+	*/
 		
 	allocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
 	buf = (RAW_ENGINE***)&tmp->buffer;
 	current = tmp->total - 1;
 	
-	src = (SDL_Rect*)isrc;
-	dst = (SDL_Rect*)idst;
-	surface = (SDL_Surface*)isurface;		
-	
 	(*buf)[current]->layer = layer;
-	memcpy(&(*buf)[current]->src, src, sizeof(SDL_Rect));
-	memcpy(&(*buf)[current]->dst, dst, sizeof(SDL_Rect));
-	(*buf)[current]->surface_ptr = surface;
+	memcpy(&(*buf)[current]->src, isrc, sizeof(Rectan));
+	memcpy(&(*buf)[current]->dst, idst, sizeof(Rectan));
+	(*buf)[current]->surface_ptr = isurface;
 	computeRawEngine((RAW_ENGINE*)(*buf)[current]);
 }
 
 void 
-Graphics_AddDirectDrawing(void *isrc, void *idst, void *isurface)
+Graphics_AddDirectDrawing(Rectan *isrc, Rectan *idst, void *isurface)
 {
-	SDL_Rect *dst = (SDL_Rect*)idst;
-	SDL_Rect *src = (SDL_Rect*)isrc;
-	SDL_BlitSurface((SDL_Surface*)isurface, src, screen, dst);
+#ifdef USE_SDL
+	SDL_BlitSurface((SDL_Surface*)isurface, 
+			Graphics_CNtoSDL(isrc), screen, Graphics_CNtoSDL(idst));
 	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
 	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	SDL_Flip(screen);
+#endif /* USE_SDL */
 }
 
 /* external modules call this function
@@ -561,7 +587,11 @@ Graphics_Poll()
 {
 	ENGINEBUF *tmp;
 	DRAWING_ELEMENTS ***buf;
-	SDL_Rect rect;
+#ifdef USE_SDL
+	Rectan rect;
+#endif /* USE_SDL */
+	
+	
 	u32 loo = 0;
 	const u32 frameSkipMax = 0;
 	static u32 frameSkip = 0;
@@ -572,14 +602,17 @@ Graphics_Poll()
 	
 	if (tmp->total == 0)
 		return;
-	
+
+#ifdef USE_SDL
 	rect.x = 0;
 	rect.y = 0;
 	rect.w = screen->w;
 	rect.h = screen->h;
 	/* SDL_FillRect(screen, &rect, color_black); */
+
 	SDL_FillRect(screen, 0, 0);
 	SDL_UpdateRect(screen, 0, 0, SCREEN_X, SCREEN_Y);
+#endif /* USE_SDL */
 	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
 			(int)&Graphics_ShowImage); */
 	/* printf("debug of the Graphics_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
@@ -630,6 +663,7 @@ int
 Graphics_Init()
 {
 	/* will need to be configurable */
+#ifdef USE_SDL
 	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE | SDL_DOUBLEBUF);
 
 	if (screen == NULL)
@@ -641,6 +675,13 @@ Graphics_Init()
 	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
+	printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
+			sizeof(SDL_Rect), 
+			sizeof(RAW_ENGINE), 
+			sizeof(Rectan),
+			sizeof(SDL_Surface*),
+			sizeof(u8));
+#endif /* USE_SDL */
 	return 0;
 }
 
@@ -654,6 +695,8 @@ Graphics_Clean()
 	cleanRaw();
 	cleanQueue();	
 	
+#ifdef USE_SDL
 	SDL_FreeSurface(screen);
 	SDL_FreeSurface(sclScreen);
+#endif /* USE_SDL */
 }

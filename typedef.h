@@ -40,5 +40,10 @@ typedef unsigned long long u64;
 /*! used to contain time data */
 typedef signed int t_tick; 
 
+/*! used to contain rectangle coordinates */
+typedef struct Rectan 
+{
+	u16 x, y, w, h;
+}Rectan;
 
 #endif /* __TYPEDEF_H */
