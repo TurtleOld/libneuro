@@ -6,7 +6,7 @@
 #include "engine.h"
 
 /*! TODO */
-extern void Dbg_Print(u8 *message, u8 *funcName, u32 lineNum);
+extern void Dbg_Print(char *message, char *funcName, u32 lineNum);
 
 /*! TODO */
 #define Dbg(x) Dbg_Print(x, __FUNCTION__, __LINE__)

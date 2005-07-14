@@ -21,9 +21,9 @@
 /*--- Global Functions ---*/
 
 void
-Dbg_Print(u8 *message, u8 *funcName, u32 lineNum)
+Dbg_Print(char *message, char *funcName, u32 lineNum)
 {
-	fprintf(stderr, "%s in %s:%d\n", message, funcName, lineNum);
+	fprintf(stderr, "%s:%d -- %s\n", funcName, lineNum, message);
 }
 
 /*--- Poll ---*/
