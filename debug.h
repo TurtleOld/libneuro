@@ -9,7 +9,7 @@
 extern void Dbg_Print(u8 *message, u8 *funcName, u32 lineNum);
 
 /*! TODO */
-/* #define DbgP(x, y, z) Dbg_Print(x, y, z) */
+#define Dbg(x) Dbg_Print(x, __FUNCTION__, __LINE__)
 /* #define DbgP(v ,w, x, y, z) error_at_line(v, w, x, y, "%s", z) */
 #define DbgP error_at_line
 
