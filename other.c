@@ -19,6 +19,8 @@
 
 #include "other.h"
 
+#include "graphics.h"
+
 void
 Other_Slp(u32 t)
 {
@@ -181,3 +183,19 @@ Other_PutPixel(void *srf, int x, int y, u32 pixel)
 	}
 	SDL_UnlockSurface(surface);
 }
+
+void
+Other_PrintFPS()
+{
+	t_tick fps;
+
+	Graphics_GiveFPS(&fps);
+
+	if (fps > 0)
+	{
+		printf("current fps : %d\n", fps);
+	}
+}
+
+
+

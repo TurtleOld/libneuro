@@ -65,6 +65,12 @@ extern void Graphics_AddDrawingElement(void (*func)());
  */
 extern void Graphics_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 
+/*! use this function to set the background */
+extern void Graphics_AddBackground(void *isurface);
+
+/*! give the current fps */
+extern void Graphics_GiveFPS(t_tick *output);
+
 /*! Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);
 /*! Poll of the Graphics Engine */

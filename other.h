@@ -14,5 +14,7 @@ extern void Other_PutPixel(void *srf, int x, int y, u32 pixel);
 
 extern void Other_Slp(u32 t);
 
+extern void Other_PrintFPS();
+
 
 #endif /* __OTHER_H */

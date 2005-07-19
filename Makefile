@@ -28,9 +28,9 @@ TYPE2=0
 # 1 = static
 TYPE3=0
 
-# Use the SDL(put yes or no graphics will be drawn)?
-# 0 = no
-# 1 = yes
+# select which of the graphics library you want to use
+# 0 = none
+# 1 = Simple Direct Layer (SDL)
 TYPE4=1
 
 OBJ_FLAG=

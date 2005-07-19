@@ -81,6 +81,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h> /* to calculate the frames per second (fps) */
 #ifdef USE_SDL
 #include <SDL.h>
 #endif /* USE_SDL */
@@ -129,9 +130,11 @@ typedef struct INSTRUCTION_ENGINE
 typedef void (*DRAWING_ELEMENTS)(void);
 
 #ifdef USE_SDL
-static SDL_Surface *screen;
-static SDL_Surface *sclScreen;
+static SDL_Surface *screen; /* the screen surface */
+static SDL_Surface *sclScreen; /* attempt to do a double buffered screen */
 #endif /* USE_SDL */
+
+static void *background; /* the background image */
 
 
 static INSTRUCTION_ENGINE **last_element;
@@ -140,10 +143,21 @@ static ENGINEBUF _Drawing;
 static ENGINEBUF _Raw;
 static ENGINEBUF _Queue;
 
+/* buffered structs */
+static ENGINEBUF *b_Raw;
+static ENGINEBUF *b_Queue;
+
+
 static u32 color_black; /* to fill the screen after each frames */
 
 /* temporary debugging variable, please remove when debugging is done */
 static int f_count;
+
+
+static int fps;
+static int lFps;
+static int ltime;
+
 
 /*--- Static Prototypes ---*/
 
@@ -197,6 +211,9 @@ cleanEngineBuffer(ENGINEBUF *eng)
 	void ***buf;
 	u32 i;
 	
+	if (!eng)
+		return;
+		
 	buf = &eng->buffer;
 	i = eng->total;
 
@@ -217,7 +234,8 @@ cleanEngineBuffer(ENGINEBUF *eng)
 #endif /* cleanDbg */
 	}
 
-	free(*buf);
+	if (*buf)
+		free(*buf);
 	*buf = NULL;
 	
 	eng->total = 0;
@@ -331,7 +349,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 	/* printf("Raw computing Cycle ptr %d\n", (int)(*buf)[current]); */
 	
 	/* add the data to the end of the queue */
-	printf("will place layer %d in the correct order\n", toadd->layer);
+	/* printf("will place layer %d in the correct order\n", toadd->layer); */
 	(*buf)[current]->current = toadd;
 	(*buf)[current]->next = NULL;	
 
@@ -424,6 +442,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 }
 
+
 /* 
  * convertion : done
  * testing : seems to work
@@ -431,15 +450,67 @@ computeRawEngine(RAW_ENGINE *toadd)
 static void
 flush_queue()
 {
-	ENGINEBUF *tmp = &_Queue;
+	ENGINEBUF *tmp;
 	Rectan buf;
 	INSTRUCTION_ENGINE *cur;
+
+	tmp = b_Queue;
+	
+	if (tmp)
+	{
+		
+		if (tmp->buffer)
+			cur = *tmp->buffer;
+		else
+			return;
+		/* printf("cycle\n"); */
+	
+		/* "reset" the emplacement of the last position of the image
+		 * with the background if theres one or with the color black 
+		 * if none.
+		 */
+		while (cur)
+		{
+			/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
+			buf.x = cur->current->dst.x;
+			buf.y = cur->current->dst.y;
+			buf.w = cur->current->src.w - 1;
+			buf.h = cur->current->src.h - 1;
+			if (!secureBoundsCheck(&buf))
+			{
+#ifdef USE_SDL	
+				if (background)
+				{
+					SDL_BlitSurface((SDL_Surface*)background, 
+						Graphics_CNtoSDL(&cur->current->dst), screen, 
+						Graphics_CNtoSDL(&cur->current->dst));
+	
+				}
+				else
+				{
+					SDL_FillRect(screen, Graphics_CNtoSDL(&cur->current->dst), 0);
+				}	
+#endif /* USE_SDL */
+				updScreen(&buf);
+			}
+			else
+			{
+				/* printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1); */
+			}
+			/* if (cur->next == NULL)
+				printf("the next elements seems to be NULL\n");
+			*/
+			cur = cur->next;
+		}
+	}
+
+	/* start the real drawing */
+	tmp = &_Queue;
 	
 	if (tmp->buffer)
 		cur = *tmp->buffer;
 	else
 		return;
-	printf("cycle\n");
 	
 	while (cur)
 	{
@@ -450,7 +521,7 @@ flush_queue()
 		buf.h = cur->current->src.h - 1;
 		if (!secureBoundsCheck(&buf))
 		{
-#ifdef USE_SDL
+#ifdef USE_SDL		
 			SDL_BlitSurface((SDL_Surface*)cur->current->surface_ptr, 
 					Graphics_CNtoSDL(&cur->current->src), screen, 
 					Graphics_CNtoSDL(&cur->current->dst));
@@ -459,7 +530,7 @@ flush_queue()
 		}
 		else
 		{
-			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
+			/* printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1); */
 		}
 		/* if (cur->next == NULL)
 			printf("the next elements seems to be NULL\n");
@@ -472,8 +543,14 @@ flush_queue()
 static void
 clean_queue()
 {
+	/*
 	cleanRaw();
 	cleanQueue();
+	*/
+	cleanEngineBuffer(b_Raw);
+	cleanEngineBuffer(b_Queue);
+	b_Raw = &_Raw;
+	b_Queue = &_Queue;
 }
 
 /*--- Global Functions ---*/
@@ -497,6 +574,32 @@ Graphics_CNtoSDL(Rectan *source)
 }
 #endif /* USE_SDL */
 
+void
+Graphics_GiveFPS(t_tick *output)
+{
+	*output = lFps;
+}
+
+/* use this function to set the background */
+void
+Graphics_AddBackground(void *isurface)
+{
+	background = isurface;
+	
+#ifdef USE_SDL
+	SDL_Surface *tmp = background;
+	Rectan src;
+
+	src.x = 0;
+	src.y = 0;
+	src.h = tmp->h;
+	src.w = tmp->w;
+	
+	SDL_BlitSurface(tmp, NULL, screen, (SDL_Rect*)&src);
+	SDL_Flip(screen);
+#endif /* USE_SDL */
+}
+
 /* - layer is the priority by which it much be drawn.
  * - src should be used to know which part of the 
  *     surface has to be drawn(for sprites mostly).
@@ -515,7 +618,7 @@ Graphics_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurf
 
 	/* printf("new layer %d\n", layer); */
 	tmp = &_Raw;
-	printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total);
+	/* printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total); */
 	
 	/*
 	if (f_count < 20)
@@ -603,15 +706,27 @@ Graphics_Poll()
 	if (tmp->total == 0)
 		return;
 
+	if (ltime + 1 <= time(NULL))
+	{
+		lFps = fps;
+		fps = 0;
+		ltime = time(NULL);
+	}
+	else
+		lFps = 0;
+
+	
 #ifdef USE_SDL
 	rect.x = 0;
 	rect.y = 0;
 	rect.w = screen->w;
 	rect.h = screen->h;
 	/* SDL_FillRect(screen, &rect, color_black); */
-
-	SDL_FillRect(screen, 0, 0);
-	SDL_UpdateRect(screen, 0, 0, SCREEN_X, SCREEN_Y);
+	
+	/*
+	 * SDL_FillRect(screen, 0, 0);
+	 * SDL_UpdateRect(screen, 0, 0, SCREEN_X, SCREEN_Y);
+	*/
 #endif /* USE_SDL */
 	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
 			(int)&Graphics_ShowImage); */
@@ -656,15 +771,19 @@ Graphics_Poll()
 	/* SDL_BlitSurface(screen, &rect, screen, &rect); */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	/* SDL_Flip(screen); */
+
+	fps++;
 }
 
 /*--- Constructor Destructor ---*/
 int
 Graphics_Init()
 {
+	ltime = time(NULL);
+
 	/* will need to be configurable */
 #ifdef USE_SDL
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE | SDL_DOUBLEBUF);
+	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
 
 	if (screen == NULL)
 	{
@@ -675,12 +794,14 @@ Graphics_Init()
 	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
-	printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
+	/* 
+	 * printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
 			sizeof(SDL_Rect), 
 			sizeof(RAW_ENGINE), 
 			sizeof(Rectan),
 			sizeof(SDL_Surface*),
-			sizeof(u8));
+			sizeof(u8)); 
+	*/
 #endif /* USE_SDL */
 	return 0;
 }
@@ -693,7 +814,9 @@ Graphics_Clean()
 {	
 	cleanDrawing();
 	cleanRaw();
-	cleanQueue();	
+	cleanQueue();
+	cleanEngineBuffer(b_Queue);
+	cleanEngineBuffer(b_Raw);
 	
 #ifdef USE_SDL
 	SDL_FreeSurface(screen);
