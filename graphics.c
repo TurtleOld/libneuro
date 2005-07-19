@@ -200,7 +200,7 @@ static void
 updScreen(Rectan *rect)
 {
 #ifdef USE_SDL
-	SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
+	SDL_UpdateRect(sclScreen, rect->x, rect->y, rect->w, rect->h);
 #endif /* USE_SDL */
 }
 
@@ -482,13 +482,13 @@ flush_queue()
 				if (background)
 				{
 					SDL_BlitSurface((SDL_Surface*)background, 
-						Graphics_CNtoSDL(&cur->current->dst), screen, 
+						Graphics_CNtoSDL(&cur->current->dst), sclScreen, 
 						Graphics_CNtoSDL(&cur->current->dst));
 	
 				}
 				else
 				{
-					SDL_FillRect(screen, Graphics_CNtoSDL(&cur->current->dst), 0);
+					SDL_FillRect(sclScreen, Graphics_CNtoSDL(&cur->current->dst), 0);
 				}	
 #endif /* USE_SDL */
 				updScreen(&buf);
@@ -523,7 +523,7 @@ flush_queue()
 		{
 #ifdef USE_SDL		
 			SDL_BlitSurface((SDL_Surface*)cur->current->surface_ptr, 
-					Graphics_CNtoSDL(&cur->current->src), screen, 
+					Graphics_CNtoSDL(&cur->current->src), sclScreen, 
 					Graphics_CNtoSDL(&cur->current->dst));
 #endif /* USE_SDL */
 			updScreen(&buf);
@@ -595,8 +595,8 @@ Graphics_AddBackground(void *isurface)
 	src.h = tmp->h;
 	src.w = tmp->w;
 	
-	SDL_BlitSurface(tmp, NULL, screen, (SDL_Rect*)&src);
-	SDL_Flip(screen);
+	SDL_BlitSurface(tmp, NULL, sclScreen, (SDL_Rect*)&src);
+	SDL_Flip(sclScreen);
 #endif /* USE_SDL */
 }
 
@@ -768,8 +768,8 @@ Graphics_Poll()
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	/* SDL_Flip(screen); */
 
-	/* SDL_BlitSurface(screen, &rect, screen, &rect); */
-	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
+	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
+	SDL_UpdateRect(screen, 0, 0, 0, 0);
 	/* SDL_Flip(screen); */
 
 	fps++;
@@ -783,7 +783,7 @@ Graphics_Init()
 
 	/* will need to be configurable */
 #ifdef USE_SDL
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
+	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_HWSURFACE);
 
 	if (screen == NULL)
 	{
@@ -791,7 +791,7 @@ Graphics_Init()
 		return 1;
 	}
 
-	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+	sclScreen = SDL_CreateRGBSurface(SDL_HWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
 	/* 
