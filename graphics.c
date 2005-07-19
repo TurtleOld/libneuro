@@ -783,7 +783,7 @@ Graphics_Init()
 
 	/* will need to be configurable */
 #ifdef USE_SDL
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_HWSURFACE);
+	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
 
 	if (screen == NULL)
 	{
@@ -791,7 +791,7 @@ Graphics_Init()
 		return 1;
 	}
 
-	sclScreen = SDL_CreateRGBSurface(SDL_HWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
 	/* 
