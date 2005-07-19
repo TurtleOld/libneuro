@@ -137,7 +137,7 @@ static SDL_Surface *sclScreen; /* attempt to do a double buffered screen */
 static void *background; /* the background image */
 
 
-static INSTRUCTION_ENGINE **last_element;
+static INSTRUCTION_ENGINE *last_element;
 
 static ENGINEBUF _Drawing;
 static ENGINEBUF _Raw;
@@ -200,7 +200,10 @@ static void
 updScreen(Rectan *rect)
 {
 #ifdef USE_SDL
-	SDL_UpdateRect(sclScreen, rect->x, rect->y, rect->w, rect->h);
+	if (rect)
+		SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
+	else
+		SDL_UpdateRect(screen, 0, 0, 0, 0);
 #endif /* USE_SDL */
 }
 
@@ -355,19 +358,20 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 	if (last_element != NULL)
 	{
-		if ((*last_element)->current == NULL)
+		if (last_element->current == NULL)
 		{
 			printf("CAUGHT ERROR in last_element current == %d -- debug %d\nDropping this call\n", 
-					current, 
-					(int)(*last_element)->current);
+				current, 
+				(int)last_element->current);
 			return;
 		}
+		
 		/* printf("last_element layer %d\n", last_element->current->layer); */
 
 		/* if ((*last_element)->current->layer <= (*buf)[current]->current->layer) */
 		{
-			(*last_element)->next = (*buf)[current];
-			last_element = &(*buf)[current];
+			last_element->next = (*buf)[current];
+			last_element = (*buf)[current];
 			/*printf("proof layer %d real layer %d ptr %d\n",
 					(*buf)[current]->current->layer,
 					(*last_element)->current->layer,
@@ -378,7 +382,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 	}
 	else
 	{
-		last_element = &(*buf)[current];
+		last_element = (*buf)[current];
 		/* printf("Just placed the frame as the first element, starting the queue\n"); */
 		return;
 	}
@@ -472,6 +476,7 @@ flush_queue()
 		while (cur)
 		{
 			/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
+			
 			buf.x = cur->current->dst.x;
 			buf.y = cur->current->dst.y;
 			buf.w = cur->current->src.w - 1;
@@ -488,10 +493,10 @@ flush_queue()
 				}
 				else
 				{
-					SDL_FillRect(sclScreen, Graphics_CNtoSDL(&cur->current->dst), 0);
+					/* SDL_FillRect(sclScreen, Graphics_CNtoSDL(&cur->current->dst), 0);*/
 				}	
 #endif /* USE_SDL */
-				updScreen(&buf);
+				/* updScreen(&buf); */
 			}
 			else
 			{
@@ -503,6 +508,9 @@ flush_queue()
 			cur = cur->next;
 		}
 	}
+#ifdef USE_SDL
+	SDL_FillRect(sclScreen, 0, 0);
+#endif /* USE_SDL */
 
 	/* start the real drawing */
 	tmp = &_Queue;
@@ -526,7 +534,7 @@ flush_queue()
 					Graphics_CNtoSDL(&cur->current->src), sclScreen, 
 					Graphics_CNtoSDL(&cur->current->dst));
 #endif /* USE_SDL */
-			updScreen(&buf);
+			/* updScreen(&buf); */
 		}
 		else
 		{
@@ -769,7 +777,8 @@ Graphics_Poll()
 	/* SDL_Flip(screen); */
 
 	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
-	SDL_UpdateRect(screen, 0, 0, 0, 0);
+	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
+	updScreen(0);
 	/* SDL_Flip(screen); */
 
 	fps++;
@@ -791,7 +800,7 @@ Graphics_Init()
 		return 1;
 	}
 
-	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, 16, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, screen->format->BitsPerPixel, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
 	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
 	/* 
