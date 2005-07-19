@@ -2,8 +2,10 @@
 
 #the engine is compiled into a shared object which is linked with the game binary
 
+include version.mk
+
 NAME=libneuro
-VERSION=0.8.1
+VERSION=$(MAJOR).$(MEDIUM).$(MINOR)
 
 AR=ar
 RANLIB=ranlib
