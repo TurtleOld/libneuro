@@ -460,7 +460,7 @@ flush_queue()
 
 	tmp = b_Queue;
 	
-	if (tmp)
+	if (tmp && background)
 	{
 		
 		if (tmp->buffer)
@@ -508,9 +508,12 @@ flush_queue()
 			cur = cur->next;
 		}
 	}
+	else if (!background)
+	{
 #ifdef USE_SDL
-	SDL_FillRect(sclScreen, 0, 0);
+		SDL_FillRect(sclScreen, 0, 0);
 #endif /* USE_SDL */
+	}
 
 	/* start the real drawing */
 	tmp = &_Queue;
