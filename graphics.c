@@ -163,7 +163,7 @@ static int lFps;
 static int ltime;
 
 /* last frame we redrawn the pixels? */
-static u8 lastPdraw;
+/* static u8 lastPdraw; */
 
 
 /*--- Static Prototypes ---*/
@@ -462,28 +462,37 @@ cleanPixels()
 	Rectan buf;
 	PIXEL_ENGINE ***pix;
 	u32 current;
-
+	
 	tmp = &_Pixel;
 	current = tmp->total;
 	pix = (PIXEL_ENGINE***)&tmp->buffer;
+
+	if (current <= 0)
+		return;
+
+	printf("inside %s %d\n", __FUNCTION__, current);
 	
 	if (background)
 	{
 		while (current-- > 0)
 		{
+			/* printf("%d\n", current); */
 			buf.x = (*pix)[current]->x;
 			buf.y = (*pix)[current]->y;
-			/*
+			
 			buf.w = 1;
 			buf.h = 1;
 			
 			SDL_BlitSurface((SDL_Surface*)background, 
 				Graphics_CNtoSDL(&buf), sclScreen, 
 				Graphics_CNtoSDL(&buf));
+			/*
+			Graphics_PutPixel(buf.x, buf.y, 
+					Other_GetPixel(background, buf.x, buf.y));
 			*/
-			Graphics_PutPixel(buf.x, buf.y, Other_GetPixel(background, buf.x, buf.y));
 		}
 	}
+	cleanEngineBuffer(&_Pixel);
 }
 
 /* 
@@ -553,9 +562,7 @@ flush_queue()
 		SDL_FillRect(sclScreen, 0, 0);
 #endif /* USE_SDL */
 	}
-
-	cleanEngineBuffer(&_Pixel);
-
+	
 	/* start the real drawing */
 	tmp = &_Queue;
 	
@@ -738,12 +745,6 @@ Graphics_PutPixel(u32 x, u32 y, u32 pixel)
 	ENGINEBUF *tmp;
 	PIXEL_ENGINE ***buf;
 	u32 current;
-
-	if (lastPdraw == 0)
-	{
-		cleanPixels();
-		lastPdraw = 1;
-	}
 	
 	tmp = &_Pixel;
 	allocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
@@ -790,6 +791,8 @@ Graphics_Poll()
 	if (tmp->total == 0)
 		return;
 
+	cleanPixels();
+	
 	if (ltime + 1 <= time(NULL))
 	{
 		lFps = fps;
@@ -855,9 +858,7 @@ Graphics_Poll()
 	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	updScreen(0);
-	
-	lastPdraw = 0;
-	
+		
 	/* SDL_Flip(screen); */
 
 	fps++;
