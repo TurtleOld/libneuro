@@ -129,6 +129,11 @@ typedef struct INSTRUCTION_ENGINE
 
 typedef void (*DRAWING_ELEMENTS)(void);
 
+typedef struct PIXEL_ENGINE
+{
+	u32 x, y;
+}PIXEL_ENGINE;
+
 #ifdef USE_SDL
 static SDL_Surface *screen; /* the screen surface */
 static SDL_Surface *sclScreen; /* attempt to do a double buffered screen */
@@ -142,13 +147,12 @@ static INSTRUCTION_ENGINE *last_element;
 static ENGINEBUF _Drawing;
 static ENGINEBUF _Raw;
 static ENGINEBUF _Queue;
+static ENGINEBUF _Pixel;
 
 /* buffered structs */
 static ENGINEBUF *b_Raw;
 static ENGINEBUF *b_Queue;
 
-
-static u32 color_black; /* to fill the screen after each frames */
 
 /* temporary debugging variable, please remove when debugging is done */
 static int f_count;
@@ -157,6 +161,9 @@ static int f_count;
 static int fps;
 static int lFps;
 static int ltime;
+
+/* last frame we redrawn the pixels? */
+static u8 lastPdraw;
 
 
 /*--- Static Prototypes ---*/
@@ -180,6 +187,8 @@ static void flush_queue();
 static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
 static int secureBoundsCheck(Rectan *rect);
+/* clean the screen of the handled pixels drawn */
+static void cleanPixels();
 
 /*--- Static Functions ---*/
 
@@ -446,6 +455,36 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 }
 
+static void
+cleanPixels()
+{
+	ENGINEBUF *tmp;
+	Rectan buf;
+	PIXEL_ENGINE ***pix;
+	u32 current;
+
+	tmp = &_Pixel;
+	current = tmp->total;
+	pix = (PIXEL_ENGINE***)&tmp->buffer;
+	
+	if (background)
+	{
+		while (current-- > 0)
+		{
+			buf.x = (*pix)[current]->x;
+			buf.y = (*pix)[current]->y;
+			/*
+			buf.w = 1;
+			buf.h = 1;
+			
+			SDL_BlitSurface((SDL_Surface*)background, 
+				Graphics_CNtoSDL(&buf), sclScreen, 
+				Graphics_CNtoSDL(&buf));
+			*/
+			Graphics_PutPixel(buf.x, buf.y, Other_GetPixel(background, buf.x, buf.y));
+		}
+	}
+}
 
 /* 
  * convertion : done
@@ -514,6 +553,8 @@ flush_queue()
 		SDL_FillRect(sclScreen, 0, 0);
 #endif /* USE_SDL */
 	}
+
+	cleanEngineBuffer(&_Pixel);
 
 	/* start the real drawing */
 	tmp = &_Queue;
@@ -691,6 +732,38 @@ Graphics_AddDrawingElement(void (*func)())
 	/* printf("proof %d real %d\n", (int)*(*buf)[current], (int)func); */
 }
 
+void
+Graphics_PutPixel(u32 x, u32 y, u32 pixel)
+{
+	ENGINEBUF *tmp;
+	PIXEL_ENGINE ***buf;
+	u32 current;
+
+	if (lastPdraw == 0)
+	{
+		cleanPixels();
+		lastPdraw = 1;
+	}
+	
+	tmp = &_Pixel;
+	allocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
+	
+	buf = (PIXEL_ENGINE***)&tmp->buffer;
+	current = tmp->total - 1;
+	
+	Other_PutPixel(sclScreen, x, y, pixel);
+
+	
+	(*buf)[current]->x = x;
+	(*buf)[current]->y = y;
+}
+
+u32
+Graphics_GetPixel(u32 x, u32 y)
+{
+	return Other_GetPixel(sclScreen, x, y);
+}
+
 /*--- Poll ---*/
 
 /* convertion : done
@@ -782,6 +855,9 @@ Graphics_Poll()
 	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	updScreen(0);
+	
+	lastPdraw = 0;
+	
 	/* SDL_Flip(screen); */
 
 	fps++;
@@ -805,7 +881,6 @@ Graphics_Init()
 
 	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, screen->format->BitsPerPixel, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
 	
-	color_black = SDL_MapRGB(screen->format, 0, 0, 0);
 	/* 
 	 * printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
 			sizeof(SDL_Rect), 
@@ -829,6 +904,7 @@ Graphics_Clean()
 	cleanQueue();
 	cleanEngineBuffer(b_Queue);
 	cleanEngineBuffer(b_Raw);
+	cleanEngineBuffer(&_Pixel);
 	
 #ifdef USE_SDL
 	SDL_FreeSurface(screen);

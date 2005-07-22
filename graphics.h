@@ -9,6 +9,7 @@
 #define __GRAPHICS_H
 
 #include "engine.h"
+#include "other.h"
 
 /*! default : 60
  * the maximum amount of frames per seconds -deprecated-
@@ -70,6 +71,12 @@ extern void Graphics_AddBackground(void *isurface);
 
 /*! give the current fps */
 extern void Graphics_GiveFPS(t_tick *output);
+
+/* draw a pixel on the screen */
+extern void Graphics_PutPixel(u32 x, u32 y, u32 pixel);
+
+/* get the color of a pixel on the screen */
+extern u32 Graphics_GetPixel(u32 x, u32 y);
 
 /*! Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);
