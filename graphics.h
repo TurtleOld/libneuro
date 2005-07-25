@@ -78,6 +78,16 @@ extern void Graphics_PutPixel(u32 x, u32 y, u32 pixel);
 /* get the color of a pixel on the screen */
 extern u32 Graphics_GetPixel(u32 x, u32 y);
 
+
+typedef struct ENGINEBUF ENGINEBUF;
+
+
+extern void Graphics_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj);
+
+extern void Graphics_CleanEngineBuffer(ENGINEBUF *eng);
+
+
+
 /*! Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);
 /*! Poll of the Graphics Engine */

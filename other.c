@@ -21,6 +21,15 @@
 
 #include "graphics.h"
 
+/*
+struct OBJBUF
+{
+	void **buffer;
+	u32 total;
+	void (*callback)(void *src);
+};
+*/
+
 void
 Other_Slp(u32 t)
 {
@@ -29,6 +38,59 @@ Other_Slp(u32 t)
 #else /* NOT WIN32 */
 	usleep(t);
 #endif /* NOT WIN32 */
+}
+
+void
+OtherCallbackBuf(OBJBUF *eng, void (*callback)(void *src))
+{
+	eng->callback = callback;
+}
+
+void
+OtherAllocBuf(OBJBUF *eng, size_t sptp)
+{
+	void ***buf = NULL;
+	u32 total = 0;
+		
+	buf = &eng->buffer;
+	total = eng->total;
+			
+	if (!*buf)
+	{
+		*buf = calloc(1, sptp);
+		total = 0;
+	}
+	else
+		*buf = realloc(*buf, sptp * (total + 1));	
+	
+	total++;
+	eng->total = total;
+}
+
+void
+OtherCleanBuf(OBJBUF *eng)
+{
+	void ***buf;
+	u32 i;
+	
+	if (!eng)
+		return;
+		
+	buf = &eng->buffer;
+	i = eng->total;
+
+	while (i-- > 0)
+	{
+		if ((*buf)[i])
+			(eng->callback)((*buf)[i]);
+	}
+
+	if (*buf)
+		free(*buf);
+	*buf = NULL;
+	
+	eng->total = 0;
+	eng->buffer = NULL;
 }
 
 /* this functions was made to separate a given character, 

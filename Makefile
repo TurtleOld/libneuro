@@ -15,7 +15,7 @@ GCC=gcc
 # 0 = normal
 # 1 = debug
 # 2 = release
-TYPE=1
+TYPE=2
 
 # compile the library has a shared or static library
 # legend :
@@ -41,8 +41,8 @@ FLAGS= -std=gnu99 -pedantic -Wall -I/usr/include/libxml2 -I/usr/include/sdl_lib 
 ENDFLAGS=
 LIBS= -lc `sdl-config --libs`
 DEFINES=
-DEBUG= -g
-RELEASE= -s -O3
+DEBUG= -ggdb3 -fprofile-arcs -ftest-coverage
+RELEASE= -s -O9
 SLIB= #-lSDL_image
 #events.o needs to become an engine
 ENGINES=graphics.o events.o debug.o xmltool.o nmap.o other.o
@@ -50,11 +50,11 @@ OBJECTS=$(ENGINES)
 TARGETS= make-engine
 
 ifeq ($(TYPE), 1)
-	FLAGS += -g -fprofile-arcs -ftest-coverage
-	ENDFLAGS += -pg 
+	FLAGS += $(DEBUG)
+	ENDFLAGS += -pg
 endif
 ifeq ($(TYPE), 2)
-	FLAGS += -s -O3
+	FLAGS += $(RELEASE)
 endif
 
 

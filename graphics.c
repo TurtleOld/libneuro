@@ -77,6 +77,10 @@
 
 #define debug_instruction_buffer 0
  
+#define cleanEngineBuffer Graphics_CleanEngineBuffer
+#define allocEngineBuf Graphics_AllocEngineBuf
+
+ 
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -96,12 +100,12 @@
 
 /*--- Static Variables ---*/
 
-typedef struct ENGINEBUF
+struct ENGINEBUF
 {
 	void **buffer;
 	u32 mem;
 	u32 total;
-}ENGINEBUF;
+};
  
 typedef struct RAW_ENGINE
 {
@@ -168,7 +172,6 @@ static int ltime;
 
 /*--- Static Prototypes ---*/
 
-static void cleanEngineBuffer(ENGINEBUF *eng);
 static void cleanDrawing();
 static void cleanQueue();
 static void cleanRaw();
@@ -216,47 +219,6 @@ updScreen(Rectan *rect)
 #endif /* USE_SDL */
 }
 
-
-static void
-cleanEngineBuffer(ENGINEBUF *eng)
-{
-	void ***buf;
-	u32 i;
-	
-	if (!eng)
-		return;
-		
-	buf = &eng->buffer;
-	i = eng->total;
-
-#if cleanDbg
-	printf("total to clean : %d\n", i);
-#endif /* cleanDbg */
-
-	while (i-- > 0)
-	{
-#if cleanDbg
-		printf("cleaning i:%d\nptr %d\n", i, (int)(*buf)[i]);
-#endif /* cleanDbg */
-		if ((*buf)[i])
-			free((*buf)[i]);
-#if cleanDbg
-		else
-			printf("the element %d is NULL\n", i);
-#endif /* cleanDbg */
-	}
-
-	if (*buf)
-		free(*buf);
-	*buf = NULL;
-	
-	eng->total = 0;
-	eng->buffer = NULL;
-	eng->mem = 0;
-	last_element = NULL;
-	/* printf("cleaned the Engine buffers\n"); */
-}
-
 static void
 cleanDrawing()
 {
@@ -275,48 +237,6 @@ cleanQueue()
 	cleanEngineBuffer(&_Queue);	
 }
 
-static void
-allocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
-{
-	void ***buf = NULL;
-	u32 total = 0;
-	u32 mem = 0;
-	
-	buf = &eng->buffer;
-	total = eng->total;
-	mem = eng->mem;
-	
-	if (mem > MEMORY_ALLOC_OVERH)
-	{
-		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", mem);
-		return;
-	}
-	/*
-	printf("debug : %d\n", sptp);
-	printf("before mem %d\n", mem);
-	*/
-	if (!*buf)
-	{
-		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
-		total = 0;
-		mem = MEMORY_ALLOC_OVERH;
-	}
-	else if ((mem * sptp) < sptp)
-	{
-		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total + 1));
-		mem = MEMORY_ALLOC_OVERH;
-	}
-	else
-		mem -= 1;
-	/*
-	printf("after mem %d\n", mem);
-	*/
-	(*buf)[total] = calloc(1, sobj);
-	
-	total++;
-	eng->total = total;
-	eng->mem = mem;
-}
 
 #if debug_instruction_buffer
 static void
@@ -347,9 +267,9 @@ print_queue()
 static void
 computeRawEngine(RAW_ENGINE *toadd)
 {
-	ENGINEBUF *tmp;	
-	INSTRUCTION_ENGINE ***buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
-	u32 current; /* current number of elements in instruction */	
+	register ENGINEBUF *tmp;	
+	register INSTRUCTION_ENGINE ***buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
+	register u32 current; /* current number of elements in instruction */	
 
 
 	tmp = &_Queue;	
@@ -470,7 +390,7 @@ cleanPixels()
 	if (current <= 0)
 		return;
 
-	printf("inside %s %d\n", __FUNCTION__, current);
+	/* printf("inside %s %d\n", __FUNCTION__, current); */
 	
 	if (background)
 	{
@@ -482,7 +402,7 @@ cleanPixels()
 			
 			buf.w = 1;
 			buf.h = 1;
-			
+#ifdef USE_SDL			
 			SDL_BlitSurface((SDL_Surface*)background, 
 				Graphics_CNtoSDL(&buf), sclScreen, 
 				Graphics_CNtoSDL(&buf));
@@ -490,6 +410,7 @@ cleanPixels()
 			Graphics_PutPixel(buf.x, buf.y, 
 					Other_GetPixel(background, buf.x, buf.y));
 			*/
+#endif /* USE_SDL */
 		}
 	}
 	cleanEngineBuffer(&_Pixel);
@@ -614,6 +535,89 @@ clean_queue()
 
 /*--- Global Functions ---*/
 
+void
+Graphics_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
+{
+	void ***buf = NULL;
+	u32 total = 0;
+	u32 mem = 0;
+	
+	buf = &eng->buffer;
+	total = eng->total;
+	mem = eng->mem;
+	
+	if (mem > MEMORY_ALLOC_OVERH)
+	{
+		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", mem);
+		return;
+	}
+	/*
+	printf("debug : %d\n", sptp);
+	printf("before mem %d\n", mem);
+	*/
+	if (!*buf)
+	{
+		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
+		total = 0;
+		mem = MEMORY_ALLOC_OVERH;
+	}
+	else if ((mem * sptp) < sptp)
+	{
+		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total + 1));
+		mem = MEMORY_ALLOC_OVERH;
+	}
+	else
+		mem -= 1;
+	/*
+	printf("after mem %d\n", mem);
+	*/
+	(*buf)[total] = calloc(1, sobj);
+	
+	total++;
+	eng->total = total;
+	eng->mem = mem;
+}
+
+void
+Graphics_CleanEngineBuffer(ENGINEBUF *eng)
+{
+	void ***buf;
+	u32 i;
+	
+	if (!eng)
+		return;
+		
+	buf = &eng->buffer;
+	i = eng->total;
+
+#if cleanDbg
+	printf("total to clean : %d\n", i);
+#endif /* cleanDbg */
+
+	while (i-- > 0)
+	{
+#if cleanDbg
+		printf("cleaning i:%d\nptr %d\n", i, (int)(*buf)[i]);
+#endif /* cleanDbg */
+		if ((*buf)[i])
+			free((*buf)[i]);
+#if cleanDbg
+		else
+			printf("the element %d is NULL\n", i);
+#endif /* cleanDbg */
+	}
+
+	if (*buf)
+		free(*buf);
+	*buf = NULL;
+	
+	eng->total = 0;
+	eng->buffer = NULL;
+	eng->mem = 0;
+	last_element = NULL;
+	/* printf("cleaned the Engine buffers\n"); */
+}
+
 /* convert native rectangle structure (Rectan) to SDL rectangle structure (SDL_Rect) */
 #if USE_SDL
 SDL_Rect *
@@ -671,9 +675,9 @@ Graphics_AddBackground(void *isurface)
 void 
 Graphics_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
 {
-	ENGINEBUF *tmp = NULL;
-	RAW_ENGINE ***buf = NULL;
-	u32 current;
+	register ENGINEBUF *tmp = NULL;
+	register RAW_ENGINE ***buf = NULL;
+	register u32 current;
 
 	/* printf("new layer %d\n", layer); */
 	tmp = &_Raw;
@@ -752,7 +756,9 @@ Graphics_PutPixel(u32 x, u32 y, u32 pixel)
 	buf = (PIXEL_ENGINE***)&tmp->buffer;
 	current = tmp->total - 1;
 	
+#ifdef USE_SDL
 	Other_PutPixel(sclScreen, x, y, pixel);
+#endif /* USE_SDL */
 
 	
 	(*buf)[current]->x = x;
@@ -762,7 +768,11 @@ Graphics_PutPixel(u32 x, u32 y, u32 pixel)
 u32
 Graphics_GetPixel(u32 x, u32 y)
 {
+#ifdef USE_SDL
 	return Other_GetPixel(sclScreen, x, y);
+#else
+	return 0;
+#endif /* USE_SDL */
 }
 
 /*--- Poll ---*/
@@ -854,8 +864,9 @@ Graphics_Poll()
 	/* update the full screen */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	/* SDL_Flip(screen); */
-
+#ifdef USE_SDL
 	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
+#endif /* USE_SDL */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	updScreen(0);
 		
