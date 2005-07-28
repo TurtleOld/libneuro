@@ -403,13 +403,14 @@ cleanPixels()
 			buf.w = 1;
 			buf.h = 1;
 #ifdef USE_SDL			
+			/*
 			SDL_BlitSurface((SDL_Surface*)background, 
 				Graphics_CNtoSDL(&buf), sclScreen, 
 				Graphics_CNtoSDL(&buf));
-			/*
-			Graphics_PutPixel(buf.x, buf.y, 
-					Other_GetPixel(background, buf.x, buf.y));
 			*/
+			
+			Graphics_PutPixel(buf.x, buf.y, 
+					(u32)Other_GetPixel(background, buf.x, buf.y));
 #endif /* USE_SDL */
 		}
 	}
@@ -651,7 +652,7 @@ Graphics_AddBackground(void *isurface)
 	
 #ifdef USE_SDL
 	SDL_Surface *tmp = background;
-	Rectan src;
+	SDL_Rect src;
 
 	src.x = 0;
 	src.y = 0;
