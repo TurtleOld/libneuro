@@ -167,6 +167,7 @@ Other_GetPixel(void *srf, int x, int y)
 		case 1:
 		{
 			err = *p;
+			/* err = *(u16 *)p; */
 		}
 		break;
 		

@@ -403,14 +403,15 @@ cleanPixels()
 			buf.w = 1;
 			buf.h = 1;
 #ifdef USE_SDL			
-			/*
+			
 			SDL_BlitSurface((SDL_Surface*)background, 
 				Graphics_CNtoSDL(&buf), sclScreen, 
 				Graphics_CNtoSDL(&buf));
-			*/
 			
-			Graphics_PutPixel(buf.x, buf.y, 
-					(u32)Other_GetPixel(background, buf.x, buf.y));
+			/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
+			/* Graphics_PutPixel(buf.x, buf.y, 
+					Other_GetPixel(background, buf.x, buf.y));
+			*/
 #endif /* USE_SDL */
 		}
 	}
