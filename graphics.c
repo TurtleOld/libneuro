@@ -771,7 +771,7 @@ u32
 Graphics_GetPixel(u32 x, u32 y)
 {
 #ifdef USE_SDL
-	return Other_GetPixel(sclScreen, x, y);
+	return Other_GetPixel(screen, x, y);
 #else
 	return 0;
 #endif /* USE_SDL */
