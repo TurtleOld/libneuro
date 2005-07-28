@@ -134,6 +134,18 @@ Other_SepChr(const unsigned char chr, char *source, int *items)
 }
 
 
+u32
+Other_gRGB(u8 R, u8 G, u8 B)
+{
+	u32 out;
+
+	out = ((R * 63) / 255) << 11;
+	out ^= ((G * 63) / 255) << 6;
+	out ^= ((B * 63) / 255);
+	
+	return out;
+}
+
 /*
  *  * Return the pixel value at (x, y)
  *   * NOTE: The surface must be locked before calling this!
