@@ -87,7 +87,7 @@
 #include <string.h>
 #include <time.h> /* to calculate the frames per second (fps) */
 #ifdef USE_SDL
-#include <SDL.h>
+	#include <SDL.h>
 #endif /* USE_SDL */
 
 /*--- Local Headers Including ---*/
@@ -166,6 +166,9 @@ static int fps;
 static int lFps;
 static int ltime;
 
+/* 1 is that the pixels will be cleaned during this cycle and 0 is no it won't */
+static u8 clean_pixel_in_this_cycle;
+
 /* last frame we redrawn the pixels? */
 /* static u8 lastPdraw; */
 
@@ -211,12 +214,13 @@ secureBoundsCheck(Rectan *rect)
 static void
 updScreen(Rectan *rect)
 {
-#ifdef USE_SDL
-	if (rect)
-		SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
-	else
-		SDL_UpdateRect(screen, 0, 0, 0, 0);
-#endif /* USE_SDL */
+	if (USE_SDL)
+	{
+		if (rect)
+			SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
+		else
+			SDL_UpdateRect(screen, 0, 0, 0, 0);
+	}
 }
 
 static void
@@ -368,9 +372,9 @@ computeRawEngine(RAW_ENGINE *toadd)
 	}
 	/* printf("End of the looping process\n"); */
 #if debug_instruction_buffer
-	printf("BEGIN inside computeRawEngine debug print\n");
-	print_queue();
-	printf("END inside computeRawEngine debug print\n");
+		printf("BEGIN inside computeRawEngine debug print\n");
+		print_queue();
+		printf("END inside computeRawEngine debug print\n");
 #endif /* debug_instruction_buffer */
 
 }
@@ -402,17 +406,18 @@ cleanPixels()
 			
 			buf.w = 1;
 			buf.h = 1;
-#ifdef USE_SDL			
 			
-			SDL_BlitSurface((SDL_Surface*)background, 
-				Neuro_CNtoSDL(&buf), sclScreen, 
-				Neuro_CNtoSDL(&buf));
+			if (USE_SDL)
+			{	
+				SDL_BlitSurface((SDL_Surface*)background, 
+					Neuro_CNtoSDL(&buf), sclScreen, 
+					Neuro_CNtoSDL(&buf));
 			
-			/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
-			/* Neuro_PutPixel(buf.x, buf.y, 
-					Other_GetPixel(background, buf.x, buf.y));
-			*/
-#endif /* USE_SDL */
+				/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
+				/* Neuro_PutPixel(buf.x, buf.y, 
+						Other_GetPixel(background, buf.x, buf.y));
+				*/
+			}
 		}
 	}
 	cleanEngineBuffer(&_Pixel);
@@ -783,6 +788,12 @@ Neuro_GetPixel(u32 x, u32 y)
 #endif /* USE_SDL */
 }
 
+void
+Neuro_CleanPixels()
+{
+	clean_pixel_in_this_cycle = 1;
+}
+
 /*--- Poll ---*/
 
 /* convertion : done
@@ -809,7 +820,11 @@ Graphics_Poll()
 	if (tmp->total == 0)
 		return;
 
-	cleanPixels();
+	if (clean_pixel_in_this_cycle)
+	{
+		cleanPixels();
+		clean_pixel_in_this_cycle = 0;
+	}
 	
 	if (ltime + 1 <= time(NULL))
 	{

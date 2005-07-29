@@ -86,6 +86,9 @@ extern void Neuro_PutPixel(u32 x, u32 y, u32 pixel);
 /* get the color of a pixel on the screen */
 extern u32 Neuro_GetPixel(u32 x, u32 y);
 
+/* clean all the pixels that were drawn using the handled pixel drawer in this module */
+extern void Neuro_CleanPixels();
+
 
 typedef struct ENGINEBUF ENGINEBUF;
 

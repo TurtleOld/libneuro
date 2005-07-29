@@ -265,7 +265,7 @@ Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 }
 
 void
-Neuro_CleanKeyb()
+Neuro_CleanKeyboard()
 {
 	clean_keyboard();
 }

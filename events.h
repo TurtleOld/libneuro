@@ -16,7 +16,7 @@ extern void Neuro_AddPressedMouseEvent(u32 button, void (*callback)());
 extern void Neuro_AddReleasedMouseEvent(u32 button, void (*callback)());
 
 /*! TODO */
-extern void Neuro_CleanKeyb();
+extern void Neuro_CleanKeyboard();
 
 /*! TODO */
 extern void Neuro_CleanMouse();
