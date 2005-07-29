@@ -31,7 +31,7 @@ struct OBJBUF
 */
 
 void
-Other_Slp(u32 t)
+Neuro_Sleep(u32 t)
 {
 #ifdef WIN32
 	Sleep(t);
@@ -41,13 +41,13 @@ Other_Slp(u32 t)
 }
 
 void
-OtherCallbackBuf(OBJBUF *eng, void (*callback)(void *src))
+Neuro_CallbackBuf(OBJBUF *eng, void (*callback)(void *src))
 {
 	eng->callback = callback;
 }
 
 void
-OtherAllocBuf(OBJBUF *eng, size_t sptp)
+Neuro_AllocBuf(OBJBUF *eng, size_t sptp)
 {
 	void ***buf = NULL;
 	u32 total = 0;
@@ -68,7 +68,7 @@ OtherAllocBuf(OBJBUF *eng, size_t sptp)
 }
 
 void
-OtherCleanBuf(OBJBUF *eng)
+Neuro_CleanBuf(OBJBUF *eng)
 {
 	void ***buf;
 	u32 i;
@@ -100,7 +100,7 @@ OtherCleanBuf(OBJBUF *eng)
  * foo bar test and test2 will be accessable independently.
  */
 char **
-Other_SepChr(const unsigned char chr, char *source, int *items)
+Neuro_SepChr(const unsigned char chr, char *source, int *items)
 {/* separate characters of words */
 	char **ending = NULL;
 	u32 slen = strlen(source);
@@ -135,10 +135,10 @@ Other_SepChr(const unsigned char chr, char *source, int *items)
 
 
 u32
-Other_gRGB(u8 R, u8 G, u8 B)
+Neuro_giveRGB(u8 R, u8 G, u8 B)
 {
 	u32 out;
-
+	
 	out = ((R * 31) / 255) << 11;
 	out ^= ((G * 31) / 255) << 6;
 	out ^= ((B * 31) / 255);
@@ -151,7 +151,7 @@ Other_gRGB(u8 R, u8 G, u8 B)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 u32 
-Other_GetPixel(void *srf, int x, int y)
+Neuro_RawGetPixel(void *srf, int x, int y)
 {
 	SDL_Surface *surface = (SDL_Surface*)srf;
 
@@ -209,10 +209,10 @@ Other_GetPixel(void *srf, int x, int y)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 void 
-Other_PutPixel(void *srf, int x, int y, u32 pixel)
+Neuro_RawPutPixel(void *srf, int x, int y, u32 pixel)
 {
 	SDL_Surface *surface = (SDL_Surface*)srf;
-	SDL_LockSurface(surface);
+	/* SDL_LockSurface(surface); */
 	
 	int bpp = surface->format->BytesPerPixel;
 	/* Here p is the address to the pixel we want to set */
@@ -256,15 +256,15 @@ Other_PutPixel(void *srf, int x, int y, u32 pixel)
 		break;
 		
 	}
-	SDL_UnlockSurface(surface);
+	/* SDL_UnlockSurface(surface); */
 }
 
 void
-Other_PrintFPS()
+Neuro_PrintFPS()
 {
 	t_tick fps;
 
-	Graphics_GiveFPS(&fps);
+	Neuro_GiveFPS(&fps);
 
 	if (fps > 0)
 	{

@@ -77,8 +77,8 @@
 
 #define debug_instruction_buffer 0
  
-#define cleanEngineBuffer Graphics_CleanEngineBuffer
-#define allocEngineBuf Graphics_AllocEngineBuf
+#define cleanEngineBuffer Neuro_CleanEngineBuffer
+#define allocEngineBuf Neuro_AllocEngineBuf
 
  
 /*--- Extern Headers Including ---*/
@@ -405,11 +405,11 @@ cleanPixels()
 #ifdef USE_SDL			
 			
 			SDL_BlitSurface((SDL_Surface*)background, 
-				Graphics_CNtoSDL(&buf), sclScreen, 
-				Graphics_CNtoSDL(&buf));
+				Neuro_CNtoSDL(&buf), sclScreen, 
+				Neuro_CNtoSDL(&buf));
 			
 			/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
-			/* Graphics_PutPixel(buf.x, buf.y, 
+			/* Neuro_PutPixel(buf.x, buf.y, 
 					Other_GetPixel(background, buf.x, buf.y));
 			*/
 #endif /* USE_SDL */
@@ -458,13 +458,13 @@ flush_queue()
 				if (background)
 				{
 					SDL_BlitSurface((SDL_Surface*)background, 
-						Graphics_CNtoSDL(&cur->current->dst), sclScreen, 
-						Graphics_CNtoSDL(&cur->current->dst));
+						Neuro_CNtoSDL(&cur->current->dst), sclScreen, 
+						Neuro_CNtoSDL(&cur->current->dst));
 	
 				}
 				else
 				{
-					/* SDL_FillRect(sclScreen, Graphics_CNtoSDL(&cur->current->dst), 0);*/
+					/* SDL_FillRect(sclScreen, Neuro_CNtoSDL(&cur->current->dst), 0);*/
 				}	
 #endif /* USE_SDL */
 				/* updScreen(&buf); */
@@ -505,8 +505,8 @@ flush_queue()
 		{
 #ifdef USE_SDL		
 			SDL_BlitSurface((SDL_Surface*)cur->current->surface_ptr, 
-					Graphics_CNtoSDL(&cur->current->src), sclScreen, 
-					Graphics_CNtoSDL(&cur->current->dst));
+					Neuro_CNtoSDL(&cur->current->src), sclScreen, 
+					Neuro_CNtoSDL(&cur->current->dst));
 #endif /* USE_SDL */
 			/* updScreen(&buf); */
 		}
@@ -538,7 +538,7 @@ clean_queue()
 /*--- Global Functions ---*/
 
 void
-Graphics_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
+Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 {
 	void ***buf = NULL;
 	u32 total = 0;
@@ -581,7 +581,7 @@ Graphics_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 }
 
 void
-Graphics_CleanEngineBuffer(ENGINEBUF *eng)
+Neuro_CleanEngineBuffer(ENGINEBUF *eng)
 {
 	void ***buf;
 	u32 i;
@@ -623,7 +623,7 @@ Graphics_CleanEngineBuffer(ENGINEBUF *eng)
 /* convert native rectangle structure (Rectan) to SDL rectangle structure (SDL_Rect) */
 #if USE_SDL
 SDL_Rect *
-Graphics_CNtoSDL(Rectan *source)
+Neuro_CNtoSDL(Rectan *source)
 {
 	/*
 	SDL_Rect out;
@@ -640,14 +640,14 @@ Graphics_CNtoSDL(Rectan *source)
 #endif /* USE_SDL */
 
 void
-Graphics_GiveFPS(t_tick *output)
+Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;
 }
 
 /* use this function to set the background */
 void
-Graphics_AddBackground(void *isurface)
+Neuro_AddBackground(void *isurface)
 {
 	background = isurface;
 	
@@ -675,7 +675,7 @@ Graphics_AddBackground(void *isurface)
  *   testing : seg fault at 22 elements
  */
 void 
-Graphics_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
+Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
 {
 	register ENGINEBUF *tmp = NULL;
 	register RAW_ENGINE ***buf = NULL;
@@ -708,11 +708,11 @@ Graphics_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurf
 }
 
 void 
-Graphics_AddDirectDrawing(Rectan *isrc, Rectan *idst, void *isurface)
+Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, void *isurface)
 {
 #ifdef USE_SDL
 	SDL_BlitSurface((SDL_Surface*)isurface, 
-			Graphics_CNtoSDL(isrc), screen, Graphics_CNtoSDL(idst));
+			Neuro_CNtoSDL(isrc), screen, Neuro_CNtoSDL(idst));
 	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
 	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
@@ -728,7 +728,7 @@ Graphics_AddDirectDrawing(Rectan *isrc, Rectan *idst, void *isurface)
  * testing : works 100%
  */
 void 
-Graphics_AddDrawingElement(void (*func)())
+Neuro_AddDrawingElement(void (*func)())
 {
 	ENGINEBUF *tmp = NULL;
 	DRAWING_ELEMENTS ***buf = NULL;
@@ -746,7 +746,7 @@ Graphics_AddDrawingElement(void (*func)())
 }
 
 void
-Graphics_PutPixel(u32 x, u32 y, u32 pixel)
+Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 {
 	ENGINEBUF *tmp;
 	PIXEL_ENGINE ***buf;
@@ -759,7 +759,7 @@ Graphics_PutPixel(u32 x, u32 y, u32 pixel)
 	current = tmp->total - 1;
 	
 #ifdef USE_SDL
-	Other_PutPixel(sclScreen, x, y, pixel);
+	Neuro_RawPutPixel(sclScreen, x, y, pixel);
 #endif /* USE_SDL */
 
 	
@@ -767,11 +767,17 @@ Graphics_PutPixel(u32 x, u32 y, u32 pixel)
 	(*buf)[current]->y = y;
 }
 
+void *
+Neuro_GetScreenBuffer()
+{
+	return (void*)sclScreen;
+}
+
 u32
-Graphics_GetPixel(u32 x, u32 y)
+Neuro_GetPixel(u32 x, u32 y)
 {
 #ifdef USE_SDL
-	return Other_GetPixel(screen, x, y);
+	return Neuro_RawGetPixel(screen, x, y);
 #else
 	return 0;
 #endif /* USE_SDL */
@@ -828,15 +834,15 @@ Graphics_Poll()
 	*/
 #endif /* USE_SDL */
 	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
-			(int)&Graphics_ShowImage); */
-	/* printf("debug of the Graphics_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
+			(int)&Neuro_ShowImage); */
+	/* printf("debug of the Neuro_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
 	while (loo < tmp->total)
 	{
 		/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
 		if (*(*buf)[loo] != NULL)
 		{
 			/* (*test_ptr)(); */
-			/* Graphics_ShowImage(); */
+			/* Neuro_ShowImage(); */
 			/* printf("calling callback #%d on %d\n", loo, tmp->total); */
 			(*(*buf)[loo])();
 		}

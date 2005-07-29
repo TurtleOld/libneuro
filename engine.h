@@ -5,7 +5,6 @@
 
 #include "typedef.h"
 
-
 #include <error.h>
 #include "debug.h"
 

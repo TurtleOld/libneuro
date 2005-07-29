@@ -54,37 +54,35 @@ typedef struct node_map
 
 
 /* set of functions to deal with the struct node_map *n_map variable.
- *  they are used to configure the nodes to be repeated. todo
+ *  they are used to configure the nodes to be repeated.
  */
 
-/* FIXME */
-extern int Nmap_AddRoot(char *rootname /* FIXME */);
+/*! change the name of the root of the xml into which the nodes will all be put in*/
+extern int Neuro_XMLAddRoot(char *rootname);
 
-/* FIXME */
-extern int Nmap_Add(char *parent_name, /* FIXME */
-		char *child_name, /* FIXME */
-		char *content); /* FIXME */
+/*! add a new node to the repeated nodes and also set the content */
+extern int Neuro_XMLAdd(char *parent_name, char *child_name, char *content);
 
-/* FIXME */
-extern int Nmap_Del(char *parent_name, /* FIXME */
-	       	char *child_name); /* FIXME */
+/*! remove a node from the nodes */
+extern int Neuro_XMLDel(char *parent_name, char *child_name);
 
-/* FIXME */
-extern char *Nmap_GetContent(char *child_name /* FIXME */ );
+/*! output the content of a node */
+extern char *Neuro_XMLGetContent(char *child_name);
 
-/* FIXME */
-extern void Nmap_Clear();
+/*! clear the nodes */
+extern void Neuro_XMLClear();
 
-/* FIXME */
-extern void Nmap_PrintData();
+/*! debug : print the content of the nodes one by one */
+extern void Neuro_XMLPrintData();
 
-/* FIXME */
-extern void Nmap_ClearContent();
+/*! clear only the content of all the nodes */
+extern void Neuro_XMLClearContent();
 
-/* FIXME */
-extern NODE_MAP *Nmap_GetData();
+/*! give the pointer to the struct containing the nodes, content and other */
+extern NODE_MAP *Neuro_XMLGetData();
 
-/* FIXME */
+
+/* used internally */
 extern void Nmap_Clean();
 
 #endif /* NMAP_H */

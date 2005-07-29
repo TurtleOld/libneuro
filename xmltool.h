@@ -31,22 +31,19 @@ enum returns
  * This functions has to be used to 
  * be given a short description 
  * of an eventual error. 
+ * @param [in] this is for the user to add extra informations (like the function name it was called from).
  */
-extern void Xmltool_Perror(
-		/*! this is for the user to add extra 
-		 * informations (like the function name it was called from).
-		 */
-		char *message );
+extern void Neuro_XMLPerror(char *message);
 
-/*! Internal, do not use. The name is self explanatory anyway.*/
-void Xmltool_SetError(
-		/*! the error number */
-		int source);
+/*! Internal, do not use. The name is self explanatory anyway.
+ * @param [in] the error number
+ */
+void Neuro_XMLSetError(int source);
 
-/*! FIXME */
-void Xmltool_GetError(
-		/*! FIXME */
-		int *destination);
+/*! Internal use only 
+ * @param [in] destination
+ */
+void Neuro_XMLGetError(int *destination);
 
 /* set of functions to Input, 
  * Output, Edit and Delete to the xml file. 
@@ -54,45 +51,35 @@ void Xmltool_GetError(
  * and remove only 1 item at a time.
  */
 
-/*! Write a single value to a node */
-extern int Xmltool_WriteToXml(
-			/*! xml file */
-			char *filename, 	
-			/*! parent node of the node */
-			char *parent_name, 	
-			/*! node to add */
-			char *node_name, 
-			/*! data to add to the node */ 
-			char *node_info); 	
+/*! Write a single value to a node 
+ * @param [in] the xml file to use
+ * @param [in] name of the parent node of the node to be read
+ * @param [in] the name of the node to be created
+ * @param [in] the data to add to the node
+ */
+extern int Neuro_WriteToXml(char *filename, char *parent_name, char *node_name, char *node_info); 	
 
-/*! Read a single value of a node */
-extern char *Xmltool_ReadFromXml(
-			   /*! the xml file */
-			   char *filename, 	
-			   /*! parent node of the node */
-			   char *parent_name, 	
-		   	   /*! node to read */
-			   char *child_name); 		
+/*! Read a single value of a node 
+ * @param [in] the xml file to use
+ * @param [in] the name of the parent node of the node to be read
+ * @param [in] the name of the node to be read
+ */
+extern char *Neuro_ReadFromXml(char *filename, char *parent_name, char *child_name); 		
 
-/*! Modify a single value of a node */
-extern int Xmltool_EditToXml(
-		/*! the xml file */
-		char *filename, 	
-		/*! parent node of the node */ 
-		char *parent_name, 		
-		/*! node to edit */
-		char *node_name, 		
-		/*! New data to add to the node */
-		char *node_info);
+/*! Modify a single value of a node 
+ * @param [in] the xml file to use
+ * @param [in] the name of the parent node of the node to be edited
+ * @param [in] the name of the node to be edited
+ * @param [in] the data that will be newly put into the node
+ */
+extern int Neuro_EditToXml(char *filename, char *parent_name, char *node_name, char *node_info);
 
-/*! Delete a single node */
-extern int Xmltool_RemoveFromXml(
-		/*! the xml file */
-		char *filename, 	
-		/*! parent node of the node */
-		char *parent_name, 			
-		/*! the node to delete */
-		char *child_name);
+/*! Delete a single node 
+ * @param [in] the xml file to use
+ * @param [in] the name of the parent node of the node to be edited
+ * @param [in] the name of the node to be deleted
+ */
+extern int Neuro_RemoveFromXml(char *filename, char *parent_name, char *child_name);
 
 
 /* 
@@ -104,30 +91,25 @@ extern int Xmltool_RemoveFromXml(
  * FIXME : the Edit and Delete functions aren't done yet
  */
 
-/*! This function actually checks and parse the DtD of an xml file.*/
-extern int Xmltool_GetXmlDesc(
-		/*! file to read from */
-		char *filename );
+/*! This function actually checks and parse the DtD of an xml file.
+ * @param [in] the xml file to use
+ */
+extern int Neuro_GetXmlDesc(char *filename);
 
-/*! This function is to dump the data loaded, with Nmap_Add, in the xml file. */
-extern int Xmltool_MAddXml(
-		/*! file to write to */
-		char *filename );
+/*! This function is to dump the data loaded, with Nmap_Add, in the xml file. 
+ * @param [in] the xml file to use
+ */
+extern int Neuro_MultiAddXml(char *filename);
 
-/*! Reads a file that has a repetitive number of parent nodes (as set in the DtD). */
-extern struct node_map *Xmltool_MReadXml(
-		/*! the xml file. */
-		char *filename,				
-		/*! parent node of the node. */
-		char *parent_node, 			
-		/*! node that has a unique data(compared to the other nodes) */
-		char *node_name, 			
-		/*! content that the child 
-		 * must have to be recognised 
-		 */
-		char *content);
+/*! Reads a file that has a repetitive number of parent nodes (as set in the DtD). 
+ * @param [in] the xml file to use
+ * @param [in] the name of the parent node of the node to be read
+ * @param [in] the name of the node to be read
+ * @param [in] the content that the child must have to be recognised and read
+ */
+extern struct node_map *Neuro_MultiReadXml(char *filename, char *parent_node, char *node_name, char *content);
 
-/*! clean up Xmltools. Call this before the program closes, at least. */
-extern void Xmltool_Clean();
+/*! clean up Xmltools. Internally used */
+extern void Xxmltool_Clean();
 
 #endif /* __XMLTOOL_H */

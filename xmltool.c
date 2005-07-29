@@ -75,19 +75,19 @@ static xmlNodePtr *findNode(xmlDocPtr *doc, char *parent_name, char *child_name,
 
 /* prints the error description */
 void 
-Xmltool_GetError(int *destination)
+Neuro_XMLGetError(int *destination)
 {
 	*destination = xmlt_errno;
 }
 
 void 
-Xmltool_SetError(int source)
+Neuro_XMLSetError(int source)
 {
 	xmlt_errno = source;
 }
 
 void 
-Xmltool_Perror(char *message)
+Neuro_XMLPerror(char *message)
 {
 	int err = xmlt_errno;
 	err += 4;
@@ -96,7 +96,7 @@ Xmltool_Perror(char *message)
 }
 
 int 
-Xmltool_WriteToXml(char *filename, char *parent_name, char *node_name, char *node_info)
+Neuro_XMLWriteToXml(char *filename, char *parent_name, char *node_name, char *node_info)
 {
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -173,7 +173,7 @@ Xmltool_WriteToXml(char *filename, char *parent_name, char *node_name, char *nod
 }
 
 char *
-Xmltool_ReadFromXml(char *filename, char *parent_name, char *child_name)
+Neuro_ReadFromXml(char *filename, char *parent_name, char *child_name)
 {
 	/* might have to output the data 
 	 * in a struct or a pointer to a pointer, 
@@ -198,7 +198,7 @@ Xmltool_ReadFromXml(char *filename, char *parent_name, char *child_name)
 }
 
 int 
-Xmltool_EditToXml(char *filename, char *parent_name, char *child_name, char *content)
+Neuro_EditToXml(char *filename, char *parent_name, char *child_name, char *content)
 {/* simply changes the content of the given node to the new one inputted. */
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -227,7 +227,7 @@ Xmltool_EditToXml(char *filename, char *parent_name, char *child_name, char *con
 }
 
 int 
-Xmltool_RemoveFromXml(char *filename, char *parent_name, char *child_name)
+Neuro_RemoveFromXml(char *filename, char *parent_name, char *child_name)
 { /* remove the node of a parent, if the node is NULL or inexistant, remove the whole content of the parent or simply remove the empty parent node, in order. */
 	
 	xmlKeepBlanksDefault(0); /* to fix a libxml2 bug */
@@ -255,7 +255,7 @@ Xmltool_RemoveFromXml(char *filename, char *parent_name, char *child_name)
 }
 
 int 
-Xmltool_GetXmlDesc(char *filename)
+Neuro_GetXmlDesc(char *filename)
 {
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
@@ -282,13 +282,13 @@ Xmltool_GetXmlDesc(char *filename)
 		dtd = xmlGetIntSubset(doc); /* get the Xml Descriptor of the xml file which is located at the beginning of the file */
 		cur = (xmlNodePtr)dtd->children;
 		
-		Nmap_AddRoot((char*)cur->name);
+		Neuro_XMLAddRoot((char*)cur->name);
 		xmlNodePtr parent = cur->next;
 		cur = cur->next->next;
 		while (cur)
 		{
 			/* printf("getxmldesc %s\n", cur->name); */
-			Nmap_Add((char*)parent->name, (char*)cur->name, NULL);
+			Neuro_XMLAdd((char*)parent->name, (char*)cur->name, NULL);
 			if (cur->next)
 				cur = cur->next;
 			else 
@@ -302,7 +302,7 @@ Xmltool_GetXmlDesc(char *filename)
 }
 
 int 
-Xmltool_MAddXml(char *filename)
+Neuro_MultiAddXml(char *filename)
 {
 	xmlDocPtr doc;
 	xmlNodePtr cur;
@@ -316,7 +316,7 @@ Xmltool_MAddXml(char *filename)
 	xmlChar *pcdata = "(#PCDATA)";
 	*/
 	
-	NODE_MAP *n_map = Nmap_GetData();
+	NODE_MAP *n_map = Neuro_XMLGetData();
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
 		/* the file doesnt exist, so we start it up */
@@ -384,7 +384,7 @@ Xmltool_MAddXml(char *filename)
 }
 
 NODE_MAP *
-Xmltool_MReadXml(char *filename, char *parent_name, char *node_name, char *content)
+Neuro_MultiReadXml(char *filename, char *parent_name, char *node_name, char *content)
 { 
 	/* This function will check out the nodes in order until
 	 * it finds a subnode in it (node_name) that has a set content.
@@ -397,7 +397,7 @@ Xmltool_MReadXml(char *filename, char *parent_name, char *node_name, char *conte
 	 */
 	xmlDocPtr doc;
 	xmlNodePtr cur;
-	NODE_MAP *n_map = Nmap_GetData();
+	NODE_MAP *n_map = Neuro_XMLGetData();
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
 		error_handle2(FILE_UNEXIST);
@@ -441,7 +441,7 @@ Xmltool_MReadXml(char *filename, char *parent_name, char *node_name, char *conte
 			{
 				xmlChar *buf1 = (xmlChar*)xmlNodeListGetString(doc, cur->children,1);
 				/* printf("node name (%s) content (%s)\n", cur->name, buf1); */
-				Nmap_Add(parent_name, (char*)cur->name, (char*)buf1);
+				Neuro_XMLAdd(parent_name, (char*)cur->name, (char*)buf1);
 			}
 			if (cur->next)
 			{
@@ -454,7 +454,7 @@ Xmltool_MReadXml(char *filename, char *parent_name, char *node_name, char *conte
 
 	}
 	/* Debug printing of the struct n_map */
-	/* Nmap_PrintData(); */
+	/* Neuro_XMLPrintData(); */
 	
 	
 	xmlFreeDoc(doc);
@@ -468,7 +468,7 @@ createdtdheader(xmlDocPtr doc, char **buf1)
 {
 	char *elem = "<!ELEMENT ";
 	char *pcdata = " (#PCDATA)";
-	NODE_MAP *n_map = Nmap_GetData();
+	NODE_MAP *n_map = Neuro_XMLGetData();
 
 #if usexmlbuffer
 	

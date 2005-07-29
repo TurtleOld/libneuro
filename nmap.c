@@ -47,12 +47,12 @@ static char *rootnam = NULL;
 
 
 int 
-Nmap_AddRoot(char *rootname)
+Neuro_XMLAddRoot(char *rootname)
 {
 	/*printf("will add the root (%s)\n", rootname); */
 	if (!rootname)
 	{
-		Xmltool_SetError(INCORRECT_INPUT);
+		Neuro_XMLSetError(INCORRECT_INPUT);
 		return INCORRECT_INPUT;
 	}
 	if (n_map)
@@ -79,7 +79,7 @@ Nmap_AddRoot(char *rootname)
  * structure.
  */
 void 
-Nmap_PrintData()
+Neuro_XMLPrintData()
 {
 	unsigned int a = 0;
 	while (a < n_map->total_child)
@@ -92,7 +92,7 @@ Nmap_PrintData()
 
 /* returns the content of the child node . */ 
 char *
-Nmap_GetContent(char *child_name)
+Neuro_XMLGetContent(char *child_name)
 {
 	unsigned int a = 0;
 	/* printf("getcontent childs total %d\n", n_map->total_child); */
@@ -122,7 +122,7 @@ Nmap_GetContent(char *child_name)
  * other informations.
  */
 int 
-Nmap_Add(char *parent_name, char *child_name, char *content)
+Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 {
 	/* error nums : 
 	 * 1 if the arguments r empty,
@@ -132,7 +132,7 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
 	
 	if (!parent_name || !child_name)
 	{
-		Xmltool_SetError(INCORRECT_INPUT);
+		Neuro_XMLSetError(INCORRECT_INPUT);
 		return INCORRECT_INPUT;
 	}
 #if debug == 0
@@ -148,7 +148,7 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
 		new_pnode = 1;
 		n_map = (struct node_map*)calloc(1, sizeof(struct node_map));
 		if (!rootnam)
-			Nmap_AddRoot("_xml_root_");
+			Neuro_XMLAddRoot("_xml_root_");
 		else
 			rootnam = realloc(rootnam, 0);
 	}
@@ -229,14 +229,14 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
 			int cur_p_node = -1;	
 			if ((cur_p_node = give_parent_number(parent_name)) == PARENT_UNEXIST)
 			{
-				Xmltool_SetError(PARENT_UNEXIST);
+				Neuro_XMLSetError(PARENT_UNEXIST);
 				return cur_p_node;
 			}
 			
 			int cur_c_node = -1;
 			if ((cur_c_node = give_child_number(parent_name, child_name)) == CHILD_UNEXIST)
 			{
-				Xmltool_SetError(CHILD_UNEXIST);
+				Neuro_XMLSetError(CHILD_UNEXIST);
 				return cur_c_node;
 			}
 			if (!n_map[cur_p_node].child_content[cur_c_node])
@@ -246,7 +246,7 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
 				
 				if (!strcmp(n_map[cur_p_node].child_content[cur_c_node], content))
 				{
-					Xmltool_SetError(NODE_SAME_CONTENT);
+					Neuro_XMLSetError(NODE_SAME_CONTENT);
 					return NODE_SAME_CONTENT;
 					
 				}
@@ -261,7 +261,7 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
 		}
 		else
 		{
-			Xmltool_SetError(INCORRECT_INPUT);
+			Neuro_XMLSetError(INCORRECT_INPUT);
 			return INCORRECT_INPUT;
 		}
 	}
@@ -272,7 +272,7 @@ Nmap_Add(char *parent_name, char *child_name, char *content)
  * content.
  */
 int 
-Nmap_Del(char *parent_name, char *child_name)
+Neuro_XMLDel(char *parent_name, char *child_name)
 { /* errors : 1 is that n_map doesnt exist, 2 if the parent doesnt exist, 3 if the child node doesnt exist (if the child node doesnt exist and theres no more nodes, it will delete it) */
 	unsigned int todel = 0, loo = 0;
 	/* unsigned int totalc; */
@@ -448,14 +448,14 @@ Nmap_Del(char *parent_name, char *child_name)
  * for every nodes. char **child_content.
  */
 void 
-Nmap_ClearContent()
+Neuro_XMLClearContent()
 {
 	int a = 0;
 	unsigned int b = 0;
 
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return;
 	}
 	
@@ -479,7 +479,7 @@ Nmap_ClearContent()
  * from the exterior of this source.
  */
 NODE_MAP *
-Nmap_GetData()
+Neuro_XMLGetData()
 {
 	return (NODE_MAP*)n_map;
 }
@@ -498,7 +498,7 @@ give_parent_name(char *child_name)
 {
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return NULL;
 	}
 	else
@@ -533,7 +533,7 @@ give_parent_number(char *parent_name)
 
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return N_MAP_UNEXIST; 
 	}
 	else
@@ -548,7 +548,7 @@ give_parent_number(char *parent_name)
 			a++;
 		}
 	}
-	Xmltool_SetError(PARENT_UNEXIST);
+	Neuro_XMLSetError(PARENT_UNEXIST);
 	return PARENT_UNEXIST;
 }
 
@@ -562,14 +562,14 @@ give_child_number(char *parent_name, char *child_name)
 
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return N_MAP_UNEXIST; 
 	}
 	else
 	{
 		if (pnum == PARENT_UNEXIST)
 		{
-			Xmltool_SetError(PARENT_UNEXIST);
+			Neuro_XMLSetError(PARENT_UNEXIST);
 			return pnum;
 		}
 		while (a < t_child)
@@ -579,7 +579,7 @@ give_child_number(char *parent_name, char *child_name)
 			a++;
 		}
 	}
-	Xmltool_SetError(CHILD_UNEXIST);
+	Neuro_XMLSetError(CHILD_UNEXIST);
 	return CHILD_UNEXIST;		
 }
 
@@ -597,14 +597,14 @@ check_node_struct(char *parent_name, char *child_name)
 
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return N_MAP_UNEXIST; 
 	}
 	else
 	{
 		if ((p_num = give_parent_number(parent_name)) == PARENT_UNEXIST)
 		{
-			Xmltool_SetError(PARENT_UNEXIST);
+			Neuro_XMLSetError(PARENT_UNEXIST);
 			return p_num; /* happens if the parent_name doesnt exist */
 		}
 		while (a < n_map[p_num].total_child)
@@ -614,7 +614,7 @@ check_node_struct(char *parent_name, char *child_name)
 			a++;
 		}
 	}
-	Xmltool_SetError(CHILD_UNEXIST);
+	Neuro_XMLSetError(CHILD_UNEXIST);
 	return CHILD_UNEXIST;
 }
 
@@ -629,15 +629,15 @@ clear_nmap()
 
 	if (!n_map)
 	{
-		Xmltool_SetError(N_MAP_UNEXIST);
+		Neuro_XMLSetError(N_MAP_UNEXIST);
 		return;
 	}
 	
 	while (a >= 0)
 	{
 		while (n_map->total_child != 0)
-			Nmap_Del(n_map->parent_name, n_map[a].child_nodes[0]);
-		Nmap_Del(n_map->parent_name, NULL);
+			Neuro_XMLDel(n_map->parent_name, n_map[a].child_nodes[0]);
+		Neuro_XMLDel(n_map->parent_name, NULL);
 		a--;
 	}
 }

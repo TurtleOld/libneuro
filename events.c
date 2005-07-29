@@ -193,7 +193,7 @@ mouseListChange(u32 button, void (*callback)(), u32 listCursor, u8 click_release
 /*--- Global Functions ---*/
 
 void 
-Events_AddPressedKeyEvent(u32 keysym, void (*callback)())
+Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 {
 	if (KEventList.kevents == NULL)
 	{
@@ -212,7 +212,7 @@ Events_AddPressedKeyEvent(u32 keysym, void (*callback)())
 }
 
 void
-Events_AddPressedMouseEvent(u32 button, void (*callback)())
+Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 {
 	printf("adding mouse event\n");
 	u32 i = 0;
@@ -239,7 +239,7 @@ Events_AddPressedMouseEvent(u32 button, void (*callback)())
 }
 
 void
-Events_AddReleasedMouseEvent(u32 button, void (*callback)())
+Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 {
 	u32 i = 0;
 	if (MEventList.mevents == NULL)
@@ -263,6 +263,19 @@ Events_AddReleasedMouseEvent(u32 button, void (*callback)())
 	mouseListChange(button, callback, MEventList.total, 1);
 	MEventList.total++;
 }
+
+void
+Neuro_CleanKeyb()
+{
+	clean_keyboard();
+}
+
+void
+Neuro_CleanMouse()
+{
+	clean_mouse();
+}
+
 
 /*--- Poll ---*/
 void
@@ -348,17 +361,5 @@ void
 Events_Clean()
 {
 	clean_keyboard();
-	clean_mouse();
-}
-
-void
-Events_CleanKeyb()
-{
-	clean_keyboard();
-}
-
-void
-Events_CleanMouse()
-{
 	clean_mouse();
 }

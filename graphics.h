@@ -11,6 +11,12 @@
 #include "engine.h"
 #include "other.h"
 
+#include <stdlib.h>
+
+#if USE_SDL
+#include <SDL.h>
+#endif
+
 /*! default : 60
  * the maximum amount of frames per seconds -deprecated-
  */
@@ -35,6 +41,8 @@
 /*! The Total screen height (can be changed before compile time to set the new size) */
 #define SCREEN_Y 600
 
+extern void *Neuro_GetScreenBuffer();
+
 /*! Add a Drawing Instruction to the graphics loop. This function will
  * put take the image, place it in a special buffer and then draw the image
  * with the desired draw time(in comparison with other to draw images : layer) and 
@@ -46,12 +54,12 @@
  * @param [in] dst the coordinate where the image must be drawn to.
  * @param [in] surface the pointer to the image itself.
  */
-extern void Graphics_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void *surface);
+extern void Neuro_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void *surface);
 
 #ifdef USE_SDL
 /*! convert Rectan to SDL_Rect 
  */
-extern SDL_Rect *Graphics_CNtoSDL(Rectan *source);
+extern SDL_Rect *Neuro_CNtoSDL(Rectan *source);
 #endif /* USE_SDL */
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
@@ -59,36 +67,36 @@ extern SDL_Rect *Graphics_CNtoSDL(Rectan *source);
  * @param [in] func this is the callback function that the graphics engine will loop and 
  * run every cycles 
  */
-extern void Graphics_AddDrawingElement(void (*func)());
+extern void Neuro_AddDrawingElement(void (*func)());
 
 /* directly draw a surface on the screen without
  * the layering feature.
  */
-extern void Graphics_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
+extern void Neuro_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 
 /*! use this function to set the background */
-extern void Graphics_AddBackground(void *isurface);
+extern void Neuro_AddBackground(void *isurface);
 
 /*! give the current fps */
-extern void Graphics_GiveFPS(t_tick *output);
+extern void Neuro_GiveFPS(t_tick *output);
 
 /* draw a pixel on the screen */
-extern void Graphics_PutPixel(u32 x, u32 y, u32 pixel);
+extern void Neuro_PutPixel(u32 x, u32 y, u32 pixel);
 
 /* get the color of a pixel on the screen */
-extern u32 Graphics_GetPixel(u32 x, u32 y);
+extern u32 Neuro_GetPixel(u32 x, u32 y);
 
 
 typedef struct ENGINEBUF ENGINEBUF;
 
 
-extern void Graphics_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj);
+extern void Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj);
 
-extern void Graphics_CleanEngineBuffer(ENGINEBUF *eng);
+extern void Neuro_CleanEngineBuffer(ENGINEBUF *eng);
 
 
 
-/*! Initialisation of the Graphics Engine */
+/*! internal use Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);
 /*! Poll of the Graphics Engine */
 extern void Graphics_Poll(void);

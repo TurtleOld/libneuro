@@ -21,9 +21,9 @@
 /*--- Global Functions ---*/
 
 void
-Dbg_Print(char *message, char *funcName, u32 lineNum)
+Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum)
 {
-	fprintf(stderr, "%s:%d -- %s\n", funcName, lineNum, message);
+	fprintf(stderr, "%s:%s:%d -- %s\n", filename, funcName, lineNum, message);
 }
 
 /*--- Poll ---*/
