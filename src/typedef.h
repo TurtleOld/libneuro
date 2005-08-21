@@ -46,4 +46,6 @@ typedef struct Rectan
 	u16 x, y, w, h;
 }Rectan;
 
+typedef void v_object;
+
 #endif /* __TYPEDEF_H */

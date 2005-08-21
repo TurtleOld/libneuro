@@ -26,7 +26,6 @@ include_HEADERS= \
 		     events.h \
 		     graphics.h \
 		     other.h \
-		     sdl.h \
 		     xml/xmltool.h \
 		     xml/nmap.h \
 		     engine.h \

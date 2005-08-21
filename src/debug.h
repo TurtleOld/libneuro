@@ -6,7 +6,7 @@
 #include "engine.h"
 
 /*! TODO */
-extern void Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum);
+extern inline void Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum) __attribute__ ((__always_inline__));
 
 /*! TODO */
 /*

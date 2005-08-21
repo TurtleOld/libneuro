@@ -20,7 +20,7 @@
 
 /*--- Global Functions ---*/
 
-void
+inline void
 Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum)
 {
 	fprintf(stderr, "%s:%s:%d -- %s\n", filename, funcName, lineNum, message);

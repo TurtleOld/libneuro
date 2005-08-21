@@ -86,12 +86,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h> /* to calculate the frames per second (fps) */
-#ifdef USE_SDL
-	#include <SDL.h>
-#endif /* USE_SDL */
-
+ 
 /*--- Local Headers Including ---*/
 #include "typedef.h"
+#include "extlib.h"
 
 /*--- Main Module Header ---*/
 #include "graphics.h"
@@ -138,12 +136,10 @@ typedef struct PIXEL_ENGINE
 	u32 x, y;
 }PIXEL_ENGINE;
 
-#ifdef USE_SDL
-static SDL_Surface *screen; /* the screen surface */
-static SDL_Surface *sclScreen; /* attempt to do a double buffered screen */
-#endif /* USE_SDL */
+static v_object *screen; /* the screen surface */
+static v_object *sclScreen; /* attempt to do a double buffered screen */
 
-static void *background; /* the background image */
+static v_object *background; /* the background image */
 
 
 static INSTRUCTION_ENGINE *last_element;
@@ -180,26 +176,22 @@ static void cleanQueue();
 static void cleanRaw();
 
 static void computeRawEngine(RAW_ENGINE *toadd);
-#if obsolete
-static void compute_instructionqueue();
-#endif /* obsolete */
 
-#if debug_instruction_buffer
-static void print_queue();
-#endif /* debug_instruction_buffer */
+/* debug print of the instruction queue */
+static void print_queue() __attribute__ ((__unused__));
 
 static void flush_queue();
 /* update only a part of the screen */
 static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
-static int secureBoundsCheck(Rectan *rect);
+static inline int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
 /* clean the screen of the handled pixels drawn */
 static void cleanPixels();
 
 /*--- Static Functions ---*/
 
 /* check if the rectangle can be securly blit to the main screen */
-static int
+static inline int
 secureBoundsCheck(Rectan *rect)
 {
 	/* normal bounds check */
@@ -214,13 +206,7 @@ secureBoundsCheck(Rectan *rect)
 static void
 updScreen(Rectan *rect)
 {
-	if (USE_SDL)
-	{
-		if (rect)
-			SDL_UpdateRect(screen, rect->x, rect->y, rect->w, rect->h);
-		else
-			SDL_UpdateRect(screen, 0, 0, 0, 0);
-	}
+	Lib_UpdateRect(screen, rect);
 }
 
 static void
@@ -241,8 +227,6 @@ cleanQueue()
 	cleanEngineBuffer(&_Queue);	
 }
 
-
-#if debug_instruction_buffer
 static void
 print_queue()
 {
@@ -260,7 +244,6 @@ print_queue()
 			cur = cur->next;
 	}
 }
-#endif /* debug_instruction_buffer */
 
 /* compute the instruction_engine everytime
  * a new raw is added.
@@ -407,17 +390,11 @@ cleanPixels()
 			buf.w = 1;
 			buf.h = 1;
 			
-			if (USE_SDL)
-			{	
-				SDL_BlitSurface((SDL_Surface*)background, 
-					Neuro_CNtoSDL(&buf), sclScreen, 
-					Neuro_CNtoSDL(&buf));
-			
-				/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
-				/* Neuro_PutPixel(buf.x, buf.y, 
-						Other_GetPixel(background, buf.x, buf.y));
-				*/
-			}
+			Lib_BlitObject(background, &buf, sclScreen, &buf);
+			/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
+			/* Neuro_PutPixel(buf.x, buf.y, 
+					Other_GetPixel(background, buf.x, buf.y));
+			*/
 		}
 	}
 	cleanEngineBuffer(&_Pixel);
@@ -459,19 +436,12 @@ flush_queue()
 			buf.h = cur->current->src.h - 1;
 			if (!secureBoundsCheck(&buf))
 			{
-#ifdef USE_SDL	
 				if (background)
 				{
-					SDL_BlitSurface((SDL_Surface*)background, 
-						Neuro_CNtoSDL(&cur->current->dst), sclScreen, 
-						Neuro_CNtoSDL(&cur->current->dst));
+					Lib_BlitObject(background, &cur->current->dst, sclScreen, 
+						&cur->current->dst);
 	
 				}
-				else
-				{
-					/* SDL_FillRect(sclScreen, Neuro_CNtoSDL(&cur->current->dst), 0);*/
-				}	
-#endif /* USE_SDL */
 				/* updScreen(&buf); */
 			}
 			else
@@ -486,9 +456,7 @@ flush_queue()
 	}
 	else if (!background)
 	{
-#ifdef USE_SDL
-		SDL_FillRect(sclScreen, 0, 0);
-#endif /* USE_SDL */
+		Lib_FillRect(sclScreen, 0, 0);
 	}
 	
 	/* start the real drawing */
@@ -508,12 +476,9 @@ flush_queue()
 		buf.h = cur->current->src.h - 1;
 		if (!secureBoundsCheck(&buf))
 		{
-#ifdef USE_SDL		
-			SDL_BlitSurface((SDL_Surface*)cur->current->surface_ptr, 
-					Neuro_CNtoSDL(&cur->current->src), sclScreen, 
-					Neuro_CNtoSDL(&cur->current->dst));
-#endif /* USE_SDL */
-			/* updScreen(&buf); */
+			Lib_BlitObject(cur->current->surface_ptr, 
+					&cur->current->src, sclScreen, 
+					&cur->current->dst);
 		}
 		else
 		{
@@ -625,25 +590,6 @@ Neuro_CleanEngineBuffer(ENGINEBUF *eng)
 	/* printf("cleaned the Engine buffers\n"); */
 }
 
-/* convert native rectangle structure (Rectan) to SDL rectangle structure (SDL_Rect) */
-#if USE_SDL
-SDL_Rect *
-Neuro_CNtoSDL(Rectan *source)
-{
-	/*
-	SDL_Rect out;
-
-	out.x = (i16)source->x;
-	out.y = (i16)source->y;
-	out.w = source->w;
-	out.h = source->h;
-
-	return &out;
-	*/
-	return (SDL_Rect*)source;
-}
-#endif /* USE_SDL */
-
 void
 Neuro_GiveFPS(t_tick *output)
 {
@@ -652,22 +598,21 @@ Neuro_GiveFPS(t_tick *output)
 
 /* use this function to set the background */
 void
-Neuro_AddBackground(void *isurface)
+Neuro_AddBackground(v_object *isurface)
 {
 	background = isurface;
-	
-#ifdef USE_SDL
-	SDL_Surface *tmp = background;
-	SDL_Rect src;
+	Rectan buf;
+	Rectan src;
+
+	Lib_GiveVobjectProp(background, &buf);
 
 	src.x = 0;
 	src.y = 0;
-	src.h = tmp->h;
-	src.w = tmp->w;
+	src.h = buf.h;
+	src.w = buf.w;
 	
-	SDL_BlitSurface(tmp, NULL, sclScreen, (SDL_Rect*)&src);
-	SDL_Flip(sclScreen);
-#endif /* USE_SDL */
+	Lib_BlitObject(background, NULL, sclScreen, &src);
+	Lib_Flip(sclScreen);
 }
 
 /* - layer is the priority by which it much be drawn.
@@ -713,16 +658,13 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 }
 
 void 
-Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, void *isurface)
+Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
 {
-#ifdef USE_SDL
-	SDL_BlitSurface((SDL_Surface*)isurface, 
-			Neuro_CNtoSDL(isrc), screen, Neuro_CNtoSDL(idst));
+	Lib_BlitObject(isurface, isrc, screen, idst);
 	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
 	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
-	SDL_Flip(screen);
-#endif /* USE_SDL */
+	Lib_Flip(screen);
 }
 
 /* external modules call this function
@@ -763,10 +705,7 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 	buf = (PIXEL_ENGINE***)&tmp->buffer;
 	current = tmp->total - 1;
 	
-#ifdef USE_SDL
 	Neuro_RawPutPixel(sclScreen, x, y, pixel);
-#endif /* USE_SDL */
-
 	
 	(*buf)[current]->x = x;
 	(*buf)[current]->y = y;
@@ -781,11 +720,7 @@ Neuro_GetScreenBuffer()
 u32
 Neuro_GetPixel(u32 x, u32 y)
 {
-#ifdef USE_SDL
 	return Neuro_RawGetPixel(screen, x, y);
-#else
-	return 0;
-#endif /* USE_SDL */
 }
 
 void
@@ -804,10 +739,6 @@ Graphics_Poll()
 {
 	ENGINEBUF *tmp;
 	DRAWING_ELEMENTS ***buf;
-#ifdef USE_SDL
-	Rectan rect;
-#endif /* USE_SDL */
-	
 	
 	u32 loo = 0;
 	const u32 frameSkipMax = 0;
@@ -835,19 +766,6 @@ Graphics_Poll()
 	else
 		lFps = 0;
 
-	
-#ifdef USE_SDL
-	rect.x = 0;
-	rect.y = 0;
-	rect.w = screen->w;
-	rect.h = screen->h;
-	/* SDL_FillRect(screen, &rect, color_black); */
-	
-	/*
-	 * SDL_FillRect(screen, 0, 0);
-	 * SDL_UpdateRect(screen, 0, 0, SCREEN_X, SCREEN_Y);
-	*/
-#endif /* USE_SDL */
 	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
 			(int)&Neuro_ShowImage); */
 	/* printf("debug of the Neuro_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
@@ -887,9 +805,9 @@ Graphics_Poll()
 	/* update the full screen */
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	/* SDL_Flip(screen); */
-#ifdef USE_SDL
-	SDL_BlitSurface(sclScreen, NULL, screen, NULL);
-#endif /* USE_SDL */
+
+	Lib_BlitObject(sclScreen, NULL, screen, NULL);
+
 	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	updScreen(0);
 		
@@ -902,19 +820,23 @@ Graphics_Poll()
 int
 Graphics_Init()
 {
+	int _err_;
 	ltime = time(NULL);
 
+	_err_ = 0;
 	/* will need to be configurable */
-#ifdef USE_SDL
-	screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
+	_err_ = Lib_VideoInit(&screen, &sclScreen);
+	
+	/* screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
 
 	if (screen == NULL)
 	{
 		perror("SDL_SetVideoMode()");
 		return 1;
 	}
+	*/
 
-	sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, screen->format->BitsPerPixel, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask);
+	/* sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, screen->format->BitsPerPixel, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask); */
 	
 	/* 
 	 * printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
@@ -924,8 +846,7 @@ Graphics_Init()
 			sizeof(SDL_Surface*),
 			sizeof(u8)); 
 	*/
-#endif /* USE_SDL */
-	return 0;
+	return _err_;
 }
 
 /* convertion : done
@@ -940,9 +861,8 @@ Graphics_Clean()
 	cleanEngineBuffer(b_Queue);
 	cleanEngineBuffer(b_Raw);
 	cleanEngineBuffer(&_Pixel);
+	Lib_FreeVobject(screen);
+	Lib_FreeVobject(sclScreen);
 	
-#ifdef USE_SDL
-	SDL_FreeSurface(screen);
-	SDL_FreeSurface(sclScreen);
-#endif /* USE_SDL */
+	Lib_VideoExit();
 }

@@ -271,6 +271,3 @@ Neuro_PrintFPS()
 		printf("current fps : %d\n", fps);
 	}
 }
-
-
-
