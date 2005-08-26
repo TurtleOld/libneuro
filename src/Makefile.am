@@ -23,6 +23,7 @@ libneuro_la_LIBADD = \
 
 include_HEADERS= \
 		     debug.h \
+		     extlib.h \
 		     events.h \
 		     graphics.h \
 		     other.h \

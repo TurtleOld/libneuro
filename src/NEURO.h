@@ -9,6 +9,7 @@
 #include "typedef.h"
 
 #include "debug.h"
+#include "extlib.h"
 #include "graphics.h"
 #include "events.h"
 #include "sdl.h"

@@ -9,6 +9,7 @@
 extern inline void Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum) __attribute__ ((__always_inline__));
 
 /*! TODO */
+#define DbgP(x) Neuro_DebugPrint(x, __FILE__, __FUNCTION__, __LINE__) 
 /*
 #define Dbg(x) Dbg_Print(x, __FUNCTION__, __LINE__)
 */
