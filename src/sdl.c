@@ -126,7 +126,7 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	if (!source || !destination)
 		return;
 	
-	SDL_BlitSurface((SDL_Surface*)source, (SDL_Rect*)src, destination, (SDL_Rect*)dst);
+	SDL_BlitSurface((SDL_Surface*)source, (SDL_Rect*)src, (SDL_Surface*)destination, (SDL_Rect*)dst);
 }
 
 void

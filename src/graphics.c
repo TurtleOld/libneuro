@@ -446,7 +446,7 @@ flush_queue()
 			}
 			else
 			{
-				/* printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1); */
+				printf("[reset] catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
 			}
 			/* if (cur->next == NULL)
 				printf("the next elements seems to be NULL\n");
@@ -482,7 +482,7 @@ flush_queue()
 		}
 		else
 		{
-			/* printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1); */
+			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
 		}
 		/* if (cur->next == NULL)
 			printf("the next elements seems to be NULL\n");
@@ -698,7 +698,20 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 	ENGINEBUF *tmp;
 	PIXEL_ENGINE ***buf;
 	u32 current;
+	Rectan check;
+
 	
+	check.x = x;
+	check.y = y;
+	check.h = 1;
+	check.w = 1;
+	
+	if (secureBoundsCheck(&check))
+	{
+		DbgP("Unsecure Pixel position have been catched, dropping the instruction\n");
+		return;
+	}
+
 	tmp = &_Pixel;
 	allocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
 	

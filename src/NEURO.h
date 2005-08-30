@@ -12,7 +12,6 @@
 #include "extlib.h"
 #include "graphics.h"
 #include "events.h"
-#include "sdl.h"
 #include "nmap.h"
 #include "xmltool.h"
 #include "other.h"
