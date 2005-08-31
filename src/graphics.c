@@ -194,6 +194,8 @@ static void cleanPixels();
 static inline int
 secureBoundsCheck(Rectan *rect)
 {
+	Rectan screenb;
+#if oldboundscheck
 	/* normal bounds check */
 	if (rect->x >= SCREEN_X || rect->y >= SCREEN_Y)
 		return 1;
@@ -201,6 +203,14 @@ secureBoundsCheck(Rectan *rect)
 	if (rect->x + rect->w >= SCREEN_X || rect->y + rect->h >= SCREEN_Y)
 		return 1;
 	return 0;
+#endif /* oldboundscheck */
+	
+	screenb.x = 0;
+	screenb.y = 0;
+	screenb.h = SCREEN_Y;
+	screenb.w = SCREEN_X;
+
+	return Neuro_BoundsCheck(&screenb, rect);
 }
 
 static void

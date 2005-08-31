@@ -37,5 +37,6 @@ extern void Neuro_Sleep(u32 t);
 
 extern void Neuro_PrintFPS();
 
+extern inline u8 Neuro_BoundsCheck(Rectan *indep, Rectan *depen);
 
 #endif /* __OTHER_H */
