@@ -49,7 +49,7 @@ AC_PROG_CC
 AM_PROG_LIBTOOL
 
 # set the flags
-CFLAGS="$CFLAGS -std=gnu99 -Wall -pedantic -I\$(top_srcdir)/src"
+CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
 SDLFLAGS="$(sdl-config --cflags)"
 #NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
 XML2FLAGS="-I/usr/include/libxml2"

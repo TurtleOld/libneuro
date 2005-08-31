@@ -214,8 +214,9 @@ Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 void
 Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 {
-	printf("adding mouse event\n");
 	u32 i = 0;
+	
+	printf("adding mouse event\n");
 	if (MEventList.mevents == NULL)
 	{
 		MEventList.mevents = (MEVENTLIST*)calloc(1, sizeof(MEVENTLIST));

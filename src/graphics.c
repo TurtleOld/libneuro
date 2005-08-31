@@ -184,14 +184,14 @@ static void flush_queue();
 /* update only a part of the screen */
 static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
-static inline int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
+static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
 /* clean the screen of the handled pixels drawn */
 static void cleanPixels();
 
 /*--- Static Functions ---*/
 
 /* check if the rectangle can be securly blit to the main screen */
-static inline int
+static int
 secureBoundsCheck(Rectan *rect)
 {
 	Rectan screenb;
@@ -238,7 +238,7 @@ cleanQueue()
 }
 
 static void
-print_queue()
+print_queue() __attribute__ ((__unused__))
 {
 	INSTRUCTION_ENGINE *cur = *_Queue.buffer;
 	
@@ -423,7 +423,7 @@ flush_queue()
 
 	tmp = b_Queue;
 	
-	if (tmp && background)
+	if (tmp)
 	{
 		
 		if (tmp->buffer)
@@ -452,6 +452,10 @@ flush_queue()
 						&cur->current->dst);
 	
 				}
+				else
+				{
+					Lib_FillRect(sclScreen, &cur->current->dst, 0);
+				}
 				/* updScreen(&buf); */
 			}
 			else
@@ -464,10 +468,12 @@ flush_queue()
 			cur = cur->next;
 		}
 	}
+	/*
 	else if (!background)
 	{
 		Lib_FillRect(sclScreen, 0, 0);
 	}
+	*/
 	
 	/* start the real drawing */
 	tmp = &_Queue;
@@ -610,10 +616,11 @@ Neuro_GiveFPS(t_tick *output)
 void
 Neuro_AddBackground(v_object *isurface)
 {
-	background = isurface;
 	Rectan buf;
 	Rectan src;
 
+
+	background = isurface;
 	Lib_GiveVobjectProp(background, &buf);
 
 	src.x = 0;

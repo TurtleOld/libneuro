@@ -129,7 +129,13 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 	 * 2 if the child_name is already there,
 	 * 3 is that theres a big error internal to this alghorithm
 	 */
-	
+	int o_checknode;	
+	unsigned char new_pnode;
+	char *p_name;
+
+
+	new_pnode = 0;
+	p_name = NULL;
 	if (!parent_name || !child_name)
 	{
 		Neuro_XMLSetError(INCORRECT_INPUT);
@@ -138,9 +144,6 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 #if debug == 0
 	printf("Asking to Create the Parent (%s) and/or the child (%s)\n", parent_name, child_name);
 #endif
-	int o_checknode;	
-	unsigned char new_pnode = 0;
-	char *p_name = NULL;
 	if (!n_map)
 	{
 		/* printf("creating the new struct n_map\n"); */
@@ -165,7 +168,8 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 	{	
 		/* printf("The child node doesnt exist, everything goes well\n"); */
 		int cur_p_node = -1;
-		
+		int c_total;
+
 		if (new_pnode == 1)
 		{
 			n_map->parent_name = (char*)calloc(1, strlen(parent_name));
@@ -187,7 +191,7 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 			*/
 			cur_p_node = 0;
 		}
-		int c_total = n_map[cur_p_node].total_child;
+		c_total = n_map[cur_p_node].total_child;
 		if (!n_map[cur_p_node].child_nodes)
 		{
 			n_map[cur_p_node].child_nodes = (char**)calloc(1, sizeof(char*));
@@ -227,13 +231,14 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 		if (content)
 		{
 			int cur_p_node = -1;	
+			int cur_c_node = -1;
+			
 			if ((cur_p_node = give_parent_number(parent_name)) == PARENT_UNEXIST)
 			{
 				Neuro_XMLSetError(PARENT_UNEXIST);
 				return cur_p_node;
 			}
 			
-			int cur_c_node = -1;
 			if ((cur_c_node = give_child_number(parent_name, child_name)) == CHILD_UNEXIST)
 			{
 				Neuro_XMLSetError(CHILD_UNEXIST);
@@ -402,8 +407,9 @@ Neuro_XMLDel(char *parent_name, char *child_name)
 	}
 	
 	
-	// destroy a parent only, if its empty only
-	// TODO : if the child_name is NULL and if the total_child isnt, delete them all.
+	/* destroy a parent only, if its empty only
+	 TODO : if the child_name is NULL and if the total_child isnt, delete them all.
+	 */
 	if (child_name == NULL && n_map->total_child == 0)
 	{
 		/* printf("asked to free the struct n_map completely\n"); */

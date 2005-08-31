@@ -103,19 +103,19 @@ Neuro_XMLWriteToXml(char *filename, char *parent_name, char *node_name, char *no
 	
 	/* int pnum = 0;
 	pnum = give_parent_number(parent_name); */
-	if (open(filename, 0644) == -1) // check to see if the file exist
+	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
-		// the file doesnt exist, so we start it up
+		/* the file doesnt exist, so we start it up */
 		doc = xmlNewDoc(NULL);
 		cur = xmlNewDocRawNode(doc, NULL, (const xmlChar*)parent_name, NULL);
 		xmlDocSetRootElement(doc, cur);
 		xmlNewTextChild(cur, NULL, (const xmlChar*)node_name, (const xmlChar*)node_info);
-		/*
-		cur = xmlNewChild(cur, NULL, (const xmlChar*)parent_name, (const xmlChar*)NULL);
 		
+		cur = xmlNewChild(cur, NULL, (const xmlChar*)parent_name, (const xmlChar*)NULL);
+#if oldstuff
 		if (pnum == -1)
 		{
-			//xmlAddChild(cur, xmlNewChild(cur, NULL, (const xmlChar*)node_name, NULL));
+			/* xmlAddChild(cur, xmlNewChild(cur, NULL, (const xmlChar*)node_name, NULL)); */
 			xmlNewTextChild(cur, NULL, (const xmlChar*)node_name, (const xmlChar*)node_info);
 		}
 		else
@@ -130,7 +130,7 @@ Neuro_XMLWriteToXml(char *filename, char *parent_name, char *node_name, char *no
 					a++;
 				}	
 			}
-		*/
+#endif /* oldstuff */	
 		xmlSaveFormatFile(filename, doc, 1);
 		xmlFreeDoc(doc);
 	}
@@ -183,8 +183,10 @@ Neuro_ReadFromXml(char *filename, char *parent_name, char *child_name)
 	 */ 
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+	xmlChar *output;
+	
 	doc = xmlParseFile(filename);
-	xmlChar *output = NULL;
+	output = NULL;
 
 	cur = (xmlNodePtr)findNode((xmlDocPtr*)&doc, parent_name, child_name, NULL);
 	if (cur)
@@ -202,13 +204,15 @@ Neuro_EditToXml(char *filename, char *parent_name, char *child_name, char *conte
 {/* simply changes the content of the given node to the new one inputted. */
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+	int _err_;
+	
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
 		xmlt_errno = FILE_UNEXIST;
 		return FILE_UNEXIST;
 	}
 	doc = xmlParseFile(filename);
-	int _err_ = 0;
+	_err_ = 0;
 	
 	cur = (xmlNodePtr)findNode((xmlDocPtr*)&doc, parent_name, child_name, NULL);
 	if (cur)
@@ -229,10 +233,12 @@ Neuro_EditToXml(char *filename, char *parent_name, char *child_name, char *conte
 int 
 Neuro_RemoveFromXml(char *filename, char *parent_name, char *child_name)
 { /* remove the node of a parent, if the node is NULL or inexistant, remove the whole content of the parent or simply remove the empty parent node, in order. */
-	
-	xmlKeepBlanksDefault(0); /* to fix a libxml2 bug */
 	xmlDocPtr doc;
 	xmlNodePtr cur;
+	int _err_ = 0;
+
+
+	xmlKeepBlanksDefault(0); /* to fix a libxml2 bug */
 	
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
@@ -240,7 +246,7 @@ Neuro_RemoveFromXml(char *filename, char *parent_name, char *child_name)
 		return FILE_UNEXIST;
 	}
 	doc = xmlParseFile(filename);
-	int _err_ = 0;
+	
 	cur = (xmlNodePtr)findNode((xmlDocPtr*)&doc, parent_name, child_name, NULL);
 	if (cur)
 		xmlUnlinkNode(cur);
@@ -267,6 +273,7 @@ Neuro_GetXmlDesc(char *filename)
 		xmlDtdPtr dtd; /* the xml description */
 	       	xmlValidCtxtPtr ctxt; /* the xml context for validation */
 	       	xmlNodePtr cur; /* the xml temporary node pointer */
+		xmlNodePtr parent;
 		
 		doc = xmlParseFile(filename);
 		ctxt = xmlNewValidCtxt();
@@ -283,7 +290,7 @@ Neuro_GetXmlDesc(char *filename)
 		cur = (xmlNodePtr)dtd->children;
 		
 		Neuro_XMLAddRoot((char*)cur->name);
-		xmlNodePtr parent = cur->next;
+		parent = cur->next;
 		cur = cur->next->next;
 		while (cur)
 		{
@@ -319,6 +326,8 @@ Neuro_MultiAddXml(char *filename)
 	NODE_MAP *n_map = Neuro_XMLGetData();
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
+		xmlBufferPtr buf;
+		
 		/* the file doesnt exist, so we start it up */
 		doc = xmlNewDoc(NULL);
 		cur = xmlNewDocRawNode(doc, NULL, (const xmlChar*)n_map->root_name, NULL);
@@ -332,7 +341,7 @@ Neuro_MultiAddXml(char *filename)
 			a++;
 		}	
 		
-		xmlBufferPtr buf = createdtdheader(doc, &buf1);
+		buf = createdtdheader(doc, &buf1);
 		if (!buf1)
 			printf("madd debug buf1 is empty, thats why it crashes\n");
 		dtd = xmlCreateIntSubset(doc, (xmlChar*)buf1, NULL, NULL);
@@ -353,10 +362,12 @@ Neuro_MultiAddXml(char *filename)
 	}
 	else
 	{
+		xmlValidCtxtPtr ctxt;
+		unsigned int a;
 		
 		xmlKeepBlanksDefault(0);
 		doc = xmlParseFile(filename);
-		xmlValidCtxtPtr ctxt = xmlNewValidCtxt();
+		ctxt = xmlNewValidCtxt();
 		
 		if (!xmlValidateDocument(ctxt, doc))
 		{
@@ -370,7 +381,7 @@ Neuro_MultiAddXml(char *filename)
 		
 		cur = xmlNewTextChild(cur, NULL, (const xmlChar*)n_map->parent_name, (const xmlChar*)NULL);
 		
-		unsigned int a = 0;
+		a = 0;
 		while (a < n_map->total_child)
 		{
 			 xmlNewTextChild(cur, NULL, (const xmlChar*)n_map->child_nodes[a], (const xmlChar*)n_map->child_content[a]);
@@ -398,6 +409,8 @@ Neuro_MultiReadXml(char *filename, char *parent_name, char *node_name, char *con
 	xmlDocPtr doc;
 	xmlNodePtr cur;
 	NODE_MAP *n_map = Neuro_XMLGetData();
+	xmlValidCtxtPtr ctxt;
+	
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
 		error_handle2(FILE_UNEXIST);
@@ -410,7 +423,7 @@ Neuro_MultiReadXml(char *filename, char *parent_name, char *node_name, char *con
 	}
 
 	doc = xmlParseFile(filename);
-	xmlValidCtxtPtr ctxt = xmlNewValidCtxt();
+	ctxt = xmlNewValidCtxt();
 		
 	if (!xmlValidateDocument(ctxt, doc))
 	{

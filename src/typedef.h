@@ -20,8 +20,8 @@ typedef signed char i8;
 typedef signed short i16;
 /*! TODO */
 typedef signed int i32;
-/*! TODO */
-typedef signed long long i64;
+/*! TODO long long is not ansi compliant */
+/* typedef signed long long i64; */
 
 /*! \section unsigned 
  * the 1st bit from the left is also used to store data instead of a negative toggle 
@@ -32,8 +32,8 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 /*! TODO */
 typedef unsigned int u32;
-/*! TODO */
-typedef unsigned long long u64;
+/*! TODO long long is not ansi compliant */
+/* typedef unsigned long long u64; */
 
 /* \section other */
 

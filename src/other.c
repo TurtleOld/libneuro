@@ -14,6 +14,7 @@
 	#define WINDOWS_MEAN_AND_LEAN
 	#include <windows.h>
 #else /* NOT WIN32 */
+	#define __USE_BSD
 	#include <unistd.h>
 #endif /* NOT WIN32 */
 
@@ -104,12 +105,14 @@ Neuro_SepChr(const unsigned char chr, char *source, int *items)
 {/* separate characters of words */
 	char **ending = NULL;
 	u32 slen = strlen(source);
-	if (slen == 0)
-		return 0;
 	u32 o_total = 0;
 	char *object;
 	u32 o_ptr = 0;
 	u32 last_ptr = 0;
+
+	
+	if (slen == 0)
+		return 0;
 	while ((last_ptr + o_ptr) < slen)
 	{
 		if (o_ptr == 0)
@@ -154,13 +157,16 @@ u32
 Neuro_RawGetPixel(void *srf, int x, int y)
 {
 	SDL_Surface *surface = (SDL_Surface*)srf;
-
+	int bpp;
+	u8 *p;
+	u32 err;
+	
 	SDL_LockSurface(surface);
-
-	int bpp = surface->format->BytesPerPixel;
+	
+	bpp = surface->format->BytesPerPixel;
 	/* Here p is the address to the pixel we want to retrieve */
-	u8 *p = (u8 *)surface->pixels + y * surface->pitch + x * bpp;
-	u32 err = 0;
+	p = (u8 *)surface->pixels + y * surface->pitch + x * bpp;
+	err = 0;
 	
 	switch(bpp) 
 	{
@@ -272,7 +278,7 @@ Neuro_PrintFPS()
 	}
 }
 
-inline u8
+u8
 Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 {
 	/* rectangle or square bounds check. If the depen is outside or is a bit inside and
