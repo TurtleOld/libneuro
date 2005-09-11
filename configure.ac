@@ -50,6 +50,7 @@ AM_PROG_LIBTOOL
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
+NEUROFLAGS="-D__USE_GNU"
 SDLFLAGS="$(sdl-config --cflags)"
 #NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
 XML2FLAGS="-I/usr/include/libxml2"
@@ -64,18 +65,30 @@ if test x$enable_libxml2 = xyes; then
 	AC_CHECK_LIB(xml2, xmlFreeDoc, [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"
 ] , AC_MSG_ERROR([You must have libxml2]))
 fi
+#AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
 # need to make it so if it is set to 0, it will still compile :D
-AC_ARG_ENABLE(SDL, 
+AC_ARG_ENABLE(libSDL, 
 [  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [default=yes]],
 	, enable_libSDL=yes)
 if test x$enable_libSDL = xyes; then
-	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" AC_SUBST(SDLFLAGS)
-], [AC_DEFINE(USE_SDL, 0)])
+	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
+	], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
 else
 	AC_DEFINE(USE_SDL, 0)
 fi
+AM_CONDITIONAL(USE_SDL, test x$enable_libSDL = xyes)
 
+AC_ARG_ENABLE(Debug,
+[  --enable-Debug	enable the debugging of this program [default=no]],
+	, enable_Debug=no)
+if test x$enable_Debug = xyes; then
+	NEUROFLAGS="$NEUROFLAGS -g"
+else
+	NEUROFLAGS="$NEUROFLAGS -O3 -s"
+fi
+
+AC_SUBST(NEUROFLAGS)
 
 # set the installation path for the headers
 includedir=$includedir/Neuro

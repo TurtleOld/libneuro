@@ -46,6 +46,7 @@ typedef struct Rectan
 	u16 x, y, w, h;
 }Rectan;
 
+/* video object */
 typedef void v_object;
 
 #endif /* __TYPEDEF_H */

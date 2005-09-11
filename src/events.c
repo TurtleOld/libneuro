@@ -7,10 +7,10 @@
  */
 
 /*--- Extern Headers Including ---*/
-#include <SDL.h>
 #include <stdlib.h>
 
 /*--- Local Headers Including ---*/
+#include "extlib.h"
 
 /*--- Main Module Header ---*/
 #include "events.h"
@@ -92,9 +92,12 @@ handle_keys()
 	if (KEventList.kevents == NULL)
 		return;
 	
-	key = SDL_GetKeyState(NULL);
+	key = Lib_GetKeyState(NULL);
 	i = KEventList.total;
 
+	if (!key)
+		return;
+	
 	while (i-- > 0)
 	{
 		if (key[KEventList.kevents[i].key])
@@ -143,12 +146,11 @@ handle_mouse()
 		return;
 	}
 	
-	button = SDL_GetMouseState(&x, &y);
+	button = Lib_GetMouseState(&x, &y);
 	
 	i = MEventList.total;
 
 	/* printf("mouse (%d,%d) button %d \n", x, y, button); */
-	
 	
 	while (i-- > 0)
 	{
@@ -216,7 +218,7 @@ Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 {
 	u32 i = 0;
 	
-	printf("adding mouse event\n");
+	/* printf("adding mouse event\n"); */
 	if (MEventList.mevents == NULL)
 	{
 		MEventList.mevents = (MEVENTLIST*)calloc(1, sizeof(MEVENTLIST));
@@ -281,72 +283,9 @@ Neuro_CleanMouse()
 /*--- Poll ---*/
 void
 Events_Poll()
-{
-	SDL_Event event;
-		
-	while(SDL_PollEvent(&event))
-	{	
-		switch (event.type)
-		{	
-#if temp
-			case SDL_KEYDOWN:
-			{
-				switch(event.key.keysym.sym)
-				{
-					/* temporary 
-					 *
-					 * Until we have another less debug way to
-					 * leave the game :)
-					 */
-					case SDLK_ESCAPE:
-						looping = 0;	
-					break;
-					/* end temporary */
-					
-					case SDLK_UP:
-						Player_UpWard();		
-					break;
-					
-					case SDLK_DOWN:
-						Player_DownWard();
-					break;
-					
-					case SDLK_LEFT:
-						Player_LeftWard();	
-					break;
-					
-					case SDLK_RIGHT:
-						Player_RightWard();
-					break;	
-					
-					case SDLK_KP8:
-						Camera_UpWard();
-					break;
-					
-					case SDLK_KP6:
-						Camera_RightWard();
-					break;
-					
-					case SDLK_KP2:
-						Camera_DownWard();
-					break;
+{	
+	Lib_EventPoll();
 
-					case SDLK_KP4:
-						Camera_LeftWard();
-					break;
-
-					
-					default:
-					break;
-				}
-			}
-			break;
-
-			default:
-			break;
-#endif /* temp */
-		}
-	}
 	handle_keys();
 	handle_mouse();
 }

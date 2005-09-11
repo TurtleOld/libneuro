@@ -1,17 +1,24 @@
-
+#!/bin/bash
 
 SUBDIRS = xml
 
 lib_LTLIBRARIES = libneuro.la
 
-libneuro_la_SOURCES = debug.c \
-		     events.c \
-		     graphics.c \
-		     other.c \
-		     sdl.c
+lib_sources = 	debug.c \
+		events.c \
+		graphics.c \
+		other.c
 
-#AM_CFLAGS= @NEUROFLAGS@
-AM_CFLAGS= @SDLFLAGS@
+if USE_SDL
+lib_lal = sdl.c
+else
+lib_lal = none.c
+endif
+
+libneuro_la_SOURCES = $(lib_sources) $(lib_lal)
+
+AM_CFLAGS= @NEUROFLAGS@
+#AM_CFLAGS= @SDLFLAGS@
 
 libneuro_la_LDFLAGS = \
 		      -no-undefines \

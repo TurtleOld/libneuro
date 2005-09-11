@@ -5,7 +5,6 @@
  * Especially when you want to have more than 1 data per nodes
  */
 
-#include <SDL.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -19,6 +18,7 @@
 #endif /* NOT WIN32 */
 
 #include "other.h"
+#include "extlib.h"
 
 #include "graphics.h"
 
@@ -138,7 +138,7 @@ Neuro_SepChr(const unsigned char chr, char *source, int *items)
 
 
 u32
-Neuro_giveRGB(u8 R, u8 G, u8 B)
+Neuro_GiveRGB(u8 R, u8 G, u8 B)
 {
 	u32 out;
 	
@@ -154,18 +154,24 @@ Neuro_giveRGB(u8 R, u8 G, u8 B)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 u32 
-Neuro_RawGetPixel(void *srf, int x, int y)
+Neuro_RawGetPixel(v_object *srf, int x, int y)
 {
-	SDL_Surface *surface = (SDL_Surface*)srf;
-	int bpp;
+	u8 bpp;
 	u8 *p;
+	void *pixels;
+	u32 pitch;
 	u32 err;
 	
-	SDL_LockSurface(surface);
 	
-	bpp = surface->format->BytesPerPixel;
+	Lib_LockVObject(srf);
+	
+	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
+			NULL, NULL, NULL, NULL);
+	
+	/* bpp = surface->format->BytesPerPixel; */
 	/* Here p is the address to the pixel we want to retrieve */
-	p = (u8 *)surface->pixels + y * surface->pitch + x * bpp;
+	/* p = (u8 *)surface->pixels + y * surface->pitch + x * bpp; */
+	p = (u8 *)pixels + y * pitch + x * bpp;
 	err = 0;
 	
 	switch(bpp) 
@@ -183,7 +189,7 @@ Neuro_RawGetPixel(void *srf, int x, int y)
 		}
 		break;
 		
-		case 3:
+		/*case 3:
 		{
 			if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
 				err = p[0] << 16 | p[1] << 8 | p[2];
@@ -191,6 +197,7 @@ Neuro_RawGetPixel(void *srf, int x, int y)
 				err = p[0] | p[1] << 8 | p[2] << 16;
 		}
 		break;
+		*/
 		
 		case 4:
 		{
@@ -204,7 +211,7 @@ Neuro_RawGetPixel(void *srf, int x, int y)
 		}
 	}
 
-	SDL_UnlockSurface(surface);
+	Lib_UnlockVObject(srf);
 
 	return err;
 }
@@ -215,14 +222,22 @@ Neuro_RawGetPixel(void *srf, int x, int y)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 void 
-Neuro_RawPutPixel(void *srf, int x, int y, u32 pixel)
+Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
 {
-	SDL_Surface *surface = (SDL_Surface*)srf;
+	/* SDL_Surface *surface = (SDL_Surface*)srf; */
 	/* SDL_LockSurface(surface); */
+	u8 bpp;
+	u8 *p;
+	void *pixels;
+	u32 pitch;
 	
-	int bpp = surface->format->BytesPerPixel;
+	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
+			NULL, NULL, NULL, NULL);
+
+	/* int bpp = surface->format->BytesPerPixel; */
 	/* Here p is the address to the pixel we want to set */
-	u8 *p = (u8*)surface->pixels + y * surface->pitch + x * bpp;
+	/* p = (u8*)surface->pixels + y * surface->pitch + x * bpp; */
+	p = (u8 *)pixels + y * pitch + x * bpp;
 
 	switch(bpp) 
 	{
@@ -237,7 +252,7 @@ Neuro_RawPutPixel(void *srf, int x, int y, u32 pixel)
 			*(u16*)p = pixel;
 		}
 		break;
-
+		/*
 		case 3:
 		{
 			if(SDL_BYTEORDER == SDL_BIG_ENDIAN) 
@@ -254,7 +269,7 @@ Neuro_RawPutPixel(void *srf, int x, int y, u32 pixel)
 			}
 		}
 		break;
-	
+		*/
 		case 4:
 		{
 			*(u32 *)p = pixel;

@@ -6,10 +6,14 @@
 #include "engine.h"
 
 /*! TODO */
-extern void Neuro_DebugPrint(char *message, char *filename, char *funcName, u32 lineNum) __attribute__ ((__always_inline__));
+/*extern void Neuro_DebugPrint(char *filename, char *funcName, u32 lineNum, const char *control, ...) __attribute__ ((__always_inline__));*/
+
+extern void Neuro_DebugPrint(char *control, char *filename, char *funcName, u32 lineNum);
 
 /*! TODO */
-#define DbgP(x) Neuro_DebugPrint(x, __FILE__, __FUNCTION__, __LINE__) 
+/*#define DbgP(x) Neuro_DebugPrint(__FILE__, __FUNCTION__, __LINE__, x)*/
+#define DbgP(x) Neuro_DebugPrint(x, NULL, NULL, 0)
+
 /*
 #define Dbg(x) Dbg_Print(x, __FUNCTION__, __LINE__)
 */

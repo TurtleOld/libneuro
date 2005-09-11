@@ -13,10 +13,6 @@
 
 #include <stdlib.h>
 
-#if USE_SDL
-#include <SDL.h>
-#endif
-
 /*! default : 60
  * the maximum amount of frames per seconds -deprecated-
  */
@@ -55,12 +51,6 @@ extern void *Neuro_GetScreenBuffer();
  * @param [in] surface the pointer to the image itself.
  */
 extern void Neuro_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void *surface);
-
-#ifdef USE_SDL
-/*! convert Rectan to SDL_Rect 
- */
-extern SDL_Rect *Neuro_CNtoSDL(Rectan *source);
-#endif /* USE_SDL */
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 

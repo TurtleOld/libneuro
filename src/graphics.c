@@ -76,6 +76,7 @@
  */
 
 #define debug_instruction_buffer 0
+#define debug_instruction_buffer2 0
  
 #define cleanEngineBuffer Neuro_CleanEngineBuffer
 #define allocEngineBuf Neuro_AllocEngineBuf
@@ -150,8 +151,8 @@ static ENGINEBUF _Queue;
 static ENGINEBUF _Pixel;
 
 /* buffered structs */
-static ENGINEBUF *b_Raw;
-static ENGINEBUF *b_Queue;
+static ENGINEBUF b_Raw;
+static ENGINEBUF b_Queue;
 
 
 /* temporary debugging variable, please remove when debugging is done */
@@ -179,6 +180,10 @@ static void computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
 static void print_queue() __attribute__ ((__unused__));
+static void print_queue2() __attribute__ ((__unused__));
+
+/* copy an ENGINE buffer to another one(only pointers) */
+static void copyEngineBuffer(ENGINEBUF *to, ENGINEBUF *from);
 
 static void flush_queue();
 /* update only a part of the screen */
@@ -187,6 +192,8 @@ static void updScreen(Rectan *rect);
 static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
 /* clean the screen of the handled pixels drawn */
 static void cleanPixels();
+/* only reset all to 0 without freeing (mem leak) */
+static void cleanLightBuf(ENGINEBUF *eng);
 
 /*--- Static Functions ---*/
 
@@ -234,13 +241,19 @@ cleanRaw()
 static void 
 cleanQueue()
 {
-	cleanEngineBuffer(&_Queue);	
+	cleanEngineBuffer(&_Queue);
+	last_element = NULL;
 }
 
 static void
 print_queue() __attribute__ ((__unused__))
 {
-	INSTRUCTION_ENGINE *cur = *_Queue.buffer;
+	INSTRUCTION_ENGINE *cur;
+	
+	if (!_Queue.buffer)
+		return;
+	cur = *_Queue.buffer;
+	printf("Queue address %d\n", (int)cur);
 	
 	while (cur != NULL)
 	{
@@ -248,6 +261,30 @@ print_queue() __attribute__ ((__unused__))
 		if (cur->next == *_Queue.buffer)
 		{
 			printf("Error- this element points to the beginning element\n");
+			break;
+		}
+		else
+			cur = cur->next;
+	}
+}
+
+static void
+print_queue2() __attribute__ ((__unused__))
+{
+	INSTRUCTION_ENGINE *cur;
+	
+	if (!b_Queue.buffer)
+		return;
+	cur = *b_Queue.buffer;
+	printf("b Queue address %d\n", (int)cur);
+
+
+	while (cur != NULL)
+	{
+		printf("b layer #%d\n", cur->current->layer);
+		if (cur->next == *b_Queue.buffer)
+		{
+			printf("b Error- this element points to the beginning element\n");
 			break;
 		}
 		else
@@ -389,7 +426,7 @@ cleanPixels()
 
 	/* printf("inside %s %d\n", __FUNCTION__, current); */
 	
-	if (background)
+	/* if (background) */
 	{
 		while (current-- > 0)
 		{
@@ -421,15 +458,21 @@ flush_queue()
 	Rectan buf;
 	INSTRUCTION_ENGINE *cur;
 
-	tmp = b_Queue;
+	tmp = &b_Queue;
 	
+#if debug_instruction_buffer2
+	printf("B BEGIN debug print\n");
+	print_queue2();
+	printf("B END debug print\n");
+#endif /* debug_instruction_buffer2 */
+
 	if (tmp)
 	{
-		
 		if (tmp->buffer)
 			cur = *tmp->buffer;
 		else
 			return;
+		
 		/* printf("cycle\n"); */
 	
 		/* "reset" the emplacement of the last position of the image
@@ -440,21 +483,25 @@ flush_queue()
 		{
 			/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
 			
+			/*if (cur->current->layer >= 55)
+				printf("-----------------------\n");
+			*/
+			
 			buf.x = cur->current->dst.x;
 			buf.y = cur->current->dst.y;
 			buf.w = cur->current->src.w - 1;
 			buf.h = cur->current->src.h - 1;
+			
 			if (!secureBoundsCheck(&buf))
 			{
 				if (background)
 				{
-					Lib_BlitObject(background, &cur->current->dst, sclScreen, 
-						&cur->current->dst);
+					Lib_BlitObject(background, &buf, sclScreen, &buf);
 	
 				}
 				else
 				{
-					Lib_FillRect(sclScreen, &cur->current->dst, 0);
+					Lib_FillRect(sclScreen, &buf, 0);
 				}
 				/* updScreen(&buf); */
 			}
@@ -486,6 +533,12 @@ flush_queue()
 	while (cur)
 	{
 		/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
+
+		/*
+		if (cur->current->layer >= 55)
+				printf("------///----------\\\\\\-------\n");
+		*/
+
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w - 1;
@@ -515,10 +568,62 @@ clean_queue()
 	cleanRaw();
 	cleanQueue();
 	*/
-	cleanEngineBuffer(b_Raw);
-	cleanEngineBuffer(b_Queue);
-	b_Raw = &_Raw;
-	b_Queue = &_Queue;
+	cleanEngineBuffer(&b_Raw);
+	cleanEngineBuffer(&b_Queue);
+	
+	copyEngineBuffer(&b_Raw, &_Raw);
+	copyEngineBuffer(&b_Queue, &_Queue);
+	
+	cleanLightBuf(&_Raw);
+	
+	cleanLightBuf(&_Queue);
+	last_element = NULL;
+#if debug_instruction_buffer2
+	printf("-B BEGIN debug print\n");
+	print_queue2();
+	printf("-B END debug print\n");
+#endif /* debug_instruction_buffer2 */
+
+#if debug_instruction_buffer
+	printf("-BEGIN debug print\n");
+	print_queue();
+	printf("-END debug print\n");
+#endif /* debug_instruction_buffer2 */
+
+}
+
+static void
+copyEngineBuffer(ENGINEBUF *to, ENGINEBUF *from)
+{
+	void ***buf;
+	if (!to || !from)
+		return;
+	
+	buf = &to->buffer;
+
+	*buf = from->buffer;
+	to->total = from->total;
+	to->mem = from->mem;
+}
+
+/* do not use this function unless you know what your doing. 
+ * This leads to a memory leak (unless carefuly used). 
+ */
+static void
+cleanLightBuf(ENGINEBUF *eng)
+{
+	void ***buf;
+	
+	if (!eng)
+		return;
+		
+	buf = &eng->buffer;
+
+	*buf = NULL;
+	
+	eng->total = 0;
+	eng->buffer = NULL;
+	eng->mem = 0;
 }
 
 /*--- Global Functions ---*/
@@ -587,22 +692,21 @@ Neuro_CleanEngineBuffer(ENGINEBUF *eng)
 #if cleanDbg
 		printf("cleaning i:%d\nptr %d\n", i, (int)(*buf)[i]);
 #endif /* cleanDbg */
-		if ((*buf)[i])
-			free((*buf)[i]);
+		/* if ((*buf)[i]) */
+		free((*buf)[i]);
 #if cleanDbg
 		else
 			printf("the element %d is NULL\n", i);
 #endif /* cleanDbg */
 	}
 
-	if (*buf)
-		free(*buf);
+	/* if (*buf) */
+	free(*buf);
 	*buf = NULL;
 	
 	eng->total = 0;
 	eng->buffer = NULL;
 	eng->mem = 0;
-	last_element = NULL;
 	/* printf("cleaned the Engine buffers\n"); */
 }
 
@@ -725,7 +829,7 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 	
 	if (secureBoundsCheck(&check))
 	{
-		DbgP("Unsecure Pixel position have been catched, dropping the instruction\n");
+		printf("Unsecure Pixel position have been catched, dropping the instruction\n");
 		return;
 	}
 
@@ -888,8 +992,8 @@ Graphics_Clean()
 	cleanDrawing();
 	cleanRaw();
 	cleanQueue();
-	cleanEngineBuffer(b_Queue);
-	cleanEngineBuffer(b_Raw);
+	cleanEngineBuffer(&b_Queue);
+	cleanEngineBuffer(&b_Raw);
 	cleanEngineBuffer(&_Pixel);
 	Lib_FreeVobject(screen);
 	Lib_FreeVobject(sclScreen);
