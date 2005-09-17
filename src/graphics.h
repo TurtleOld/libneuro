@@ -87,6 +87,9 @@ extern void Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj);
 
 extern void Neuro_CleanEngineBuffer(ENGINEBUF *eng);
 
+extern u32 Neuro_GiveEngineBufCount(ENGINEBUF *eng);
+
+extern void *Neuro_GiveEngineBuf(ENGINEBUF *eng, u32 elem);
 
 
 /*! internal use Initialisation of the Graphics Engine */

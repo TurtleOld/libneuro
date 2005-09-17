@@ -75,7 +75,7 @@
  * for future seeing of how I was offtrack ;P.
  */
 
-#define debug_instruction_buffer 0
+#define debug_instruction_buffer 1
 #define debug_instruction_buffer2 0
  
 #define cleanEngineBuffer Neuro_CleanEngineBuffer
@@ -331,7 +331,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 		
 		/* printf("last_element layer %d\n", last_element->current->layer); */
 
-		/* if ((*last_element)->current->layer <= (*buf)[current]->current->layer) */
+		if (last_element->current->layer <= (*buf)[current]->current->layer)
 		{
 			last_element->next = (*buf)[current];
 			last_element = (*buf)[current];
@@ -708,6 +708,42 @@ Neuro_CleanEngineBuffer(ENGINEBUF *eng)
 	eng->buffer = NULL;
 	eng->mem = 0;
 	/* printf("cleaned the Engine buffers\n"); */
+}
+
+u32 
+Neuro_GiveEngineBufCount(ENGINEBUF *eng)
+{
+	if (eng)
+		return (eng->total - 1);
+	else
+		return 0;
+}
+
+void *
+Neuro_GiveEngineBuf(ENGINEBUF *eng, u32 elem)
+{
+	void ***buf;
+	
+	if (!eng)
+		return NULL;
+	
+	buf = (void***)&eng->buffer;
+	
+	return (*buf)[elem];
+}
+
+void
+Neuro_SetEngineBuf(ENGINEBUF *eng, u32 to, u32 from)
+{
+	void ***buf;
+
+	if (!eng || !to || !from)
+		return;
+	
+	buf = (void***)&eng->buffer;
+
+
+	(*buf)[to] = (*buf)[from];
 }
 
 void
