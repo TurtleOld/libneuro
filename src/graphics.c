@@ -75,7 +75,7 @@
  * for future seeing of how I was offtrack ;P.
  */
 
-#define debug_instruction_buffer 1
+#define debug_instruction_buffer 0
 #define debug_instruction_buffer2 0
  
 #define cleanEngineBuffer Neuro_CleanEngineBuffer
@@ -489,8 +489,8 @@ flush_queue()
 			
 			buf.x = cur->current->dst.x;
 			buf.y = cur->current->dst.y;
-			buf.w = cur->current->src.w - 1;
-			buf.h = cur->current->src.h - 1;
+			buf.w = cur->current->src.w;
+			buf.h = cur->current->src.h;
 			
 			if (!secureBoundsCheck(&buf))
 			{
