@@ -126,7 +126,10 @@ typedef struct INSTRUCTION_ENGINE
 	struct INSTRUCTION_ENGINE *next;
 }INSTRUCTION_ENGINE;
 
-typedef void (*DRAWING_ELEMENTS)(void);
+typedef struct DRAWING_ELEMENTS
+{
+	void (*callback)(void);
+}DRAWING_ELEMENTS;
 
 typedef struct PIXEL_ENGINE
 {
@@ -175,8 +178,12 @@ static void cleanRaw();
 static void computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
+#if debug_instruction_buffer
 static void print_queue() __attribute__ ((__unused__));
+#endif /* debug_instruction_buffer */
+#if debug_instruction_buffer2
 static void print_queue2() __attribute__ ((__unused__));
+#endif /* debug_instruction_buffer2 */
 
 /* copy an ENGINE buffer to another one(only pointers) */
 static void copyEngineBuffer(ENGINEBUF *to, ENGINEBUF *from);
@@ -241,6 +248,7 @@ cleanQueue()
 	last_element = NULL;
 }
 
+#if debug_instruction_buffer
 static void
 print_queue() __attribute__ ((__unused__))
 {
@@ -263,7 +271,9 @@ print_queue() __attribute__ ((__unused__))
 			cur = cur->next;
 	}
 }
+#endif /* debug_instruction_buffer */
 
+#if debug_instruction_buffer2
 static void
 print_queue2() __attribute__ ((__unused__))
 {
@@ -287,6 +297,7 @@ print_queue2() __attribute__ ((__unused__))
 			cur = cur->next;
 	}
 }
+#endif /* debug_instruction_buffer */
 
 /* compute the instruction_engine everytime
  * a new raw is added.
@@ -761,14 +772,14 @@ Neuro_GiveEngineBufAddr(ENGINEBUF *eng, u32 elem)
 void
 Neuro_SetEngineBuf(ENGINEBUF *eng, void **to, void *from)
 {
-	void ***buf;
-	u32 total;
+	/*void ***buf;
+	u32 total;*/
 	
 	if (!eng || !to || !from)
 		return;
 	
-	buf = (void***)&eng->buffer;
-	total = Neuro_GiveEngineBufCount(eng);
+	/*buf = (void***)&eng->buffer;
+	total = Neuro_GiveEngineBufCount(eng);*/
 
 /*	
 	while (total-- > 0)
@@ -857,9 +868,6 @@ void
 Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
 {
 	Lib_BlitObject(isurface, isrc, screen, idst);
-	/* SDL_UpdateRect(screen, dst->x, dst->y, src->w, src->h); */
-	/* printf("%d %d %d %d\n", dst->x, dst->y, src->w, src->h); */
-	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	Lib_Flip(screen);
 }
 
@@ -873,19 +881,15 @@ Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
 void 
 Neuro_AddDrawingElement(void (*func)())
 {
-	ENGINEBUF *tmp = NULL;
-	DRAWING_ELEMENTS ***buf = NULL;
-	u32 current;
+	DRAWING_ELEMENTS *buf = NULL;
 	
-	tmp = _Drawing;
-	Neuro_AllocEngineBuf(tmp, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
+	Neuro_AllocEngineBuf(_Drawing, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
+
+	buf = Neuro_GiveEngineBuf(_Drawing, Neuro_GiveEngineBufCount(_Drawing));
 	
-	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
-	current = tmp->total - 1;
-
-	*(*buf)[current] = func;
-
-	/* printf("proof %d real %d\n", (int)*(*buf)[current], (int)func); */
+	buf->callback = func;
+	
+	/* printf("proof %d real %d\n", (int)buf, (int)func); */
 }
 
 void
@@ -945,21 +949,11 @@ Neuro_CleanPixels()
  */
 void
 Graphics_Poll()
-{
-	ENGINEBUF *tmp;
-	DRAWING_ELEMENTS ***buf;
-	
-	u32 loo = 0;
+{	
 	const u32 frameSkipMax = 0;
 	static u32 frameSkip = 0;
 	/* printf("Cycle\n"); */
-
-	tmp = _Drawing;
-	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
 	
-	if (tmp->total == 0)
-		return;
-
 	if (clean_pixel_in_this_cycle)
 	{
 		cleanPixels();
@@ -975,20 +969,19 @@ Graphics_Poll()
 	else
 		lFps = 0;
 
-	/* printf("function pointer %d proof %d\n", (int)drawing_elements_buffer[0][loo], 
-			(int)&Neuro_ShowImage); */
-	/* printf("debug of the Neuro_Poll function -> drawingelements buffer : number of functions in buffer == %d\n", drawing_elements_buffer_count); */
-	while (loo < tmp->total)
+	
 	{
-		/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
-		if (*(*buf)[loo] != NULL)
+		DRAWING_ELEMENTS *bufa;
+		u32 total;
+		
+		total = Neuro_GiveEngineBufCount(_Drawing);
+		total++;
+		while (total-- > 0)
 		{
-			/* (*test_ptr)(); */
-			/* Neuro_ShowImage(); */
-			/* printf("calling callback #%d on %d\n", loo, tmp->total); */
-			(*(*buf)[loo])();
+			/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
+			bufa = Neuro_GiveEngineBuf(_Drawing, total);
+			(*bufa->callback)();
 		}
-		loo++;
 	}
 	
 #if debug_instruction_buffer
@@ -1012,15 +1005,9 @@ Graphics_Poll()
 	clean_queue();
 
 	/* update the full screen */
-	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
-	/* SDL_Flip(screen); */
-
 	Lib_BlitObject(sclScreen, NULL, screen, NULL);
 
-	/* SDL_UpdateRect(screen, 0, 0, 0, 0); */
 	updScreen(0);
-		
-	/* SDL_Flip(screen); */
 
 	fps++;
 }
