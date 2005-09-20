@@ -78,10 +78,6 @@
 #define debug_instruction_buffer 0
 #define debug_instruction_buffer2 0
  
-#define cleanEngineBuffer Neuro_CleanEngineBuffer
-#define allocEngineBuf Neuro_AllocEngineBuf
-
- 
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -145,14 +141,14 @@ static v_object *background; /* the background image */
 
 static INSTRUCTION_ENGINE *last_element;
 
-static ENGINEBUF _Drawing;
-static ENGINEBUF _Raw;
-static ENGINEBUF _Queue;
-static ENGINEBUF _Pixel;
+static ENGINEBUF *_Drawing;
+static ENGINEBUF *_Raw;
+static ENGINEBUF *_Queue;
+static ENGINEBUF *_Pixel;
 
 /* buffered structs */
-static ENGINEBUF b_Raw;
-static ENGINEBUF b_Queue;
+static ENGINEBUF *b_Raw;
+static ENGINEBUF *b_Queue;
 
 
 /* temporary debugging variable, please remove when debugging is done */
@@ -229,19 +225,19 @@ updScreen(Rectan *rect)
 static void
 cleanDrawing()
 {
-	cleanEngineBuffer(&_Drawing);
+	Neuro_CleanEngineBuf(&_Drawing);
 }
 
 static void 
 cleanRaw()
 {
-	cleanEngineBuffer(&_Raw);
+	Neuro_CleanEngineBuf(&_Raw);
 }
 
 static void 
 cleanQueue()
 {
-	cleanEngineBuffer(&_Queue);
+	Neuro_CleanEngineBuf(&_Queue);
 	last_element = NULL;
 }
 
@@ -250,15 +246,15 @@ print_queue() __attribute__ ((__unused__))
 {
 	INSTRUCTION_ENGINE *cur;
 	
-	if (!_Queue.buffer)
+	if (!_Queue->buffer)
 		return;
-	cur = *_Queue.buffer;
+	cur = *_Queue->buffer;
 	printf("Queue address %d\n", (int)cur);
 	
 	while (cur != NULL)
 	{
 		printf("layer #%d\n", cur->current->layer);
-		if (cur->next == *_Queue.buffer)
+		if (cur->next == *_Queue->buffer)
 		{
 			printf("Error- this element points to the beginning element\n");
 			break;
@@ -273,16 +269,16 @@ print_queue2() __attribute__ ((__unused__))
 {
 	INSTRUCTION_ENGINE *cur;
 	
-	if (!b_Queue.buffer)
+	if (!b_Queue->buffer)
 		return;
-	cur = *b_Queue.buffer;
+	cur = *b_Queue->buffer;
 	printf("b Queue address %d\n", (int)cur);
 
 
 	while (cur != NULL)
 	{
 		printf("b layer #%d\n", cur->current->layer);
-		if (cur->next == *b_Queue.buffer)
+		if (cur->next == *b_Queue->buffer)
 		{
 			printf("b Error- this element points to the beginning element\n");
 			break;
@@ -306,8 +302,8 @@ computeRawEngine(RAW_ENGINE *toadd)
 	register u32 current; /* current number of elements in instruction */	
 
 
-	tmp = &_Queue;	
-	allocEngineBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
+	tmp = _Queue;	
+	Neuro_AllocEngineBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
 	buf = (INSTRUCTION_ENGINE***)&tmp->buffer;	
 	current = tmp->total - 1;
@@ -417,7 +413,7 @@ cleanPixels()
 	PIXEL_ENGINE ***pix;
 	u32 current;
 	
-	tmp = &_Pixel;
+	tmp = _Pixel;
 	current = tmp->total;
 	pix = (PIXEL_ENGINE***)&tmp->buffer;
 
@@ -444,7 +440,7 @@ cleanPixels()
 			*/
 		}
 	}
-	cleanEngineBuffer(&_Pixel);
+	Neuro_CleanEngineBuf(&_Pixel);
 }
 
 /* 
@@ -458,7 +454,7 @@ flush_queue()
 	Rectan buf;
 	INSTRUCTION_ENGINE *cur;
 
-	tmp = &b_Queue;
+	tmp = b_Queue;
 	
 #if debug_instruction_buffer2
 	printf("B BEGIN debug print\n");
@@ -523,7 +519,7 @@ flush_queue()
 	*/
 	
 	/* start the real drawing */
-	tmp = &_Queue;
+	tmp = _Queue;
 	
 	if (tmp->buffer)
 		cur = *tmp->buffer;
@@ -568,15 +564,18 @@ clean_queue()
 	cleanRaw();
 	cleanQueue();
 	*/
-	cleanEngineBuffer(&b_Raw);
-	cleanEngineBuffer(&b_Queue);
+	Neuro_CleanEngineBuf(&b_Raw);
+	Neuro_CleanEngineBuf(&b_Queue);
 	
-	copyEngineBuffer(&b_Raw, &_Raw);
-	copyEngineBuffer(&b_Queue, &_Queue);
+	b_Raw = Neuro_CreateEngineBuf();
+	b_Queue = Neuro_CreateEngineBuf();
 	
-	cleanLightBuf(&_Raw);
+	copyEngineBuffer(b_Raw, _Raw);
+	copyEngineBuffer(b_Queue, _Queue);
 	
-	cleanLightBuf(&_Queue);
+	cleanLightBuf(_Raw);
+	
+	cleanLightBuf(_Queue);
 	last_element = NULL;
 #if debug_instruction_buffer2
 	printf("-B BEGIN debug print\n");
@@ -628,6 +627,16 @@ cleanLightBuf(ENGINEBUF *eng)
 
 /*--- Global Functions ---*/
 
+ENGINEBUF *
+Neuro_CreateEngineBuf()
+{
+	ENGINEBUF *temp;
+
+	temp = (ENGINEBUF*)calloc(1, sizeof(ENGINEBUF));
+
+	return temp;
+}
+
 void
 Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 {
@@ -672,42 +681,40 @@ Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 }
 
 void
-Neuro_CleanEngineBuffer(ENGINEBUF *eng)
+Neuro_CleanEngineBuf(ENGINEBUF **engi)
 {
-	void ***buf;
+	void *buf;
+	ENGINEBUF *eng;
 	u32 i;
 	
+	eng = *engi;
 	if (!eng)
 		return;
 		
 	buf = &eng->buffer;
 	i = eng->total;
 
-#if cleanDbg
-	printf("total to clean : %d\n", i);
-#endif /* cleanDbg */
-
 	while (i-- > 0)
 	{
-#if cleanDbg
-		printf("cleaning i:%d\nptr %d\n", i, (int)(*buf)[i]);
-#endif /* cleanDbg */
-		/* if ((*buf)[i]) */
-		free((*buf)[i]);
-#if cleanDbg
-		else
-			printf("the element %d is NULL\n", i);
-#endif /* cleanDbg */
+		buf = Neuro_GiveEngineBuf(eng, i);
+		if (buf)
+			free(buf);
+		/* printf("#%d -- cleaned\n", i); */
 	}
 
-	/* if (*buf) */
-	free(*buf);
-	*buf = NULL;
+	if (eng->buffer)
+		free(eng->buffer);
 	
+	/* printf("cleaned %d elements\n", eng->total); */
 	eng->total = 0;
 	eng->buffer = NULL;
 	eng->mem = 0;
-	/* printf("cleaned the Engine buffers\n"); */
+
+	if (*engi)
+	{
+		free(*engi);
+		*engi = NULL;
+	}
 }
 
 u32 
@@ -729,21 +736,53 @@ Neuro_GiveEngineBuf(ENGINEBUF *eng, u32 elem)
 	
 	buf = (void***)&eng->buffer;
 	
-	return (*buf)[elem];
+	if ((*buf)[elem])
+		return (*buf)[elem];
+	else
+		return NULL;
+}
+
+void **
+Neuro_GiveEngineBufAddr(ENGINEBUF *eng, u32 elem)
+{
+	void ***buf;
+	
+	if (!eng)
+		return NULL;
+	
+	buf = (void***)&eng->buffer;
+	
+	if ((*buf)[elem])
+		return &(*buf)[elem];
+	else
+		return NULL;
 }
 
 void
-Neuro_SetEngineBuf(ENGINEBUF *eng, u32 to, u32 from)
+Neuro_SetEngineBuf(ENGINEBUF *eng, void **to, void *from)
 {
 	void ***buf;
-
+	u32 total;
+	
 	if (!eng || !to || !from)
 		return;
 	
 	buf = (void***)&eng->buffer;
+	total = Neuro_GiveEngineBufCount(eng);
 
+/*	
+	while (total-- > 0)
+	{
+		if (from == (*buf)[total])
+		{
+			*to = (*buf)[total];
+			return;
+		}
+	}
+*/
 
-	(*buf)[to] = (*buf)[from];
+	*to = from;
+	return;
 }
 
 void
@@ -789,7 +828,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	register u32 current;
 
 	/* printf("new layer %d\n", layer); */
-	tmp = &_Raw;
+	tmp = _Raw;
 	/* printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total); */
 	
 	/*
@@ -802,7 +841,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 		return;
 	*/
 		
-	allocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
+	Neuro_AllocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
 	buf = (RAW_ENGINE***)&tmp->buffer;
 	current = tmp->total - 1;
@@ -838,8 +877,8 @@ Neuro_AddDrawingElement(void (*func)())
 	DRAWING_ELEMENTS ***buf = NULL;
 	u32 current;
 	
-	tmp = &_Drawing;
-	allocEngineBuf(tmp, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
+	tmp = _Drawing;
+	Neuro_AllocEngineBuf(tmp, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
 	
 	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
 	current = tmp->total - 1;
@@ -869,8 +908,8 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 		return;
 	}
 
-	tmp = &_Pixel;
-	allocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
+	tmp = _Pixel;
+	Neuro_AllocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
 	
 	buf = (PIXEL_ENGINE***)&tmp->buffer;
 	current = tmp->total - 1;
@@ -915,7 +954,7 @@ Graphics_Poll()
 	static u32 frameSkip = 0;
 	/* printf("Cycle\n"); */
 
-	tmp = &_Drawing;
+	tmp = _Drawing;
 	buf = (DRAWING_ELEMENTS***)&tmp->buffer;
 	
 	if (tmp->total == 0)
@@ -1016,6 +1055,14 @@ Graphics_Init()
 			sizeof(SDL_Surface*),
 			sizeof(u8)); 
 	*/
+	
+	_Drawing = Neuro_CreateEngineBuf();
+	_Raw = Neuro_CreateEngineBuf();
+	_Queue = Neuro_CreateEngineBuf();
+	_Pixel = Neuro_CreateEngineBuf();
+	b_Queue = Neuro_CreateEngineBuf();
+	b_Raw = Neuro_CreateEngineBuf();
+	
 	return _err_;
 }
 
@@ -1028,9 +1075,9 @@ Graphics_Clean()
 	cleanDrawing();
 	cleanRaw();
 	cleanQueue();
-	cleanEngineBuffer(&b_Queue);
-	cleanEngineBuffer(&b_Raw);
-	cleanEngineBuffer(&_Pixel);
+	Neuro_CleanEngineBuf(&b_Queue);
+	Neuro_CleanEngineBuf(&b_Raw);
+	Neuro_CleanEngineBuf(&_Pixel);
 	Lib_FreeVobject(screen);
 	Lib_FreeVobject(sclScreen);
 	
