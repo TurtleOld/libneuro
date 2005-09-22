@@ -144,10 +144,10 @@ static v_object *background; /* the background image */
 
 static INSTRUCTION_ENGINE *last_element;
 
-static ENGINEBUF *_Drawing;
+static EBUF *_Drawing;
 static ENGINEBUF *_Raw;
 static ENGINEBUF *_Queue;
-static ENGINEBUF *_Pixel;
+static EBUF *_Pixel;
 
 /* buffered structs */
 static ENGINEBUF *b_Raw;
@@ -232,7 +232,7 @@ updScreen(Rectan *rect)
 static void
 cleanDrawing()
 {
-	Neuro_CleanEngineBuf(&_Drawing);
+	Neuro_CleanEBuf(&_Drawing);
 }
 
 static void 
@@ -419,14 +419,15 @@ computeRawEngine(RAW_ENGINE *toadd)
 static void
 cleanPixels()
 {
-	ENGINEBUF *tmp;
+	EBUF *tmp;
 	Rectan buf;
-	PIXEL_ENGINE ***pix;
+	PIXEL_ENGINE *pix;
 	u32 current;
 	
 	tmp = _Pixel;
-	current = tmp->total;
-	pix = (PIXEL_ENGINE***)&tmp->buffer;
+	current = Neuro_GiveEBufCount(tmp);
+	/* pix = (PIXEL_ENGINE***)&tmp->buffer; */
+	pix = Neuro_GiveEBuf(tmp, current);
 
 	if (current <= 0)
 		return;
@@ -438,8 +439,8 @@ cleanPixels()
 		while (current-- > 0)
 		{
 			/* printf("%d\n", current); */
-			buf.x = (*pix)[current]->x;
-			buf.y = (*pix)[current]->y;
+			buf.x = pix->x;
+			buf.y = pix->y;
 			
 			buf.w = 1;
 			buf.h = 1;
@@ -451,7 +452,7 @@ cleanPixels()
 			*/
 		}
 	}
-	Neuro_CleanEngineBuf(&_Pixel);
+	Neuro_CleanEBuf(&_Pixel);
 }
 
 /* 
@@ -885,9 +886,9 @@ Neuro_AddDrawingElement(void (*func)())
 {
 	DRAWING_ELEMENTS *buf = NULL;
 	
-	Neuro_AllocEngineBuf(_Drawing, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
+	Neuro_AllocEBuf(_Drawing, sizeof(DRAWING_ELEMENTS*), sizeof(DRAWING_ELEMENTS));
 
-	buf = Neuro_GiveEngineBuf(_Drawing, Neuro_GiveEngineBufCount(_Drawing));
+	buf = Neuro_GiveEBuf(_Drawing, Neuro_GiveEBufCount(_Drawing));
 	
 	buf->callback = func;
 	
@@ -897,8 +898,8 @@ Neuro_AddDrawingElement(void (*func)())
 void
 Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 {
-	ENGINEBUF *tmp;
-	PIXEL_ENGINE ***buf;
+	EBUF *tmp;
+	PIXEL_ENGINE *buf;
 	u32 current;
 	Rectan check;
 
@@ -915,15 +916,15 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 	}
 
 	tmp = _Pixel;
-	Neuro_AllocEngineBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
+	Neuro_AllocEBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
 	
-	buf = (PIXEL_ENGINE***)&tmp->buffer;
-	current = tmp->total - 1;
+	current = Neuro_GiveEBufCount(tmp);
+	buf = Neuro_GiveEBuf(tmp, current);
 	
 	Neuro_RawPutPixel(sclScreen, x, y, pixel);
 	
-	(*buf)[current]->x = x;
-	(*buf)[current]->y = y;
+	buf->x = x;
+	buf->y = y;
 }
 
 void *
@@ -976,12 +977,12 @@ Graphics_Poll()
 		DRAWING_ELEMENTS *bufa;
 		u32 total;
 		
-		total = Neuro_GiveEngineBufCount(_Drawing);
+		total = Neuro_GiveEBufCount(_Drawing);
 		total++;
 		while (total-- > 0)
 		{
 			/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
-			bufa = Neuro_GiveEngineBuf(_Drawing, total);
+			bufa = Neuro_GiveEBuf(_Drawing, total);
 			(*bufa->callback)();
 		}
 	}
@@ -1045,10 +1046,10 @@ Graphics_Init()
 			sizeof(u8)); 
 	*/
 	
-	_Drawing = Neuro_CreateEngineBuf();
+	_Drawing = Neuro_CreateEBuf();
 	_Raw = Neuro_CreateEngineBuf();
 	_Queue = Neuro_CreateEngineBuf();
-	_Pixel = Neuro_CreateEngineBuf();
+	_Pixel = Neuro_CreateEBuf();
 	b_Queue = Neuro_CreateEngineBuf();
 	b_Raw = Neuro_CreateEngineBuf();
 	
@@ -1066,7 +1067,7 @@ Graphics_Clean()
 	cleanQueue();
 	Neuro_CleanEngineBuf(&b_Queue);
 	Neuro_CleanEngineBuf(&b_Raw);
-	Neuro_CleanEngineBuf(&_Pixel);
+	Neuro_CleanEBuf(&_Pixel);
 	Lib_FreeVobject(screen);
 	Lib_FreeVobject(sclScreen);
 	
