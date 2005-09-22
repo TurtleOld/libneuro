@@ -18,11 +18,11 @@
  */
 #define FRAMES_PER_SECOND 60
 
-/*! default : 10
+/*! default : 10 -- moved to ebuf.h
  * the amount of memory that we allocate
  * in addition to the mem required. 
  * */
-#define MEMORY_ALLOC_OVERH 100
+/* #define MEMORY_ALLOC_OVERH 1 */
 
 /*! default : 2
  * how many time the computer has to check 

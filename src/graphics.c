@@ -85,8 +85,8 @@
 #include <time.h> /* to calculate the frames per second (fps) */
  
 /*--- Local Headers Including ---*/
-#include "typedef.h"
 #include "extlib.h"
+#include "ebuf.h"
 
 /*--- Main Module Header ---*/
 #include "graphics.h"
@@ -645,50 +645,52 @@ Neuro_CreateEngineBuf()
 
 	temp = (ENGINEBUF*)calloc(1, sizeof(ENGINEBUF));
 
+	temp->mem = 0;
+	temp->total = 0;
+	temp->buffer = NULL;
+
 	return temp;
 }
 
 void
 Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
 {
-	void ***buf = NULL;
-	u32 total = 0;
-	u32 mem = 0;
+	void ***buf;
+	u32 *total;
+	u32 *mem;
 	
 	buf = &eng->buffer;
-	total = eng->total;
-	mem = eng->mem;
+	total = &eng->total;
+	mem = &eng->mem;
 	
-	if (mem > MEMORY_ALLOC_OVERH)
+	if (*mem > MEMORY_ALLOC_OVERH)
 	{
-		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", mem);
+		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", *mem);
 		return;
 	}
 	/*
 	printf("debug : %d\n", sptp);
 	printf("before mem %d\n", mem);
 	*/
-	if (!*buf)
+	if (*buf == NULL)
 	{
 		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
-		total = 0;
-		mem = MEMORY_ALLOC_OVERH;
+		*total = 0;
+		*mem = MEMORY_ALLOC_OVERH;
 	}
-	else if ((mem * sptp) < sptp)
+	else if ((*mem * sptp) < sptp)
 	{
-		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + total + 1));
-		mem = MEMORY_ALLOC_OVERH;
+		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + *total + 1));
+		*mem = MEMORY_ALLOC_OVERH;
 	}
 	else
-		mem -= 1;
+		*mem -= 1;
 	/*
 	printf("after mem %d\n", mem);
 	*/
-	(*buf)[total] = calloc(1, sobj);
+	(*buf)[*total] = calloc(1, sobj);
 	
-	total++;
-	eng->total = total;
-	eng->mem = mem;
+	*total = *total + 1;
 }
 
 void
@@ -723,7 +725,7 @@ Neuro_CleanEngineBuf(ENGINEBUF **engi)
 
 	if (*engi)
 	{
-		free(*engi);
+		free(eng);
 		*engi = NULL;
 	}
 }

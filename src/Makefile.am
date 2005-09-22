@@ -6,6 +6,7 @@ lib_LTLIBRARIES = libneuro.la
 
 lib_sources = 	debug.c \
 		events.c \
+		ebuf.c \
 		graphics.c \
 		other.c
 
