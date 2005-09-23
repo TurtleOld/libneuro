@@ -21,5 +21,10 @@ extern void *Neuro_GiveEBuf(EBUF *eng, u32 elem);
 
 extern void Neuro_SetEBuf(EBUF *eng, void **to, void *from);
 
+extern void Neuro_CopyEBuf(EBUF *to, EBUF *from);
+
+extern void Neuro_ResetEBuf(EBUF *eng);
+
+extern u8 Neuro_EBufIsEmpty(EBUF *eng);
 
 #endif /* not __EBUF_H */

@@ -17,6 +17,7 @@ struct EBUF
 	u32 mem;
 	u32 total;
 };
+
 /*-------------------- Global Variables ----------------------------*/
 
 /*-------------------- Static Variables ----------------------------*/
@@ -123,7 +124,7 @@ Neuro_CleanEBuf(EBUF **engi)
 u32 
 Neuro_GiveEBufCount(EBUF *eng)
 {
-	if (eng)
+	if (eng && eng->total > 0)
 		return (eng->total - 1);
 	else
 		return 0;
@@ -135,6 +136,9 @@ Neuro_GiveEBuf(EBUF *eng, u32 elem)
 	void ***buf;
 	
 	if (!eng)
+		return NULL;
+
+	if (elem > eng->total)
 		return NULL;
 	
 	buf = (void***)&eng->buffer;
@@ -171,4 +175,41 @@ Neuro_SetEBuf(EBUF *eng, void **to, void *from)
 	
 	return;
 }
+
+void
+Neuro_CopyEBuf(EBUF *to, EBUF *from)
+{
+	EBUF *tmp;
+	if (!to || !from)
+		return;
+	
+	tmp = to;
+
+	to = from;
+	from = tmp;	
+}
+
+void
+Neuro_ResetEBuf(EBUF *eng)
+{
+	if (!eng)
+		return;
+	
+	eng->buffer = NULL;
+	eng->total = 0;
+	eng->mem = 0;
+}
+
+u8
+Neuro_EBufIsEmpty(EBUF *eng)
+{
+
+	if (!eng)
+		return 2;
+	if (eng)
+		if (eng->total == 0)
+			return 1;
+	return 0;
+}
+
 

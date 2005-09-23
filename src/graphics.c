@@ -145,12 +145,12 @@ static v_object *background; /* the background image */
 static INSTRUCTION_ENGINE *last_element;
 
 static EBUF *_Drawing;
-static ENGINEBUF *_Raw;
+static EBUF *_Raw;
 static ENGINEBUF *_Queue;
 static EBUF *_Pixel;
 
 /* buffered structs */
-static ENGINEBUF *b_Raw;
+static EBUF *b_Raw;
 static ENGINEBUF *b_Queue;
 
 
@@ -238,7 +238,7 @@ cleanDrawing()
 static void 
 cleanRaw()
 {
-	Neuro_CleanEngineBuf(&_Raw);
+	Neuro_CleanEBuf(&_Raw);
 }
 
 static void 
@@ -425,19 +425,20 @@ cleanPixels()
 	u32 current;
 	
 	tmp = _Pixel;
+
 	current = Neuro_GiveEBufCount(tmp);
 	/* pix = (PIXEL_ENGINE***)&tmp->buffer; */
-	pix = Neuro_GiveEBuf(tmp, current);
-
+	
 	if (current <= 0)
 		return;
 
 	/* printf("inside %s %d\n", __FUNCTION__, current); */
 	
-	/* if (background) */
+	if (!Neuro_EBufIsEmpty(tmp))
 	{
 		while (current-- > 0)
 		{
+			pix = Neuro_GiveEBuf(tmp, current);
 			/* printf("%d\n", current); */
 			buf.x = pix->x;
 			buf.y = pix->y;
@@ -576,16 +577,17 @@ clean_queue()
 	cleanRaw();
 	cleanQueue();
 	*/
-	Neuro_CleanEngineBuf(&b_Raw);
+	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEngineBuf(&b_Queue);
 	
-	b_Raw = Neuro_CreateEngineBuf();
+	b_Raw = Neuro_CreateEBuf();
 	b_Queue = Neuro_CreateEngineBuf();
 	
-	copyEngineBuffer(b_Raw, _Raw);
+	Neuro_CopyEBuf(b_Raw, _Raw);
 	copyEngineBuffer(b_Queue, _Queue);
 	
-	cleanLightBuf(_Raw);
+	/* cleanLightBuf(_Raw); */
+	Neuro_ResetEBuf(_Raw);
 	
 	cleanLightBuf(_Queue);
 	last_element = NULL;
@@ -837,8 +839,8 @@ Neuro_AddBackground(v_object *isurface)
 void 
 Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
 {
-	register ENGINEBUF *tmp = NULL;
-	register RAW_ENGINE ***buf = NULL;
+	register EBUF *tmp = NULL;
+	register RAW_ENGINE *buf = NULL;
 	register u32 current;
 
 	/* printf("new layer %d\n", layer); */
@@ -855,16 +857,16 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 		return;
 	*/
 		
-	Neuro_AllocEngineBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
+	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
-	buf = (RAW_ENGINE***)&tmp->buffer;
-	current = tmp->total - 1;
+	current = Neuro_GiveEBufCount(tmp);
+	buf = Neuro_GiveEBuf(tmp, current);
 	
-	(*buf)[current]->layer = layer;
-	memcpy(&(*buf)[current]->src, isrc, sizeof(Rectan));
-	memcpy(&(*buf)[current]->dst, idst, sizeof(Rectan));
-	(*buf)[current]->surface_ptr = isurface;
-	computeRawEngine((RAW_ENGINE*)(*buf)[current]);
+	buf->layer = layer;
+	memcpy(&buf->src, isrc, sizeof(Rectan));
+	memcpy(&buf->dst, idst, sizeof(Rectan));
+	buf->surface_ptr = isurface;
+	computeRawEngine((RAW_ENGINE*)buf);
 }
 
 void 
@@ -1047,11 +1049,11 @@ Graphics_Init()
 	*/
 	
 	_Drawing = Neuro_CreateEBuf();
-	_Raw = Neuro_CreateEngineBuf();
+	_Raw = Neuro_CreateEBuf();
 	_Queue = Neuro_CreateEngineBuf();
 	_Pixel = Neuro_CreateEBuf();
 	b_Queue = Neuro_CreateEngineBuf();
-	b_Raw = Neuro_CreateEngineBuf();
+	b_Raw = Neuro_CreateEBuf();
 	
 	return _err_;
 }
@@ -1066,7 +1068,7 @@ Graphics_Clean()
 	cleanRaw();
 	cleanQueue();
 	Neuro_CleanEngineBuf(&b_Queue);
-	Neuro_CleanEngineBuf(&b_Raw);
+	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&_Pixel);
 	Lib_FreeVobject(screen);
 	Lib_FreeVobject(sclScreen);
