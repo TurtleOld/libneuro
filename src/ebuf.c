@@ -179,7 +179,6 @@ Neuro_SetEBuf(EBUF *eng, void **to, void *from)
 void
 Neuro_CopyEBuf(EBUF *to, EBUF *from)
 {
-	EBUF *tmp;
 	if (!to || !from)
 		return;
 	
