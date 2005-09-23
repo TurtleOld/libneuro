@@ -94,13 +94,6 @@
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
-
-struct ENGINEBUF
-{
-	void **buffer;
-	u32 mem;
-	u32 total;
-};
  
 typedef struct RAW_ENGINE
 {
@@ -146,12 +139,12 @@ static INSTRUCTION_ENGINE *last_element;
 
 static EBUF *_Drawing;
 static EBUF *_Raw;
-static ENGINEBUF *_Queue;
+static EBUF *_Queue;
 static EBUF *_Pixel;
 
 /* buffered structs */
 static EBUF *b_Raw;
-static ENGINEBUF *b_Queue;
+static EBUF *b_Queue;
 
 
 /* temporary debugging variable, please remove when debugging is done */
@@ -185,9 +178,6 @@ static void print_queue() __attribute__ ((__unused__));
 static void print_queue2() __attribute__ ((__unused__));
 #endif /* debug_instruction_buffer2 */
 
-/* copy an ENGINE buffer to another one(only pointers) */
-static void copyEngineBuffer(ENGINEBUF *to, ENGINEBUF *from);
-
 static void flush_queue();
 /* update only a part of the screen */
 static void updScreen(Rectan *rect);
@@ -195,8 +185,6 @@ static void updScreen(Rectan *rect);
 static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
 /* clean the screen of the handled pixels drawn */
 static void cleanPixels();
-/* only reset all to 0 without freeing (mem leak) */
-static void cleanLightBuf(ENGINEBUF *eng);
 
 /*--- Static Functions ---*/
 
@@ -244,7 +232,7 @@ cleanRaw()
 static void 
 cleanQueue()
 {
-	Neuro_CleanEngineBuf(&_Queue);
+	Neuro_CleanEBuf(&_Queue);
 	last_element = NULL;
 }
 
@@ -254,15 +242,15 @@ print_queue() __attribute__ ((__unused__))
 {
 	INSTRUCTION_ENGINE *cur;
 	
-	if (!_Queue->buffer)
+	if (Neuro_EBufIsEmpty(_Queue))
 		return;
-	cur = *_Queue->buffer;
+	cur = Neuro_GiveEBuf(_Queue, 0);
 	printf("Queue address %d\n", (int)cur);
 	
 	while (cur != NULL)
 	{
 		printf("layer #%d\n", cur->current->layer);
-		if (cur->next == *_Queue->buffer)
+		if (cur->next == Neuro_GiveEBuf(_Queue, 0))
 		{
 			printf("Error- this element points to the beginning element\n");
 			break;
@@ -279,16 +267,16 @@ print_queue2() __attribute__ ((__unused__))
 {
 	INSTRUCTION_ENGINE *cur;
 	
-	if (!b_Queue->buffer)
+	if (Neuro_EBufIsEmpty(b_Queue))
 		return;
-	cur = *b_Queue->buffer;
+	cur = Neuro_GiveEBuf(b_Queue, 0);
 	printf("b Queue address %d\n", (int)cur);
 
 
 	while (cur != NULL)
 	{
 		printf("b layer #%d\n", cur->current->layer);
-		if (cur->next == *b_Queue->buffer)
+		if (cur->next == Neuro_GiveEBuf(b_Queue, 0))
 		{
 			printf("b Error- this element points to the beginning element\n");
 			break;
@@ -308,24 +296,29 @@ print_queue2() __attribute__ ((__unused__))
 static void
 computeRawEngine(RAW_ENGINE *toadd)
 {
-	register ENGINEBUF *tmp;	
-	register INSTRUCTION_ENGINE ***buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
+	register EBUF *tmp;	
+	register INSTRUCTION_ENGINE *buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
 	register u32 current; /* current number of elements in instruction */	
 
 
 	tmp = _Queue;	
-	Neuro_AllocEngineBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
+	Neuro_AllocEBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
-	buf = (INSTRUCTION_ENGINE***)&tmp->buffer;	
-	current = tmp->total - 1;
+	current = Neuro_GiveEBufCount(tmp);
+	/* buf = (INSTRUCTION_ENGINE***)&tmp->buffer; */
+	buf = Neuro_GiveEBuf(tmp, current);
+	
+	/* current = tmp->total - 1; */
 	
 	/* printf("Raw computing Cycle ptr %d\n", (int)(*buf)[current]); */
 	
 	/* add the data to the end of the queue */
 	/* printf("will place layer %d in the correct order\n", toadd->layer); */
-	(*buf)[current]->current = toadd;
-	(*buf)[current]->next = NULL;	
-
+	/* (*buf)[current]->current = toadd; */
+	/* (*buf)[current]->next = NULL; */
+	buf->current = toadd;
+	buf->next = NULL;
+	
 	if (last_element != NULL)
 	{
 		if (last_element->current == NULL)
@@ -338,10 +331,14 @@ computeRawEngine(RAW_ENGINE *toadd)
 		
 		/* printf("last_element layer %d\n", last_element->current->layer); */
 
-		if (last_element->current->layer <= (*buf)[current]->current->layer)
+		if (last_element->current->layer <= buf->current->layer)
 		{
+			/*
 			last_element->next = (*buf)[current];
 			last_element = (*buf)[current];
+			*/
+			last_element->next = buf;
+			last_element = buf;
 			/*printf("proof layer %d real layer %d ptr %d\n",
 					(*buf)[current]->current->layer,
 					(*last_element)->current->layer,
@@ -352,16 +349,16 @@ computeRawEngine(RAW_ENGINE *toadd)
 	}
 	else
 	{
-		last_element = (*buf)[current];
+		last_element = buf;
 		/* printf("Just placed the frame as the first element, starting the queue\n"); */
 		return;
 	}
 
-	cur = **buf;
+	cur = Neuro_GiveEBuf(tmp, 0);
 	while (cur != NULL)
 	{
 		/*  printf("looped %d\n", (int)cur); */
-		if (cur->current->layer > (*buf)[current]->current->layer)
+		if (cur->current->layer > buf->current->layer)
 		{
 			/*printf("Event current layer %d > toadd layer %d\n",  
 					cur->current->layer, 
@@ -369,22 +366,22 @@ computeRawEngine(RAW_ENGINE *toadd)
 			*/
 			
 			/* to avoid death loops */
-			if (cur->next == (*buf)[current])
+			if (cur->next == buf)
 				cur->next = NULL;
 			
-			if (cur == **buf)
+			if (cur == Neuro_GiveEBuf(tmp, 0))
 			{
 				/* switch **buf with the current position */
-				temp = **buf;
-				**buf = (*buf)[current];
-				(*buf)[current] = temp;
+				temp = Neuro_GiveEBuf(tmp, 0);
+				Neuro_SetEBuf(tmp, Neuro_GiveEBufAddr(tmp, 0), buf);
+				Neuro_SetEBuf(tmp, Neuro_GiveEBufAddr(tmp, current), temp);
 
 				/*printf("Beginning LL change : cur %d, buf[0][0] %d\n", 
 						(int)cur, 
 						(int)buf[0]);
 				*/
-				cur = **buf;
-				if (**buf == (*buf)[current])
+				cur = Neuro_GiveEBuf(tmp, 0);
+				if (Neuro_GiveEBuf(tmp, 0) == buf)
 				{
 					printf("huge problem, it is going to put its next element as the same node as itself, creating a death loop!!\n");
 					cur->next = NULL;
@@ -393,10 +390,10 @@ computeRawEngine(RAW_ENGINE *toadd)
 					cur->next = temp;
 			}
 			else
-				(*buf)[current]->next = cur;
+				buf->next = cur;
 			if (last != NULL)
 			{
-				last->next = (*buf)[current];
+				last->next = buf;
 			}
 			break;
 		}
@@ -463,7 +460,7 @@ cleanPixels()
 static void
 flush_queue()
 {
-	ENGINEBUF *tmp;
+	EBUF *tmp;
 	Rectan buf;
 	INSTRUCTION_ENGINE *cur;
 
@@ -477,8 +474,8 @@ flush_queue()
 
 	if (tmp)
 	{
-		if (tmp->buffer)
-			cur = *tmp->buffer;
+		if (!Neuro_EBufIsEmpty(tmp))
+			cur = Neuro_GiveEBuf(tmp, 0);
 		else
 			return;
 		
@@ -534,8 +531,8 @@ flush_queue()
 	/* start the real drawing */
 	tmp = _Queue;
 	
-	if (tmp->buffer)
-		cur = *tmp->buffer;
+	if (!Neuro_EBufIsEmpty(tmp))
+		cur = Neuro_GiveEBuf(tmp, 0);
 	else
 		return;
 	
@@ -578,18 +575,20 @@ clean_queue()
 	cleanQueue();
 	*/
 	Neuro_CleanEBuf(&b_Raw);
-	Neuro_CleanEngineBuf(&b_Queue);
+	Neuro_CleanEBuf(&b_Queue);
 	
 	b_Raw = Neuro_CreateEBuf();
-	b_Queue = Neuro_CreateEngineBuf();
+	b_Queue = Neuro_CreateEBuf();
 	
 	Neuro_CopyEBuf(b_Raw, _Raw);
-	copyEngineBuffer(b_Queue, _Queue);
+	Neuro_CopyEBuf(b_Queue, _Queue);
 	
 	/* cleanLightBuf(_Raw); */
 	Neuro_ResetEBuf(_Raw);
 	
-	cleanLightBuf(_Queue);
+	/* cleanLightBuf(_Queue); */
+	Neuro_ResetEBuf(_Queue);
+
 	last_element = NULL;
 #if debug_instruction_buffer2
 	printf("-B BEGIN debug print\n");
@@ -605,201 +604,7 @@ clean_queue()
 
 }
 
-static void
-copyEngineBuffer(ENGINEBUF *to, ENGINEBUF *from)
-{
-	void ***buf;
-	if (!to || !from)
-		return;
-	
-	buf = &to->buffer;
-
-	*buf = from->buffer;
-	to->total = from->total;
-	to->mem = from->mem;
-}
-
-/* do not use this function unless you know what your doing. 
- * This leads to a memory leak (unless carefuly used). 
- */
-static void
-cleanLightBuf(ENGINEBUF *eng)
-{
-	void ***buf;
-	
-	if (!eng)
-		return;
-		
-	buf = &eng->buffer;
-
-	*buf = NULL;
-	
-	eng->total = 0;
-	eng->buffer = NULL;
-	eng->mem = 0;
-}
-
 /*--- Global Functions ---*/
-
-ENGINEBUF *
-Neuro_CreateEngineBuf()
-{
-	ENGINEBUF *temp;
-
-	temp = (ENGINEBUF*)calloc(1, sizeof(ENGINEBUF));
-
-	temp->mem = 0;
-	temp->total = 0;
-	temp->buffer = NULL;
-
-	return temp;
-}
-
-void
-Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj)
-{
-	void ***buf;
-	u32 *total;
-	u32 *mem;
-	
-	buf = &eng->buffer;
-	total = &eng->total;
-	mem = &eng->mem;
-	
-	if (*mem > MEMORY_ALLOC_OVERH)
-	{
-		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", *mem);
-		return;
-	}
-	/*
-	printf("debug : %d\n", sptp);
-	printf("before mem %d\n", mem);
-	*/
-	if (*buf == NULL)
-	{
-		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
-		*total = 0;
-		*mem = MEMORY_ALLOC_OVERH;
-	}
-	else if ((*mem * sptp) < sptp)
-	{
-		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH + *total + 1));
-		*mem = MEMORY_ALLOC_OVERH;
-	}
-	else
-		*mem -= 1;
-	/*
-	printf("after mem %d\n", mem);
-	*/
-	(*buf)[*total] = calloc(1, sobj);
-	
-	*total = *total + 1;
-}
-
-void
-Neuro_CleanEngineBuf(ENGINEBUF **engi)
-{
-	void *buf;
-	ENGINEBUF *eng;
-	u32 i;
-	
-	eng = *engi;
-	if (!eng)
-		return;
-		
-	buf = &eng->buffer;
-	i = eng->total;
-
-	while (i-- > 0)
-	{
-		buf = Neuro_GiveEngineBuf(eng, i);
-		if (buf)
-			free(buf);
-		/* printf("#%d -- cleaned\n", i); */
-	}
-
-	if (eng->buffer)
-		free(eng->buffer);
-	
-	/* printf("cleaned %d elements\n", eng->total); */
-	eng->total = 0;
-	eng->buffer = NULL;
-	eng->mem = 0;
-
-	if (*engi)
-	{
-		free(eng);
-		*engi = NULL;
-	}
-}
-
-u32 
-Neuro_GiveEngineBufCount(ENGINEBUF *eng)
-{
-	if (eng)
-		return (eng->total - 1);
-	else
-		return 0;
-}
-
-void *
-Neuro_GiveEngineBuf(ENGINEBUF *eng, u32 elem)
-{
-	void ***buf;
-	
-	if (!eng)
-		return NULL;
-	
-	buf = (void***)&eng->buffer;
-	
-	if ((*buf)[elem])
-		return (*buf)[elem];
-	else
-		return NULL;
-}
-
-void **
-Neuro_GiveEngineBufAddr(ENGINEBUF *eng, u32 elem)
-{
-	void ***buf;
-	
-	if (!eng)
-		return NULL;
-	
-	buf = (void***)&eng->buffer;
-	
-	if ((*buf)[elem])
-		return &(*buf)[elem];
-	else
-		return NULL;
-}
-
-void
-Neuro_SetEngineBuf(ENGINEBUF *eng, void **to, void *from)
-{
-	/*void ***buf;
-	u32 total;*/
-	
-	if (!eng || !to || !from)
-		return;
-	
-	/*buf = (void***)&eng->buffer;
-	total = Neuro_GiveEngineBufCount(eng);*/
-
-/*	
-	while (total-- > 0)
-	{
-		if (from == (*buf)[total])
-		{
-			*to = (*buf)[total];
-			return;
-		}
-	}
-*/
-
-	*to = from;
-	return;
-}
 
 void
 Neuro_GiveFPS(t_tick *output)
@@ -990,7 +795,9 @@ Graphics_Poll()
 	}
 	
 #if debug_instruction_buffer
+	printf("--BEGIN debug print\n");
 	print_queue();
+	printf("--END debug print\n");
 #endif /* debug_instruction_buffer */
 
 	/* construct the instruction buffer */
@@ -1050,9 +857,9 @@ Graphics_Init()
 	
 	_Drawing = Neuro_CreateEBuf();
 	_Raw = Neuro_CreateEBuf();
-	_Queue = Neuro_CreateEngineBuf();
+	_Queue = Neuro_CreateEBuf();
 	_Pixel = Neuro_CreateEBuf();
-	b_Queue = Neuro_CreateEngineBuf();
+	b_Queue = Neuro_CreateEBuf();
 	b_Raw = Neuro_CreateEBuf();
 	
 	return _err_;
@@ -1067,7 +874,7 @@ Graphics_Clean()
 	cleanDrawing();
 	cleanRaw();
 	cleanQueue();
-	Neuro_CleanEngineBuf(&b_Queue);
+	Neuro_CleanEBuf(&b_Queue);
 	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&_Pixel);
 	Lib_FreeVobject(screen);

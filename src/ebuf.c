@@ -183,10 +183,9 @@ Neuro_CopyEBuf(EBUF *to, EBUF *from)
 	if (!to || !from)
 		return;
 	
-	tmp = to;
-
-	to = from;
-	from = tmp;	
+	to->buffer = from->buffer;
+	to->mem = from->mem;
+	to->total = from->total;
 }
 
 void
