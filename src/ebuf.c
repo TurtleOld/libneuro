@@ -18,6 +18,26 @@ struct EBUF
 	u32 total;
 };
 
+
+/* doesn't seem to be ISO C ANSI compliant. 
+ * I'm leaving the code here for future 
+ * reference. 
+ */
+/*
+#define GIVEEBUF(__eng, __elem)	\
+({ 						\
+	register void ***__buf;			\
+	void *__result;				\
+	if (__elem > __eng->total)		\
+		__result = NULL;		\
+	__buf = (void***)&__eng->buffer;	\
+	if ((*__buf)[__elem])			\
+		__result = (*__buf)[__elem];	\
+	else					\
+		__result = NULL; 		\
+ 	__result; })
+*/
+	
 /*-------------------- Global Variables ----------------------------*/
 
 /*-------------------- Static Variables ----------------------------*/
@@ -124,16 +144,16 @@ Neuro_CleanEBuf(EBUF **engi)
 u32 
 Neuro_GiveEBufCount(EBUF *eng)
 {
-	if (eng && eng->total > 0)
-		return (eng->total - 1);
-	else
-		return 0;
+	if (!eng)
+	       return 0;
+
+	return (eng->total > 0 ? eng->total -1 : 0);
 }
 
 void *
 Neuro_GiveEBuf(EBUF *eng, u32 elem)
 {
-	void ***buf;
+	register void ***buf;
 	
 	if (!eng)
 		return NULL;
@@ -201,13 +221,10 @@ Neuro_ResetEBuf(EBUF *eng)
 u8
 Neuro_EBufIsEmpty(EBUF *eng)
 {
-
 	if (!eng)
 		return 2;
-	if (eng)
-		if (eng->total == 0)
-			return 1;
-	return 0;
+
+	return (eng->total == 0 ? 1 : 0);
 }
 
 

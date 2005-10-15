@@ -31,6 +31,17 @@ struct OBJBUF
 };
 */
 
+u8
+Chk_bound(Rectan *rec, u16 x, u16 y)
+{
+	if (rec->x <= x && rec->x + rec->w >= x)
+	{
+		if (rec->y <= y && rec->y + rec->h >= y)
+			return 1;
+	}
+	return 0;
+}
+
 void
 Neuro_Sleep(u32 t)
 {
@@ -293,34 +304,32 @@ Neuro_PrintFPS()
 	}
 }
 
+/* rectangle or square bounds check function.
+ * return values :
+ * 0 = depen is inside indep.
+ * 1 = depen and indep are not touching each others(they are far away).
+ * 2 = depen is overlaping indep. 
+ * this function needs to be converted to a macro so its lightning quick
+ */
 u8
 Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
-{
-	/* rectangle or square bounds check. If the depen is outside or is a bit inside and
-	 * a but outside(also inclusive), it will return 1. If the depen rectangle 
-	 * is completely inside indep, it returns 0 .
-	 */
-	
-	/* Up side check */
-	if (depen->y <= indep->y) /* checked and ok */
-		return 1;
-	/* Right side check */
-	if (depen->x >= indep->x + indep->w) /* fixed and ok */ 
-		return 1;	
-		/* clip check */
-		if (depen->x + depen->w >= indep->x + indep->w) 
-			return 1;
-	/* Bottom side check */
-	if (depen->y >= indep->y + indep->h)
-		return 1;
-		/* clip check */
-		if (depen->y + depen->h >= indep->y + indep->h)
-			return 1;
-	/* Left side check */
-	if (depen->x <= indep->x)
-		return 1;
+{		
+	register u8 status = 0;
 
-	/* depen is completely inside indep */
-	return 0;
+	status = Chk_bound(indep, depen->x, depen->y); /* up left */
+	status += Chk_bound(indep, depen->x + depen->w, depen->y); /* up right */
+	status += Chk_bound(indep, depen->x + depen->w, depen->y + depen->h); /* bottom right */
+	status += Chk_bound(indep, depen->x, depen->y + depen->h); /* bottom left */
+
+	if (status == 4)
+		status = 0; /* obj is inside form */
+	else
+	{
+		if (status > 0)
+			status = 2; /* obj overlaps form */
+		else
+			status = 1; /* obj is not touching form */
+	}
+	return status;
 }
 

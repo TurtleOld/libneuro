@@ -661,7 +661,13 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	else
 		return;
 	*/
-		
+
+	if (secureBoundsCheck(idst) > 0)
+	{
+		printf("a drawing instruction was dropped because its destination is outbound\n");
+		return;
+	}
+	
 	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
 	current = Neuro_GiveEBufCount(tmp);
