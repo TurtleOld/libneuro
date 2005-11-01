@@ -8,6 +8,7 @@
 
 #include "typedef.h"
 
+#include "ebuf.h"
 #include "debug.h"
 #include "extlib.h"
 #include "graphics.h"

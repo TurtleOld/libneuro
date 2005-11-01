@@ -2,12 +2,15 @@
 #define __EBUF_H
 
 #include "engine.h"
+#include <stdlib.h>
 
 #define MEMORY_ALLOC_OVERH 10
 
 typedef struct EBUF EBUF;
 
 extern EBUF *Neuro_CreateEBuf();
+
+extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
 
 extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
 

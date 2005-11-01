@@ -39,4 +39,5 @@ include_HEADERS= \
 		     xml/nmap.h \
 		     engine.h \
 		     typedef.h \
-		     NEURO.h 
+		     NEURO.h \
+		     ebuf.h

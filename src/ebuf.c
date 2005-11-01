@@ -16,6 +16,7 @@ struct EBUF
 	void **buffer;
 	u32 mem;
 	u32 total;
+	void (*callback)(void *src);
 };
 
 
@@ -59,6 +60,12 @@ Neuro_CreateEBuf()
 	temp->buffer = NULL;
 
 	return temp;
+}
+
+void
+Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src))
+{
+	eng->callback = callback;
 }
 
 void
@@ -115,12 +122,18 @@ Neuro_CleanEBuf(EBUF **engi)
 		
 	buf = &eng->buffer;
 	i = eng->total;
-
+	
 	while (i-- > 0)
 	{
 		buf = Neuro_GiveEBuf(eng, i);
 		if (buf)
+		{
+			if (eng->callback)
+			{
+				eng->callback(buf);
+			}
 			free(buf);
+		}
 		/* printf("#%d -- cleaned\n", i); */
 	}
 
