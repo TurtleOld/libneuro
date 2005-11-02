@@ -577,8 +577,8 @@ clean_queue()
 	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&b_Queue);
 	
-	b_Raw = Neuro_CreateEBuf();
-	b_Queue = Neuro_CreateEBuf();
+	Neuro_CreateEBuf(&b_Raw);
+	Neuro_CreateEBuf(&b_Queue);
 	
 	Neuro_CopyEBuf(b_Raw, _Raw);
 	Neuro_CopyEBuf(b_Queue, _Queue);
@@ -861,12 +861,12 @@ Graphics_Init()
 			sizeof(u8)); 
 	*/
 	
-	_Drawing = Neuro_CreateEBuf();
-	_Raw = Neuro_CreateEBuf();
-	_Queue = Neuro_CreateEBuf();
-	_Pixel = Neuro_CreateEBuf();
-	b_Queue = Neuro_CreateEBuf();
-	b_Raw = Neuro_CreateEBuf();
+	Neuro_CreateEBuf(&_Drawing);
+	Neuro_CreateEBuf(&_Raw);
+	Neuro_CreateEBuf(&_Queue);
+	Neuro_CreateEBuf(&_Pixel);
+	Neuro_CreateEBuf(&b_Queue);
+	Neuro_CreateEBuf(&b_Raw);
 	
 	return _err_;
 }

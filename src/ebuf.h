@@ -8,7 +8,7 @@
 
 typedef struct EBUF EBUF;
 
-extern EBUF *Neuro_CreateEBuf();
+extern void Neuro_CreateEBuf(EBUF **eng);
 
 extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
 
@@ -16,7 +16,11 @@ extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
 
 extern void Neuro_CleanEBuf(EBUF **eng);
 
+extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
+
 extern u32 Neuro_GiveEBufCount(EBUF *eng);
+
+extern i32 Neuro_GiveEBufElem(EBUF *eng, void *object);
 
 extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 

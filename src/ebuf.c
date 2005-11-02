@@ -19,7 +19,6 @@ struct EBUF
 	void (*callback)(void *src);
 };
 
-
 /* doesn't seem to be ISO C ANSI compliant. 
  * I'm leaving the code here for future 
  * reference. 
@@ -48,18 +47,23 @@ struct EBUF
 /*-------------------- Static Functions ----------------------------*/
 
 /*-------------------- Global Functions ----------------------------*/	
-EBUF *
-Neuro_CreateEBuf()
-{
-	EBUF *temp;
 
-	temp = (EBUF*)calloc(1, sizeof(EBUF));
+void
+Neuro_CreateEBuf(EBUF **eng)
+{	
+	EBUF *tmp;
+	
+	if (*eng == NULL)
+	{
+		*eng = (EBUF*)calloc(1, sizeof(EBUF));
 
-	temp->mem = 0;
-	temp->total = 0;
-	temp->buffer = NULL;
+		(*eng)->mem = 0;
+		(*eng)->total = 0;
+		(*eng)->buffer = NULL;
+		(*eng)->callback = NULL;
 
-	return temp;
+		tmp = *eng;
+	}	
 }
 
 void
@@ -107,6 +111,44 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	(*buf)[*total] = calloc(1, sobj);
 	
 	*total = *total + 1;
+}
+
+void
+Neuro_SCleanEBuf(EBUF *eng, void *object)
+{
+	void *buf;
+	i32 elem;
+	u32 total;
+	
+	if (!eng || !object)
+		return;
+	
+	total = Neuro_GiveEBufCount(eng);
+	
+	elem = Neuro_GiveEBufElem(eng, object);
+
+	if (elem < 0)
+		return;
+	
+	if (eng->callback != NULL)
+		eng->callback(object);
+	
+	free(object);
+
+	/* check to see if the one we want to remove is the last one */ 
+	if (total != elem)
+	{
+		/* get the last one */
+		buf = Neuro_GiveEBuf(eng, total);
+	
+		/* make the one we just deleted point to the last one */
+		Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, elem), buf);
+	}
+	/* make the last element point to NULL */
+	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL);
+
+	eng->mem++; /* add an extra mem because we now have an extra slot free */
+	eng->total--;
 }
 
 void
@@ -180,6 +222,27 @@ Neuro_GiveEBuf(EBUF *eng, u32 elem)
 		return (*buf)[elem];
 	else
 		return NULL;
+}
+
+i32
+Neuro_GiveEBufElem(EBUF *eng, void *object)
+{
+	void *buf;
+	u32 i;
+
+	if (!eng || !object)
+		return -1;
+		
+	buf = &eng->buffer;
+	i = eng->total;
+	
+	while (i-- > 0)
+	{
+		buf = Neuro_GiveEBuf(eng, i);
+		if (buf == object)
+			return i;
+	}
+	return -1;
 }
 
 void **
