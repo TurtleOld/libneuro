@@ -12,6 +12,8 @@ lib_sources = 	debug.c \
 
 if USE_SDL
 lib_lal = sdl.c
+#else USE_GGI
+#lib_lal = ggi.c
 else
 lib_lal = none.c
 endif

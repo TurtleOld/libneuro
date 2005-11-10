@@ -67,20 +67,31 @@ if test x$enable_libxml2 = xyes; then
 fi
 #AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
- need to make it so if it is set to 0, it will still compile :D
-AC_ARG_ENABLE(libSDL, 
-[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [[default=yes]]],
-	, enable_libSDL=yes)
-if test x$enable_libSDL = xyes; then
-	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
-	], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
-else
-	AC_DEFINE(USE_SDL, 0)
-fi
-AM_CONDITIONAL(USE_SDL, test x$enable_libSDL = xyes)
+AC_ARG_WITH(lowlib, 
+[ --with-lowlib=<lowlib>     the low library Neuro will use;]
+[ 			   only a single value is valid here;]
+[			   Default is "sdl";]
+[ 			   Possible low libraries are :]
+[			     dummy, sdl ],
+lowlib="$withval", lowlib="sdl")
+SELECTED_LOWLIB=`echo $lowlib`
+
+AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
+
+# need to make it so if it is set to 0, it will still compile :D
+#AC_ARG_ENABLE(libSDL, 
+#[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [[default=yes]]],
+#	, enable_libSDL=yes)
+#if test x$enable_libSDL = xyes; then
+#	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
+#	], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
+#else
+#	AC_DEFINE(USE_SDL, 0)
+#fi
+#AM_CONDITIONAL(USE_SDL, test x$enable_libSDL = xyes)
 
 AC_ARG_ENABLE(Debug,
-[  --enable-Debug	enable the debugging of this program [default=no]],
+[  --enable-Debug	enable the debugging of this program [[default=no]]],
 	, enable_Debug=no)
 if test x$enable_Debug = xyes; then
 	NEUROFLAGS="$NEUROFLAGS -g"
@@ -100,4 +111,10 @@ src/Makefile
 src/xml/Makefile
 ])
 
+#AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
+
 AC_OUTPUT
+
+echo " "
+echo "This is the low library Neuro will use : $SELECTED_LOWLIB"
+echo " "

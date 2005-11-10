@@ -210,6 +210,8 @@ lib_sources = debug.c \
 		graphics.c \
 		other.c
 
+#else USE_GGI
+#lib_lal = ggi.c
 @USE_SDL_FALSE@lib_lal = none.c
 @USE_SDL_TRUE@lib_lal = sdl.c
 libneuro_la_SOURCES = $(lib_sources) $(lib_lal)
