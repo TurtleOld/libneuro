@@ -1033,8 +1033,8 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-libxml2	enable the use of libxml2 for use with the xmltools default=yes
-  --enable-libSDL	enable the use of the library Simple DirectMedia Layer default=yes
+  --enable-libxml2	enable the use of libxml2 for use with the xmltools [default=yes]
+  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [default=yes]
   --enable-Debug	enable the debugging of this program default=no
 
 Optional Packages:
@@ -19248,7 +19248,7 @@ fi
 fi
 #AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
-# need to make it so if it is set to 0, it will still compile :D
+ need to make it so if it is set to 0, it will still compile :D
 # Check whether --enable-libSDL or --disable-libSDL was given.
 if test "${enable_libSDL+set}" = set; then
   enableval="$enable_libSDL"

@@ -59,7 +59,7 @@ XML2FLAGS="-I/usr/include/libxml2"
 
 # need to make it so if it is set to 0, that it doesnt compile xmltool.c and nmap.c
 AC_ARG_ENABLE(libxml2, 
-[  --enable-libxml2	enable the use of libxml2 for use with the xmltools [default=yes]],
+[  --enable-libxml2	enable the use of libxml2 for use with the xmltools [[default=yes]]],
 	, enable_libxml2=yes)
 if test x$enable_libxml2 = xyes; then
 	AC_CHECK_LIB(xml2, xmlFreeDoc, [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"
@@ -67,9 +67,9 @@ if test x$enable_libxml2 = xyes; then
 fi
 #AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
-# need to make it so if it is set to 0, it will still compile :D
+ need to make it so if it is set to 0, it will still compile :D
 AC_ARG_ENABLE(libSDL, 
-[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [default=yes]],
+[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [[default=yes]]],
 	, enable_libSDL=yes)
 if test x$enable_libSDL = xyes; then
 	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
