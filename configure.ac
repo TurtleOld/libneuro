@@ -77,6 +77,11 @@ lowlib="$withval", lowlib="sdl")
 SELECTED_LOWLIB=`echo $lowlib`
 
 AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
+if test $SELECTED_LOWLIB = sdl; then
+	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
+
+fi
+
 
 # need to make it so if it is set to 0, it will still compile :D
 #AC_ARG_ENABLE(libSDL, 

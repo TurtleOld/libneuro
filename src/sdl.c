@@ -120,7 +120,12 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 v_object *
 Lib_LoadBMP(const char *path)
 {
-	return (v_object*)SDL_LoadBMP(path);
+	void *temp;
+	temp = SDL_LoadBMP(path);
+	if (temp)
+		return (v_object*)temp;
+	else
+		return NULL;
 }
 
 static u8 

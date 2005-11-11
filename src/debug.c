@@ -25,7 +25,7 @@
 Neuro_DebugPrint(char *filename, char *funcName, u32 lineNum, const char *control, ...)
 */
 void
-Neuro_DebugPrint(char *control, char *filename, char *funcName, u32 lineNum)
+Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum)
 {
 	/*
 	va_list args;
@@ -35,8 +35,8 @@ Neuro_DebugPrint(char *control, char *filename, char *funcName, u32 lineNum)
 	vasprintf(msg, control, args);
 	va_end(args);
 	*/
-	/* fprintf(stderr, "%s:%s:%d -- %s\n", filename, funcName, lineNum, control); */
-	fprintf(stderr, "%s\n", control);
+	fprintf(stderr, "%s : %s:%s:%d -- %s\n", type, filename, funcName, lineNum, control);
+	/* fprintf(stderr, "%s\n", control); */
 	
 	/* free(msg); */
 }

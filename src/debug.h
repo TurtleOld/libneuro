@@ -8,11 +8,14 @@
 /*! TODO */
 /*extern void Neuro_DebugPrint(char *filename, char *funcName, u32 lineNum, const char *control, ...) __attribute__ ((__always_inline__));*/
 
-extern void Neuro_DebugPrint(char *control, char *filename, char *funcName, u32 lineNum);
+extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum);
 
 /*! TODO */
 /*#define DbgP(x) Neuro_DebugPrint(__FILE__, __FUNCTION__, __LINE__, x)*/
-#define DbgP(x) Neuro_DebugPrint(x, NULL, NULL, 0)
+/*#define DbgP(x) Neuro_DebugPrint(x, NULL, NULL, 0)*/
+#define Debug_Print(x) Neuro_DebugPrint("Debug Message", x, __FILE__, __FUNCTION__, __LINE__)
+#define Error_Print(x) Neuro_DebugPrint("Error Message", x, __FILE__, __FUNCTION__, __LINE__)
+#define Info_Print(x) Neuro_DebugPrint("Information Message", x, __FILE__, __FUNCTION__, __LINE__)
 
 /*
 #define Dbg(x) Dbg_Print(x, __FUNCTION__, __LINE__)
