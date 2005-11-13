@@ -498,8 +498,8 @@ flush_queue()
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
 			
-			if (!secureBoundsCheck(&buf))
-			{
+			/*if (!secureBoundsCheck(&buf))
+			{*/
 				if (background)
 				{
 					Lib_BlitObject(background, &buf, sclScreen, &buf);
@@ -510,11 +510,11 @@ flush_queue()
 					Lib_FillRect(sclScreen, &buf, 0);
 				}
 				/* updScreen(&buf); */
-			}
+			/*}
 			else
 			{
 				printf("[reset] catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
-			}
+			}*/
 			/* if (cur->next == NULL)
 				printf("the next elements seems to be NULL\n");
 			*/
@@ -549,16 +549,17 @@ flush_queue()
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w - 1;
 		buf.h = cur->current->src.h - 1;
-		if (!secureBoundsCheck(&buf))
-		{
+		/*if (!secureBoundsCheck(&buf))
+		{*/
 			Lib_BlitObject(cur->current->surface_ptr, 
 					&cur->current->src, sclScreen, 
 					&cur->current->dst);
-		}
+		/*}
 		else
 		{
 			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
-		}
+		}*/
+			
 		/* if (cur->next == NULL)
 			printf("the next elements seems to be NULL\n");
 		*/
@@ -647,6 +648,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	register EBUF *tmp = NULL;
 	register RAW_ENGINE *buf = NULL;
 	register u32 current;
+	Rectan bufa;
 
 	/* printf("new layer %d\n", layer); */
 	tmp = _Raw;
@@ -661,8 +663,12 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	else
 		return;
 	*/
-
-	if (secureBoundsCheck(idst) > 0)
+	bufa.x = idst->x;
+	bufa.y = idst->y;
+	bufa.w = isrc->w - 1;
+	bufa.h = isrc->h - 1;
+	
+	if (secureBoundsCheck(&bufa) > 0)
 	{
 		printf("a drawing instruction was dropped because its destination is outbound\n");
 		return;
@@ -785,7 +791,8 @@ Graphics_Poll()
 	else
 		lFps = 0;
 
-	
+
+	if (!Neuro_EBufIsEmpty(_Drawing))	
 	{
 		DRAWING_ELEMENTS *bufa;
 		u32 total;
