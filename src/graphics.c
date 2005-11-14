@@ -193,15 +193,6 @@ static int
 secureBoundsCheck(Rectan *rect)
 {
 	Rectan screenb;
-#if oldboundscheck
-	/* normal bounds check */
-	if (rect->x >= SCREEN_X || rect->y >= SCREEN_Y)
-		return 1;
-	/* now see if the width and height coords are in bound too */
-	if (rect->x + rect->w >= SCREEN_X || rect->y + rect->h >= SCREEN_Y)
-		return 1;
-	return 0;
-#endif /* oldboundscheck */
 	
 	screenb.x = 0;
 	screenb.y = 0;
@@ -291,7 +282,7 @@ print_queue2() __attribute__ ((__unused__))
  * a new raw is added.
  *
  * convertion : done
- * testing : seems to work
+ * testing : works
  */
 static void
 computeRawEngine(RAW_ENGINE *toadd)
@@ -305,17 +296,9 @@ computeRawEngine(RAW_ENGINE *toadd)
 	Neuro_AllocEBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
 	current = Neuro_GiveEBufCount(tmp);
-	/* buf = (INSTRUCTION_ENGINE***)&tmp->buffer; */
+
 	buf = Neuro_GiveEBuf(tmp, current);
 	
-	/* current = tmp->total - 1; */
-	
-	/* printf("Raw computing Cycle ptr %d\n", (int)(*buf)[current]); */
-	
-	/* add the data to the end of the queue */
-	/* printf("will place layer %d in the correct order\n", toadd->layer); */
-	/* (*buf)[current]->current = toadd; */
-	/* (*buf)[current]->next = NULL; */
 	buf->current = toadd;
 	buf->next = NULL;
 	
@@ -333,10 +316,6 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 		if (last_element->current->layer <= buf->current->layer)
 		{
-			/*
-			last_element->next = (*buf)[current];
-			last_element = (*buf)[current];
-			*/
 			last_element->next = buf;
 			last_element = buf;
 			/*printf("proof layer %d real layer %d ptr %d\n",
@@ -424,19 +403,16 @@ cleanPixels()
 	tmp = _Pixel;
 
 	current = Neuro_GiveEBufCount(tmp);
-	/* pix = (PIXEL_ENGINE***)&tmp->buffer; */
 	
 	if (current <= 0)
 		return;
 
-	/* printf("inside %s %d\n", __FUNCTION__, current); */
 	
 	if (!Neuro_EBufIsEmpty(tmp))
 	{
 		while (current-- > 0)
 		{
 			pix = Neuro_GiveEBuf(tmp, current);
-			/* printf("%d\n", current); */
 			buf.x = pix->x;
 			buf.y = pix->y;
 			
@@ -444,10 +420,6 @@ cleanPixels()
 			buf.h = 1;
 			
 			Lib_BlitObject(background, &buf, sclScreen, &buf);
-			/* printf("%d\n", Other_GetPixel(background, buf.x, buf.y));*/
-			/* Neuro_PutPixel(buf.x, buf.y, 
-					Other_GetPixel(background, buf.x, buf.y));
-			*/
 		}
 	}
 	Neuro_CleanEBuf(&_Pixel);
@@ -455,7 +427,7 @@ cleanPixels()
 
 /* 
  * convertion : done
- * testing : seems to work
+ * testing : works
  */
 static void
 flush_queue()
@@ -478,49 +450,27 @@ flush_queue()
 			cur = Neuro_GiveEBuf(tmp, 0);
 		else
 			return;
-		
-		/* printf("cycle\n"); */
 	
 		/* "reset" the emplacement of the last position of the image
 		 * with the background if theres one or with the color black 
 		 * if none.
 		 */
 		while (cur)
-		{
-			/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
-			
-			/*if (cur->current->layer >= 55)
-				printf("-----------------------\n");
-			*/
-			
+		{		
 			buf.x = cur->current->dst.x;
 			buf.y = cur->current->dst.y;
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
 			
-			/*if (!secureBoundsCheck(&buf))
-			{*/
-				if (background)
-				{
-					Lib_BlitObject(background, &buf, sclScreen, &buf);
-	
-				}
-				else
-				{
-					Lib_FillRect(sclScreen, &buf, 0);
-				}
-				/* updScreen(&buf); */
-			/*}
+			if (background)
+				Lib_BlitObject(background, &buf, sclScreen, &buf);
 			else
-			{
-				printf("[reset] catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
-			}*/
-			/* if (cur->next == NULL)
-				printf("the next elements seems to be NULL\n");
-			*/
+				Lib_FillRect(sclScreen, &buf, 0);
+			
 			cur = cur->next;
 		}
 	}
+	/* TODO : check if it all works without a background. */
 	/*
 	else if (!background)
 	{
@@ -538,31 +488,12 @@ flush_queue()
 	
 	while (cur)
 	{
-		/* printf("flushing an instruction : layer %d\n", cur->current->layer); */
-
-		/*
-		if (cur->current->layer >= 55)
-				printf("------///----------\\\\\\-------\n");
-		*/
-
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w - 1;
 		buf.h = cur->current->src.h - 1;
-		/*if (!secureBoundsCheck(&buf))
-		{*/
-			Lib_BlitObject(cur->current->surface_ptr, 
-					&cur->current->src, sclScreen, 
-					&cur->current->dst);
-		/*}
-		else
-		{
-			printf("catched an unsecure coordinate %d %d %d %d\n", buf.x, buf.y, buf.w - 1, buf.h - 1);
-		}*/
-			
-		/* if (cur->next == NULL)
-			printf("the next elements seems to be NULL\n");
-		*/
+		Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
+					&cur->current->dst);	
 		cur = cur->next;
 	}
 	f_count = 0;
@@ -570,11 +501,7 @@ flush_queue()
 
 static void
 clean_queue()
-{
-	/*
-	cleanRaw();
-	cleanQueue();
-	*/
+{	
 	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&b_Queue);
 	
@@ -584,10 +511,7 @@ clean_queue()
 	Neuro_CopyEBuf(b_Raw, _Raw);
 	Neuro_CopyEBuf(b_Queue, _Queue);
 	
-	/* cleanLightBuf(_Raw); */
 	Neuro_ResetEBuf(_Raw);
-	
-	/* cleanLightBuf(_Queue); */
 	Neuro_ResetEBuf(_Queue);
 
 	last_element = NULL;
@@ -640,7 +564,7 @@ Neuro_AddBackground(v_object *isurface)
  * - surface is the pointer of the loaded image. 
  *
  *   convertion : done
- *   testing : seg fault at 22 elements
+ *   testing : works
  */
 void 
 Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
@@ -650,19 +574,8 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	register u32 current;
 	Rectan bufa;
 
-	/* printf("new layer %d\n", layer); */
 	tmp = _Raw;
-	/* printf("-- raw element adding (%d), current total is %d\n", layer, tmp->total); */
 	
-	/*
-	if (f_count < 20)
-	{
-		f_count++;
-		printf("frame count %d total %d\n", f_count, tmp->total);
-	}
-	else
-		return;
-	*/
 	bufa.x = idst->x;
 	bufa.y = idst->y;
 	bufa.w = isrc->w - 1;
@@ -711,7 +624,6 @@ Neuro_AddDrawingElement(void (*func)())
 	
 	buf->callback = func;
 	
-	/* printf("proof %d real %d\n", (int)buf, (int)func); */
 }
 
 void
@@ -774,7 +686,6 @@ Graphics_Poll()
 {	
 	const u32 frameSkipMax = 0;
 	static u32 frameSkip = 0;
-	/* printf("Cycle\n"); */
 	
 	if (clean_pixel_in_this_cycle)
 	{
@@ -792,7 +703,7 @@ Graphics_Poll()
 		lFps = 0;
 
 
-	if (!Neuro_EBufIsEmpty(_Drawing))	
+	if (!Neuro_EBufIsEmpty(_Drawing))
 	{
 		DRAWING_ELEMENTS *bufa;
 		u32 total;
@@ -801,7 +712,6 @@ Graphics_Poll()
 		total++;
 		while (total-- > 0)
 		{
-			/* printf("callback ptr %d #%d\n", (int)(*(*buf)[loo]), loo); */
 			bufa = Neuro_GiveEBuf(_Drawing, total);
 			(*bufa->callback)();
 		}
@@ -845,28 +755,8 @@ Graphics_Init()
 	ltime = time(NULL);
 
 	_err_ = 0;
-	/* will need to be configurable */
-	_err_ = Lib_VideoInit(&screen, &sclScreen);
-	
-	/* screen = SDL_SetVideoMode(SCREEN_X, SCREEN_Y, 16, SDL_SWSURFACE);
-
-	if (screen == NULL)
-	{
-		perror("SDL_SetVideoMode()");
-		return 1;
-	}
-	*/
-
-	/* sclScreen = SDL_CreateRGBSurface(SDL_SWSURFACE, SCREEN_X, SCREEN_Y, screen->format->BitsPerPixel, screen->format->Rmask, screen->format->Gmask, screen->format->Bmask, screen->format->Amask); */
-	
-	/* 
-	 * printf("the size of SDL_Rect %d, the size of RAW_ENGINE %d the size of Rectan %d the size of SDL_Surface %d the size of u8 %d\n", 
-			sizeof(SDL_Rect), 
-			sizeof(RAW_ENGINE), 
-			sizeof(Rectan),
-			sizeof(SDL_Surface*),
-			sizeof(u8)); 
-	*/
+	/* will need to be configurable from the projects that use Neuro */
+	_err_ = Lib_VideoInit(&screen, &sclScreen);	
 	
 	Neuro_CreateEBuf(&_Drawing);
 	Neuro_CreateEBuf(&_Raw);
