@@ -626,15 +626,16 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	register EBUF *tmp = NULL;
 	register RAW_ENGINE *buf = NULL;
 	register u32 current;
-	Rectan bufa, tIsrc;
+	Rectan bufa, tIsrc, tIdst;
 
 	tmp = _Raw;
 	
 
 	memcpy(&tIsrc, isrc, sizeof(Rectan));
+	memcpy(&tIdst, idst, sizeof(Rectan));
 	
-	bufa.x = idst->x;
-	bufa.y = idst->y;
+	bufa.x = tIdst.x;
+	bufa.y = tIdst.y;
 	bufa.w = tIsrc.w - 1;
 	bufa.h = tIsrc.h - 1;
 	
@@ -660,8 +661,8 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 			 * The only thing to do is to change the isrc(Rectan)'s 
 			 * values.
 			 */
-			Neuro_VerticalBoundFix(&screenSize, &tIsrc, idst);
-			Neuro_HorizontalBoundFix(&screenSize, &tIsrc, idst);
+			Neuro_VerticalBoundFix(&screenSize, &tIsrc, &tIdst);
+			Neuro_HorizontalBoundFix(&screenSize, &tIsrc, &tIdst);
 			Info_Print("Fixed the coordinates/size of the drawing instruction.");
 		}
 		break;
@@ -674,8 +675,8 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 		break;
 	}
 	
-	bufa.x = idst->x;
-	bufa.y = idst->y;
+	bufa.x = tIdst.x;
+	bufa.y = tIdst.y;
 	bufa.w = tIsrc.w - 1;
 	bufa.h = tIsrc.h - 1;
 
@@ -685,7 +686,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 		/* return; */
 	}
 
-	BoundFixChecker(&test_BoundFix, &tIsrc, idst);
+	BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst);
 
 	
 	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
@@ -695,7 +696,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	
 	buf->layer = layer;
 	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
-	memcpy(&buf->dst, idst, sizeof(Rectan));
+	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
 	buf->surface_ptr = isurface;
 	computeRawEngine((RAW_ENGINE*)buf);
 }
@@ -872,7 +873,7 @@ Graphics_Init()
 	screenSize.h = SCREEN_Y;
 	
 	test_BoundFix.x = screenSize.w / 2;
-	test_BoundFix.y = 500 - 2;
+	test_BoundFix.y = 500 + 10;
 	test_BoundFix.w = 20;
 	test_BoundFix.h = 7 * 6;
 	

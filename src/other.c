@@ -295,6 +295,22 @@ Neuro_PrintFPS()
 	}
 }
 
+/* substract num2 from num1 and returns the answer only if it is positive,
+ * if it is not, returns 0 
+ */
+u32
+Neuro_CalcOnlyPos(u32 num1, u32 num2)
+{
+	double result;
+	
+	result = num1 - num2;
+
+	if (result < 0)
+		return 0;
+	else 
+		return (u32)result;
+}
+
 /* skeleton rectangle or square bounds check function.
  * return values :
  * 0 = depen is inside indep.
@@ -342,7 +358,7 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 	/* check to see if depen is bigger than indep and indep is inside depen 
 	 * if its the case, the status will be 2.
 	 */
-	if (status == 0)
+	if (status == 1)
 	{
 		if (Neuro_DumbBoundsCheck(depen, indep) != 1)
 			status = 2;
@@ -355,35 +371,46 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 void
 Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 {
-	if ((indep->x + 1) > idst->x)
+	/*
+	if ((indep->x) > idst->x)
 	{
-		idst->x = indep->x + 1;
-		isrc->x += (indep->x + 1) - idst->x;
-		isrc->w += (indep->x + 1) - idst->x;
+		isrc->x += (indep->x) - idst->x;
+		isrc->w -= abs((indep->x) - idst->x);
+		idst->x = indep->x;
 	}
 	
 	if ((indep->x + indep->w) < (idst->x + isrc->w))
 	{
-		isrc->x += (idst->x + isrc->w) - (indep->x + indep->w);
 		isrc->w -= (idst->x + isrc->w) - (indep->x + indep->w);
 	}
+	*/
+
+	isrc->x += Neuro_CalcOnlyPos(indep->x, idst->x);
+	isrc->w -= (Neuro_CalcOnlyPos(indep->x, idst->x) + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w));
+	idst->x += Neuro_CalcOnlyPos(indep->x, idst->x);
 }
 
 /* only play with the y and height values */
 void
 Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 {
+	/*	
 	if ((indep->y + 1) > idst->y)
 	{
-		idst->y = indep->y + 1;
-		isrc->y += (indep->y + 1) - idst->y;
-		isrc->y -= (indep->y + 1) - idst->y;
+		isrc->y += abs((indep->y + 1) - idst->y);
+		isrc->h -= abs((indep->y + 1) - idst->y);
+		idst->y = (indep->y + 1);
 	}
-	
 	if ((indep->y + indep->h) < (idst->y + isrc->h))
 	{
-		isrc->y += (idst->y + isrc->h) - (indep->y + indep->h);
 		isrc->h -= (idst->y + isrc->h) - (indep->y + indep->h);
 	}
+	*/
+	
+	
+	isrc->y += Neuro_CalcOnlyPos(indep->y, idst->y);
+	isrc->h -= (Neuro_CalcOnlyPos(indep->y, idst->y) + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h));
+	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);
+	
 }
 
