@@ -22,21 +22,12 @@
 
 #include "graphics.h"
 
-/*
-struct OBJBUF
-{
-	void **buffer;
-	u32 total;
-	void (*callback)(void *src);
-};
-*/
-
 u8
 Chk_bound(Rectan *rec, u16 x, u16 y)
 {
-	if (rec->x <= x && rec->x + rec->w >= x)
+	if (rec->x <= x && (rec->x + rec->w) >= x)
 	{
-		if (rec->y <= y && rec->y + rec->h >= y)
+		if (rec->y <= y && (rec->y + rec->h) >= y)
 			return 1;
 	}
 	return 0;
@@ -304,7 +295,7 @@ Neuro_PrintFPS()
 	}
 }
 
-/* rectangle or square bounds check function.
+/* skeleton rectangle or square bounds check function.
  * return values :
  * 0 = depen is inside indep.
  * 1 = depen and indep are not touching each others(they are far away).
@@ -312,7 +303,7 @@ Neuro_PrintFPS()
  * this function needs to be converted to a macro so its lightning quick
  */
 u8
-Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
+Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen)
 {		
 	register u8 status = 0;
 
@@ -330,6 +321,69 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 		else
 			status = 1; /* obj is not touching form */
 	}
+	
 	return status;
+}
+
+/* rectangle or square bounds check function.
+ * return values :
+ * 0 = depen is inside indep.
+ * 1 = depen and indep are not touching each others(they are far away).
+ * 2 = depen is overlaping indep. 
+ * this function needs to be converted to a macro so its lightning quick
+ */
+u8
+Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
+{		
+	register u8 status = 0;
+	
+	status = Neuro_DumbBoundsCheck(indep, depen);
+
+	/* check to see if depen is bigger than indep and indep is inside depen 
+	 * if its the case, the status will be 2.
+	 */
+	if (status == 0)
+	{
+		if (Neuro_DumbBoundsCheck(depen, indep) != 1)
+			status = 2;
+	}
+	
+	return status;
+}
+
+/* only play with the x and width values */
+void
+Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
+{
+	if ((indep->x + 1) > idst->x)
+	{
+		idst->x = indep->x + 1;
+		isrc->x += (indep->x + 1) - idst->x;
+		isrc->w += (indep->x + 1) - idst->x;
+	}
+	
+	if ((indep->x + indep->w) < (idst->x + isrc->w))
+	{
+		isrc->x += (idst->x + isrc->w) - (indep->x + indep->w);
+		isrc->w -= (idst->x + isrc->w) - (indep->x + indep->w);
+	}
+}
+
+/* only play with the y and height values */
+void
+Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
+{
+	if ((indep->y + 1) > idst->y)
+	{
+		idst->y = indep->y + 1;
+		isrc->y += (indep->y + 1) - idst->y;
+		isrc->y -= (indep->y + 1) - idst->y;
+	}
+	
+	if ((indep->y + indep->h) < (idst->y + isrc->h))
+	{
+		isrc->y += (idst->y + isrc->h) - (indep->y + indep->h);
+		isrc->h -= (idst->y + isrc->h) - (indep->y + indep->h);
+	}
 }
 
