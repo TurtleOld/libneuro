@@ -298,17 +298,17 @@ Neuro_PrintFPS()
 /* substract num2 from num1 and returns the answer only if it is positive,
  * if it is not, returns 0 
  */
-u32
-Neuro_CalcOnlyPos(u32 num1, u32 num2)
+i16
+Neuro_CalcOnlyPos(i16 num1, i16 num2)
 {
-	double result;
+	i16 result;
 	
 	result = num1 - num2;
 
 	if (result < 0)
 		return 0;
 	else 
-		return (u32)result;
+		return result;
 }
 
 /* skeleton rectangle or square bounds check function.
@@ -383,10 +383,9 @@ Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 	{
 		isrc->w -= (idst->x + isrc->w) - (indep->x + indep->w);
 	}
-	*/
-
+	*/	
 	isrc->x += Neuro_CalcOnlyPos(indep->x, idst->x);
-	isrc->w -= (Neuro_CalcOnlyPos(indep->x, idst->x) + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w));
+	isrc->w = Neuro_CalcOnlyPos(isrc->w, (Neuro_CalcOnlyPos(indep->x, idst->x) + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w)));
 	idst->x += Neuro_CalcOnlyPos(indep->x, idst->x);
 }
 
@@ -406,11 +405,8 @@ Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 		isrc->h -= (idst->y + isrc->h) - (indep->y + indep->h);
 	}
 	*/
-	
-	
 	isrc->y += Neuro_CalcOnlyPos(indep->y, idst->y);
-	isrc->h -= (Neuro_CalcOnlyPos(indep->y, idst->y) + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h));
-	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);
-	
+	isrc->h = Neuro_CalcOnlyPos(isrc->h, (Neuro_CalcOnlyPos(indep->y, idst->y) + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h)));
+	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);	
 }
 

@@ -568,7 +568,7 @@ BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst)
 			 */
 			Neuro_VerticalBoundFix(indep, isrc, idst);
 			Neuro_HorizontalBoundFix(indep, isrc, idst);
-			Info_Print("OTHER Fixed the coordinates/size of the drawing instruction.");
+			/* Info_Print("Fixed the coordinates/size of the drawing instruction."); */
 		}
 		break;
 
@@ -626,68 +626,25 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	register EBUF *tmp = NULL;
 	register RAW_ENGINE *buf = NULL;
 	register u32 current;
-	Rectan bufa, tIsrc, tIdst;
+	Rectan tIsrc, tIdst;
 
 	tmp = _Raw;
 	
 
 	memcpy(&tIsrc, isrc, sizeof(Rectan));
-	memcpy(&tIdst, idst, sizeof(Rectan));
-	
-	bufa.x = tIdst.x;
-	bufa.y = tIdst.y;
-	bufa.w = tIsrc.w - 1;
-	bufa.h = tIsrc.h - 1;
-	
-	switch (secureBoundsCheck(&bufa))
+	memcpy(&tIdst, idst, sizeof(Rectan));	
+
+	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
 	{
-		case 0: /* the v_object is inside the screen, all is ok */
-		break;
-
-		case 1: /* the v_object is outside the screen, we need to drop this instruction */
-		{
-			Debug_Print("a drawing instruction was dropped because its destination is outbound");
-			return;
-		}
-		break;
-
-		case 2: /* here is the fun, the v_object is overlapping the screen and we got to
-	        only draw the part that is still inside the screen */
-		{
-			/* to do this, im thinking we could use 2 similar functions 
-			 * the 1st one would check and "correct" the parts of the
-			 * v_object that is not inside the screen vertically and
-			 * the 2nd one would do the same but horizontally.
-			 * The only thing to do is to change the isrc(Rectan)'s 
-			 * values.
-			 */
-			Neuro_VerticalBoundFix(&screenSize, &tIsrc, &tIdst);
-			Neuro_HorizontalBoundFix(&screenSize, &tIsrc, &tIdst);
-			Info_Print("Fixed the coordinates/size of the drawing instruction.");
-		}
-		break;
-
-		default:
-		{
-			Debug_Print("a drawing instruction was dropped because its destination is outbound");
-			return;
-		}
-		break;
-	}
+		Debug_Print("a drawing instruction was dropped because its destination is outbound");
+		return;
+	}	
 	
-	bufa.x = tIdst.x;
-	bufa.y = tIdst.y;
-	bufa.w = tIsrc.w - 1;
-	bufa.h = tIsrc.h - 1;
-
-	if (secureBoundsCheck(&bufa) > 0)
-	{
-		Error_Print("Invalid drawing instruction coordinates/size.");
-		/* return; */
-	}
-
-	BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst);
-
+	/* a square in the middle of the screen to test 
+	 * the bound fix checker on an object other than 
+	 * the screen itself. 
+	 */
+	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */ 
 	
 	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	

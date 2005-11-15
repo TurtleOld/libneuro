@@ -43,7 +43,7 @@ typedef signed int t_tick;
 /*! used to contain rectangle coordinates */
 typedef struct Rectan 
 {
-	u16 x, y, w, h;
+	i16 x, y, w, h;
 }Rectan;
 
 /* video object */
