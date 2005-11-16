@@ -644,7 +644,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	 * the bound fix checker on an object other than 
 	 * the screen itself. 
 	 */
-	BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst);
+	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */
 	
 	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
