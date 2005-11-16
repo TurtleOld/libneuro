@@ -8,8 +8,8 @@
 #ifndef __GRAPHICS_H
 #define __GRAPHICS_H
 
-#include "engine.h"
-#include "other.h"
+#include "../engine.h"
+#include "../misc/other.h"
 
 #include <stdlib.h>
 

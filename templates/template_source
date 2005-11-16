@@ -28,7 +28,7 @@
 /*-------------------- Poll ----------------------------------------*/
 
 void
-ModulePoll()
+Module_Poll()
 {
 	
 }
@@ -36,13 +36,13 @@ ModulePoll()
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-ModuleInit()
+Module_Init()
 {
 	return 0;
 }
 
 void
-ModuleClean()
+Module_Clean()
 {
 	
 }

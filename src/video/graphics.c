@@ -85,8 +85,8 @@
 #include <time.h> /* to calculate the frames per second (fps) */
  
 /*--- Local Headers Including ---*/
-#include "extlib.h"
-#include "ebuf.h"
+#include "../extlib/extlib.h"
+#include "../memory/ebuf.h"
 
 /*--- Main Module Header ---*/
 #include "graphics.h"

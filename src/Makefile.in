@@ -59,13 +59,12 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libneuro_la_DEPENDENCIES = xml/libxmltool.la
-am__libneuro_la_SOURCES_DIST = debug.c events.c ebuf.c graphics.c \
-	other.c none.c sdl.c
-am__objects_1 = debug.lo events.lo ebuf.lo graphics.lo other.lo
-@USE_SDL_FALSE@am__objects_2 = none.lo
-@USE_SDL_TRUE@am__objects_2 = sdl.lo
-am_libneuro_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+libneuro_la_DEPENDENCIES = memory/libmemory.la misc/libmisc.la \
+	extlib/libextlib.la video/libvideo.la events/libevents.la \
+	script/libscript.la sound/libsound.la gui/libgui.la \
+	xml/libxmltool.la
+am__objects_1 = debug.lo neuro_main.lo
+am_libneuro_la_OBJECTS = $(am__objects_1)
 libneuro_la_OBJECTS = $(am_libneuro_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -79,7 +78,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libneuro_la_SOURCES)
-DIST_SOURCES = $(am__libneuro_la_SOURCES_DIST)
+DIST_SOURCES = $(libneuro_la_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -202,19 +201,23 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = xml
-lib_LTLIBRARIES = libneuro.la
-lib_sources = debug.c \
-		events.c \
-		ebuf.c \
-		graphics.c \
-		other.c
+SUBDIRS = \
+	  memory \
+	  misc \
+	  extlib \
+	  video \
+	  events \
+	  script \
+	  sound \
+	  gui \
+	  xml
 
-#else USE_GGI
-#lib_lal = ggi.c
-@USE_SDL_FALSE@lib_lal = none.c
-@USE_SDL_TRUE@lib_lal = sdl.c
-libneuro_la_SOURCES = $(lib_sources) $(lib_lal)
+lib_LTLIBRARIES = libneuro.la
+lib_sources = \
+		debug.c \
+		neuro_main.c
+
+libneuro_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
 libneuro_la_LDFLAGS = \
@@ -223,20 +226,20 @@ libneuro_la_LDFLAGS = \
 		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 libneuro_la_LIBADD = \
+		     memory/libmemory.la \
+		     misc/libmisc.la \
+		     extlib/libextlib.la \
+		     video/libvideo.la \
+		     events/libevents.la \
+		     script/libscript.la \
+		     sound/libsound.la \
+		     gui/libgui.la \
 		     xml/libxmltool.la
 
 include_HEADERS = \
 		     debug.h \
-		     extlib.h \
-		     events.h \
-		     graphics.h \
-		     other.h \
-		     xml/xmltool.h \
-		     xml/nmap.h \
-		     engine.h \
-		     typedef.h \
 		     NEURO.h \
-		     ebuf.h
+		     engine.h
 
 all: all-recursive
 
@@ -308,12 +311,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/debug.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ebuf.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/events.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/graphics.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/none.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/other.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/neuro_main.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -484,7 +482,6 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/xml
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

@@ -1,24 +1,23 @@
 #!/bin/bash
 
-SUBDIRS = xml
+SUBDIRS = \
+	  memory \
+	  misc \
+	  extlib \
+	  video \
+	  events \
+	  script \
+	  sound \
+	  gui \
+	  xml
 
 lib_LTLIBRARIES = libneuro.la
 
-lib_sources = 	debug.c \
-		events.c \
-		ebuf.c \
-		graphics.c \
-		other.c
+lib_sources = 	\
+		debug.c \
+		neuro_main.c
 
-if USE_SDL
-lib_lal = sdl.c
-#else USE_GGI
-#lib_lal = ggi.c
-else
-lib_lal = none.c
-endif
-
-libneuro_la_SOURCES = $(lib_sources) $(lib_lal)
+libneuro_la_SOURCES = $(lib_sources)
 
 AM_CFLAGS= @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
@@ -29,17 +28,18 @@ libneuro_la_LDFLAGS = \
 		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 libneuro_la_LIBADD = \
+		     memory/libmemory.la \
+		     misc/libmisc.la \
+		     extlib/libextlib.la \
+		     video/libvideo.la \
+		     events/libevents.la \
+		     script/libscript.la \
+		     sound/libsound.la \
+		     gui/libgui.la \
 		     xml/libxmltool.la
+		     
 
 include_HEADERS= \
 		     debug.h \
-		     extlib.h \
-		     events.h \
-		     graphics.h \
-		     other.h \
-		     xml/xmltool.h \
-		     xml/nmap.h \
-		     engine.h \
-		     typedef.h \
 		     NEURO.h \
-		     ebuf.h
+		     engine.h

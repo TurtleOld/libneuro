@@ -18,9 +18,9 @@
 #endif /* NOT WIN32 */
 
 #include "other.h"
-#include "extlib.h"
+#include "../extlib/extlib.h"
 
-#include "graphics.h"
+#include "../video/graphics.h"
 
 u8
 Chk_bound(Rectan *rec, u16 x, u16 y)

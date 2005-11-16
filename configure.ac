@@ -39,7 +39,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 #AC_INIT(Neuro, $NEURO_VERSION)
-AC_CONFIG_SRCDIR(src/graphics.c)
+AC_CONFIG_SRCDIR(src/neuro_main.c)
 
 # init automake
 AM_INIT_AUTOMAKE(Neuro, $NEURO_VERSION)
@@ -114,7 +114,22 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/xml/Makefile
+src/memory/Makefile
+src/video/Makefile
+src/events/Makefile
+src/extlib/Makefile
+src/misc/Makefile
+src/gui/Makefile
+src/script/Makefile
+src/sound/Makefile
+src/sound/music/Makefile
 ])
+#add to AC_CONFIG_FILES when they are started
+#src/gui/Makefile
+#src/script/Makefile
+#src/sound/Makefile
+#src/sound/music/Makefile
+
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 
