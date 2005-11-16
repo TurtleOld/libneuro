@@ -1,0 +1,10 @@
+/* module.h */
+
+#ifndef __MODULE_H
+#define __MODULE_H
+
+extern void ModulePoll();
+extern int ModuleInit();
+extern void ModuleClean();
+
+#endif /* __MODULE_H */
