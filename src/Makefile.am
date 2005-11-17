@@ -5,11 +5,16 @@ SUBDIRS = \
 	  misc \
 	  extlib \
 	  video \
-	  events \
-	  script \
-	  sound \
-	  gui \
-	  xml
+	  events
+
+
+#	  script 
+#	  sound 
+#	  gui 
+
+if USE_XML
+SUBDIRS += xml
+endif
 
 lib_LTLIBRARIES = libneuro.la
 
@@ -22,24 +27,35 @@ libneuro_la_SOURCES = $(lib_sources)
 AM_CFLAGS= @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
 
-libneuro_la_LDFLAGS = \
-		      -no-undefines \
-		      -release $(LT_RELEASE) \
-		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+LIB_FLAGS= @NEUROLIBFLAGS@
 
-libneuro_la_LIBADD = \
-		     memory/libmemory.la \
-		     misc/libmisc.la \
-		     extlib/libextlib.la \
-		     video/libvideo.la \
-		     events/libevents.la \
-		     script/libscript.la \
-		     sound/libsound.la \
-		     gui/libgui.la \
-		     xml/libxmltool.la
-		     
+LIB_FLAGS += \
+	      -release $(LT_RELEASE) \
+	      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	      
+libneuro_la_LDFLAGS = $(LIB_FLAGS)
+
+
+SUBLIBLIST= \
+	     memory/libmemory.la \
+	     misc/libmisc.la \
+	     extlib/libextlib.la \
+	     video/libvideo.la \
+	     events/libevents.la 
+
+#		     script/libscript.la 
+#		     sound/libsound.la 
+#		     gui/libgui.la 
+
+if USE_XML
+SUBLIBLIST += xml/libxmltool.la
+endif
+
+libneuro_la_LIBADD = $(SUBLIBLIST)
+
+
 
 include_HEADERS= \
 		     debug.h \
 		     NEURO.h \
-		     engine.h
+		     neuro_engine.h

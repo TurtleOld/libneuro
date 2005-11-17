@@ -41,6 +41,16 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+
+#	  script 
+#	  sound 
+#	  gui 
+@USE_XML_TRUE@am__append_1 = xml
+
+#		     script/libscript.la 
+#		     sound/libsound.la 
+#		     gui/libgui.la 
+@USE_XML_TRUE@am__append_2 = xml/libxmltool.la
 subdir = src
 DIST_COMMON = $(include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
@@ -59,10 +69,11 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libneuro_la_DEPENDENCIES = memory/libmemory.la misc/libmisc.la \
+@USE_XML_TRUE@am__DEPENDENCIES_1 = xml/libxmltool.la
+am__DEPENDENCIES_2 = memory/libmemory.la misc/libmisc.la \
 	extlib/libextlib.la video/libvideo.la events/libevents.la \
-	script/libscript.la sound/libsound.la gui/libgui.la \
-	xml/libxmltool.la
+	$(am__DEPENDENCIES_1)
+libneuro_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am__objects_1 = debug.lo neuro_main.lo
 am_libneuro_la_OBJECTS = $(am__objects_1)
 libneuro_la_OBJECTS = $(am_libneuro_la_OBJECTS)
@@ -89,13 +100,14 @@ includeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(include_HEADERS)
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = memory misc extlib video events xml
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
 AR = @AR@
+AS = @AS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -112,6 +124,7 @@ CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
 ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -136,12 +149,14 @@ LT_RELEASE = @LT_RELEASE@
 LT_REVISION = @LT_REVISION@
 MAKEINFO = @MAKEINFO@
 NEUROFLAGS = @NEUROFLAGS@
+NEUROLIBFLAGS = @NEUROLIBFLAGS@
 NEURO_BINARY_AGE = @NEURO_BINARY_AGE@
 NEURO_INTERFACE_AGE = @NEURO_INTERFACE_AGE@
 NEURO_MAJOR_VERSION = @NEURO_MAJOR_VERSION@
 NEURO_MICRO_VERSION = @NEURO_MICRO_VERSION@
 NEURO_MINOR_VERSION = @NEURO_MINOR_VERSION@
 NEURO_VERSION = @NEURO_VERSION@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
@@ -156,12 +171,17 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
+USE_XML_FALSE = @USE_XML_FALSE@
+USE_XML_TRUE = @USE_XML_TRUE@
 VERSION = @VERSION@
 XML2FLAGS = @XML2FLAGS@
 ac_ct_AR = @ac_ct_AR@
+ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
+ac_ct_DLLTOOL = @ac_ct_DLLTOOL@
 ac_ct_F77 = @ac_ct_F77@
+ac_ct_OBJDUMP = @ac_ct_OBJDUMP@
 ac_ct_RANLIB = @ac_ct_RANLIB@
 ac_ct_STRIP = @ac_ct_STRIP@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -201,17 +221,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = \
-	  memory \
-	  misc \
-	  extlib \
-	  video \
-	  events \
-	  script \
-	  sound \
-	  gui \
-	  xml
-
+SUBDIRS = memory misc extlib video events $(am__append_1)
 lib_LTLIBRARIES = libneuro.la
 lib_sources = \
 		debug.c \
@@ -220,26 +230,16 @@ lib_sources = \
 libneuro_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
-libneuro_la_LDFLAGS = \
-		      -no-undefines \
-		      -release $(LT_RELEASE) \
-		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
-
-libneuro_la_LIBADD = \
-		     memory/libmemory.la \
-		     misc/libmisc.la \
-		     extlib/libextlib.la \
-		     video/libvideo.la \
-		     events/libevents.la \
-		     script/libscript.la \
-		     sound/libsound.la \
-		     gui/libgui.la \
-		     xml/libxmltool.la
-
+LIB_FLAGS = @NEUROLIBFLAGS@ -release $(LT_RELEASE) -version-info \
+	$(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+libneuro_la_LDFLAGS = $(LIB_FLAGS)
+SUBLIBLIST = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
+	video/libvideo.la events/libevents.la $(am__append_2)
+libneuro_la_LIBADD = $(SUBLIBLIST)
 include_HEADERS = \
 		     debug.h \
 		     NEURO.h \
-		     engine.h
+		     neuro_engine.h
 
 all: all-recursive
 

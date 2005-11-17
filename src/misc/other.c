@@ -17,10 +17,10 @@
 	#include <unistd.h>
 #endif /* NOT WIN32 */
 
-#include "other.h"
-#include "../extlib/extlib.h"
+#include <other.h>
+#include <extlib.h>
 
-#include "../video/graphics.h"
+#include <graphics.h>
 
 u8
 Chk_bound(Rectan *rec, u16 x, u16 y)

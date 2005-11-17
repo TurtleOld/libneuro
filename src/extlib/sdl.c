@@ -12,10 +12,10 @@
 #if USE_SDL
 
 #include <SDL.h>
-#include <endian.h>
+/* #include <endian.h> */
 
 #include "extlib.h"
-#include "other.h"
+#include <other.h>
 
 /* SDL variable types used
  * -- Graphics.c --

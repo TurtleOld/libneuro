@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libgui.la
+noinst_LTLIBRARIES = libgui.la
 
 lib_sources=
 

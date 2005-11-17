@@ -3,7 +3,7 @@
 #ifndef __EXTLIB_H
 #define __EXTLIB_H
 
-#include "engine.h"
+#include <neuro_engine.h>
 
 extern int Lib_VideoInit(v_object **screen, v_object **screen_buf);
 

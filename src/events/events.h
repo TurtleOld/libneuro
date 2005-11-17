@@ -4,7 +4,7 @@
 #ifndef __EVENTS_H
 #define __EVENTS_H
 
-#include "engine.h"
+#include <neuro_engine.h>
 
 /*! TODO */
 extern void Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)());

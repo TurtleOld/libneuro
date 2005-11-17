@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libextlib.la
+noinst_LTLIBRARIES = libextlib.la
 
 if USE_SDL
 lib_sources = sdl.c

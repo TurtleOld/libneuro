@@ -2,7 +2,7 @@
 
 SUBDIRS= music
 
-lib_LTLIBRARIES = libneuro.la
+noinst_LTLIBRARIES = libneuro.la
 
 lib_sources =
 

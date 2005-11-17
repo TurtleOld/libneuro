@@ -1,7 +1,7 @@
 #ifndef __EBUF_H
 #define __EBUF_H
 
-#include "engine.h"
+#include <neuro_engine.h>
 #include <stdlib.h>
 
 /*  

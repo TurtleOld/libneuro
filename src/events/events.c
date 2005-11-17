@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 /*--- Local Headers Including ---*/
-#include "extlib.h"
+#include <extlib.h>
 
 /*--- Main Module Header ---*/
 #include "events.h"

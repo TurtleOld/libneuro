@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libmusic.la
+noinst_LTLIBRARIES = libmusic.la
 
 lib_sources =
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libscript.la
+noinst_LTLIBRARIES = libscript.la
 
 lib_sources =
 

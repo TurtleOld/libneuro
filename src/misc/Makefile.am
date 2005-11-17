@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libmisc.la
+noinst_LTLIBRARIES = libmisc.la
 
 lib_sources = 	\
 		other.c

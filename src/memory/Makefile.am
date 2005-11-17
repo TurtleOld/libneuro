@@ -1,6 +1,6 @@
 #!/bin/bash
 
-lib_LTLIBRARIES = libmemory.la
+noinst_LTLIBRARIES = libmemory.la
 
 lib_sources = 	\
 		ebuf.c 
