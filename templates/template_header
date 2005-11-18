@@ -3,8 +3,8 @@
 #ifndef __MODULE_H
 #define __MODULE_H
 
-extern void Module_Poll();
-extern int Module_Init();
-extern void Module_Clean();
+extern void ModulePoll();
+extern int ModuleInit();
+extern void ModuleClean();
 
 #endif /* __MODULE_H */

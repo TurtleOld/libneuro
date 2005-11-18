@@ -39,27 +39,23 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 #AC_INIT(Neuro, $NEURO_VERSION)
-AC_CONFIG_SRCDIR(src/neuro_main.c)
+AC_CONFIG_SRCDIR(src/graphics.c)
 
 # init automake
 AM_INIT_AUTOMAKE(Neuro, $NEURO_VERSION)
 
 # set some variables
 AC_PROG_CC
-AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
-NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I/usr/include/SDL"
-NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
-SDLFLAGS="`sdl-config --cflags` -lSDL" #"-lpthread"
+NEUROFLAGS="-D__USE_GNU"
+SDLFLAGS="$(sdl-config --cflags)"
 #NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
 XML2FLAGS="-I/usr/include/libxml2"
 
 #------ configure arguments ------
-
-AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
 
 # need to make it so if it is set to 0, that it doesnt compile xmltool.c and nmap.c
 AC_ARG_ENABLE(libxml2, 
@@ -69,7 +65,7 @@ if test x$enable_libxml2 = xyes; then
 	AC_CHECK_LIB(xml2, xmlFreeDoc, [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"
 ] , AC_MSG_ERROR([You must have libxml2]))
 fi
-AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
+#AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
 AC_ARG_WITH(lowlib, 
 [ --with-lowlib=<lowlib>     the low library Neuro will use;]
@@ -82,10 +78,7 @@ SELECTED_LOWLIB=`echo $lowlib`
 
 AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
 if test $SELECTED_LOWLIB = sdl; then
-	AC_CHECK_LIB(SDL, SDL_Init, 
-		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS" #$(sdl-config --libs)
-		      NEUROFLAGS="$NEUROFLAGS"], 
-		     [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
+	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
 
 fi
 
@@ -112,7 +105,6 @@ else
 fi
 
 AC_SUBST(NEUROFLAGS)
-AC_SUBST(NEUROLIBFLAGS)
 
 # set the installation path for the headers
 includedir=$includedir/Neuro
@@ -122,15 +114,6 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/xml/Makefile
-src/memory/Makefile
-src/video/Makefile
-src/events/Makefile
-src/extlib/Makefile
-src/misc/Makefile
-src/gui/Makefile
-src/script/Makefile
-src/sound/Makefile
-src/sound/music/Makefile
 ])
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
