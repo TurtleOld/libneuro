@@ -3,7 +3,7 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#include "engine.h"
+#include <neuro_engine.h>
 
 /*! TODO */
 /*extern void Neuro_DebugPrint(char *filename, char *funcName, u32 lineNum, const char *control, ...) __attribute__ ((__always_inline__));*/
