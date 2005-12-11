@@ -202,13 +202,12 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libextlib.la
+AM_CFLAGS = @NEUROFLAGS@
 #else USE_GGI
 #lib_sources = ggi.c
 @USE_SDL_FALSE@lib_sources = none.c
 @USE_SDL_TRUE@lib_sources = sdl.c
 libextlib_la_SOURCES = $(lib_sources) 
-AM_CFLAGS = @NEUROFLAGS@
-#AM_CFLAGS= @SDLFLAGS@
 include_HEADERS = \
 		     extlib.h
 

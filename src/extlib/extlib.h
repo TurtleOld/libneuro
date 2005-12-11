@@ -36,7 +36,7 @@ extern v_object *Lib_LoadBMP(const char *path);
 
 extern u32 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b);
 
-extern void Lib_SetColorKey(v_object *vobj, u32 flag,u32 key);
+extern void Lib_SetColorKey(v_object *vobj, u32 flag, u32 key);
 
 extern v_object * Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask, u32 Bmask, u32 Amask);
 

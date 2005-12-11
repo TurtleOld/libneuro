@@ -51,25 +51,16 @@ AM_PROG_LIBTOOL
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
-NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I/usr/include/SDL"
+NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include"
 NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
-SDLFLAGS="`sdl-config --cflags` -lSDL" #"-lpthread"
-#NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
+SDLFLAGS="`sdl-config --libs`"#"`sdl-config --cflags` -lSDL" #"-lpthread"
 XML2FLAGS="-I/usr/include/libxml2"
 
-#------ configure arguments ------
+dnl ------ Configure Arguments ------
 
-AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
+AC_ARG_ENABLE(libxml2, [  --enable-libxml2	enable the use of libxml2 for use with the xmltools [[default=yes]]], , enable_libxml2=yes)
 
-# need to make it so if it is set to 0, that it doesnt compile xmltool.c and nmap.c
-AC_ARG_ENABLE(libxml2, 
-[  --enable-libxml2	enable the use of libxml2 for use with the xmltools [[default=yes]]],
-	, enable_libxml2=yes)
-if test x$enable_libxml2 = xyes; then
-	AC_CHECK_LIB(xml2, xmlFreeDoc, [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"
-] , AC_MSG_ERROR([You must have libxml2]))
-fi
-AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
+AC_ARG_ENABLE(Debug, [  --enable-Debug	enable the debugging of this program [[default=no]]], , enable_Debug=no)
 
 AC_ARG_WITH(lowlib, 
 [ --with-lowlib=<lowlib>     the low library Neuro will use;]
@@ -78,33 +69,51 @@ AC_ARG_WITH(lowlib,
 [ 			   Possible low libraries are :]
 [			     dummy, sdl ],
 lowlib="$withval", lowlib="sdl")
+
+
+
+dnl --- cheap check for w32 ... --- please make this better, this section should be the
+dnl recognition of the platform Neuro is getting built on
+
+AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
+
+
+
+dnl --------- Checks -------------
+
+dnl ----------------
+dnl XML check
+dnl ----------------
+if test x$enable_libxml2 = xyes; then
+  AC_CHECK_LIB(xml2, 
+		 xmlFreeDoc, 
+		 [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"] , 
+		 AC_MSG_ERROR([You must have libxml2])
+		 )
+fi
+AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
+
+dnl ----------------
+dnl List of libraries Neuro can use
+dnl ----------------
 SELECTED_LOWLIB=`echo $lowlib`
 
+
+dnl ----------------
+dnl SDL check
+dnl ----------------
 AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
 if test $SELECTED_LOWLIB = sdl; then
 	AC_CHECK_LIB(SDL, SDL_Init, 
 		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS" #$(sdl-config --libs)
-		      NEUROFLAGS="$NEUROFLAGS"], 
+		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"], 
 		     [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
 
 fi
 
-
-# need to make it so if it is set to 0, it will still compile :D
-#AC_ARG_ENABLE(libSDL, 
-#[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [[default=yes]]],
-#	, enable_libSDL=yes)
-#if test x$enable_libSDL = xyes; then
-#	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
-#	], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
-#else
-#	AC_DEFINE(USE_SDL, 0)
-#fi
-#AM_CONDITIONAL(USE_SDL, test x$enable_libSDL = xyes)
-
-AC_ARG_ENABLE(Debug,
-[  --enable-Debug	enable the debugging of this program [[default=no]]],
-	, enable_Debug=no)
+dnl ----------------
+dnl Debug toggle
+dnl ----------------
 if test x$enable_Debug = xyes; then
 	NEUROFLAGS="$NEUROFLAGS -g"
 else
@@ -114,7 +123,7 @@ fi
 AC_SUBST(NEUROFLAGS)
 AC_SUBST(NEUROLIBFLAGS)
 
-# set the installation path for the headers
+dnl Set the installation path for the headers
 includedir=$includedir/Neuro
 
 # enumerate the Makefiles to be created

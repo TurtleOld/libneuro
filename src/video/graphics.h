@@ -70,6 +70,12 @@ extern void Neuro_AddBackground(void *isurface);
 /*! give the current fps */
 extern void Neuro_GiveFPS(t_tick *output);
 
+/* set the frames we have to skip */
+extern void Neuro_SetFrameSkip(u32 frameskip);
+
+/* set the maximum fps the application can go */
+extern void Neuro_SetFpsLimit(u32 fpsLimit);
+
 /* draw a pixel on the screen */
 extern void Neuro_PutPixel(u32 x, u32 y, u32 pixel);
 

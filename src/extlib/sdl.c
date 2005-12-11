@@ -219,7 +219,31 @@ Lib_Flip(v_object *source)
 void
 Lib_FreeVobject(v_object *source)
 {
-	SDL_FreeSurface((SDL_Surface*)source);
+	SDL_Surface *temp;
+	/* SDL_FreeSurface((SDL_Surface*)source); */
+	
+	temp = (SDL_Surface*)source;
+
+	if (temp)
+	{
+		if (temp->format)
+		{
+			if (temp->format->palette)
+			{
+				if (temp->format->palette->colors)
+					free(temp->format->palette->colors);
+
+				free(temp->format->palette);
+			}
+
+			free(temp->format);
+		}
+
+		if (temp->pixels)
+			free(temp->pixels);
+
+		free(temp);
+	}
 }
 
 /* this function will become obsolete soon */

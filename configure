@@ -19404,13 +19404,39 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
-NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I/usr/include/SDL"
+NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include"
 NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
-SDLFLAGS="`sdl-config --cflags` -lSDL" #"-lpthread"
-#NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
+SDLFLAGS="`sdl-config --libs`"#"`sdl-config --cflags` -lSDL" #"-lpthread"
 XML2FLAGS="-I/usr/include/libxml2"
 
-#------ configure arguments ------
+
+# Check whether --enable-libxml2 or --disable-libxml2 was given.
+if test "${enable_libxml2+set}" = set; then
+  enableval="$enable_libxml2"
+
+else
+  enable_libxml2=yes
+fi;
+
+# Check whether --enable-Debug or --disable-Debug was given.
+if test "${enable_Debug+set}" = set; then
+  enableval="$enable_Debug"
+
+else
+  enable_Debug=no
+fi;
+
+
+# Check whether --with-lowlib or --without-lowlib was given.
+if test "${with_lowlib+set}" = set; then
+  withval="$with_lowlib"
+  lowlib="$withval"
+else
+  lowlib="sdl"
+fi;
+
+
+
 
 echo "$as_me:$LINENO: checking for usleep" >&5
 echo $ECHO_N "checking for usleep... $ECHO_C" >&6
@@ -19509,16 +19535,11 @@ else
 fi
 
 
-# need to make it so if it is set to 0, that it doesnt compile xmltool.c and nmap.c
-# Check whether --enable-libxml2 or --disable-libxml2 was given.
-if test "${enable_libxml2+set}" = set; then
-  enableval="$enable_libxml2"
 
-else
-  enable_libxml2=yes
-fi;
+
+
 if test x$enable_libxml2 = xyes; then
-	echo "$as_me:$LINENO: checking for xmlFreeDoc in -lxml2" >&5
+  echo "$as_me:$LINENO: checking for xmlFreeDoc in -lxml2" >&5
 echo $ECHO_N "checking for xmlFreeDoc in -lxml2... $ECHO_C" >&6
 if test "${ac_cv_lib_xml2_xmlFreeDoc+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -19584,11 +19605,11 @@ echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlFreeDoc" >&5
 echo "${ECHO_T}$ac_cv_lib_xml2_xmlFreeDoc" >&6
 if test $ac_cv_lib_xml2_xmlFreeDoc = yes; then
   NEUROLIBS="$NEUROLIBS -lxml2"  LIBS="$LIBS -lxml2"
-
 else
   { { echo "$as_me:$LINENO: error: You must have libxml2" >&5
 echo "$as_me: error: You must have libxml2" >&2;}
    { (exit 1); exit 1; }; }
+
 fi
 
 fi
@@ -19603,15 +19624,8 @@ else
 fi
 
 
-
-# Check whether --with-lowlib or --without-lowlib was given.
-if test "${with_lowlib+set}" = set; then
-  withval="$with_lowlib"
-  lowlib="$withval"
-else
-  lowlib="sdl"
-fi;
 SELECTED_LOWLIB=`echo $lowlib`
+
 
 
 
@@ -19693,7 +19707,7 @@ if test $ac_cv_lib_SDL_SDL_Init = yes; then
 #define USE_SDL 1
 _ACEOF
  LIBS="$LIBS $SDLFLAGS" #$(sdl-config --libs)
-		      NEUROFLAGS="$NEUROFLAGS"
+		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"
 else
   { { echo "$as_me:$LINENO: error: You don't have libSDL" >&5
 echo "$as_me: error: You don't have libSDL" >&2;}
@@ -19703,26 +19717,6 @@ fi
 
 fi
 
-
-# need to make it so if it is set to 0, it will still compile :D
-#AC_ARG_ENABLE(libSDL,
-#[  --enable-libSDL	enable the use of the library Simple DirectMedia Layer [[default=yes]]],
-#	, enable_libSDL=yes)
-#if test x$enable_libSDL = xyes; then
-#	AC_CHECK_LIB(SDL, SDL_Init, [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $(sdl-config --libs)" NEUROFLAGS="$NEUROFLAGS $SDLFLAGS"
-#	], [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
-#else
-#	AC_DEFINE(USE_SDL, 0)
-#fi
-#AM_CONDITIONAL(USE_SDL, test x$enable_libSDL = xyes)
-
-# Check whether --enable-Debug or --disable-Debug was given.
-if test "${enable_Debug+set}" = set; then
-  enableval="$enable_Debug"
-
-else
-  enable_Debug=no
-fi;
 if test x$enable_Debug = xyes; then
 	NEUROFLAGS="$NEUROFLAGS -g"
 else
@@ -19732,7 +19726,6 @@ fi
 
 
 
-# set the installation path for the headers
 includedir=$includedir/Neuro
 
 # enumerate the Makefiles to be created

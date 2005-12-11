@@ -73,6 +73,10 @@
  * lol I made it! I once again complicated everything when
  * it was so obvious when I retought it. I left my above idea
  * for future seeing of how I was offtrack ;P.
+ *
+ * On second thought, the before last paragraph will be
+ * used to implement a frames per second limiter so it
+ * was still useful.
  */
 
 #define debug_instruction_buffer 0
@@ -104,6 +108,10 @@ typedef struct RAW_ENGINE
 			* scope of the calling function.
 			*/
 	void *surface_ptr; /* only the pointer needed cause its "static" */
+	v_object *former_area; /* contains an allocated variable that contains 
+				* what we drawn right before the engine drawn 
+				* anything to this position. 
+				*/
 }RAW_ENGINE;
 
 /* this linked list will be computed 
@@ -152,12 +160,24 @@ static Rectan screenSize;
 /* a rectangle meant to test the bound fix algorithm */
 static Rectan test_BoundFix;
 
-static int fps;
-static int lFps;
-static int ltime;
+static u32 fps; /* used increment every cycles */
+static u32 lFps; /* used to give to other function the current's cycle fps count. */
+static u32 ltime; /* used for the fps count, it is used to know when 1 second passed. */
+static u32 fps_limit; /* used to limit the fps to this count. */
+static u8 fps_dotincr; /* used to after dot increment for the fps limiter algorithm */
+/*static u8 fps_incr; *//* used to increment for the fps limiter algorithm */
+static u32 frameSkip = 0; /* holds the number of frames we have to skip. */
+static u32 frameSkip_tmp = 0; /* the count of frames skipped already. */
+
 
 /* 1 is that the pixels will be cleaned during this cycle and 0 is no it won't */
 static u8 clean_pixel_in_this_cycle;
+
+/* 1 is that we have drawn the last cycle and 0 is no */
+static u8 drawn_last_cycle;
+
+/* 1 is that we don't draw anything in this cycle */
+static u8 dont_draw_this_cycle;
 
 /* last frame we redrawn the pixels? */
 /* static u8 lastPdraw; */
@@ -179,7 +199,10 @@ static void print_queue() __attribute__ ((__unused__));
 static void print_queue2() __attribute__ ((__unused__));
 #endif /* debug_instruction_buffer2 */
 
-static void flush_queue();
+/* draw the objects on the screen */
+static void draw_objects();
+/* clean the previously drawn object on the screen */
+static void clean_drawn_objects();
 /* update only a part of the screen */
 static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
@@ -289,6 +312,14 @@ computeRawEngine(RAW_ENGINE *toadd)
 	register u32 current; /* current number of elements in instruction */	
 
 
+	if (dont_draw_this_cycle && drawn_last_cycle)
+	{
+		return;
+		/*if (drawn_last_cycle)
+			clean_drawn_objects();*/
+	}
+
+	
 	tmp = _Queue;	
 	Neuro_AllocEBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
 	
@@ -427,7 +458,7 @@ cleanPixels()
  * testing : works
  */
 static void
-flush_queue()
+draw_objects()
 {
 	EBUF *tmp;
 	Rectan buf;
@@ -440,7 +471,73 @@ flush_queue()
 	print_queue2();
 	printf("B END debug print\n");
 #endif /* debug_instruction_buffer2 */
+		
+	/* start the real drawing */
+	tmp = _Queue;
+	
+	if (!Neuro_EBufIsEmpty(tmp))
+		cur = Neuro_GiveEBuf(tmp, 0);
+	else
+		return;
+	
+	while (cur)
+	{
+		u8 bpp;
+		u32 rmask, gmask, bmask, amask;
+		Rectan bufa;
+		
+		buf.x = cur->current->dst.x;
+		buf.y = cur->current->dst.y;
+		buf.w = cur->current->src.w;
+		buf.h = cur->current->src.h;
 
+		/* copy the emplacement of where the surface will be drawn to
+		 * so we can revert to it when we clean. I'm not totally sure 
+		 * if we should use sclScreen(the buffer) or Screen(the screen itself).
+		 * I'll use sclScreen and see how it goes.
+		 */
+		/*
+		Lib_GetVObjectData(sclScreen, NULL, NULL, NULL, NULL, NULL, NULL,
+				&bpp, &rmask, &gmask, &bmask, &amask);
+		
+		cur->current->former_area = Lib_CreateVObject(0x00000000, buf.w, 
+				buf.h, bpp, rmask, gmask, bmask, amask);
+
+		bufa.x = 0;
+		bufa.y = 0;
+		bufa.w = cur->current->src.w;
+		bufa.h = cur->current->src.h;
+		
+		Lib_BlitObject(sclScreen, &buf, cur->current->former_area, &bufa);
+		*/
+		
+		/* draw the surface_ptr to the screen buffer. */
+		Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
+					&cur->current->dst);
+
+		/* as a test, we will draw the former_area buffer to see if it works...
+		 * it didnt work :L 
+		 */
+		/*Lib_BlitObject(cur->current->former_area, &bufa, sclScreen, &cur->current->dst);*/
+		cur = cur->next;
+	}
+
+	drawn_last_cycle = 1;
+	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
+}
+
+
+/* */
+static void
+clean_drawn_objects()
+{
+	EBUF *tmp;
+	Rectan buf;
+	INSTRUCTION_ENGINE *cur;
+
+	tmp = b_Queue;
+
+	
 	if (tmp)
 	{
 		if (!Neuro_EBufIsEmpty(tmp))
@@ -463,6 +560,13 @@ flush_queue()
 				Lib_BlitObject(background, &buf, sclScreen, &buf);
 			else
 				Lib_FillRect(sclScreen, &buf, 0);
+
+			/* Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf); */
+			
+			if (cur->current->former_area)
+			{
+				Lib_FreeVobject(cur->current->former_area);
+			}
 			
 			cur = cur->next;
 		}
@@ -474,28 +578,9 @@ flush_queue()
 		Lib_FillRect(sclScreen, 0, 0);
 	}
 	*/
-	
-	/* start the real drawing */
-	tmp = _Queue;
-	
-	if (!Neuro_EBufIsEmpty(tmp))
-		cur = Neuro_GiveEBuf(tmp, 0);
-	else
-		return;
-	
-	while (cur)
-	{
-		buf.x = cur->current->dst.x;
-		buf.y = cur->current->dst.y;
-		buf.w = cur->current->src.w - 1;
-		buf.h = cur->current->src.h - 1;
-		Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
-					&cur->current->dst);	
-		cur = cur->next;
-	}
-
-	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
+	drawn_last_cycle = 0;
 }
+
 
 static void
 clean_queue()
@@ -586,12 +671,26 @@ BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst)
 /*--- Global Functions ---*/
 
 void
+Neuro_SetFrameSkip(u32 frameskip)
+{
+	frameSkip = frameskip;
+}
+
+void
+Neuro_SetFpsLimit(u32 fpsLimit)
+{
+	fps_limit = fpsLimit;
+}
+
+void
 Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;
 }
 
-/* use this function to set the background */
+/* use this function to set the background 
+ * --will soon become obsolete--
+ */
 void
 Neuro_AddBackground(v_object *isurface)
 {
@@ -743,9 +842,6 @@ Neuro_CleanPixels()
 void
 Graphics_Poll()
 {	
-	const u32 frameSkipMax = 0;
-	static u32 frameSkip = 0;
-	
 	if (clean_pixel_in_this_cycle)
 	{
 		cleanPixels();
@@ -758,9 +854,32 @@ Graphics_Poll()
 		fps = 0;
 		ltime = time(NULL);
 	}
+	/*
 	else
-		lFps = 0;
+	{*/
+		/* lFps = 0; */
+	/*	fps++;
+	}*/
+	
+	if (fps_limit > 0 /*&& fps_limit <= fps*/) 
+	{
+		/* in this case, we toggle a variable so nothing will be drawn
+		 * this cycle 
+		 */
+		fps_dotincr += fps_limit;
 
+		if (fps_dotincr >= 100)
+		{
+			fps++;
+		
+			if (fps_limit <= 100)
+				fps_dotincr -= 100;
+			else
+				fps_dotincr -= 100 * (int)(fps_limit / 100);
+		}
+		else
+			dont_draw_this_cycle = 1;
+	}
 
 	if (!Neuro_EBufIsEmpty(_Drawing))
 	{
@@ -787,13 +906,22 @@ Graphics_Poll()
 	/* flush the instruction completely in the order 
 	 * presented and clean the raw engine buffer 
 	 */
-	if (frameSkip <= 0)
+	if (frameSkip_tmp <= 0)
 	{
-		flush_queue();
-		frameSkip = frameSkipMax;
+		if (!dont_draw_this_cycle)
+		{
+			if (drawn_last_cycle)
+				clean_drawn_objects();
+		
+			draw_objects();
+		}
+		else
+			dont_draw_this_cycle = 0;
+		
+		frameSkip_tmp = frameSkip;
 	}
 	else
-		frameSkip--;
+		frameSkip_tmp--;
 	
 	/* clean some of the most important buffers */
 	clean_queue();
@@ -802,8 +930,6 @@ Graphics_Poll()
 	Lib_BlitObject(sclScreen, NULL, screen, NULL);
 
 	updScreen(0);
-
-	fps++;
 }
 
 /*--- Constructor Destructor ---*/
@@ -812,7 +938,7 @@ Graphics_Init()
 {
 	int _err_;
 	ltime = time(NULL);
-
+	
 	_err_ = 0;
 	/* will need to be configurable from the projects that use Neuro */
 	_err_ = Lib_VideoInit(&screen, &sclScreen);	
