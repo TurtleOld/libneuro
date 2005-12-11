@@ -169,6 +169,9 @@ static u8 fps_dotincr; /* used to after dot increment for the fps limiter algori
 static u32 frameSkip = 0; /* holds the number of frames we have to skip. */
 static u32 frameSkip_tmp = 0; /* the count of frames skipped already. */
 
+/* used to check for mem leaks */
+static u32 memleak_check;
+
 
 /* 1 is that the pixels will be cleaned during this cycle and 0 is no it won't */
 static u8 clean_pixel_in_this_cycle;
@@ -496,7 +499,7 @@ draw_objects()
 		 * if we should use sclScreen(the buffer) or Screen(the screen itself).
 		 * I'll use sclScreen and see how it goes.
 		 */
-		/*
+		
 		Lib_GetVObjectData(sclScreen, NULL, NULL, NULL, NULL, NULL, NULL,
 				&bpp, &rmask, &gmask, &bmask, &amask);
 		
@@ -509,7 +512,7 @@ draw_objects()
 		bufa.h = cur->current->src.h;
 		
 		Lib_BlitObject(sclScreen, &buf, cur->current->former_area, &bufa);
-		*/
+		
 		
 		/* draw the surface_ptr to the screen buffer. */
 		Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
@@ -555,13 +558,14 @@ clean_drawn_objects()
 			buf.y = cur->current->dst.y;
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
-			
+			/*
 			if (background)
 				Lib_BlitObject(background, &buf, sclScreen, &buf);
 			else
 				Lib_FillRect(sclScreen, &buf, 0);
-
-			/* Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf); */
+			*/
+				
+			Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf);
 			
 			if (cur->current->former_area)
 			{

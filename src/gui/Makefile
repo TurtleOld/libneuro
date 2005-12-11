@@ -122,7 +122,7 @@ LT_CURRENT = 10
 LT_RELEASE = 0.20
 LT_REVISION = 0
 MAKEINFO = ${SHELL} /home/nik_89/gneuro/missing --run makeinfo
-NEUROFLAGS = -D__USE_GNU -I${top_srcdir}/include -I/usr/local/include/SDL -D_REENTRANT -O3 -s
+NEUROFLAGS = -D__USE_GNU -I${top_srcdir}/include -I/usr/local/include/SDL -D_REENTRANT -g
 NEUROLIBFLAGS = -no-undefined --enable-realtime-pseudo-reloc
 NEURO_BINARY_AGE = 10
 NEURO_INTERFACE_AGE = 0
@@ -198,7 +198,7 @@ target_alias =
 noinst_LTLIBRARIES = libgui.la
 lib_sources = 
 libgui_la_SOURCES = $(lib_sources)
-AM_CFLAGS = -D__USE_GNU -I${top_srcdir}/include -I/usr/local/include/SDL -D_REENTRANT -O3 -s
+AM_CFLAGS = -D__USE_GNU -I${top_srcdir}/include -I/usr/local/include/SDL -D_REENTRANT -g
 #AM_CFLAGS= @SDLFLAGS@
 include_HEADERS = 
 all: all-am

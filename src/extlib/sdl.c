@@ -220,12 +220,12 @@ void
 Lib_FreeVobject(v_object *source)
 {
 	SDL_Surface *temp;
-	/* SDL_FreeSurface((SDL_Surface*)source); */
 	
 	temp = (SDL_Surface*)source;
 
 	if (temp)
 	{
+		/*
 		if (temp->format)
 		{
 			if (temp->format->palette)
@@ -238,12 +238,21 @@ Lib_FreeVobject(v_object *source)
 
 			free(temp->format);
 		}
+		*/
 
-		if (temp->pixels)
+		/*if (temp->pixels)
 			free(temp->pixels);
+		*/
+		
 
-		free(temp);
+		/* free(temp); */ /* we'll let SDL_FreeSurface this job... hope it does it ;P */
 	}
+
+	/* poor SDL needs a third support, see above. This is concerning mem leaks in 
+	 * the poor SDL free surface function.
+	 */
+	SDL_FreeSurface((SDL_Surface*)source);
+
 }
 
 /* this function will become obsolete soon */
