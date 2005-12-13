@@ -15,5 +15,5 @@ libextlib_la_SOURCES = $(lib_sources)
 AM_CFLAGS= @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
 
-include_HEADERS= \
-		     extlib.h
+#include_HEADERS= \
+#		     extlib.h

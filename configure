@@ -1848,7 +1848,7 @@ fi
 
 
 # Define the identity of the package.
- PACKAGE=Neuro
+ PACKAGE=neuro
  VERSION=$NEURO_VERSION
 
 
@@ -19404,7 +19404,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
-NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I/usr/include/SDL"
+NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
 SDLFLAGS="`sdl-config --cflags` -lSDL" #"-lpthread"
 #NEUROFLAGS="-std=gnu99 -Wall -pedantic -I/usr/include/libxml2 $(sdl-config --cflags)"
@@ -19733,7 +19733,7 @@ fi
 
 
 # set the installation path for the headers
-includedir=$includedir/Neuro
+includedir=$includedir/neuro
 
 # enumerate the Makefiles to be created
                                                                                                                         ac_config_files="$ac_config_files Makefile src/Makefile src/xml/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile src/gui/Makefile src/script/Makefile src/sound/Makefile src/sound/music/Makefile"

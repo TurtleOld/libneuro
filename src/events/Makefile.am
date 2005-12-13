@@ -13,5 +13,5 @@ AM_CFLAGS= @NEUROFLAGS@
 #LIB_FLAGS= @NEUROLIBFLAGS@
 #libevents_la_LDFLAGS = $(LIB_FLAGS)
 
-include_HEADERS= \
-		     events.h
+#include_HEADERS= \
+#		     events.h

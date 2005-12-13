@@ -13,5 +13,5 @@ AM_CFLAGS= @NEUROFLAGS@
 #LIB_FLAGS= @NEUROLIBFLAGS@
 #libvideo_la_LDFLAGS = $(LIB_FLAGS)
 
-include_HEADERS= \
-		     graphics.h
+#include_HEADERS= \
+#		     graphics.h

@@ -11,11 +11,11 @@
 
 #if USE_SDL
 
-#include <SDL.h>
+#include <SDL/SDL.h>
 /* #include <endian.h> */
 
-#include "extlib.h"
-#include <other.h>
+#include <neuro/extlib.h>
+#include <neuro/other.h>
 
 /* SDL variable types used
  * -- Graphics.c --

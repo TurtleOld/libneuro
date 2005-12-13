@@ -55,7 +55,7 @@ libneuro_la_LIBADD = $(SUBLIBLIST)
 
 
 
-include_HEADERS= \
-		     debug.h \
-		     NEURO.h \
-		     neuro_engine.h
+#include_HEADERS= \
+#		     debug.h \
+#		     NEURO.h \
+#		     neuro_engine.h
