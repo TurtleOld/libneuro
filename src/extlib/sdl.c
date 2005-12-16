@@ -11,11 +11,11 @@
 
 #if USE_SDL
 
-#include <SDL.h>
+#include <SDL/SDL.h>
 /* #include <endian.h> */
 
-#include "extlib.h"
-#include <other.h>
+#include <neuro/extlib.h>
+#include <neuro/other.h>
 
 /* SDL variable types used
  * -- Graphics.c --
@@ -117,15 +117,10 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	SDL_BlitSurface((SDL_Surface*)source, (SDL_Rect*)src, (SDL_Surface*)destination, (SDL_Rect*)dst);
 }
 
-v_object *
-Lib_LoadBMP(const char *path)
+void
+Lib_LoadBMP(const char *path, v_object **img)
 {
-	void *temp;
-	temp = SDL_LoadBMP(path);
-	if (temp)
-		return (v_object*)temp;
-	else
-		return NULL;
+	*img = SDL_LoadBMP(path);
 }
 
 static u8 

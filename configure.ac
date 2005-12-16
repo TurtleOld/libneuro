@@ -42,7 +42,7 @@ AC_SUBST(LT_AGE)
 AC_CONFIG_SRCDIR(src/neuro_main.c)
 
 # init automake
-AM_INIT_AUTOMAKE(Neuro, $NEURO_VERSION)
+AM_INIT_AUTOMAKE(neuro, $NEURO_VERSION)
 
 # set some variables
 AC_PROG_CC
@@ -51,7 +51,7 @@ AM_PROG_LIBTOOL
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
-NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include"
+NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
 SDLFLAGS="`sdl-config --libs`"#"`sdl-config --cflags` -lSDL" #"-lpthread"
 XML2FLAGS="-I/usr/include/libxml2"
@@ -123,8 +123,8 @@ fi
 AC_SUBST(NEUROFLAGS)
 AC_SUBST(NEUROLIBFLAGS)
 
-dnl Set the installation path for the headers
-includedir=$includedir/Neuro
+# set the installation path for the headers
+includedir=$includedir/neuro
 
 # enumerate the Makefiles to be created
 AC_CONFIG_FILES([

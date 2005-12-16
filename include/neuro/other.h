@@ -4,7 +4,7 @@
 #ifndef __OTHER_H
 #define __OTHER_H
 
-#include <neuro_engine.h>
+#include "neuro_engine.h"
 
 #include <stdlib.h>
 

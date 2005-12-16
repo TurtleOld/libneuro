@@ -34,7 +34,7 @@
  * which is not really useful in xml
  */
 
-#include <neuro_engine.h>
+#include "neuro_engine.h"
 
 
 /*! 

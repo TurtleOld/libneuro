@@ -13,6 +13,3 @@ lib_sources = none.c
 endif
 
 libextlib_la_SOURCES = $(lib_sources) 
-
-include_HEADERS= \
-		     extlib.h

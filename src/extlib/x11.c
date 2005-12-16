@@ -3,8 +3,15 @@
  * extern library(this is used for debugging).
  */
 
-#include <extlib.h>
+
+
+#ifdef USE_X11
+
+#include <neuro/extlib.h>
+
 #include <stdlib.h>
+
+#include <X11.h>
 
 /*  video constructor destructor  */
 int
@@ -125,3 +132,5 @@ Lib_EventsExit()
 {
 	
 }
+
+#endif /* USE_X11 */

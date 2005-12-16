@@ -12,5 +12,5 @@ SRCS=	xmltool.c \
 #AM_CFLAGS= @NEUROFLAGS@
 AM_CFLAGS= @XML2FLAGS@ @NEUROFLAGS@
 
-include_HEADERS= xmltool.h \
-		 nmap.h
+#include_HEADERS= xmltool.h \
+#		 nmap.h
