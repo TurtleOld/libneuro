@@ -224,6 +224,15 @@ Neuro_GiveEBuf(EBUF *eng, u32 elem)
 		return NULL;
 }
 
+void **
+Neuro_GiveEBufCore(EBUF *eng)
+{
+	if (!eng)
+		return NULL;
+	
+	return eng->buffer;
+}
+
 i32
 Neuro_GiveEBufElem(EBUF *eng, void *object)
 {
