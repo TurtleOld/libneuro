@@ -19730,7 +19730,14 @@ fi
 includedir=$includedir/neuro
 
 # enumerate the Makefiles to be created
-                                                                                                                        ac_config_files="$ac_config_files Makefile src/Makefile src/xml/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile src/gui/Makefile src/script/Makefile src/sound/Makefile src/sound/music/Makefile"
+                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/xml/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile"
+
+#add those above when they are started
+#src/gui/Makefile
+#src/script/Makefile
+#src/sound/Makefile
+#src/sound/music/Makefile
+
 
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
@@ -20339,10 +20346,6 @@ do
   "src/events/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/events/Makefile" ;;
   "src/extlib/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/extlib/Makefile" ;;
   "src/misc/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/misc/Makefile" ;;
-  "src/gui/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gui/Makefile" ;;
-  "src/script/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/script/Makefile" ;;
-  "src/sound/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/sound/Makefile" ;;
-  "src/sound/music/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/sound/music/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

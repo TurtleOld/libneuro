@@ -136,11 +136,14 @@ src/video/Makefile
 src/events/Makefile
 src/extlib/Makefile
 src/misc/Makefile
-src/gui/Makefile
-src/script/Makefile
-src/sound/Makefile
-src/sound/music/Makefile
 ])
+#add those above when they are started
+#src/gui/Makefile
+#src/script/Makefile
+#src/sound/Makefile
+#src/sound/music/Makefile
+
+
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 
