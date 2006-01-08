@@ -3,7 +3,9 @@
 noinst_LTLIBRARIES = libmisc.la
 
 lib_sources = 	\
-		other.c
+		other.c \
+		chgen.c \
+		bitmap.c
 
 libmisc_la_SOURCES = $(lib_sources)
 

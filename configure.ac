@@ -67,7 +67,7 @@ AC_ARG_WITH(lowlib,
 [ 			   only a single value is valid here;]
 [			   Default is "sdl";]
 [ 			   Possible low libraries are :]
-[			     dummy, sdl ],
+[			     dummy, X11, sdl ],
 lowlib="$withval", lowlib="sdl")
 
 
@@ -110,6 +110,25 @@ if test $SELECTED_LOWLIB = sdl; then
 		     [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
 
 fi
+
+dnl ----------------
+dnl X11 check
+dnl ----------------
+AM_CONDITIONAL(USE_X11, test x$SELECTED_LOWLIB = xX11)
+if test $SELECTED_LOWLIB = X11; then
+	AC_PATH_X
+	AC_PATH_XTRA
+	#AC_CHECK_LIB(X11, XCopyArea, 
+	#	     [AC_DEFINE(USE_X11, 1) LIBS="$LIBS -lX11"
+	#	      NEUROFLAGS="$NEUROFLAGS -L/usr/X11R6/lib -I/usr/X11R6/include"], 
+	#	     [AC_MSG_ERROR(You don't have libX11)])
+	LIBS="$LIBS $X_PRE_LIBS $X_LIBS -lXpm $X_EXTRA_LIBS"
+	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
+	#AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
+	#	     [LIBS="$LIBS -lXpm"],
+	#	     [AC_MSG_ERROR(You don't have libXpm)])
+fi
+
 
 dnl ----------------
 dnl Debug toggle

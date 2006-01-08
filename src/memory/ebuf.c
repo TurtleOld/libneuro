@@ -8,7 +8,7 @@
 /*-------------------- Local Headers Including ---------------------*/
 
 /*-------------------- Main Module Header --------------------------*/
-#include "ebuf.h"
+#include <ebuf.h>
 
 /*--------------------      Other       ----------------------------*/
 struct EBUF
@@ -52,18 +52,15 @@ void
 Neuro_CreateEBuf(EBUF **eng)
 {	
 	EBUF *tmp;
-	
-	if (*eng == NULL)
-	{
-		*eng = (EBUF*)calloc(1, sizeof(EBUF));
+		
+	*eng = (EBUF*)calloc(1, sizeof(EBUF));
 
-		(*eng)->mem = 0;
-		(*eng)->total = 0;
-		(*eng)->buffer = NULL;
-		(*eng)->callback = NULL;
+	(*eng)->mem = 0;
+	(*eng)->total = 0;
+	(*eng)->buffer = NULL;
+	(*eng)->callback = NULL;
 
-		tmp = *eng;
-	}	
+	tmp = *eng;
 }
 
 void
@@ -100,6 +97,12 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	}
 	else if ((*mem * sptp) <= sptp)
 	{
+		if (*buf == NULL)
+		{
+			/* theres a big problem */
+			Error_Print("Memory buffer unknown error");
+			return;
+		}
 		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH * (*total + 1)));
 		*mem = MEMORY_ALLOC_OVERH;
 	}
@@ -207,19 +210,33 @@ Neuro_GiveEBufCount(EBUF *eng)
 
 void *
 Neuro_GiveEBuf(EBUF *eng, u32 elem)
-{
-	register void ***buf;
-	
+{	
 	if (!eng)
+		return NULL;
+
+	if (Neuro_EBufIsEmpty(eng))
 		return NULL;
 
 	if (elem > eng->total)
 		return NULL;
 	
-	buf = (void***)&eng->buffer;
-	
-	if ((*buf)[elem])
-		return (*buf)[elem];
+	if (eng->buffer[elem])
+		return eng->buffer[elem];
+	else
+		return NULL;
+}
+
+void *
+Neuro_GiveCurEBuf(EBUF *eng)
+{	
+	if (!eng)
+		return NULL;
+
+	if (Neuro_EBufIsEmpty(eng))
+		return NULL;
+
+	if (eng->buffer[eng->total - 1])
+		return (eng->buffer[eng->total - 1]);
 	else
 		return NULL;
 }

@@ -86,11 +86,18 @@ extern u32 Neuro_GiveEBufCount(EBUF *eng);
 /* give the array number of the element [object] */
 extern i32 Neuro_GiveEBufElem(EBUF *eng, void *object);
 
+/* gives the last element of the buffer */
+extern void *Neuro_GiveCurEBuf(EBUF *eng);
+
 /* give the real address of the element of the number [elem] */
 extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 
 /* give the element corresponding to the number [elem] */
 extern void *Neuro_GiveEBuf(EBUF *eng, u32 elem);
+
+/* give the core buffer of the EBuf element */
+extern void **Neuro_GiveEBufCore(EBUF *eng);
+
 
 /* copy the content of an element to another */
 extern void Neuro_SetEBuf(EBUF *eng, void **to, void *from);

@@ -1,22 +1,62 @@
-/* none.c
- * the source file permitting to compile this library without any lower
- * extern library(this is used for debugging).
+/* x11.c
+ * X11 driver(abstraction layer) source.
  */
 
-
-
-#ifdef USE_X11
-
-#include <neuro/extlib.h>
-
 #include <stdlib.h>
+#include <X11/Xlib.h>
+#include <X11/xpm.h>
 
-#include <X11.h>
+#include <extlib.h>
+#include <ebuf.h>
+#include <other.h>
+
+
+typedef struct V_OBJECT
+{
+	Display *display;
+	i32 screen;
+	GC GC;
+
+	Window *win;
+	GC wGC;
+	XGCValues wValue;
+	
+	Pixmap data;
+	Pixmap shapemask;
+	XpmAttributes attrib;
+}V_OBJECT;
+
+EBUF *vobjs;
+
+V_OBJECT *dmain;
 
 /*  video constructor destructor  */
 int
 Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
+	V_OBJECT *tmp;
+	
+	Neuro_CreateEBuf(&vobjs);
+	
+	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+	
+	tmp = Neuro_GiveCurEBuf(vobjs);
+	
+	tmp->display = XOpenDisplay(NULL);
+	tmp->screen = XDefaultScreen(tmp->display);
+	tmp->GC = XDefaultGC(tmp->display, tmp->screen);
+	
+	tmp->win = XCreateSimpleWindow(display, XRootWindow(tmp->display, tmp->screen),
+			200, 200, 800, 600, 4,
+			BlackPixel(tmp->display, tmp->screen),
+			WhitePixel(tmp->display, tmp->screen));
+
+	tmp->wGC = XCreateGC(tmp->display, tmp->win, 0, &tmp->wValue);
+	
+	
+	dmain = tmp;
+	*screen = tmp;
+	
 	return 0;
 }
 
@@ -29,7 +69,20 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 void
 Lib_LoadBMP(const char *path, v_object **img)
 {
+	EBUF *temp;
+	V_OBJECT *tmp;
 
+	readBitmapFileToPixmap(path, &temp);
+	
+	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+
+	tmp = Neuro_GiveCurEBuf(vobjs);
+	
+	XpmCreatePixmapFromData(dmain->display, dmain->GC, Neuro_GiveEBufCore(temp), &tmp->data, &tmp->shapemask, &tmp->attrib);
+	
+	*img = tmp;
+	
+	Neuro_CleanEBuf(&temp);
 }
 
 v_object *
@@ -92,7 +145,7 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 void
 Lib_VideoExit()
 {
-
+	Neuro_CleanEBuf(&vobjs);
 }
 
 /*----------------- Input Events -----------------*/
@@ -132,5 +185,3 @@ Lib_EventsExit()
 {
 	
 }
-
-#endif /* USE_X11 */

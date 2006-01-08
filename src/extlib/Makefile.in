@@ -50,8 +50,9 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libextlib_la_LIBADD =
-am__libextlib_la_SOURCES_DIST = none.c sdl.c
-@USE_SDL_FALSE@am__objects_1 = none.lo
+am__libextlib_la_SOURCES_DIST = none.c x11.c sdl.c
+@USE_SDL_FALSE@@USE_X11_FALSE@am__objects_1 = none.lo
+@USE_SDL_FALSE@@USE_X11_TRUE@am__objects_1 = x11.lo
 @USE_SDL_TRUE@am__objects_1 = sdl.lo
 am_libextlib_la_OBJECTS = $(am__objects_1)
 libextlib_la_OBJECTS = $(am_libextlib_la_OBJECTS)
@@ -140,10 +141,16 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
+USE_X11_FALSE = @USE_X11_FALSE@
+USE_X11_TRUE = @USE_X11_TRUE@
 USE_XML_FALSE = @USE_XML_FALSE@
 USE_XML_TRUE = @USE_XML_TRUE@
 VERSION = @VERSION@
 XML2FLAGS = @XML2FLAGS@
+X_CFLAGS = @X_CFLAGS@
+X_EXTRA_LIBS = @X_EXTRA_LIBS@
+X_LIBS = @X_LIBS@
+X_PRE_LIBS = @X_PRE_LIBS@
 ac_ct_AR = @ac_ct_AR@
 ac_ct_AS = @ac_ct_AS@
 ac_ct_CC = @ac_ct_CC@
@@ -192,9 +199,8 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libextlib.la
 AM_CFLAGS = @NEUROFLAGS@
-#else USE_GGI
-#lib_sources = ggi.c
-@USE_SDL_FALSE@lib_sources = none.c
+@USE_SDL_FALSE@@USE_X11_FALSE@lib_sources = none.c
+@USE_SDL_FALSE@@USE_X11_TRUE@lib_sources = x11.c
 @USE_SDL_TRUE@lib_sources = sdl.c
 libextlib_la_SOURCES = $(lib_sources) 
 all: all-am
@@ -250,6 +256,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/none.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x11.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

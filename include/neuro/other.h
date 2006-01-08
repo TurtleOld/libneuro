@@ -5,6 +5,7 @@
 #define __OTHER_H
 
 #include "neuro_engine.h"
+#include "ebuf.h"
 
 #include <stdlib.h>
 
@@ -44,5 +45,15 @@ extern u8 Neuro_BoundsCheck(Rectan *indep, Rectan *depen);
 extern void Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst);
 
 extern void Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst);
+
+/* generate characters (source is chgen.c in src/misc TODO might need to have the Neuro_ prefix */
+extern void Uchar(int amount, unsigned char **buf);
+
+/* internal function (source is bitmap.c in src/misc) */
+extern void readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap);
+/* internal function (source is bitmap.c in src/misc) 
+ * pretty much useless, use Neuro_CleanEBuf() instead
+ */
+extern void cleanPixmapEbuf(EBUF **pixmap);
 
 #endif /* __OTHER_H */
