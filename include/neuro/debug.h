@@ -25,4 +25,13 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 #define DbgP error_at_line
 */
 
+/* depending on the current debug level, will 
+ * output those formatted debug informations.
+ */
+extern void Debug_Val(u8 level, char *control, ...);
+
+/* sets the current debug level */
+extern void Neuro_SetDebugLevel(u8 level);
+	
+
 #endif /* __DEBUF_H */

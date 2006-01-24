@@ -14,6 +14,7 @@
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
+static u8 debug_level = 0;
 
 /*--- Static Prototypes ---*/
 
@@ -39,6 +40,31 @@ Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 
 	/* fprintf(stderr, "%s\n", control); */
 	
 	/* free(msg); */
+}
+
+/* */
+void
+Debug_Val(u8 level, char *control, ...)
+{
+	va_list args;
+	/* char *msg;*/
+	
+	if (debug_level >= level)
+	{
+		/* msg = calloc(1, 520); */
+		va_start(args, control);
+		/* vasprintf(msg, control, args); */
+		vfprintf(stderr, control, args);
+		va_end(args);
+
+		/* free(msg); */
+	}
+}
+
+void
+Neuro_SetDebugLevel(u8 level)
+{
+	debug_level = level;
 }
 
 /*--- Poll ---*/

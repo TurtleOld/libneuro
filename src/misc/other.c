@@ -21,6 +21,7 @@
 #include <extlib.h>
 
 #include <graphics.h>
+#include <ebuf.h>
 
 u8
 Chk_bound(Rectan *rec, u16 x, u16 y)
@@ -138,6 +139,72 @@ Neuro_SepChr(const unsigned char chr, char *source, int *items)
 	return ending;
 }
 
+static void
+clean_sepchr_ebuf(void *src)
+{
+	SepChr_Data *tmp;
+	
+	tmp = (SepChr_Data*)src;
+	
+	if (tmp->string)
+		free(tmp->string);
+}
+
+/* new separate character function using the EBUF tech */
+EBUF *
+Neuro_SepChr2(const unsigned char chr, char *source)
+{
+	u32 total;
+	u32 i = 0, i2 = 0;
+	EBUF *temp;
+	SepChr_Data *tmp;
+	char *buf;
+
+	if (source)
+		total = strlen(source);
+	else
+		return NULL;
+
+	Neuro_CreateEBuf(&temp);
+	Neuro_SetcallbEBuf(temp, clean_sepchr_ebuf);
+	
+	buf = calloc(1, total);
+	
+	while (i < total)
+	{
+		if (source[i] == chr)
+		{
+			Neuro_AllocEBuf(temp, sizeof(SepChr_Data*), sizeof(SepChr_Data));
+			tmp = Neuro_GiveCurEBuf(temp);
+			
+			tmp->string = calloc(1, i2 + 1);
+			strncpy(tmp->string, buf, i2);
+			tmp->string[i2] = '\0';
+			i2 = 0;
+		}
+		else
+		{
+			buf[i2] = source[i];
+			i2++;
+		}
+		
+		i++;
+	}
+	
+	if (i2 > 0)
+	{
+		Neuro_AllocEBuf(temp, sizeof(SepChr_Data*), sizeof(SepChr_Data));
+		tmp = Neuro_GiveCurEBuf(temp);
+			
+		tmp->string = calloc(1, i2 + 1);
+		strncpy(tmp->string, buf, i2);
+		tmp->string[i2] = '\0';
+	}
+
+	free(buf);
+
+	return temp;
+}
 
 u32
 Neuro_GiveRGB(u8 R, u8 G, u8 B)

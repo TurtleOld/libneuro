@@ -27,6 +27,14 @@ extern void Neuro_CallbackBuf(OBJBUF *eng, void (*callback)(void *src));
 
 extern char **Neuro_SepChr(const unsigned char chr, char *source, int *items);
 
+/* the EBUF data uses this struct */
+typedef struct SepChr_Data
+{
+	char *string;
+}SepChr_Data;
+
+extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
+
 /* returns a u32 that contains a 16bit color system. */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
 
