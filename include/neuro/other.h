@@ -64,4 +64,29 @@ extern void readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap);
  */
 extern void cleanPixmapEbuf(EBUF **pixmap);
 
+/* -------- Argument System ---------- */
+
+enum
+{
+	OPTION_NORMAL	= 0x00000000, /* normal option which includes a callback or not */
+	OPTION_ARGUMENT = 0x00000001, /* needs an argument */
+	OPTION_REQUIRED = 0x00000010, /* is required to make the app run */
+	OPTION_NESTED	= 0x00000100, /* can be nested with other */
+	OPTION_MULTI	= 0x00001000, /* can have more than one option of this type */
+	OPTION_VOID	= 0x00010000, /* when the command has no options, this option is executed */
+	OPTION_QUIT	= 0x00100000  /* when this option is called, no more options r executed. */
+};
+
+extern int Neuro_ArgInit(int argc, char **argv);
+
+extern void Neuro_ArgClean();
+
+extern void Neuro_ArgOption(char *string, int options, void (*action)(char *data));
+
+/* return 2 on error, 1 on normal exit requested and 0 on execution continue */
+extern int Neuro_ArgProcess();
+
+/* ---------- End of the Argument System ---------- */
+
+
 #endif /* __OTHER_H */
