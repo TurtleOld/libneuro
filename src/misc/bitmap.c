@@ -557,7 +557,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 				if (i > 0)
 					i--;
 			}
-			bufe[width] = '\0';
+			bufe[width * symbol_count] = '\0';
 			
 			Neuro_AllocEBuf(bufa, sizeof(char*), symbol_count * bmap->infoheader.width + 1);
 			buf = Neuro_GiveCurEBuf(bufa);
@@ -609,7 +609,7 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 		/* error with the file reading, it doesn't seem to exist 
 		 * or it is empty.
 		 */
-		output_pixmap = NULL;
+		*output_pixmap = NULL;
 		return;
 	}
 

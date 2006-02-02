@@ -48,11 +48,11 @@ clean_Vobjects(void *src)
 	/* Info_Print("cleaning process ..."); */
 	/* Info_Print("pixmap data"); */
 	if (buf->data)
-		XpmFree(buf->data);
+		XFreePixmap(dmain->display, buf->data);
 
 	/* Info_Print("shapemask"); */
 	if (buf->shapemask)
-		XpmFree(buf->shapemask);
+		XFreePixmap(dmain->display, buf->shapemask);
 	
 	/* Info_Print("display main window Graphic context (GC)"); */
 	if (buf->wGC)
@@ -146,13 +146,19 @@ Lib_LoadBMP(const char *path, v_object **img)
 	int _err = 0;
 
 	readBitmapFileToPixmap(path, &temp);
+	if (!temp)
+	{
+		Debug_Val(0, "Error loading the file %s, it might not exist or its not a bitmap\n", path);
+		return;
+	}
+
 	
 	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
 
 	tmp = Neuro_GiveCurEBuf(vobjs);
 
-	buffer = (char**)Neuro_GiveEBufCore(temp);
-
+	buffer = (char**)Neuro_GiveEBufCore(temp);	
+	
 	initbuf = buffer;
 	while (*buffer)
 	{
@@ -170,6 +176,8 @@ Lib_LoadBMP(const char *path, v_object **img)
 		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);
 	
 	Neuro_CleanEBuf(&temp);
+
+	return; /* int needed */
 }
 
 v_object *
