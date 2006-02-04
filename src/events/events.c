@@ -6,77 +6,31 @@
  * set which keyboard events will go with which functions.
  */
 
-/*--- Extern Headers Including ---*/
 #include <stdlib.h>
 
-/*--- Local Headers Including ---*/
+
 #include <extlib.h>
-
-/*--- Main Module Header ---*/
-#include "events.h"
-
-/*--- Global Variables ---*/
-
-/*--- Static Variables ---*/
+#include <events.h>
+#include <ebuf.h>
 
 /* keyboard buffers */
-typedef struct
+typedef struct KEYBEVENT
 {
 	u32 key;
 	void (*callback)();
-}PEVENTLIST;
-
-struct
-{
-	u32 total;
-	PEVENTLIST *kevents;
-}KEventList;
+}KEYBEVENT;
 
 /* mouse buffers */
-typedef struct
+typedef struct MOUSEEVENT
 {
 	u32 button;
 	u8 lastState; /* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
 	void (*callbackClick)(); /* callback to call when clicked */
 	void (*callbackRelease)(); /* callback to call when released */
-}MEVENTLIST;
+}MOUSEEVENT;
 
-typedef struct EventList
-{
-	u32 total;
-	MEVENTLIST *mevents;
-}EventList;
-
-EventList MEventList;
-
-/*--- Static Prototypes ---*/
-
-
-
-/*--- Static Functions ---*/
-
-
-static void
-clean_keyboard()
-{
-	if (KEventList.kevents)
-	{
-		free(KEventList.kevents);
-		KEventList.kevents = NULL;
-		KEventList.total = 0;
-	}	
-}
-
-static void
-clean_mouse()
-{
-	if (MEventList.mevents)
-	{
-		free(MEventList.mevents);
-		MEventList.mevents = NULL;
-		MEventList.total = 0;
-	}
-}
+static EBUF *_klist; /* keyboard buffer */
+static EBUF *_mlist; /* mouse buffer */
 
 /* this function is to check if keys are still being pushed.
  * It calls a function to get an array of all the keys on a
@@ -87,49 +41,25 @@ static void
 handle_keys()
 {
 	u8 *key;
-	u32 i;
+	u32 total;
+	KEYBEVENT *tmp;
 	
-	if (KEventList.kevents == NULL)
+	if (Neuro_EBufIsEmpty(_klist))
 		return;
 	
 	key = Lib_GetKeyState(NULL);
-	i = KEventList.total;
 
 	if (!key)
 		return;
-	
-	while (i-- > 0)
+
+	total = Neuro_GiveEBufCount(_klist) + 1;
+		
+	while (total-- > 0)
 	{
-		if (key[KEventList.kevents[i].key])
-		{
-			(KEventList.kevents[i].callback)();
-		}
+		tmp = Neuro_GiveEBuf(_klist, total);
+		if (key[tmp->key])
+			(tmp->callback)();	
 	}
-#if temp
-	if (key[SDLK_UP])
-		Player_UpWard();
-	
-	if (key[SDLK_DOWN])
-		Player_DownWard();
-	
-	if (key[SDLK_LEFT])
-		Player_LeftWard();
-
-	if (key[SDLK_RIGHT])
-		Player_RightWard();
-
-	if (key[SDLK_KP8])
-		Camera_UpWard();
-
-	if (key[SDLK_KP6])
-		Camera_RightWard();
-
-	if (key[SDLK_KP2])
-		Camera_DownWard();
-
-	if (key[SDLK_KP4])
-		Camera_LeftWard();
-#endif /* temp */
 }
 
 static void
@@ -137,59 +67,53 @@ handle_mouse()
 {
 	u8 button;
 	int x, y;
-	u32 i;
+	u32 total;
+	MOUSEEVENT *tmp;
 	
-	
-	if (!MEventList.mevents)
-	{
-		/* printf("the list is empty, bailing out\n"); */
-		return;
-	}
+	if (Neuro_EBufIsEmpty(_mlist))
+		return;	
 	
 	button = Lib_GetMouseState(&x, &y);
 	
-	i = MEventList.total;
+	total = Neuro_GiveEBufCount(_mlist) + 1;
 
 	/* printf("mouse (%d,%d) button %d \n", x, y, button); */
 	
-	while (i-- > 0)
+	while (total-- > 0)
 	{
+		tmp = Neuro_GiveEBuf(_mlist, total);
+		
 		if (button)
 		{
-			if (button == MEventList.mevents[i].button)
+			if (button == tmp->button)
 			{
-				if (!MEventList.mevents[i].lastState)
+				if (!tmp->lastState)
 				{
-					(MEventList.mevents[i].callbackClick)(x, y);
-					MEventList.mevents[i].lastState = 1;
+					(tmp->callbackClick)(x, y);
+					tmp->lastState = 1;
 				}
-				/*else
-				{
-					(MEventList.mevents[i].callbackRelease)(x, y);
-					MEventList.mevents[i].lastState = 0;
-				}*/
 			}
 		}
 		else
 		{
-			if (MEventList.mevents[i].lastState == 1)
+			if (tmp->lastState == 1)
 			{
-				(MEventList.mevents[i].callbackRelease)(x, y);
-				if (MEventList.mevents)
-					MEventList.mevents[i].lastState = 0;
+				(tmp->callbackRelease)(x, y);
+				tmp->lastState = 0;
+					
 			}
-		}
+		}	
 	}
 }
 
 static void
-mouseListChange(u32 button, void (*callback)(), u32 listCursor, u8 click_release)
+mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_release)
 {
-	MEventList.mevents[listCursor].button = button;
-	if (!click_release)
-		MEventList.mevents[listCursor].callbackClick = callback;
+	ptr->button = button;
 	if (click_release)
-		MEventList.mevents[listCursor].callbackRelease = callback;
+		ptr->callbackRelease = callback;
+	else
+		ptr->callbackClick = callback;
 }
 
 /*--- Global Functions ---*/
@@ -197,90 +121,94 @@ mouseListChange(u32 button, void (*callback)(), u32 listCursor, u8 click_release
 void 
 Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 {
-	if (KEventList.kevents == NULL)
-	{
-		KEventList.kevents = (PEVENTLIST*)calloc(1, sizeof(PEVENTLIST));
-		KEventList.total = 0;
-	}
-	else
-	{
-		KEventList.kevents = (PEVENTLIST*)realloc(KEventList.kevents, sizeof(PEVENTLIST) * (1 + KEventList.total));
-	}
-	
-	KEventList.kevents[KEventList.total].key = keysym;
-	KEventList.kevents[KEventList.total].callback = callback;
-	
-	KEventList.total++;
+	KEYBEVENT *tmp;
+
+	Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
+
+	tmp = Neuro_GiveCurEBuf(_klist);
+
+	tmp->key = keysym;
+	tmp->callback = callback;
 }
 
 void
 Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 {
-	u32 i = 0;
+	MOUSEEVENT *tmp;
+	u32 total = 0;
 	
-	/* printf("adding mouse event\n"); */
-	if (MEventList.mevents == NULL)
+	if (Neuro_EBufIsEmpty(_mlist))
 	{
-		MEventList.mevents = (MEVENTLIST*)calloc(1, sizeof(MEVENTLIST));
-		MEventList.total = 0;
+		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	}
 	else
 	{
-		i = MEventList.total;
-		while (i-- > 0)
+		total = Neuro_GiveEBufCount(_mlist) + 1;
+		/* try to find the corresponding button so we can 
+		 * change its data -- if it exists.
+		 */
+		while (total-- > 0)
 		{
-			if (button == MEventList.mevents[i].button)
+			tmp = Neuro_GiveEBuf(_mlist, total);
+			if (tmp->button == button)
 			{
-				mouseListChange(button, callback, i, 0);
+				mouseListChange(button, callback, tmp, 0);
+				/* we changed the data and now we bail out */
 				return;
 			}
 		}
-		MEventList.mevents = (MEVENTLIST*)realloc(MEventList.mevents, sizeof(MEVENTLIST) * (1 + MEventList.total));
+		/* the mouse button wasn't found so we will create a new one for it */
+		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	}
-	mouseListChange(button, callback, MEventList.total, 0);
-	MEventList.total++;
+	mouseListChange(button, callback, Neuro_GiveCurEBuf(_mlist), 0);
 }
 
 void
 Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 {
-	u32 i = 0;
-	if (MEventList.mevents == NULL)
-	{
-		MEventList.mevents = (MEVENTLIST*)calloc(1, sizeof(MEVENTLIST));
-		MEventList.total = 0;
-	}
+	MOUSEEVENT *tmp;
+	u32 total = 0;
+	
+	if (Neuro_EBufIsEmpty(_mlist))
+		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	else
 	{
-		i = MEventList.total;
-		while (i-- > 0)
+		total = Neuro_GiveEBufCount(_mlist) + 1;
+		/* try to find the corresponding button so we can 
+		 * change its data -- if it exists.
+		 */
+		while (total-- > 0)
 		{
-			if (button == MEventList.mevents[i].button)
+			tmp = Neuro_GiveEBuf(_mlist, total);
+			if (tmp->button == button)
 			{
-				mouseListChange(button, callback, i, 1);
+				mouseListChange(button, callback, tmp, 1);
+				/* we changed the data and now we bail out */
 				return;
 			}
 		}
-		MEventList.mevents = (MEVENTLIST*)realloc(MEventList.mevents, sizeof(MEVENTLIST) * (1 + MEventList.total));
+		/* the mouse button wasn't found so we will create a new one for it */
+		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	}
-	mouseListChange(button, callback, MEventList.total, 1);
-	MEventList.total++;
+	
+	mouseListChange(button, callback, Neuro_GiveCurEBuf(_mlist), 1);
 }
 
 void
 Neuro_CleanKeyboard()
 {
-	clean_keyboard();
+	Neuro_CleanEBuf(&_klist);
+	Neuro_CreateEBuf(&_klist);
 }
 
 void
 Neuro_CleanMouse()
 {
-	clean_mouse();
+	Neuro_CleanEBuf(&_mlist);
+	Neuro_CreateEBuf(&_mlist);
 }
 
 
-/*--- Poll ---*/
 void
 Events_Poll()
 {	
@@ -290,16 +218,21 @@ Events_Poll()
 	handle_mouse();
 }
 
-/*--- Constructor Destructor ---*/
 int
 Events_Init()
 {
+	Neuro_CreateEBuf(&_klist);
+	Neuro_CreateEBuf(&_mlist);
+
+	if (!_klist || !_mlist)
+		return 1;
+	
 	return 0;
 }
 
 void
 Events_Clean()
 {
-	clean_keyboard();
-	clean_mouse();
+	Neuro_CleanEBuf(&_klist);
+	Neuro_CleanEBuf(&_mlist);
 }

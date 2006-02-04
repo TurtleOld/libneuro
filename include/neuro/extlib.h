@@ -13,7 +13,7 @@
 /* default keysyms */
 #define XK_MISCELLANY
 #define XK_XKB_KEYS
-#define XK_LATIN1
+#define XK_LATIN1 /* starts at line 407 */
 #define XK_LATIN2
 #define XK_LATIN3
 #define XK_LATIN4
