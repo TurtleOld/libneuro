@@ -44,16 +44,29 @@ AC_CONFIG_SRCDIR(src/neuro_main.c)
 # init automake
 AM_INIT_AUTOMAKE(neuro, $NEURO_VERSION)
 
-# set some variables
+# call canonical host to get valuable informations about the current system
+AC_CANONICAL_HOST
+AC_DEFINE_UNQUOTED(OS, "${host}", [cpu-machine-OS])
+AC_MSG_RESULT($host)
+
+#dnl ----- set some variables ------
+# check for programs
 AC_PROG_CC
+
+# check for cygwin stuff
 AC_LIBTOOL_WIN32_DLL
+
+# libtool setup
 AM_PROG_LIBTOOL
 
+
 # set the flags
-CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" #-std=gnu99
+CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" 
+#-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
-NEUROLIBFLAGS="-no-undefined --enable-realtime-pseudo-reloc"
-SDLFLAGS="`sdl-config --libs`"#"`sdl-config --cflags` -lSDL" #"-lpthread"
+NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
+SDLFLAGS="`sdl-config --libs`" 
+#"`sdl-config --cflags` -lSDL" #"-lpthread"
 XML2FLAGS="-I/usr/include/libxml2"
 
 dnl ------ Configure Arguments ------
@@ -71,11 +84,26 @@ AC_ARG_WITH(lowlib,
 lowlib="$withval", lowlib="sdl")
 
 
+AC_MSG_CHECKING([if we need -no-undefined])
+case $host in
+	*-*-cygwin | *-*-mingw* | *-*-pw32*)
+		NEUROFLAGS="$NEUROFLAGS -DWIN32"
+		NEUROLIBFLAGS="$NEUROLIBFLAGS -no-undefined"
+		need_no_undefined=yes
+		#LIBS="$LIBS -lc -lgcc_s -ldl"
+		;;
+	*)
+		need_no_undefined=no
+		;;
+esac
+AC_MSG_RESULT($need_no_undefined)
+AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
+dnl ignore this comment because the above now does a good job
 dnl --- cheap check for w32 ... --- please make this better, this section should be the
 dnl recognition of the platform Neuro is getting built on
 
-AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
+#AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
 
 
 
@@ -144,6 +172,8 @@ AC_SUBST(NEUROLIBFLAGS)
 
 # set the installation path for the headers
 includedir=$includedir/neuro
+
+echo $LIBS
 
 # enumerate the Makefiles to be created
 AC_CONFIG_FILES([

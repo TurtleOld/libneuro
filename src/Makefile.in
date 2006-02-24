@@ -152,6 +152,8 @@ NEURO_MAJOR_VERSION = @NEURO_MAJOR_VERSION@
 NEURO_MICRO_VERSION = @NEURO_MICRO_VERSION@
 NEURO_MINOR_VERSION = @NEURO_MINOR_VERSION@
 NEURO_VERSION = @NEURO_VERSION@
+NO_UNDEFINED_FALSE = @NO_UNDEFINED_FALSE@
+NO_UNDEFINED_TRUE = @NO_UNDEFINED_TRUE@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 PACKAGE = @PACKAGE@
@@ -232,8 +234,8 @@ lib_sources = \
 libneuro_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
-LIB_FLAGS = @NEUROLIBFLAGS@ -release $(LT_RELEASE) -version-info \
-	$(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+LIB_FLAGS = @NEUROLIBFLAGS@ -no-undefined -release $(LT_RELEASE) \
+	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 libneuro_la_LDFLAGS = $(LIB_FLAGS)
 SUBLIBLIST = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
 	video/libvideo.la events/libevents.la $(am__append_2)

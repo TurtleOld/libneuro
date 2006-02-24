@@ -30,6 +30,7 @@ AM_CFLAGS= @NEUROFLAGS@
 LIB_FLAGS= @NEUROLIBFLAGS@
 
 LIB_FLAGS += \
+	      -no-undefined \
 	      -release $(LT_RELEASE) \
 	      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 	      

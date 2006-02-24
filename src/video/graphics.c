@@ -169,10 +169,6 @@ static u8 fps_dotincr; /* used to after dot increment for the fps limiter algori
 static u32 frameSkip = 0; /* holds the number of frames we have to skip. */
 static u32 frameSkip_tmp = 0; /* the count of frames skipped already. */
 
-/* used to check for mem leaks */
-static u32 memleak_check;
-
-
 /* 1 is that the pixels will be cleaned during this cycle and 0 is no it won't */
 static u8 clean_pixel_in_this_cycle;
 
@@ -195,12 +191,8 @@ static void cleanRaw();
 static void computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
-#if debug_instruction_buffer
 static void print_queue() __attribute__ ((__unused__));
-#endif /* debug_instruction_buffer */
-#if debug_instruction_buffer2
 static void print_queue2() __attribute__ ((__unused__));
-#endif /* debug_instruction_buffer2 */
 
 /* draw the objects on the screen */
 static void draw_objects();
@@ -250,9 +242,8 @@ cleanQueue()
 	last_element = NULL;
 }
 
-#if debug_instruction_buffer
 static void
-print_queue() __attribute__ ((__unused__))
+print_queue() 
 {
 	INSTRUCTION_ENGINE *cur;
 	
@@ -272,12 +263,10 @@ print_queue() __attribute__ ((__unused__))
 		else
 			cur = cur->next;
 	}
-}
-#endif /* debug_instruction_buffer */
+} __attribute__ ((__unused__))
 
-#if debug_instruction_buffer2
 static void
-print_queue2() __attribute__ ((__unused__))
+print_queue2() 
 {
 	INSTRUCTION_ENGINE *cur;
 	
@@ -298,8 +287,7 @@ print_queue2() __attribute__ ((__unused__))
 		else
 			cur = cur->next;
 	}
-}
-#endif /* debug_instruction_buffer */
+} __attribute__ ((__unused__))
 
 /* compute the instruction_engine everytime
  * a new raw is added.
@@ -485,9 +473,9 @@ draw_objects()
 	
 	while (cur)
 	{
-		u8 bpp;
+		/*u8 bpp;
 		u32 rmask, gmask, bmask, amask;
-		Rectan bufa;
+		Rectan bufa;*/
 		
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
@@ -500,18 +488,20 @@ draw_objects()
 		 * I'll use sclScreen and see how it goes.
 		 */
 		
-		Lib_GetVObjectData(sclScreen, NULL, NULL, NULL, NULL, NULL, NULL,
-				&bpp, &rmask, &gmask, &bmask, &amask);
+		/*Lib_GetVObjectData(sclScreen, NULL, NULL, NULL, NULL, NULL, NULL,
+				&bpp, &rmask, &gmask, &bmask, &amask);*/
 		
-		cur->current->former_area = Lib_CreateVObject(0x00000000, buf.w, 
-				buf.h, bpp, rmask, gmask, bmask, amask);
+		/*cur->current->former_area = Lib_CreateVObject(0x00000000, buf.w, 
+				buf.h, bpp, rmask, gmask, bmask, amask);*/
 
+		/*
 		bufa.x = 0;
 		bufa.y = 0;
 		bufa.w = cur->current->src.w;
 		bufa.h = cur->current->src.h;
+		*/
 		
-		Lib_BlitObject(sclScreen, &buf, cur->current->former_area, &bufa);
+		/*Lib_BlitObject(sclScreen, &buf, cur->current->former_area, &bufa);*/
 		
 		
 		/* draw the surface_ptr to the screen buffer. */
@@ -558,19 +548,21 @@ clean_drawn_objects()
 			buf.y = cur->current->dst.y;
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
-			/*
+			
 			if (background)
 				Lib_BlitObject(background, &buf, sclScreen, &buf);
 			else
 				Lib_FillRect(sclScreen, &buf, 0);
-			*/
-				
-			Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf);
 			
+				
+			/* Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf); */
+			
+			/*
 			if (cur->current->former_area)
 			{
 				Lib_FreeVobject(cur->current->former_area);
 			}
+			*/
 			
 			cur = cur->next;
 		}
@@ -739,7 +731,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 
 	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
 	{
-		Debug_Print("a drawing instruction was dropped because its destination is outbound");
+		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
 		return;
 	}	
 	
@@ -850,8 +842,7 @@ Graphics_Poll()
 	{
 		cleanPixels();
 		clean_pixel_in_this_cycle = 0;
-	}
-	
+	}	
 	if (ltime + 1 <= time(NULL))
 	{
 		lFps = fps;
