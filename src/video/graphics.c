@@ -679,6 +679,18 @@ Neuro_SetFpsLimit(u32 fpsLimit)
 }
 
 void
+Neuro_GiveScreenSize(u32 *width, u32 *height)
+{
+	/* will be changed so programs that call Neuro will be 
+	 * able to change the resolution dynamically when it starts
+	 * so the screen size values will be in variables rather than
+	 * hardcoded in macros.
+	 */
+	*width = SCREEN_X;
+	*height = SCREEN_Y;
+}
+
+void
 Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;

@@ -18,12 +18,6 @@
  */
 #define FRAMES_PER_SECOND 60
 
-/*! default : 10 -- moved to ebuf.h
- * the amount of memory that we allocate
- * in addition to the mem required. 
- * */
-/* #define MEMORY_ALLOC_OVERH 1 */
-
 /*! default : 2
  * how many time the computer has to check 
  * out which one of the image has the lowest
@@ -60,7 +54,7 @@ extern void Neuro_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void
 extern void Neuro_AddDrawingElement(void (*func)());
 
 /* directly draw a surface on the screen without
- * the layering feature.
+ * the layering feature and without the cleaning feature either (no feature actually :) ).
  */
 extern void Neuro_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 
@@ -70,6 +64,9 @@ extern void Neuro_AddBackground(void *isurface);
 /*! give the current fps */
 extern void Neuro_GiveFPS(t_tick *output);
 
+/* the u32 pointers will be given the current screen size in pixels */
+extern void Neuro_GiveScreenSize(u32 *width, u32 *height);
+
 /* draw a pixel on the screen */
 extern void Neuro_PutPixel(u32 x, u32 y, u32 pixel);
 
@@ -78,24 +75,6 @@ extern u32 Neuro_GetPixel(u32 x, u32 y);
 
 /* clean all the pixels that were drawn using the handled pixel drawer in this module */
 extern void Neuro_CleanPixels();
-
-
-typedef struct ENGINEBUF ENGINEBUF;
-
-extern ENGINEBUF *Neuro_CreateEngineBuf();
-
-extern void Neuro_AllocEngineBuf(ENGINEBUF *eng, size_t sptp, size_t sobj);
-
-extern void Neuro_CleanEngineBuf(ENGINEBUF **eng);
-
-extern u32 Neuro_GiveEngineBufCount(ENGINEBUF *eng);
-
-extern void **Neuro_GiveEngineBufAddr(ENGINEBUF *eng, u32 elem);
-
-extern void *Neuro_GiveEngineBuf(ENGINEBUF *eng, u32 elem);
-
-extern void Neuro_SetEngineBuf(ENGINEBUF *eng, void **to, void *from);
-
 
 /*! internal use Initialisation of the Graphics Engine */
 extern int Graphics_Init(void);
