@@ -861,12 +861,11 @@ Graphics_Poll()
 		fps = 0;
 		ltime = time(NULL);
 	}
-	/*
 	else
-	{*/
+	{
 		/* lFps = 0; */
-	/*	fps++;
-	}*/
+		fps++;
+	}
 	
 	if (fps_limit > 0 /*&& fps_limit <= fps*/) 
 	{

@@ -38,6 +38,11 @@ extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
 /* returns a u32 that contains a 16bit color system. */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
 
+/* an interface to easily give the size of an image object 
+ * width and height require the address of u32 to put the data on.
+ */
+extern void Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height);
+
 extern u32 Neuro_RawGetPixel(v_object *srf, int x, int y);
 
 extern void Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel);

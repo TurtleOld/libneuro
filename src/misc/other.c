@@ -218,6 +218,16 @@ Neuro_GiveRGB(u8 R, u8 G, u8 B)
 	return out;
 }
 
+void
+Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height)
+{
+	if (image && width && height)
+	{
+		Lib_GetVObjectData(image, NULL, height, width, NULL, NULL, NULL,
+				NULL, NULL, NULL, NULL, NULL);
+	}
+}
+
 /*
  *  * Return the pixel value at (x, y)
  *   * NOTE: The surface must be locked before calling this!
@@ -356,7 +366,7 @@ Neuro_PrintFPS()
 
 	Neuro_GiveFPS(&fps);
 
-	if (fps > 0)
+	if (fps >= 0)
 	{
 		printf("current fps : %d\n", fps);
 	}
