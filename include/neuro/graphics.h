@@ -61,6 +61,12 @@ extern void Neuro_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 /*! use this function to set the background */
 extern void Neuro_AddBackground(void *isurface);
 
+/* refreshes the screen nicely also support backgrounds */
+extern void Neuro_RefreshScreen();
+
+/* tells neuro to clean the drawn images from the screen */
+extern void Neuro_CycleClean();
+
 /*! give the current fps */
 extern void Neuro_GiveFPS(t_tick *output);
 

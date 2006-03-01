@@ -178,6 +178,9 @@ static u8 drawn_last_cycle;
 /* 1 is that we don't draw anything in this cycle */
 static u8 dont_draw_this_cycle;
 
+/* 1 is that we got instructed by external program to clean this cycle */
+static u8 clean_this_cycle;
+
 /* last frame we redrawn the pixels? */
 /* static u8 lastPdraw; */
 
@@ -691,6 +694,31 @@ Neuro_GiveScreenSize(u32 *width, u32 *height)
 }
 
 void
+Neuro_RefreshScreen()
+{
+	Rectan buf;
+	i32 h, w;
+
+	Neuro_GiveImageSize(background, &w, &h);
+
+	buf.x = 0;
+	buf.y = 0;
+	buf.w = (i16)w;
+	buf.h = (i16)h;
+			
+	if (background)
+		Lib_BlitObject(background, &buf, sclScreen, NULL);
+	else
+		Lib_FillRect(sclScreen, NULL, 0);
+}
+
+void
+Neuro_CycleClean()
+{
+	clean_this_cycle = 1;
+}
+
+void
 Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;
@@ -768,8 +796,8 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 void 
 Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
 {
-	Lib_BlitObject(isurface, isrc, screen, idst);
-	Lib_Flip(screen);
+	Lib_BlitObject(isurface, isrc, sclScreen, idst);
+	/* Lib_Flip(screen); */
 }
 
 /* external modules call this function
@@ -916,8 +944,14 @@ Graphics_Poll()
 	{
 		if (!dont_draw_this_cycle)
 		{
-			if (drawn_last_cycle)
+			/*if (drawn_last_cycle)
+				clean_drawn_objects();*/
+
+			if (clean_this_cycle)
+			{
 				clean_drawn_objects();
+				clean_this_cycle = 0;
+			}
 		
 			draw_objects();
 		}

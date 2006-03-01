@@ -61,7 +61,7 @@ AM_PROG_LIBTOOL
 
 
 # set the flags
-CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" 
+CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src" 
 #-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
@@ -164,7 +164,7 @@ dnl ----------------
 if test x$enable_Debug = xyes; then
 	NEUROFLAGS="$NEUROFLAGS -g"
 else
-	NEUROFLAGS="$NEUROFLAGS -O3 -s"
+	NEUROFLAGS="$NEUROFLAGS -O2 -s"
 fi
 
 AC_SUBST(NEUROFLAGS)
