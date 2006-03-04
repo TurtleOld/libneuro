@@ -34,6 +34,7 @@ typedef struct V_OBJECT
 EBUF *vobjs;
 
 V_OBJECT *dmain;
+V_OBJECT *scldmain; /* buffer (double) */
 
 static void
 clean_Vobjects(void *src)
@@ -70,10 +71,12 @@ clean_Vobjects(void *src)
 
 
 /*  video constructor destructor  */
+/* will need to include the screen width and height also */
 int
 Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
 	V_OBJECT *tmp;
+	i32 width = 800, height = 600;
 	
 	Neuro_CreateEBuf(&vobjs);
 	Neuro_SetcallbEBuf(vobjs, clean_Vobjects);
@@ -87,7 +90,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	tmp->GC = XDefaultGC(tmp->display, tmp->screen);
 	
 	tmp->win = XCreateSimpleWindow(tmp->display, XRootWindow(tmp->display, tmp->screen),
-			200, 200, 800, 600, 4,
+			200, 200, width, height, 4,
 			BlackPixel(tmp->display, tmp->screen),
 			WhitePixel(tmp->display, tmp->screen));
 
@@ -102,6 +105,17 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	
 	dmain = tmp;
 	*screen = tmp;
+	if (screen_buf)
+	{
+		V_OBJECT *tmp2;
+		Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+		
+		tmp2 = Neuro_GiveCurEBuf(vobjs);
+
+		/* XCreateImage(tmp->display, tmp->win, 24, ZPixmap, 0, 0, 
+				width, height, 16, 0); */
+		/* *screen_buf = *screen; */ /* cheap hack that will need to be FIxed TODO TODO */
+	}
 	
 	return 0;
 }
@@ -122,16 +136,61 @@ void
 Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst)
 {
 	V_OBJECT *vsrc, *vdst;
-
+	Rectan Rsrc, Rdst;
+	i32 h, w;
+	int _err = 0;
+	
 	vsrc = (V_OBJECT*)source;
 	vdst = (V_OBJECT*)destination;
+
+	if (src == NULL)
+	{
+		Neuro_GiveImageSize(source, &w, &h);
+		
+		Rsrc.x = 0;
+		Rsrc.y = 0;
+		Rsrc.h = (i16)h;
+		Rsrc.w = (i16)w;
+	}
+	else
+	{
+		Rsrc.x = src->x;
+		Rsrc.y = src->y;
+		Rsrc.h = src->h;
+		Rsrc.w = src->w;
+	}
+
+	if (dst == NULL)
+	{
+		Rdst.x = 0;
+		Rdst.y = 0;
+		Rdst.h = 0;
+		Rdst.w = 0;
+	}
+	else
+	{
+		Rdst.x = dst->x;
+		Rdst.y = dst->y;
+		Rdst.h = dst->h;
+		Rdst.w = dst->w;
+	}
+		
 	
 	XSetClipOrigin(dmain->display, dmain->GC, 20, 20);
 	XSetClipMask(dmain->display, vdst->GC, vsrc->shapemask);
-	XCopyArea(dmain->display, vsrc->data, *vdst->cwin, *dmain->cGC, 
-			src->x, src->y, src->w, src->h,
-			dst->x, dst->y);
+	/* TODO change vsrc->data and vdst->cwin to pointers which will change 
+	 * depending on the type of v_object the v_object is. Either core
+	 * or pixmap...
+	 */
+	_err = XCopyArea(dmain->display, vsrc->data, *vdst->cwin, *dmain->cGC, 
+			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
+			Rdst.x, Rdst.y);
 
+	if (_err != 0)
+	{
+		Error_Print("Blit seems to have failed");
+		Debug_Val(0, "Debug value is %d\n", _err);
+	}
 	XSetClipMask(vdst->display, vdst->GC, None);
 }
 
@@ -171,12 +230,16 @@ Lib_LoadBMP(const char *path, v_object **img)
 	_err = XpmCreatePixmapFromData(dmain->display, dmain->win, initbuf, &tmp->data, &tmp->shapemask, &tmp->attrib);
 	
 	if (_err == 0)
+	{
 		*img = tmp;
+		Debug_Val(0, "Successfully loaded the file %s\n", path);
+	}
 	else
 		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);
 	
 	Neuro_CleanEBuf(&temp);
 
+	
 	return; /* int needed */
 }
 

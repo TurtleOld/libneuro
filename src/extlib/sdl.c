@@ -104,7 +104,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 			return 1;
 	}
 	*screen = temp1;
-	*screen_buf = temp2;	
+	if (screen_buf)
+		*screen_buf = temp2;	
 	return 0;
 }
 
