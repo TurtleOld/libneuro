@@ -181,6 +181,9 @@ static u8 dont_draw_this_cycle;
 /* 1 is that we got instructed by external program to clean this cycle */
 static u8 clean_this_cycle;
 
+/* 1 is that we got new draw instruction this cycle so we have to draw. */
+static u8 draw_this_cycle;
+
 /* last frame we redrawn the pixels? */
 /* static u8 lastPdraw; */
 
@@ -791,6 +794,8 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
 	buf->surface_ptr = isurface;
 	computeRawEngine((RAW_ENGINE*)buf);
+
+	draw_this_cycle = 1;
 }
 
 void 
@@ -950,10 +955,11 @@ Graphics_Poll()
 			if (clean_this_cycle)
 			{
 				clean_drawn_objects();
-				clean_this_cycle = 0;
+
 			}
-		
-			draw_objects();
+	
+			if (draw_this_cycle)
+				draw_objects();
 		}
 		else
 			dont_draw_this_cycle = 0;
@@ -967,9 +973,14 @@ Graphics_Poll()
 	clean_queue();
 
 	/* update the full screen */
-	Lib_BlitObject(sclScreen, NULL, screen, NULL);
+	if (draw_this_cycle || clean_this_cycle)
+	{
+		Lib_BlitObject(sclScreen, NULL, screen, NULL);
 
-	updScreen(0);
+		updScreen(0);
+		clean_this_cycle = 0;
+		draw_this_cycle = 0;
+	}
 }
 
 /*--- Constructor Destructor ---*/
