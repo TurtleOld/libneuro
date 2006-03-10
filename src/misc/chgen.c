@@ -22,7 +22,7 @@ core_Uchar(unsigned char **buf, unsigned int *c_pass_count, unsigned int *cursor
 		*buf = (unsigned char*)calloc(1, sizeof(unsigned char) + 1);
 		c_pass = *buf;
 		c_pass[0] = START_NUMBER;
-		*c_pass_count = 0;
+		*c_pass_count = 1;
 		c_pass[1] = '\0';
 	}
 	else
@@ -33,11 +33,11 @@ core_Uchar(unsigned char **buf, unsigned int *c_pass_count, unsigned int *cursor
 		c_pass[*cursor] = START_NUMBER;
 		
 		*cursor = *cursor + 1;
-		if (*c_pass_count < *cursor)
+		if (*c_pass_count < *cursor + 1)
 		{
-			*buf = (unsigned char*)realloc(*buf, 
-					sizeof(unsigned char) * (2 + *c_pass_count));
 			*c_pass_count = *c_pass_count + 1;
+			*buf = (unsigned char*)realloc(*buf, 
+					sizeof(unsigned char) * (1 + *c_pass_count));
 			c_pass[*c_pass_count] = '\0';
 			c_pass[*cursor] = START_NUMBER;
 		}

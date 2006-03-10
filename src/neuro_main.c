@@ -6,9 +6,12 @@
 
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <graphics.h>
+#include <events.h>
+#include <extlib.h>
 
 /*-------------------- Main Module Header --------------------------*/
-#include "neuro_main.h"
+#include <neuro_main.h>
 
 
 /*--------------------      Other       ----------------------------*/
@@ -30,7 +33,8 @@
 void
 Neuro_Poll()
 {
-	
+	Events_Poll();
+	Graphics_Poll();
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -38,11 +42,26 @@ Neuro_Poll()
 int
 Neuro_Init()
 {
-	return 0;
+	int _err = 0;
+	
+	_err = Graphics_Init();
+	if (_err)
+	{
+		return _err;
+	}
+
+	_err = Events_Init();
+	if (_err)
+	{
+		return _err;
+	}
+	
+	return _err;
 }
 
 void
 Neuro_Quit()
 {
-	
+	Events_Clean();
+	Graphics_Clean();
 }

@@ -81,6 +81,8 @@
 
 #define debug_instruction_buffer 0
 #define debug_instruction_buffer2 0
+
+#define screen_buffer 0
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -702,15 +704,17 @@ Neuro_RefreshScreen()
 	Rectan buf;
 	i32 h, w;
 
-	Neuro_GiveImageSize(background, &w, &h);
-
-	buf.x = 0;
-	buf.y = 0;
-	buf.w = (i16)w;
-	buf.h = (i16)h;
-			
 	if (background)
+	{
+		Neuro_GiveImageSize(background, &w, &h);
+
+		buf.x = 0;
+		buf.y = 0;
+		buf.w = (i16)w;
+		buf.h = (i16)h;
+		
 		Lib_BlitObject(background, &buf, sclScreen, NULL);
+	}
 	else
 		Lib_FillRect(sclScreen, NULL, 0);
 }
@@ -883,6 +887,8 @@ Neuro_CleanPixels()
 void
 Graphics_Poll()
 {	
+	/* Debug_Val(0, "cycle\n"); */
+
 	if (clean_pixel_in_this_cycle)
 	{
 		cleanPixels();
@@ -975,7 +981,9 @@ Graphics_Poll()
 	/* update the full screen */
 	if (draw_this_cycle || clean_this_cycle)
 	{
+#if screen_buffer
 		Lib_BlitObject(sclScreen, NULL, screen, NULL);
+#endif /* screen_buffer */
 
 		updScreen(0);
 		clean_this_cycle = 0;
@@ -992,7 +1000,12 @@ Graphics_Init()
 	
 	_err_ = 0;
 	/* will need to be configurable from the projects that use Neuro */
-	_err_ = Lib_VideoInit(&screen, &sclScreen);	
+#if screen_buffer
+	_err_ = Lib_VideoInit(&screen, &sclScreen);
+#else /* NOT screen_buffer */
+	_err_ = Lib_VideoInit(&screen, NULL);
+	sclScreen = screen;
+#endif /* NOT screen_buffer */
 	
 	Neuro_CreateEBuf(&_Drawing);
 	Neuro_CreateEBuf(&_Raw);
@@ -1001,6 +1014,7 @@ Graphics_Init()
 	Neuro_CreateEBuf(&b_Queue);
 	Neuro_CreateEBuf(&b_Raw);
 
+	
 	screenSize.x = 0;
 	screenSize.y = 0;
 	screenSize.w = SCREEN_X;
@@ -1026,8 +1040,10 @@ Graphics_Clean()
 	Neuro_CleanEBuf(&b_Queue);
 	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&_Pixel);
-	Lib_FreeVobject(screen);
-	Lib_FreeVobject(sclScreen);
+	if (screen)
+		Lib_FreeVobject(screen);
+	if (sclScreen)
+		Lib_FreeVobject(sclScreen);
 	
 	Lib_VideoExit();
 }

@@ -846,7 +846,11 @@ extern void Lib_EventPoll();
 
 extern i32 Lib_PollEvent(void *event);
 
+/* now obsolete, use the CheckKeyStatus function instead */
 extern u8 *Lib_GetKeyState(i32 *numkeys);
+
+/* better function to get key status */
+extern u8 Lib_CheckKeyStatus(u32 key);
 
 extern u8 Lib_GetMouseState(i32 *x, i32 *y); 
 

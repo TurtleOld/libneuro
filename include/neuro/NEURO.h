@@ -16,6 +16,7 @@
 #include "nmap.h"
 #include "xmltool.h"
 #include "other.h"
+#include "neuro_main.h"
 
 
 #endif /* __LIBNEURO_H */

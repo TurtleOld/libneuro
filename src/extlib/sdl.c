@@ -61,8 +61,8 @@ static options_list options = {
 int
 Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {
-	int _err_;
-	SDL_Surface *temp1, *temp2;
+	int _err_ = 0;
+	SDL_Surface *temp1 = NULL, *temp2 = NULL;
 	
 	_err_ = SDL_Init(SDL_INIT_VIDEO);
 	if (_err_)
@@ -322,6 +322,19 @@ u8 *
 Lib_GetKeyState(i32 *numkeys)
 {
 	return SDL_GetKeyState(numkeys);
+}
+
+u8
+Lib_CheckKeyStatus(u32 key)
+{
+	u8 *keyd;
+
+	keyd = SDL_GetKeyState(NULL);
+	
+	if (keyd[key])
+		return 1;
+	
+	return 0;
 }
 
 void

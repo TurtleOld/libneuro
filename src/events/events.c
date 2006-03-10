@@ -6,9 +6,6 @@
  * set which keyboard events will go with which functions.
  */
 
-#include <stdlib.h>
-
-
 #include <extlib.h>
 #include <events.h>
 #include <ebuf.h>
@@ -40,25 +37,35 @@ static EBUF *_mlist; /* mouse buffer */
 static void
 handle_keys()
 {
+#if old_method
 	u8 *key;
+#endif /* old_method */
 	u32 total;
 	KEYBEVENT *tmp;
 	
 	if (Neuro_EBufIsEmpty(_klist))
 		return;
 	
+	total = Neuro_GiveEBufCount(_klist) + 1;
+	
+#if old_method
 	key = Lib_GetKeyState(NULL);
 
 	if (!key)
 		return;
-
-	total = Neuro_GiveEBufCount(_klist) + 1;
 		
 	while (total-- > 0)
 	{
 		tmp = Neuro_GiveEBuf(_klist, total);
 		if (key[tmp->key])
 			(tmp->callback)();	
+	}
+#endif /* old_method */
+	while (total-- > 0)
+	{
+		tmp = Neuro_GiveEBuf(_klist, total);
+		if (Lib_CheckKeyStatus(tmp->key))
+			(tmp->callback)();
 	}
 }
 
@@ -78,7 +85,7 @@ handle_mouse()
 	total = Neuro_GiveEBufCount(_mlist) + 1;
 
 	/* printf("mouse (%d,%d) button %d \n", x, y, button); */
-	
+
 	while (total-- > 0)
 	{
 		tmp = Neuro_GiveEBuf(_mlist, total);

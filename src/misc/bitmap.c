@@ -450,7 +450,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	double temp = 0; /* temporary variable */
 	u32 ctotal = 0; /* colors frontend count */
 	u32 ptotal = 0; /* pixels frontend count */
-	char *control, *control2; /* control strings for printfish functions */
+	char *control, *control2, *control3; /* control strings for printfish(printf ish) functions */
 	int width = 0, width2 = 0; /* used in the loops */
 	u8 done = 0; /* used in the loops */
 	u32 i = 0;
@@ -490,8 +490,11 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 			symbol_count);
 	
 	control2 = calloc(40 + 25, sizeof(char));
-
+	control3 = calloc(40 + 25, sizeof(char)); /* this is too much mem I think */
+	
 	sprintf(control2, "%%-%ds	c #%%02x%%02x%%02x", symbol_count);
+	sprintf(control3, "%%-%ds	c %%s", symbol_count);
+	
 				
 	i = ctotal + 1;
 	
@@ -501,7 +504,15 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 		
 		Neuro_AllocEBuf(bufa, sizeof(char*), 512);
 		buf = Neuro_GiveCurEBuf(bufa);
-		sprintf(buf, control2, cbuf->symbol, cbuf->r, cbuf->g, cbuf->b);
+		/* HACK WARNING TODO XXX TODO set the transparency 
+		 * so it can be set by the extern program rather than
+		 * being hardcoded pure pink!
+		 */
+		
+		if (cbuf->r == 255 && cbuf->g == 0 && cbuf->b == 255)
+			sprintf(buf, control3, cbuf->symbol, "None");
+		else
+			sprintf(buf, control2, cbuf->symbol, cbuf->r, cbuf->g, cbuf->b);
 	}
 	
 	control = calloc(40 + 3, sizeof(char));
@@ -567,6 +578,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 		}
 	}	
 
+	free(control3);
 	free(control2);
 	free(control);
 	free(bufe);

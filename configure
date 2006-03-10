@@ -19423,7 +19423,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 
 # set the flags
-CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src"
+CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src -I/usr/local/include -I/usr/include"
 #-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
@@ -19465,9 +19465,11 @@ case $host in
 		NEUROFLAGS="$NEUROFLAGS -DWIN32"
 		NEUROLIBFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
+		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
 		;;
 	*)
+		targ=unix
 		need_no_undefined=no
 		;;
 esac
@@ -19590,6 +19592,7 @@ else
 fi
 
 if test $SELECTED_LOWLIB = sdl; then
+	if test $targ = unix; then
 	echo "$as_me:$LINENO: checking for SDL_Init in -lSDL" >&5
 echo $ECHO_N "checking for SDL_Init in -lSDL... $ECHO_C" >&6
 if test "${ac_cv_lib_SDL_SDL_Init+set}" = set; then
@@ -19658,14 +19661,18 @@ if test $ac_cv_lib_SDL_SDL_Init = yes; then
   cat >>confdefs.h <<\_ACEOF
 #define USE_SDL 1
 _ACEOF
- LIBS="$LIBS $SDLFLAGS" #$(sdl-config --libs)
+ LIBS="$LIBS $SDLFLAGS"
 		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"
 else
   { { echo "$as_me:$LINENO: error: You don't have libSDL" >&5
 echo "$as_me: error: You don't have libSDL" >&2;}
    { (exit you can get it from http://www.libsdl.org); exit you can get it from http://www.libsdl.org; }; }
+
 fi
 
+	else
+		LIBS="$LIBS -lSDL"
+	fi
 
 fi
 

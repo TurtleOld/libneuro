@@ -61,7 +61,7 @@ AM_PROG_LIBTOOL
 
 
 # set the flags
-CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src" 
+CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src -I/usr/local/include -I/usr/include" 
 #-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
@@ -90,9 +90,11 @@ case $host in
 		NEUROFLAGS="$NEUROFLAGS -DWIN32"
 		NEUROLIBFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
+		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
 		;;
 	*)
+		targ=unix
 		need_no_undefined=no
 		;;
 esac
@@ -132,10 +134,15 @@ dnl SDL check
 dnl ----------------
 AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
 if test $SELECTED_LOWLIB = sdl; then
+	if test $targ = unix; then
 	AC_CHECK_LIB(SDL, SDL_Init, 
-		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS" #$(sdl-config --libs)
+		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS"
 		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"], 
-		     [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)])
+		     [AC_MSG_ERROR(You don't have libSDL, you can get it from http://www.libsdl.org)
+])
+	else
+		LIBS="$LIBS -lSDL"
+	fi
 
 fi
 
