@@ -264,8 +264,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		
 	
 	/* if (vsrc->shapemask) */
-	/*XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);*/
-	XSetClipMask(dmain->display, *dmain->cGC, None);
+	XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);
+	/*XSetClipMask(dmain->display, *dmain->cGC, None);*/
 	XSetClipOrigin(dmain->display, *dmain->cGC, Rdst.x, Rdst.y);
 	
 	
@@ -338,10 +338,11 @@ Lib_LoadBMP(const char *path, v_object **img)
 	Debug_Val(1, "%s\nreal total == %d\n", *initbuf, i);
 	*/
 	
-
+	/*
 	tmp->attrib.valuemask = (XpmReturnPixels | XpmReturnExtensions | XpmExactColors | XpmCloseness);
 	tmp->attrib.exactColors = False;
 	tmp->attrib.closeness = 40000;
+	*/
 	
 	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, &tmp->data, &tmp->shapemask, &tmp->attrib);
 	
