@@ -780,7 +780,7 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 	{
 		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
 		return;
-	}	
+	}
 	
 	/* a square in the middle of the screen to test 
 	 * the bound fix checker on an object other than 

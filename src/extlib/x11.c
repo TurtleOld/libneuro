@@ -160,12 +160,14 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 			GCFunction | GCFillStyle | GCGraphicsExposures, 
 			&tmp->wValue);
 	*/
-
+	
 	tmp->wGC = XCreateGC(tmp->display, *tmp->cwin, 
 			GCFillStyle | GCGraphicsExposures, 
 			&tmp->wValue);
 		
 	tmp->cGC = &tmp->wGC;
+	
+	XSetFillStyle(tmp->display, *tmp->cGC, FillStippled);
 	
 	dmain = tmp;
 	*screen = tmp;
@@ -241,6 +243,19 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	}
 	else
 	{
+		Neuro_GiveImageSize(destination, &w, &h);
+
+		/*if (dst->x < 0)
+			dst->x = 1;
+		if (dst->y < 0)
+			dst->y = 1;
+		*/
+		/*
+		if (dst->x > w)
+			dst->x = w;
+		if (dst->y > h)
+			dst->y = h;
+		*/
 		Rdst.x = dst->x;
 		Rdst.y = dst->y;
 		Rdst.h = dst->h;
@@ -248,9 +263,10 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	}
 		
 	
-	/* XSetClipOrigin(dmain->display, *dmain->cGC, Rsrc.x, Rsrc.y); */
 	/* if (vsrc->shapemask) */
-	/* XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask); */
+	XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);
+	XSetClipOrigin(dmain->display, *dmain->cGC, Rdst.x, Rdst.y);
+	
 	
 	/* TODO change vsrc->data and vdst->cwin to pointers which will change 
 	 * depending on the type of v_object the v_object is. Either core
@@ -270,7 +286,7 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 			Rdst.x, Rdst.y );
 	*/
 
-	_err = XCopyArea(dmain->display, vsrc->data, *vdst->cwin, *dmain->cGC, 
+	_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, *dmain->cGC, 
 			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
 			Rdst.x, Rdst.y);
 	/* Debug_Val(0, "XcopyArea done\n"); */
@@ -282,7 +298,7 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		Debug_Val(0, "Debug value is %d\n", _err);
 	}
 	*/
-	/* XSetClipMask(dmain->display, *dmain->cGC, None); */
+	XSetClipMask(dmain->display, *dmain->cGC, None);
 	/* Debug_Val(0, "Blit done\n"); */
 }
 
@@ -321,9 +337,15 @@ Lib_LoadBMP(const char *path, v_object **img)
 	Debug_Val(1, "%s\nreal total == %d\n", *initbuf, i);
 	*/
 	
-	_err = XpmCreatePixmapFromData(dmain->display, dmain->win, initbuf, &tmp->data, &tmp->shapemask, &tmp->attrib);
+
+	tmp->attrib.valuemask = (XpmReturnPixels | XpmReturnExtensions | XpmExactColors | XpmCloseness);
+	tmp->attrib.exactColors = False;
+	tmp->attrib.closeness = 40000;
+	
+	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, &tmp->data, &tmp->shapemask, &tmp->attrib);
 	
 	tmp->cwin = &tmp->data;
+	/* tmp->cwin = &tmp->shapemask; */
 	if (_err == 0)
 	{
 		*img = tmp;
@@ -333,7 +355,6 @@ Lib_LoadBMP(const char *path, v_object **img)
 		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);
 	
 	Neuro_CleanEBuf(&temp);
-
 	
 	return; /* int needed */
 }
