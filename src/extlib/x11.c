@@ -264,7 +264,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		
 	
 	/* if (vsrc->shapemask) */
-	XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);
+	/*XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);*/
+	XSetClipMask(dmain->display, *dmain->cGC, None);
 	XSetClipOrigin(dmain->display, *dmain->cGC, Rdst.x, Rdst.y);
 	
 	
