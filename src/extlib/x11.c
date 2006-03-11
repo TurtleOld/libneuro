@@ -167,7 +167,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		
 	tmp->cGC = &tmp->wGC;
 	
-	XSetFillStyle(tmp->display, *tmp->cGC, FillStippled);
+	/* XSetFillStyle(tmp->display, *tmp->cGC, FillStippled); */
 	
 	dmain = tmp;
 	*screen = tmp;
