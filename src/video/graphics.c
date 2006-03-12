@@ -82,7 +82,8 @@
 #define debug_instruction_buffer 0
 #define debug_instruction_buffer2 0
 
-#define screen_buffer 0
+#define screen_buffer 1
+#define retain_image_inipos 1
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -781,6 +782,16 @@ Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface
 		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
 		return;
 	}
+	
+#if retain_image_inipos
+	tIsrc.x = isrc->x;
+	tIsrc.y = isrc->y;
+	tIsrc.w = isrc->w;
+	tIsrc.h = isrc->h;
+
+	tIdst.x = idst->x;
+	tIdst.y = idst->y;
+#endif /* retain_image_inipos */
 	
 	/* a square in the middle of the screen to test 
 	 * the bound fix checker on an object other than 

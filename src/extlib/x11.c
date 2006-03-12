@@ -26,15 +26,20 @@ typedef struct V_OBJECT
 	GC wGC;
 	XGCValues wValue;
 	
+	XImage *raw_data;
 	Pixmap data;
 	Pixmap shapemask;
 	XpmAttributes attrib;
 }V_OBJECT;
 
-EBUF *vobjs;
+static EBUF *vobjs;
 
-V_OBJECT *dmain;
-V_OBJECT *scldmain; /* buffer (double) */
+static V_OBJECT *dmain;
+static V_OBJECT *scldmain; /* buffer (double) */
+
+#if temp
+static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
+#endif /* temp */
 
 static i32 width = 800, height = 600; /* HACK WARNING TODO make this better and settable*/
 
@@ -124,6 +129,7 @@ int
 Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
 	V_OBJECT *tmp;
+	XSetWindowAttributes wattrib;
 	
 	Neuro_CreateEBuf(&vobjs);
 	Neuro_SetcallbEBuf(vobjs, clean_Vobjects);
@@ -139,11 +145,12 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	tmp->rwin = XRootWindow(tmp->display, tmp->screen);
 
 	/* tmp->cwin = &tmp->rwin; */
+	wattrib.backing_store = WhenMapped;
+	wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
 	
-	tmp->win = XCreateSimpleWindow(tmp->display, tmp->rwin,
-			200, 200, width, height, DefaultDepth(tmp->display, tmp->screen),
-			BlackPixel(tmp->display, tmp->screen),
-			BlackPixel(tmp->display, tmp->screen));
+	tmp->win = XCreateWindow(tmp->display, tmp->rwin,
+			200, 200, width, height, 1, DefaultDepth(tmp->display, tmp->screen),
+			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
 		
 	if (tmp->cwin == NULL)
 	{
@@ -160,17 +167,21 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 			GCFunction | GCFillStyle | GCGraphicsExposures, 
 			&tmp->wValue);
 	*/
+
 	
-	tmp->wGC = XCreateGC(tmp->display, *tmp->cwin, 
-			GCFillStyle | GCGraphicsExposures, 
-			&tmp->wValue);
+	tmp->wGC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &tmp->wValue);
 		
 	tmp->cGC = &tmp->wGC;
 	
-	/* XSetFillStyle(tmp->display, *tmp->cGC, FillStippled); */
-	
 	dmain = tmp;
 	*screen = tmp;
+
+	/*Debug_Print("before");
+	tmp->raw_data = XGetImage(tmp->display, *tmp->cwin, 0, 0, width, height, 32, ZPixmap);
+	Debug_Print("after");*/
+#if temp	
+	XCreatePixmap(tmp->display, *tmp->cwin, 1, 1, DefaultDepth(tmp->display, tmp->screen));
+#endif /* temp */
 	
 	if (screen_buf)
 	{
@@ -181,9 +192,22 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, DefaultDepth(tmp->display, tmp->screen));
 		tmp2->cwin = &tmp2->data;
+		
+		Debug_Print("before");
+		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
+		XInitImage(tmp2->raw_data);
+		Debug_Print("after");
+
+
 		scldmain = tmp2;
 		*screen_buf = tmp2;
 	}
+	else
+	{
+		scldmain = tmp;
+	}
+
+	Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain);
 	return 0;
 }
 
@@ -194,10 +218,61 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 }
 
 void
-Lib_SetColorKey(v_object *vobj, u32 flag,u32 key)
+Lib_SetColorKey(v_object *vobj, u32 key)
 {
 	
 }
+
+void 
+Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
+{
+	V_OBJECT *tmp;
+#if temp
+	XImage *buf;
+#endif /* temp */
+	/* i32 h, w; */
+	
+	tmp = (V_OBJECT*)srf;
+	
+	/* Neuro_GiveImageSize(tmp, &w, &h); */
+
+#if temp
+	/* a better depth input is needes, use the DefaultDepth macro to find it */
+	buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, 32, ZPixmap);
+
+	buf->f.put_pixel(buf, x, y, pixel);
+#endif /* temp */
+
+	/* XDrawPoint(dmain->display, *tmp->cwin, *tmp->cGC, x, y); */
+}
+
+u32 
+Lib_GetPixel(v_object *srf, int x, int y)
+{
+	/* XImage *buf; */
+	V_OBJECT *tmp;
+	/* i32 h, w; */
+	unsigned long color = 0;
+
+	tmp = (V_OBJECT*)srf;
+
+	if (tmp->raw_data == NULL)
+	{
+		Error_Print("the XImage raw_data is empty");
+		return -1;
+	}
+	/*Neuro_GiveImageSize(tmp, &w, &h);*/
+
+	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, DefaultDepth(dmain->display, dmain->screen), ZPixmap); */
+
+	/* color = tmp->raw_data->f.get_pixel(tmp->raw_data, x, y); */
+	color = XGetPixel(tmp->raw_data, x, y);
+	Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color);
+	return color;
+	/* return 1; */
+}
+
+
 
 void
 Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst)
@@ -208,12 +283,14 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	int _err = 0;
 	
 	/* Debug_Val(0, "Blit start\n"); */
+#if temp
 	if (source == dmain)
 	{
 		Error_Print("You cannot draw the screen to another v_object\n");
 		/* this is not allowed */
 		return;
 	}
+#endif /* temp */
 	
 	vsrc = (V_OBJECT*)source;
 	vdst = (V_OBJECT*)destination;
@@ -243,13 +320,15 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	}
 	else
 	{
-		Neuro_GiveImageSize(destination, &w, &h);
-
-		/*if (dst->x < 0)
+		/* Neuro_GiveImageSize(destination, &w, &h); */
+			
+		/*
+		if (dst->x <= 0)
 			dst->x = 1;
-		if (dst->y < 0)
+		if (dst->y <= 0)
 			dst->y = 1;
 		*/
+		
 		/*
 		if (dst->x > w)
 			dst->x = w;
@@ -310,7 +389,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	V_OBJECT *tmp;
 	char **buffer;
 	char **initbuf;
-	int i = 0;
+	/* int i = 0; */
 	int _err = 0;
 
 	readBitmapFileToPixmap(path, &temp);
@@ -350,7 +429,12 @@ Lib_LoadBMP(const char *path, v_object **img)
 	/* tmp->cwin = &tmp->shapemask; */
 	if (_err == 0)
 	{
+		i32 h, w;
+
 		*img = tmp;
+
+		Neuro_GiveImageSize(tmp, &w, &h);
+		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 0, 0, w, h, DefaultDepth(dmain->display, dmain->screen), ZPixmap);
 		Debug_Val(0, "Successfully loaded the file %s\n", path);
 	}
 	else
@@ -377,7 +461,34 @@ Lib_UpdateRect(v_object *source, Rectan *src)
 void
 Lib_FillRect(v_object *source, Rectan *src, u32 color)
 {
+	V_OBJECT *tmp;
+	Rectan Vsrc;
+	i32 h, w;
 
+	/* support only black filling for now 
+	 * TODO support the use of u32 color
+	 */
+
+	tmp = (V_OBJECT*)source;
+
+	if (src == NULL)
+	{
+		Neuro_GiveImageSize(source, &w, &h);
+		Vsrc.x = 0;
+		Vsrc.y = 0;
+		Vsrc.w = w;
+		Vsrc.h = h;
+	}
+	else
+	{
+		Vsrc.x = src->x;
+		Vsrc.y = src->y;
+		Vsrc.w = src->w;
+		Vsrc.h = src->h;
+	}
+
+	XFillRectangle(dmain->display, *tmp->cwin, *dmain->cGC, 
+			Vsrc.x, Vsrc.y, Vsrc.w, Vsrc.h);
 }
 
 void
@@ -450,6 +561,11 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 void
 Lib_VideoExit()
 {
+	/* clean the tiny pixel buffer for pixels I/O */
+#if temp
+	if (pixel)
+		XFreePixmap(dmain->display, pixel);
+#endif /* temp */
 	Neuro_CleanEBuf(&vobjs);
 }
 

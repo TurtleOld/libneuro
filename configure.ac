@@ -144,6 +144,8 @@ if test $SELECTED_LOWLIB = sdl; then
 		LIBS="$LIBS -lSDL"
 	fi
 
+	cp include/extlib.h include/neuro
+	cat include/extlib_sdl.h >> include/neuro/extlib.h
 fi
 
 dnl ----------------
@@ -162,6 +164,7 @@ if test $SELECTED_LOWLIB = X11; then
 	#AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
 	#	     [LIBS="$LIBS -lXpm"],
 	#	     [AC_MSG_ERROR(You don't have libXpm)])
+	cp include/extlib.h include/neuro
 fi
 
 

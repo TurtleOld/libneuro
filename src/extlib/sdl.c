@@ -52,8 +52,8 @@ typedef struct options_list
 
 static options_list options = {
 	800, 600, 16, 
-	SDL_SWSURFACE, 
-	SDL_SWSURFACE
+	SDL_HWSURFACE | SDL_DOUBLEBUF, 
+	SDL_HWSURFACE
 };
 
 
@@ -175,9 +175,9 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 }
 
 void
-Lib_SetColorKey(v_object *vobj, u32 flag,u32 key)
+Lib_SetColorKey(v_object *vobj, u32 key)
 {
-	SDL_SetColorKey((SDL_Surface*)vobj, flag, key);
+	SDL_SetColorKey((SDL_Surface*)vobj, SDL_SRCCOLORKEY | SDL_RLEACCEL, key);
 }
 
 v_object *
@@ -197,6 +197,131 @@ Lib_UpdateRect(v_object *source, Rectan *src)
 		SDL_UpdateRect((SDL_Surface*)source, src->x, src->y, src->w, src->h);
 	else
 		SDL_UpdateRect((SDL_Surface*)source, 0, 0, 0, 0);
+}
+
+u32
+Lib_GetPixel(v_object *srf, int x, int y)
+{
+	u8 bpp;
+	u8 *p;
+	void *pixels;
+	u32 pitch;
+	u32 err;
+	
+	
+	Lib_LockVObject(srf);
+	
+	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
+			NULL, NULL, NULL, NULL);
+	
+	/* bpp = surface->format->BytesPerPixel; */
+	/* Here p is the address to the pixel we want to retrieve */
+	/* p = (u8 *)surface->pixels + y * surface->pitch + x * bpp; */
+	p = (u8 *)pixels + y * pitch + x * bpp;
+	err = 0;
+	
+	switch(bpp) 
+	{
+		case 1:
+		{
+			err = *p;
+			/* err = *(u16 *)p; */
+		}
+		break;
+		
+		case 2:
+		{
+			err = *(u16 *)p;
+		}
+		break;
+		
+		/*case 3:
+		{
+			if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+				err = p[0] << 16 | p[1] << 8 | p[2];
+			else
+				err = p[0] | p[1] << 8 | p[2] << 16;
+		}
+		break;
+		*/
+		
+		case 4:
+		{
+			err = *(u32 *)p;
+		}
+		break;
+		
+		default:
+		{
+			err = 0;       /* shouldn't happen, but avoids warnings */
+		}
+	}
+
+	Lib_UnlockVObject(srf);
+
+	return err;
+
+}
+
+void
+Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
+{
+	/* SDL_Surface *surface = (SDL_Surface*)srf; */
+	/* SDL_LockSurface(surface); */
+	u8 bpp;
+	u8 *p;
+	void *pixels;
+	u32 pitch;
+	
+	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
+			NULL, NULL, NULL, NULL);
+
+	Lib_LockVObject(srf);
+	/* int bpp = surface->format->BytesPerPixel; */
+	/* Here p is the address to the pixel we want to set */
+	/* p = (u8*)surface->pixels + y * surface->pitch + x * bpp; */
+	p = (u8 *)pixels + y * pitch + x * bpp;
+
+	switch(bpp) 
+	{
+		case 1:
+		{
+			*p = pixel;
+		}
+		break;
+
+		case 2:
+		{
+			*(u16*)p = pixel;
+		}
+		break;
+		/*
+		case 3:
+		{
+			if(SDL_BYTEORDER == SDL_BIG_ENDIAN) 
+			{
+				p[0] = (pixel >> 16) & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = pixel & 0xff;
+			} 
+			else 
+			{
+				p[0] = pixel & 0xff;
+				p[1] = (pixel >> 8) & 0xff;
+				p[2] = (pixel >> 16) & 0xff;
+			}
+		}
+		break;
+		*/
+		case 4:
+		{
+			*(u32 *)p = pixel;
+		}
+		break;
+		
+	}
+	/* SDL_UnlockSurface(surface); */
+	Lib_UnlockVObject(srf);
 }
 
 void

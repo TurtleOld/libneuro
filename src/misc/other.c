@@ -461,6 +461,7 @@ Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 		isrc->w -= (idst->x + isrc->w) - (indep->x + indep->w);
 	}
 	*/	
+	
 	isrc->x += Neuro_CalcOnlyPos(indep->x, idst->x);
 	isrc->w = Neuro_CalcOnlyPos(isrc->w, (Neuro_CalcOnlyPos(indep->x, idst->x) + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w)));
 	idst->x += Neuro_CalcOnlyPos(indep->x, idst->x);
@@ -482,9 +483,8 @@ Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 		isrc->h -= (idst->y + isrc->h) - (indep->y + indep->h);
 	}
 	*/
-
 	isrc->y += Neuro_CalcOnlyPos(indep->y, idst->y);
 	isrc->h = Neuro_CalcOnlyPos(isrc->h, (Neuro_CalcOnlyPos(indep->y, idst->y) + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h)));
-	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);	
+	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);
 }
 
