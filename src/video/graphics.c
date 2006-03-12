@@ -700,6 +700,12 @@ Neuro_GiveScreenSize(u32 *width, u32 *height)
 }
 
 void
+Neuro_RedrawScreen()
+{
+	draw_this_cycle = 1;
+}
+
+void
 Neuro_RefreshScreen()
 {
 	Rectan buf;

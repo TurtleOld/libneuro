@@ -35,6 +35,8 @@ Neuro_Poll()
 {
 	Events_Poll();
 	Graphics_Poll();
+
+	Lib_PollEvent(NULL);
 }
 
 /*-------------------- Constructor Destructor ----------------------*/

@@ -9,7 +9,7 @@
 #include <extlib.h>
 #include <ebuf.h>
 #include <other.h>
-
+#include <graphics.h>
 
 typedef struct V_OBJECT
 {
@@ -77,50 +77,54 @@ clean_Vobjects(void *src)
 }
 
 static char
-keycode_value(char num)
+keycode_value(char num, u8 *anchor)
 {
-	switch(num)
+	u8 values[8] = {
+		1, 2, 4, 8, 16, 32, 
+		64, 128
+	};
+	u8 spcl_used = 0;
+	u8 i = 8;
+
+	/* the anchor is used in case a num contains 
+	 * more than one key at a time. It is 
+	 * used to skip the last key we sent
+	 * the status of and be able to send the
+	 * second. This method only works when 2
+	 * keys are pressed at once, not 3 or more...
+	 * ( I really doubt that would be needed)
+	 */
+	
+	while (i-- > 0)
 	{
-		case 1:
-			return 0;
-		break;
-		
-		case 2:
-			return 1;
-		break;
-
-		case 4:
-			return 2;
-		break;
-
-		case 8:
-			return 3;
-		break;
-
-		case 16:
-			return 4;
-		break;
-
-		case 32:
-			return 5;
-		break;
-
-		case 64:
-			return 6;
-		break;
-
-		case 128:
-			return 7;
-		break;
-
-		case -128:
-			return 7;
-		break;
-
-		default:
-			return -1;
-		break;
+		if ((num & values[i]) == values[i])
+		{
+			if (*anchor == 1 && spcl_used == 0)
+			{
+				spcl_used = 1;
+				continue;
+			}
+			else
+			{
+				if (*anchor == 1)
+				{
+					*anchor = 0;
+				}
+				else
+				{
+					if (num - (num & values[i]) > 0)
+						*anchor = 1;	
+				}
+			}
+			
+			return i;
+		}
 	}
+
+	/* avoid death loops */
+	if (*anchor == 1)
+		*anchor = 0;
+	return -1;
 }
 
 /*  video constructor destructor  */
@@ -144,7 +148,12 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	tmp->rwin = XRootWindow(tmp->display, tmp->screen);
 
+	/* uncomment this if u want it all to be on the root window 
+	 * and comment this if u want a window.
+	 */
 	/* tmp->cwin = &tmp->rwin; */
+
+	
 	wattrib.backing_store = WhenMapped;
 	wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
 	
@@ -267,7 +276,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 
 	/* color = tmp->raw_data->f.get_pixel(tmp->raw_data, x, y); */
 	color = XGetPixel(tmp->raw_data, x, y);
-	Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color);
+	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
 	return color;
 	/* return 1; */
 }
@@ -582,17 +591,47 @@ Lib_CheckKeyStatus(u32 key)
 {
 	char keyd[32];
 	u32 i = 32;
+	KeyCode keytocheck;
+	u8 anchor;
+	u8 temp;
 	
 	XQueryKeymap(dmain->display, keyd);
 
+	keytocheck = XKeysymToKeycode(dmain->display, key);
+	
+	anchor = 0;
+	
 	while (i-- > 0)
 	{
 		if (keyd[i])
 		{
-			if ((8 * i) + keycode_value(keyd[i]) == XKeysymToKeycode(dmain->display, key))
-				return 1;
+			temp = keycode_value(keyd[i], &anchor);
+			/*Debug_Val(0, "Keycode[%d][%d] temp %d 8* %d n %d -- %d\n", i, anchor,
+						temp,
+						(8 * i) + temp,
+						keyd[i], keytocheck);*/
+			if (anchor == 1)
+			{
+				while (anchor == 1)
+				{
+					if (((8 * i) + temp) == keytocheck)
+						return 1;
+				
+					temp = keycode_value(keyd[i], &anchor);
+					
+					if (((8 * i) + temp) == keytocheck)
+						return 1;
+
+				}
+			}
+			else
+			{
+				if (((8 * i) + temp) == keytocheck)
+					return 1;
+			}
 		}
 	}
+	
 	return 0;
 }
 
@@ -641,8 +680,39 @@ Lib_EventPoll()
 }
 
 i32
-Lib_PollEvent(void *event)
+Lib_PollEvent(void *event_input)
 {
+	
+	XEvent event;
+	/*
+	XNextEvent(dmain->display, &event);
+
+	switch (event.type)
+	{
+		case Expose:
+		{
+			Neuro_RedrawScreen();
+		}
+		break;
+
+		default:
+		{
+			
+		}
+		break;
+	}
+	*/
+
+	/* the expose event... ie when other windows or stuff goes above our
+	 * own window and we need to redraw.
+	 */
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, Expose, &event) == True)  
+
+	{
+		/*Debug_Print("Redrawing from expose");*/
+		Neuro_RedrawScreen();
+	}
+	
 	return 0;
 }
 

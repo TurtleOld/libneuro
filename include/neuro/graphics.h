@@ -67,6 +67,12 @@ extern void Neuro_RefreshScreen();
 /* tells neuro to clean the drawn images from the screen */
 extern void Neuro_CycleClean();
 
+/* tells neuro to redraw the screen 
+ * might not work if the screen is not
+ * buffered but it could work anyway.
+ */
+extern void Neuro_RedrawScreen();
+
 /*! give the current fps */
 extern void Neuro_GiveFPS(t_tick *output);
 
