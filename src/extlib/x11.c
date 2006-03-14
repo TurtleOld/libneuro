@@ -48,32 +48,49 @@ clean_Vobjects(void *src)
 {
 	V_OBJECT *buf;
 
-	buf = (V_OBJECT*)src;
+	buf = (V_OBJECT*)src;	
 
-	/*if (dmain->display == buf->display)
-		Info_Print("Cleaning the main display");*/
+	Debug_Val(10, "cleaning process ...\n");
 
-	/* Info_Print("cleaning process ..."); */
-	/* Info_Print("pixmap data"); */
+	if (dmain->display == buf->display)
+		Debug_Val(10, "This element is the main display --\n");
+	
 	if (buf->data)
+	{
+		Debug_Val(10, "Freeing pixmap data\n");
 		XFreePixmap(dmain->display, buf->data);
+	}
 
-	/* Info_Print("shapemask"); */
 	if (buf->shapemask)
+	{
+		Debug_Val(10, "Freeing pixmap mask\n");
 		XFreePixmap(dmain->display, buf->shapemask);
+	}
+
+	if (buf->raw_data)
+	{
+		Debug_Val(10, "destroying XImage raw data\n");
+		XDestroyImage(buf->raw_data);
+	}
 	
-	/* Info_Print("display main window Graphic context (GC)"); */
 	if (buf->wGC)
+	{
+		Debug_Val(10, "Freeing Graphic Context\n");
 		XFreeGC(buf->display, buf->wGC);
+	}
 	
-	/* Info_Print("window"); */
 	if (buf->win)
+	{
+		Debug_Val(10, "Destroying Window\n");
 		XDestroyWindow(buf->display, buf->win);
+	}
 	
-	/* Info_Print("display"); */
 	if (buf->display)
+	{
+		Debug_Val(10, "Closing display\n");
 		XCloseDisplay(buf->display);
-	/* Info_Print("cleaning process done"); */
+	}
+	Debug_Val(10, "cleaning process done ...\n");
 }
 
 static char
@@ -202,11 +219,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, DefaultDepth(tmp->display, tmp->screen));
 		tmp2->cwin = &tmp2->data;
 		
-		Debug_Print("before");
 		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
 		XInitImage(tmp2->raw_data);
-		Debug_Print("after");
-
 
 		scldmain = tmp2;
 		*screen_buf = tmp2;
@@ -216,7 +230,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		scldmain = tmp;
 	}
 
-	Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain);
+	/* Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain); */
 	return 0;
 }
 
@@ -246,13 +260,13 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	/* Neuro_GiveImageSize(tmp, &w, &h); */
 
 #if temp
-	/* a better depth input is needes, use the DefaultDepth macro to find it */
+	/* a better depth input is needed, use the DefaultDepth macro to find it */
 	buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, 32, ZPixmap);
 
 	buf->f.put_pixel(buf, x, y, pixel);
 #endif /* temp */
 
-	/* XDrawPoint(dmain->display, *tmp->cwin, *tmp->cGC, x, y); */
+	XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y);
 }
 
 u32 
@@ -401,6 +415,12 @@ Lib_LoadBMP(const char *path, v_object **img)
 	/* int i = 0; */
 	int _err = 0;
 
+	if (Neuro_EBufIsEmpty(vobjs))
+	{
+		*img = NULL;
+		return;
+	}
+	
 	readBitmapFileToPixmap(path, &temp);
 	if (!temp)
 	{
@@ -595,6 +615,11 @@ Lib_CheckKeyStatus(u32 key)
 	u8 anchor;
 	u8 temp;
 	
+	if (Neuro_EBufIsEmpty(vobjs))
+	{
+		return 0;
+	}
+
 	XQueryKeymap(dmain->display, keyd);
 
 	keytocheck = XKeysymToKeycode(dmain->display, key);
@@ -644,6 +669,13 @@ Lib_GetMouseState(i32 *x, i32 *y)
 	u32 mask;
 	u8 value = 0;
 	
+	if (Neuro_EBufIsEmpty(vobjs))
+	{
+		*x = 0;
+		*y = 0;
+		return 0;
+	}
+	
 	XQueryPointer(dmain->display, *dmain->cwin, &croot, &cchild, &rx, &ry, x, y, &mask);
 
 	/* Debug_Val(0, "lib mouse state %d\n", mask); */
@@ -681,9 +713,13 @@ Lib_EventPoll()
 
 i32
 Lib_PollEvent(void *event_input)
-{
-	
+{	
 	XEvent event;
+
+	if (Neuro_EBufIsEmpty(vobjs))
+	{
+		return 1;
+	}
 	/*
 	XNextEvent(dmain->display, &event);
 

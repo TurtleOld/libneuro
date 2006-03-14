@@ -38,12 +38,14 @@ core_Uchar(unsigned char **buf, unsigned int *c_pass_count, unsigned int *cursor
 			*c_pass_count = *c_pass_count + 1;
 			*buf = (unsigned char*)realloc(*buf, 
 					sizeof(unsigned char) * (1 + *c_pass_count));
+			c_pass = *buf;
 			c_pass[*c_pass_count] = '\0';
 			c_pass[*cursor] = START_NUMBER;
 		}
 			
 		core_Uchar(buf, c_pass_count, cursor);
-		
+		c_pass = *buf;
+
 		*cursor = 0;
 	}
 	c_pass[*cursor] = c_pass[*cursor] + 1;

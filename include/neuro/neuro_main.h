@@ -5,7 +5,7 @@
 
 #include "neuro_engine.h"
 
-extern void Neuro_Poll();
+extern int Neuro_Poll();
 extern int Neuro_Init();
 extern void Neuro_Quit();
 

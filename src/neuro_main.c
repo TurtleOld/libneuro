@@ -30,13 +30,17 @@
 
 /*-------------------- Poll ----------------------------------------*/
 
-void
+int
 Neuro_Poll()
 {
+	int _err = 0;
+	
 	Events_Poll();
 	Graphics_Poll();
 
-	Lib_PollEvent(NULL);
+	_err = Lib_PollEvent(NULL);
+
+	return _err;
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
