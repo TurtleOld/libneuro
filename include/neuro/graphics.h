@@ -33,7 +33,7 @@
 
 extern void *Neuro_GetScreenBuffer();
 
-/*! Add a Drawing Instruction to the graphics loop. This function will
+/*! Add a Static Drawing Instruction to the graphics loop. This function will
  * put take the image, place it in a special buffer and then draw the image
  * with the desired draw time(in comparison with other to draw images : layer) and 
  * place it on the screen depending on the given coordinates (also draws the portion
@@ -44,7 +44,20 @@ extern void *Neuro_GetScreenBuffer();
  * @param [in] dst the coordinate where the image must be drawn to.
  * @param [in] surface the pointer to the image itself.
  */
-extern void Neuro_AddDrawingInstruction(u8 layer, Rectan *src, Rectan *dst, void *surface);
+extern void Neuro_PushStaticDraw(u8 layer, Rectan *src, Rectan *dst, void *surface);
+
+/*! Add a Dynamic Drawing Instruction to the graphics loop. This function will
+ * put take the image, place it in a special buffer and then draw the image
+ * with the desired draw time(in comparison with other to draw images : layer) and 
+ * place it on the screen depending on the given coordinates (also draws the portion
+ * of the image that you set). This function is in general meant to be inside a function
+ * that has a pointer callback set in graphics_AddDrawingElement().
+ * @param [in] layer the drawing order by which the frame needs to be drawn on screen 
+ * @param [in] src the image rectangle to draw (to select different parts of a single image)
+ * @param [in] dst the coordinate where the image must be drawn to.
+ * @param [in] surface the pointer to the image itself.
+ */
+extern void Neuro_PushDynamicDraw(u8 layer, Rectan *src, Rectan *dst, void *surface);
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 

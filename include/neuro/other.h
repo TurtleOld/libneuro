@@ -64,6 +64,7 @@ extern void Uchar(int amount, unsigned char **buf);
 
 /* internal function (source is bitmap.c in src/misc) */
 extern void readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap);
+extern void setBitmapColorKey(u32 key);
 /* internal function (source is bitmap.c in src/misc) 
  * pretty much useless, use Neuro_CleanEBuf() instead
  */

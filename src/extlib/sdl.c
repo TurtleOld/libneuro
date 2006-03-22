@@ -177,6 +177,9 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 void
 Lib_SetColorKey(v_object *vobj, u32 key)
 {
+	if (vobj == NULL)
+		return;
+
 	SDL_SetColorKey((SDL_Surface*)vobj, SDL_SRCCOLORKEY | SDL_RLEACCEL, key);
 }
 
@@ -400,6 +403,12 @@ void
 Lib_UnlockVObject(v_object *vobj)
 {
 	SDL_UnlockSurface((SDL_Surface*)vobj);
+}
+
+u32
+Lib_GetDefaultDepth()
+{
+	return 16; /* TEMPORARY please make get the real value from somewhere!!! TODO TODO */
 }
 
 void

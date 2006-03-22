@@ -782,6 +782,8 @@ extern void Lib_BlitObject(v_object *source, Rectan *src, v_object *destination,
 
 extern void Lib_GiveVobjectProp(v_object *source, Rectan *output);
 
+extern u32 Lib_GetDefaultDepth();
+
 extern void Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch, void **pixels, Rectan **clip_rect, u8 *bpp, u32 *Rmask, u32 *Gmask, u32 *Bmask, u32 *Amask);
 
 extern void Lib_LoadBMP(const char *path, v_object **img);

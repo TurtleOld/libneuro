@@ -83,7 +83,8 @@
 #define debug_instruction_buffer2 0
 
 #define screen_buffer 1
-#define retain_image_inipos 1
+#define second_screen_buffer 0
+#define retain_image_inipos 0
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -105,22 +106,19 @@
 typedef struct RAW_ENGINE
 {
 	u8 layer; /* the drawing level that the surface is drawn */
+	u8 type; /* 2 types : static and dynamic. 1 is static and 2 is dynamic*/
 	Rectan src;
 	Rectan dst; /* will need to memcpy the data because 
 			* this will be used beyond the 
 			* scope of the calling function.
 			*/
 	void *surface_ptr; /* only the pointer needed cause its "static" */
-	v_object *former_area; /* contains an allocated variable that contains 
-				* what we drawn right before the engine drawn 
-				* anything to this position. 
-				*/
 }RAW_ENGINE;
 
 /* this linked list will be computed 
  * unless, RAW_ENGINE is empty, every frames. 
  * It will not be possible to change entries 
- * int it once they r in, new stuff r added 
+ * in it once they r in, new stuff r added 
  * to the end of this linked list and done
  * stuff r removed, exactly like a fifo pipe.
  */
@@ -141,7 +139,8 @@ typedef struct PIXEL_ENGINE
 }PIXEL_ENGINE;
 
 static v_object *screen; /* the screen surface */
-static v_object *sclScreen; /* attempt to do a double buffered screen */
+static v_object *sclScreen; /* attempt to do a double buffered screen (for the static type) */
+static v_object *sclScreen2; /* another screen buffer used for the dynamic type */
 
 static v_object *background; /* the background image */
 
@@ -216,6 +215,10 @@ static void cleanPixels();
 
 /* test function for the bounds fixer algorithm */
 static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
+/* the old function that used to push images into this engine 
+ * now used as a backbone.
+ */
+static void AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
 
 /*--- Static Functions ---*/
 
@@ -481,11 +484,7 @@ draw_objects()
 		return;
 	
 	while (cur)
-	{
-		/*u8 bpp;
-		u32 rmask, gmask, bmask, amask;
-		Rectan bufa;*/
-		
+	{	
 		buf.x = cur->current->dst.x;
 		buf.y = cur->current->dst.y;
 		buf.w = cur->current->src.w;
@@ -497,30 +496,15 @@ draw_objects()
 		 * I'll use sclScreen and see how it goes.
 		 */
 		
-		/*Lib_GetVObjectData(sclScreen, NULL, NULL, NULL, NULL, NULL, NULL,
-				&bpp, &rmask, &gmask, &bmask, &amask);*/
-		
-		/*cur->current->former_area = Lib_CreateVObject(0x00000000, buf.w, 
-				buf.h, bpp, rmask, gmask, bmask, amask);*/
-
-		/*
-		bufa.x = 0;
-		bufa.y = 0;
-		bufa.w = cur->current->src.w;
-		bufa.h = cur->current->src.h;
-		*/
-		
-		/*Lib_BlitObject(sclScreen, &buf, cur->current->former_area, &bufa);*/
-		
-		
 		/* draw the surface_ptr to the screen buffer. */
-		Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
+		if (cur->current->type == 1)
+			Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
+					&cur->current->dst);
+		else
+			Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen2, 
 					&cur->current->dst);
 
-		/* as a test, we will draw the former_area buffer to see if it works...
-		 * it didnt work :L 
-		 */
-		/*Lib_BlitObject(cur->current->former_area, &bufa, sclScreen, &cur->current->dst);*/
+
 		cur = cur->next;
 	}
 
@@ -528,6 +512,65 @@ draw_objects()
 	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
 }
 
+/* - layer is the priority by which it much be drawn.
+ * - src should be used to know which part of the 
+ *     surface has to be drawn(for sprites mostly).
+ * - dst is the destination X Y on the screen
+ * - surface is the pointer of the loaded image. 
+ *
+ *   convertion : done
+ *   testing : works
+ */
+static void 
+AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
+{
+	register EBUF *tmp = NULL;
+	register RAW_ENGINE *buf = NULL;
+	register u32 current;
+	Rectan tIsrc, tIdst;
+
+	tmp = _Raw;
+	
+
+	memcpy(&tIsrc, isrc, sizeof(Rectan));
+	memcpy(&tIdst, idst, sizeof(Rectan));	
+
+	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
+	{
+		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
+		return;
+	}
+	
+#if retain_image_inipos
+	tIsrc.x = isrc->x;
+	tIsrc.y = isrc->y;
+	tIsrc.w = isrc->w;
+	tIsrc.h = isrc->h;
+
+	tIdst.x = idst->x;
+	tIdst.y = idst->y;
+#endif /* retain_image_inipos */
+	
+	/* a square in the middle of the screen to test 
+	 * the bound fix checker on an object other than 
+	 * the screen itself. 
+	 */
+	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */
+	
+	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
+	
+	current = Neuro_GiveEBufCount(tmp);
+	buf = Neuro_GiveEBuf(tmp, current);
+	
+	buf->layer = layer;
+	buf->type = type;
+	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
+	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
+	buf->surface_ptr = isurface;
+	computeRawEngine((RAW_ENGINE*)buf);
+
+	draw_this_cycle = 1;
+}
 
 /* */
 static void
@@ -558,31 +601,17 @@ clean_drawn_objects()
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
 			
-			if (background)
-				Lib_BlitObject(background, &buf, sclScreen, &buf);
-			else
-				Lib_FillRect(sclScreen, &buf, 0);
-			
-				
-			/* Lib_BlitObject(cur->current->former_area, NULL, sclScreen, &buf); */
-			
-			/*
-			if (cur->current->former_area)
+			/* if (cur->current->type == 2) */
 			{
-				Lib_FreeVobject(cur->current->former_area);
+				if (background)
+					Lib_BlitObject(background, &buf, sclScreen, &buf);
+				else
+					Lib_FillRect(sclScreen, &buf, 0);
 			}
-			*/
 			
 			cur = cur->next;
 		}
 	}
-	/* TODO : check if it all works without a background. */
-	/*
-	else if (!background)
-	{
-		Lib_FillRect(sclScreen, 0, 0);
-	}
-	*/
 	drawn_last_cycle = 0;
 }
 
@@ -738,6 +767,18 @@ Neuro_GiveFPS(t_tick *output)
 	*output = lFps;
 }
 
+void
+Neuro_PushStaticDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+{
+	AddDrawingInstruction(layer, 1, isrc, idst, isurface);
+}
+
+void
+Neuro_PushDynamicDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+{
+	AddDrawingInstruction(layer, 2, isrc, idst, isurface);
+}
+
 /* use this function to set the background 
  * --will soon become obsolete--
  */
@@ -758,65 +799,6 @@ Neuro_AddBackground(v_object *isurface)
 	
 	Lib_BlitObject(background, NULL, sclScreen, &src);
 	Lib_Flip(sclScreen);
-}
-
-/* - layer is the priority by which it much be drawn.
- * - src should be used to know which part of the 
- *     surface has to be drawn(for sprites mostly).
- * - dst is the destination X Y on the screen
- * - surface is the pointer of the loaded image. 
- *
- *   convertion : done
- *   testing : works
- */
-void 
-Neuro_AddDrawingInstruction(u8 layer, Rectan *isrc, Rectan *idst, void *isurface)
-{
-	register EBUF *tmp = NULL;
-	register RAW_ENGINE *buf = NULL;
-	register u32 current;
-	Rectan tIsrc, tIdst;
-
-	tmp = _Raw;
-	
-
-	memcpy(&tIsrc, isrc, sizeof(Rectan));
-	memcpy(&tIdst, idst, sizeof(Rectan));	
-
-	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
-	{
-		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
-		return;
-	}
-	
-#if retain_image_inipos
-	tIsrc.x = isrc->x;
-	tIsrc.y = isrc->y;
-	tIsrc.w = isrc->w;
-	tIsrc.h = isrc->h;
-
-	tIdst.x = idst->x;
-	tIdst.y = idst->y;
-#endif /* retain_image_inipos */
-	
-	/* a square in the middle of the screen to test 
-	 * the bound fix checker on an object other than 
-	 * the screen itself. 
-	 */
-	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */
-	
-	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
-	
-	current = Neuro_GiveEBufCount(tmp);
-	buf = Neuro_GiveEBuf(tmp, current);
-	
-	buf->layer = layer;
-	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
-	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
-	buf->surface_ptr = isurface;
-	computeRawEngine((RAW_ENGINE*)buf);
-
-	draw_this_cycle = 1;
 }
 
 void 
@@ -998,13 +980,19 @@ Graphics_Poll()
 	/* update the full screen */
 	if (draw_this_cycle || clean_this_cycle)
 	{
-#if screen_buffer
-		Lib_BlitObject(sclScreen, NULL, screen, NULL);
-#endif /* screen_buffer */
-
-		updScreen(0);
+		if (screen_buffer)
+			Lib_BlitObject(sclScreen, NULL, screen, NULL);
+		
+		if (second_screen_buffer == 0)
+			updScreen(0);
 		clean_this_cycle = 0;
 		draw_this_cycle = 0;
+	}
+
+	if (second_screen_buffer)
+	{
+		Lib_BlitObject(sclScreen2, NULL, screen, NULL);
+		updScreen(0);
 	}
 }
 
@@ -1023,6 +1011,14 @@ Graphics_Init()
 	_err_ = Lib_VideoInit(&screen, NULL);
 	sclScreen = screen;
 #endif /* NOT screen_buffer */
+
+#if second_screen_buffer
+	sclScreen2 = Lib_CreateVObject(0, SCREEN_X, SCREEN_Y, Lib_GetDefaultDepth(), 0, 
+			0, 0, 0);
+#else /* NOT second_screen_buffer */
+	sclScreen2 = sclScreen;
+#endif /* NOT second_screen_buffer */
+
 	
 	Neuro_CreateEBuf(&_Drawing);
 	Neuro_CreateEBuf(&_Raw);
@@ -1058,9 +1054,20 @@ Graphics_Clean()
 	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&_Pixel);
 	if (screen)
+	{
 		Lib_FreeVobject(screen);
-	if (sclScreen)
+		screen = NULL;
+	}
+	if (sclScreen && screen_buffer)
+	{
 		Lib_FreeVobject(sclScreen);
+		sclScreen = NULL;
+	}
+	if (sclScreen2 && second_screen_buffer)
+	{
+		Lib_FreeVobject(sclScreen2);
+		sclScreen2 = NULL;
+	}
 	
 	Lib_VideoExit();
 }

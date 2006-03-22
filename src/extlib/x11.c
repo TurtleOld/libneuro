@@ -37,6 +37,8 @@ static EBUF *vobjs;
 static V_OBJECT *dmain;
 static V_OBJECT *scldmain; /* buffer (double) */
 
+static u32 color_key = 0; /* a variable to set the transparent color when loading bitmaps */
+
 #if temp
 static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 #endif /* temp */
@@ -237,13 +239,13 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
-	return 0;
+	return Neuro_GiveRGB(r, g, b);
 }
 
 void
 Lib_SetColorKey(v_object *vobj, u32 key)
 {
-	
+	color_key = key;
 }
 
 void 
@@ -304,6 +306,7 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	Rectan Rsrc, Rdst;
 	i32 h, w;
 	int _err = 0;
+	int ClipX, ClipY;
 	
 	/* Debug_Val(0, "Blit start\n"); */
 #if temp
@@ -363,13 +366,24 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		Rdst.h = dst->h;
 		Rdst.w = dst->w;
 	}
+	
+	ClipX = Rdst.x;
+	ClipY = Rdst.y;
+
+	if (Rsrc.x > 0 || Rsrc.y > 0)
+	{
+		ClipX -= Rsrc.x;
+		ClipY -= Rsrc.y;
+	}
+	
 		
 	
 	/* if (vsrc->shapemask) */
 	XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);
 	/*XSetClipMask(dmain->display, *dmain->cGC, None);*/
-	XSetClipOrigin(dmain->display, *dmain->cGC, Rdst.x, Rdst.y);
-	
+	/*XSetClipOrigin(dmain->display, *dmain->cGC, (Rdst.x - Rsrc.w) * (Rsrc.x / Rsrc.w), 
+			(Rdst.y - Rsrc.h) * (Rsrc.y / Rsrc.h));*/
+	XSetClipOrigin(dmain->display, *dmain->cGC, ClipX, ClipY);
 	
 	/* TODO change vsrc->data and vdst->cwin to pointers which will change 
 	 * depending on the type of v_object the v_object is. Either core
@@ -420,7 +434,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 		*img = NULL;
 		return;
 	}
-	
+	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(path, &temp);
 	if (!temp)
 	{
@@ -478,7 +492,19 @@ v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
 {
-	return NULL;
+	V_OBJECT *tmp2;
+	
+	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+	
+	tmp2 = Neuro_GiveCurEBuf(vobjs);
+
+	tmp2->data = XCreatePixmap(dmain->display, *dmain->cwin, width, height, DefaultDepth(dmain->display, dmain->screen));
+	tmp2->cwin = &tmp2->data;
+		
+	tmp2->raw_data = XGetImage(dmain->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(dmain->display, dmain->screen), ZPixmap);
+	XInitImage(tmp2->raw_data);
+
+	return (v_object*)tmp2;
 }
 
 void
@@ -548,6 +574,12 @@ void
 Lib_GiveVobjectProp(v_object *source, Rectan *output)
 {
 
+}
+
+u32
+Lib_GetDefaultDepth()
+{
+	return DefaultDepth(dmain->display, dmain->screen);
 }
 
 void

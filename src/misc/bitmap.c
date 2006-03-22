@@ -48,6 +48,8 @@ typedef struct BITMAP_MAP
 	BITMAP_COLOR *color;
 }BITMAP_MAP;
 
+static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
+
 static void 
 clean_bmap_color(void *eng)
 {
@@ -500,19 +502,39 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	
 	while (i-- > 0)
 	{
+		int Rr, Gg, Bb;
+		
+		/*Rr = (color_key & 0x003e0000) >> 17;
+		Gg = (color_key & 0x0001f000) >> 12;
+		Bb = (color_key & 0x00000f80) >> 7;
+		*/
+
+		Rr = (color_key & 0xff000000) >> 24;
+		Gg = (color_key & 0x00ff0000) >> 16;
+		Bb = (color_key & 0x0000ff00) >> 8;
+
+		
+		/* Debug_Val(0, "%d COLOR KEY %d %d %d\n", color_key, Rr, Gg, Bb); */
+		
+		/*Rr = (Rr * 255) / 31;
+		Gg = (Gg * 255) / 31;
+		Bb = (Bb * 255) / 31;*/
+
+		/* Debug_Val(0, "output2 %d COLOR KEY %d %d %d\n", color_key, Rr, Gg, Bb); */
+		
 		cbuf = Neuro_GiveEBuf(bcolors, i);
 		
 		Neuro_AllocEBuf(bufa, sizeof(char*), 512);
 		buf = Neuro_GiveCurEBuf(bufa);
-		/* HACK WARNING TODO XXX TODO set the transparency 
-		 * so it can be set by the extern program rather than
-		 * being hardcoded pure pink!
-		 */
 		
-		if (cbuf->r == 255 && cbuf->g == 0 && cbuf->b == 255)
+		if (cbuf->r == Rr && cbuf->g == Gg && cbuf->b == Bb)
+		{
 			sprintf(buf, control3, cbuf->symbol, "None");
+		}
 		else
+		{
 			sprintf(buf, control2, cbuf->symbol, cbuf->r, cbuf->g, cbuf->b);
+		}
 	}
 	
 	control = calloc(40 + 3, sizeof(char));
@@ -588,6 +610,12 @@ void
 cleanPixmapEbuf(EBUF **pixmap)
 {
 	Neuro_CleanEBuf(pixmap);
+}
+
+void
+setBitmapColorKey(u32 key)
+{
+	color_key = key;
 }
 
 void
