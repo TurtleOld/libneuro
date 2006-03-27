@@ -150,7 +150,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	/* make the last element point to NULL */
 	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL);
 
-	eng->mem++; /* add an extra mem because we now have an extra slot free */
+	/* eng->mem++; */ /* add an extra mem because we now have an extra slot free */
 	eng->total--;
 }
 

@@ -24,13 +24,62 @@
 #include <ebuf.h>
 
 u8
-Chk_bound(Rectan *rec, u16 x, u16 y)
+Chk_bound(Rectan *rec, i16 x, i16 y, i16 w, i16 h)
 {
 	if (rec->x <= x && (rec->x + rec->w) >= x)
 	{
 		if (rec->y <= y && (rec->y + rec->h) >= y)
+		{
+			/* Debug_Print("condition 1"); */
 			return 1;
+		}
+		
+		if (rec->y > y)
+		{
+			
+			if ((rec->y + rec->h) < (y + h))
+			{
+				/* Debug_Print("condition 2"); */
+				return 1;
+			}
+		}
+
+		if ((rec->y + rec->h) < y)
+		{
+			if (rec->y > (y + h))
+			{
+				/* Debug_Print("condition 5"); */
+				return 1;			
+			}
+		}
+		
+		/* Debug_Print("ret condition 1"); */
 	}
+	
+	if (rec->y <= y && (rec->y + rec->h) >= y)
+	{
+		if (rec->x > x)
+		{
+			if ((rec->x + rec->w) < (x + w))
+			{
+				/* Debug_Print("condition 3"); */
+				return 1;
+			}
+		}
+
+		if ((rec->x + rec->w) < x)
+		{
+			if (rec->x > (x + w))
+			{
+				/* Debug_Print("condition 4"); */
+				return 1;
+			}	
+			/* Debug_Print("sub ret condition 2"); */
+		}
+		/* Debug_Print("ret condition 2"); */
+	}
+	
+	/* Debug_Print("condition 0");	 */
 	return 0;
 }
 
@@ -450,13 +499,15 @@ Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen)
 {		
 	register u8 status = 0;
 
-	status = Chk_bound(indep, depen->x, depen->y); /* up left */
-	status += Chk_bound(indep, depen->x + depen->w, depen->y); /* up right */
-	status += Chk_bound(indep, depen->x + depen->w, depen->y + depen->h); /* bottom right */
-	status += Chk_bound(indep, depen->x, depen->y + depen->h); /* bottom left */
+	status = Chk_bound(indep, depen->x, depen->y, depen->w, depen->h); /* up left */
+	status += Chk_bound(indep, depen->x + depen->w, depen->y, depen->w * -1, depen->h); /* up right */
+	status += Chk_bound(indep, depen->x + depen->w, depen->y + depen->h, (i16)depen->w * -1, (i16)depen->h * -1); /* bottom right */
+	status += Chk_bound(indep, depen->x, depen->y + depen->h, depen->w, (i16)depen->h * -1); /* bottom left */
 
 	if (status == 4)
+	{
 		status = 0; /* obj is inside form */
+	}
 	else
 	{
 		if (status > 0)
@@ -473,6 +524,8 @@ Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen)
  * 0 = depen is inside indep.
  * 1 = depen and indep are not touching each others(they are far away).
  * 2 = depen is overlaping indep. 
+ * 3 = depen and indep links between corners are into the other but the corners
+ *     are not touching.
  * this function needs to be converted to a macro so its lightning quick
  */
 u8
@@ -489,6 +542,12 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 	{
 		if (Neuro_DumbBoundsCheck(depen, indep) != 1)
 			status = 2;
+	}
+
+	if (status == 0)
+	{
+		if (Neuro_DumbBoundsCheck(depen, indep) == 0)
+			status = 3;
 	}
 	
 	return status;

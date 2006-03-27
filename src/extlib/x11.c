@@ -45,6 +45,8 @@ static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 
 static i32 width = 800, height = 600; /* HACK WARNING TODO make this better and settable*/
 
+static u8 Toggle_Exposed = 1;
+
 static void
 clean_Vobjects(void *src)
 {
@@ -187,7 +189,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		XMapWindow(tmp->display, tmp->win);
 	}
 
-	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask);
+	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask | FocusChangeMask);
 
 	XFlush(tmp->display);
 	
@@ -647,7 +649,7 @@ Lib_CheckKeyStatus(u32 key)
 	u8 anchor;
 	u8 temp;
 	
-	if (Neuro_EBufIsEmpty(vobjs))
+	if (Neuro_EBufIsEmpty(vobjs) || Toggle_Exposed == 0)
 	{
 		return 0;
 	}
@@ -701,7 +703,7 @@ Lib_GetMouseState(i32 *x, i32 *y)
 	u32 mask;
 	u8 value = 0;
 	
-	if (Neuro_EBufIsEmpty(vobjs))
+	if (Neuro_EBufIsEmpty(vobjs) || Toggle_Exposed == 0)
 	{
 		*x = 0;
 		*y = 0;
@@ -777,8 +779,21 @@ Lib_PollEvent(void *event_input)
 	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, Expose, &event) == True)  
 
 	{
-		/*Debug_Print("Redrawing from expose");*/
+		Toggle_Exposed = 1;
+		/* Debug_Print("Redrawing from expose"); */
 		Neuro_RedrawScreen();
+	}
+
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, FocusOut, &event) == True)  
+	{
+		/* Debug_Print("Lost Focus"); */
+		Toggle_Exposed = 0;	
+	}
+
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, FocusIn, &event) == True)  
+	{
+		/* Debug_Print("Got Focus"); */
+		Toggle_Exposed = 1;
 	}
 	
 	return 0;

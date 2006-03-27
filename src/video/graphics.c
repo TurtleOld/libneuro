@@ -80,11 +80,12 @@
  */
 
 #define debug_instruction_buffer 0
-#define debug_instruction_buffer2 0
 
 #define screen_buffer 1
 #define second_screen_buffer 0
 #define retain_image_inipos 0
+
+#define use_memory_pool 0
  
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
@@ -102,16 +103,46 @@
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
+
+enum drawings_type
+{
+	TDRAW_STATIC = 1,
+	TDRAW_DYNAMIC,
+	TDRAW_DYNAMIC_CLEAN,
+	TDRAW_SDRAWN, /* static but already drawn */
+
+	TDRAW_END
+};
  
 typedef struct RAW_ENGINE
 {
 	u8 layer; /* the drawing level that the surface is drawn */
-	u8 type; /* 2 types : static and dynamic. 1 is static and 2 is dynamic*/
+	u8 type; /* 1 is static, 2 is dynamic, 3 is static but already drawn*/
+	u8 double_rectangle; /* is set to 1 if we have to draw 2 identical rectangle
+			      * used with the overriding. something like this
+			      * (ASCII art)
+			      *
+			      * 1100011
+			      * 1100011
+			      * 1100011
+			      * 1100011
+			      *
+			      * or
+			      *
+			      * 1111111
+			      * 0000000
+			      * 0000000
+			      * 1111111
+			      */
 	Rectan src;
 	Rectan dst; /* will need to memcpy the data because 
 			* this will be used beyond the 
 			* scope of the calling function.
 			*/
+	void *override; /* if used, will point to a Rectan element that will override 
+			 * src and dst.
+			 */
+	void *override2;
 	void *surface_ptr; /* only the pointer needed cause its "static" */
 }RAW_ENGINE;
 
@@ -138,6 +169,22 @@ typedef struct PIXEL_ENGINE
 	u32 x, y;
 }PIXEL_ENGINE;
 
+enum POOL_TYPES
+{
+	POOL_AVAILABLE = 0, /* an available spot */
+	POOL_RAWENGINE = 1, /* RAW_ENGINE */
+	POOL_QUEUE, /* INSTRUCTION_ENGINE */
+	POOL_PIXELS, /* PIXEL_ENGINE */
+	
+	POOL_LAST
+};
+
+typedef struct STRUCT_POOL
+{
+	u8 type;
+	void *data;
+}STRUCT_POOL;
+
 static v_object *screen; /* the screen surface */
 static v_object *sclScreen; /* attempt to do a double buffered screen (for the static type) */
 static v_object *sclScreen2; /* another screen buffer used for the dynamic type */
@@ -145,6 +192,7 @@ static v_object *sclScreen2; /* another screen buffer used for the dynamic type 
 static v_object *background; /* the background image */
 
 
+static INSTRUCTION_ENGINE *first_element;
 static INSTRUCTION_ENGINE *last_element;
 
 static EBUF *_Drawing;
@@ -152,12 +200,13 @@ static EBUF *_Raw;
 static EBUF *_Queue;
 static EBUF *_Pixel;
 
-/* buffered structs */
-static EBUF *b_Raw;
-static EBUF *b_Queue;
+/* pool used to reuse allocated memory */
+static EBUF *_pool; 
 
 /* screen size */
 static Rectan screenSize;
+
+u32 temp_count;
 
 /* a rectangle meant to test the bound fix algorithm */
 static Rectan test_BoundFix;
@@ -180,9 +229,6 @@ static u8 drawn_last_cycle;
 /* 1 is that we don't draw anything in this cycle */
 static u8 dont_draw_this_cycle;
 
-/* 1 is that we got instructed by external program to clean this cycle */
-static u8 clean_this_cycle;
-
 /* 1 is that we got new draw instruction this cycle so we have to draw. */
 static u8 draw_this_cycle;
 
@@ -200,7 +246,6 @@ static void computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
 static void print_queue() __attribute__ ((__unused__));
-static void print_queue2() __attribute__ ((__unused__));
 
 /* draw the objects on the screen */
 static void draw_objects();
@@ -219,6 +264,17 @@ static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
  * now used as a backbone.
  */
 static void AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
+
+/* returns a pointer corresponding to the type or
+ * NULL if none found 
+ */
+static void *Pull_Data_From_Pool(u8 type);
+/* function to put a new element in the pool */
+static void Push_Data_To_Pool(u8 type, void *data);
+
+
+static void Raw_Engine_All_To_Pool();
+static void Queue_All_To_Pool();
 
 /*--- Static Functions ---*/
 
@@ -251,6 +307,7 @@ static void
 cleanQueue()
 {
 	Neuro_CleanEBuf(&_Queue);
+	first_element = NULL;
 	last_element = NULL;
 }
 
@@ -261,39 +318,16 @@ print_queue()
 	
 	if (Neuro_EBufIsEmpty(_Queue))
 		return;
-	cur = Neuro_GiveEBuf(_Queue, 0);
-	printf("Queue address %d\n", (int)cur);
+	/* cur = Neuro_GiveEBuf(_Queue, 0); */
+	cur = first_element;
+	/* printf("Queue address %d\n", (int)cur); */
 	
 	while (cur != NULL)
 	{
-		printf("layer #%d\n", cur->current->layer);
+		Debug_Val(0, "layer #%d\n", cur->current->layer);
 		if (cur->next == Neuro_GiveEBuf(_Queue, 0))
 		{
-			printf("Error- this element points to the beginning element\n");
-			break;
-		}
-		else
-			cur = cur->next;
-	}
-} __attribute__ ((__unused__))
-
-static void
-print_queue2() 
-{
-	INSTRUCTION_ENGINE *cur;
-	
-	if (Neuro_EBufIsEmpty(b_Queue))
-		return;
-	cur = Neuro_GiveEBuf(b_Queue, 0);
-	printf("b Queue address %d\n", (int)cur);
-
-
-	while (cur != NULL)
-	{
-		printf("b layer #%d\n", cur->current->layer);
-		if (cur->next == Neuro_GiveEBuf(b_Queue, 0))
-		{
-			printf("b Error- this element points to the beginning element\n");
+			Debug_Val(0, "Error- this element points to the beginning element\n");
 			break;
 		}
 		else
@@ -311,9 +345,8 @@ static void
 computeRawEngine(RAW_ENGINE *toadd)
 {
 	register EBUF *tmp;	
-	register INSTRUCTION_ENGINE *buf = NULL, *cur = NULL, *last = NULL, *temp = NULL;
-	register u32 current; /* current number of elements in instruction */	
-
+	register INSTRUCTION_ENGINE *buf = NULL, *cur = NULL, *last = NULL;
+	register u32 current; /* current number of elements in instruction */
 
 	if (dont_draw_this_cycle && drawn_last_cycle)
 	{
@@ -322,16 +355,29 @@ computeRawEngine(RAW_ENGINE *toadd)
 			clean_drawn_objects();*/
 	}
 
-	
-	tmp = _Queue;	
-	Neuro_AllocEBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
-	
-	current = Neuro_GiveEBufCount(tmp);
+	temp_count++;
 
-	buf = Neuro_GiveEBuf(tmp, current);
+	tmp = _Queue;
+	
+	buf = Pull_Data_From_Pool(POOL_QUEUE);
+	
+	if (buf == NULL)
+	{
+		/* Debug_Val(0, "computeRawEngine buf is empty so we allocate for %d\n", toadd->layer); */
+		Neuro_AllocEBuf(tmp, sizeof(INSTRUCTION_ENGINE*), sizeof(INSTRUCTION_ENGINE));
+		buf = Neuro_GiveCurEBuf(tmp);
+	}
+	/*else
+		Debug_Val(0, "computeRawEngine recycled an object! %d\n", toadd->layer);*/
+
+
+	current = Neuro_GiveEBufCount(tmp);
 	
 	buf->current = toadd;
 	buf->next = NULL;
+	
+	if (debug_instruction_buffer)
+		Debug_Val(0, "Push --> %d\n", toadd->layer);
 	
 	if (last_element != NULL)
 	{
@@ -353,21 +399,42 @@ computeRawEngine(RAW_ENGINE *toadd)
 					(*buf)[current]->current->layer,
 					(*last_element)->current->layer,
 					(int)(*last_element)->current);*/
-			/* printf("Placed the frame at the end of the queue\n"); */
+			/* Debug_Val(0, "Placed the object at the end of the queue\n"); */
 			return;
 		}
 	}
 	else
 	{
+		first_element = buf;
 		last_element = buf;
-		/* printf("Just placed the frame as the first element, starting the queue\n"); */
+		/* Debug_Val(0, "Just placed the frame as the first element, starting the queue\n"); */
 		return;
 	}
 
-	cur = Neuro_GiveEBuf(tmp, 0);
+#if temp
+	/* search for the first element and if we find any,
+	 * put its number in "first"
+	 */
+	while (current-- > 0)
+	{
+		cur = Neuro_GiveEBuf(tmp, current);
+
+		if (cur->current)
+		{
+			if (cur->current->surface_ptr)
+			{
+				first = current;
+				break;
+			}
+		}
+	}
+#endif /* temp */
+	
+	cur = first_element;
+	/* cur = Neuro_GiveEBuf(tmp, first); */
 	while (cur != NULL)
 	{
-		/*  printf("looped %d\n", (int)cur); */
+		/* Debug_Val(0, "looped cur %d buf %d\n", cur->current->layer, buf->current->layer); */
 		if (cur->current->layer > buf->current->layer)
 		{
 			/*printf("Event current layer %d > toadd layer %d\n",  
@@ -376,28 +443,35 @@ computeRawEngine(RAW_ENGINE *toadd)
 			*/
 			
 			/* to avoid death loops */
-			if (cur->next == buf)
-				cur->next = NULL;
+			/*if (cur->next == buf)
+				cur->next = NULL;*/
 			
-			if (cur == Neuro_GiveEBuf(tmp, 0))
+			if (cur == first_element)
 			{
+#if temp
 				/* switch **buf with the current position */
-				temp = Neuro_GiveEBuf(tmp, 0);
-				Neuro_SetEBuf(tmp, Neuro_GiveEBufAddr(tmp, 0), buf);
+				temp = Neuro_GiveEBuf(tmp, first);
+				Neuro_SetEBuf(tmp, Neuro_GiveEBufAddr(tmp, first), buf);
 				Neuro_SetEBuf(tmp, Neuro_GiveEBufAddr(tmp, current), temp);
 
 				/*printf("Beginning LL change : cur %d, buf[0][0] %d\n", 
 						(int)cur, 
 						(int)buf[0]);
 				*/
-				cur = Neuro_GiveEBuf(tmp, 0);
-				if (Neuro_GiveEBuf(tmp, 0) == buf)
+				if (cur->current == NULL || cur->current->surface_ptr == NULL)
+					cur = Neuro_GiveEBuf(tmp, first);
+				if (Neuro_GiveEBuf(tmp, first) == buf)
 				{
 					printf("huge problem, it is going to put its next element as the same node as itself, creating a death loop!!\n");
 					cur->next = NULL;
 				}
 				else	
 					cur->next = temp;
+#endif /* temp */
+				/*Debug_Val(0, "New First element proclaimed %d\n", 
+						buf->current->layer);*/
+				buf->next = first_element;
+				first_element = buf;
 			}
 			else
 				buf->next = cur;
@@ -409,18 +483,20 @@ computeRawEngine(RAW_ENGINE *toadd)
 		}
 		else
 		{
-			/* printf("nothing to be done\n"); */
+			/* Debug_Val(0, "nothing to be done\n"); */
 		}
 		last = cur;
 		cur = cur->next;
 	}
 	/* printf("End of the looping process\n"); */
-#if debug_instruction_buffer
-		printf("BEGIN inside computeRawEngine debug print\n");
+	
+	
+	if (debug_instruction_buffer)
+	{
+		Debug_Val(0, "BEGIN inside computeRawEngine debug print\n");
 		print_queue();
-		printf("END inside computeRawEngine debug print\n");
-#endif /* debug_instruction_buffer */
-
+		Debug_Val(0, "END inside computeRawEngine debug print\n");
+	}
 }
 
 static void
@@ -463,46 +539,105 @@ cleanPixels()
 static void
 draw_objects()
 {
-	EBUF *tmp;
-	Rectan buf;
+	Rectan isrc, idst;
 	INSTRUCTION_ENGINE *cur;
-
-	tmp = b_Queue;
-	
-#if debug_instruction_buffer2
-	printf("B BEGIN debug print\n");
-	print_queue2();
-	printf("B END debug print\n");
-#endif /* debug_instruction_buffer2 */
 		
-	/* start the real drawing */
-	tmp = _Queue;
-	
-	if (!Neuro_EBufIsEmpty(tmp))
-		cur = Neuro_GiveEBuf(tmp, 0);
-	else
-		return;
-	
-	while (cur)
-	{	
-		buf.x = cur->current->dst.x;
-		buf.y = cur->current->dst.y;
-		buf.w = cur->current->src.w;
-		buf.h = cur->current->src.h;
+	if (Neuro_EBufIsEmpty(_Queue))
+		return;	
 
-		/* copy the emplacement of where the surface will be drawn to
-		 * so we can revert to it when we clean. I'm not totally sure 
-		 * if we should use sclScreen(the buffer) or Screen(the screen itself).
-		 * I'll use sclScreen and see how it goes.
-		 */
+	cur = first_element;
+
+	/* start the real drawing */
+	while (cur)
+	{		
+		memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+		memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+
+		if (cur->current->override)
+		{
+			Rectan *buf;
+
+			buf = (Rectan*)cur->current->override;
+			
+			isrc.x = buf->x;
+			isrc.y = buf->y;
+			isrc.h = buf->h;
+			isrc.w = buf->w;
+
+			free(cur->current->override);
+			cur->current->override = NULL;
+			
+			
+
+			buf = (Rectan*)cur->current->override2;
+			
+			idst.x = buf->x;
+			idst.y = buf->y;
+			idst.h = buf->h;
+			idst.w = buf->w;
+
+			free(cur->current->override2);
+			cur->current->override2 = NULL;		
+		}
 		
 		/* draw the surface_ptr to the screen buffer. */
-		if (cur->current->type == 1)
-			Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen, 
-					&cur->current->dst);
-		else
-			Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, sclScreen2, 
-					&cur->current->dst);
+		switch (cur->current->type)
+		{
+			case TDRAW_STATIC:
+			{
+				
+				/*Debug_Val(0, "after x y (%d,%d) size %d %d\n", 
+						buf.x, buf.y, buf.w, buf.h);
+				*/
+
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, sclScreen, 
+						&idst);
+				
+				if (cur->current->double_rectangle == 1)
+				{
+					/* special case where we have to draw 
+					 * an identical rectangle on the other
+					 * side of the image.
+					 */
+					cur->current->double_rectangle = 0;
+					
+					/* find out if its an horizontal or
+					 * vertical mirror we need.
+					 */
+					if (isrc.w == cur->current->src.w)
+					{
+						/* this is the horizontal mirror. */
+						
+						isrc.y = abs(isrc.y - cur->current->src.h);
+					}
+
+					if (isrc.h == cur->current->src.h)
+					{
+						/* this is the vertical mirror. */
+						
+						isrc.x = abs(isrc.x - cur->current->src.w);
+					}
+					
+					Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen, &idst);
+				}
+				
+				cur->current->type = TDRAW_SDRAWN;
+			}
+			break;
+			
+			
+			case TDRAW_DYNAMIC_CLEAN:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen2, &idst);
+			}
+			break;
+			
+			
+			default:
+			break;
+		}
 
 
 		cur = cur->next;
@@ -524,12 +659,8 @@ draw_objects()
 static void 
 AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
 {
-	register EBUF *tmp = NULL;
-	register RAW_ENGINE *buf = NULL;
-	register u32 current;
+	RAW_ENGINE *buf = NULL;
 	Rectan tIsrc, tIdst;
-
-	tmp = _Raw;
 	
 
 	memcpy(&tIsrc, isrc, sizeof(Rectan));
@@ -557,61 +688,178 @@ AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurf
 	 */
 	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */
 	
-	Neuro_AllocEBuf(tmp, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
+	buf = Pull_Data_From_Pool(POOL_RAWENGINE);
+	if (buf == NULL)
+	{
+		Neuro_AllocEBuf(_Raw, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
 	
-	current = Neuro_GiveEBufCount(tmp);
-	buf = Neuro_GiveEBuf(tmp, current);
+		buf = Neuro_GiveCurEBuf(_Raw);
+	}
 	
 	buf->layer = layer;
 	buf->type = type;
 	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
 	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
 	buf->surface_ptr = isurface;
+	
 	computeRawEngine((RAW_ENGINE*)buf);
 
 	draw_this_cycle = 1;
+}
+
+/* clean_drawn_objects() might have cleaned objects
+ * that should be drawn so we will redraw those in this
+ * function.
+ */
+static void
+redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
+{
+	Rectan buf, indep_body;
+	INSTRUCTION_ENGINE *cur;
+	int bounds_ret = 0;
+
+
+	indep_body.x = indep->current->dst.x;
+	indep_body.y = indep->current->dst.y;
+	indep_body.w = indep->current->src.w;
+	indep_body.h = indep->current->src.h;
+	
+
+	if (first_element == NULL)
+		return;
+	
+	cur = first_element;
+
+	while (cur)
+	{		
+		
+		if (cur == indep)
+		{
+			cur = cur->next;
+			continue;
+		}
+			
+		if (cur->current->type == TDRAW_SDRAWN)
+		{
+			
+			buf.x = cur->current->dst.x;
+			buf.y = cur->current->dst.y;
+			buf.w = cur->current->src.w;
+			buf.h = cur->current->src.h;
+			
+			bounds_ret = Neuro_BoundsCheck(&indep_body, &buf);
+			/* bounds_ret = 2; */	
+			
+			if (bounds_ret == 0)
+			{	
+				/*Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, 
+						sclScreen, &cur->current->dst);*/
+
+				cur->current->type = TDRAW_STATIC;
+			}
+
+			if (bounds_ret == 2 || bounds_ret == 3)
+			{
+				Rectan *isrc, *idst;
+
+				
+				isrc = calloc(1, sizeof(Rectan));
+				idst = calloc(1, sizeof(Rectan));
+					
+				memcpy(isrc, &cur->current->src, sizeof(Rectan));
+				memcpy(idst, &cur->current->dst, sizeof(Rectan));
+
+				Neuro_VerticalBoundFix(&indep_body, isrc, idst);
+				Neuro_HorizontalBoundFix(&indep_body, isrc, idst);
+				
+				cur->current->override = isrc;
+				cur->current->override2 = idst;
+
+				cur->current->type = TDRAW_STATIC;
+					
+				/*
+				if (bounds_ret == 3)
+					cur->current->double_rectangle = 1;
+				*/
+				
+			}
+			
+			/* Debug_Val(0, "object end\n"); */
+		}	
+		cur = cur->next;
+	}
 }
 
 /* */
 static void
 clean_drawn_objects()
 {
-	EBUF *tmp;
 	Rectan buf;
-	INSTRUCTION_ENGINE *cur;
+	INSTRUCTION_ENGINE *cur, *last = NULL;
 
-	tmp = b_Queue;
+		
+	if (first_element == NULL)
+		return;
 
+	cur = first_element;
 	
-	if (tmp)
-	{
-		if (!Neuro_EBufIsEmpty(tmp))
-			cur = Neuro_GiveEBuf(tmp, 0);
-		else
-			return;
-	
-		/* "reset" the emplacement of the last position of the image
-		 * with the background if theres one or with the color black 
-		 * if none.
-		 */
-		while (cur)
-		{		
-			buf.x = cur->current->dst.x;
-			buf.y = cur->current->dst.y;
-			buf.w = cur->current->src.w;
-			buf.h = cur->current->src.h;
+	/* "reset" the emplacement of the last position of the image
+	 * with the background if theres one or with the color black 
+	 * if none.
+	 */
+	while (cur)
+	{		
+		buf.x = cur->current->dst.x;
+		buf.y = cur->current->dst.y;
+		buf.w = cur->current->src.w;
+		buf.h = cur->current->src.h;
 			
-			/* if (cur->current->type == 2) */
+		if (cur->current->type == TDRAW_DYNAMIC_CLEAN)
+		{
+			/*if (background)
+				Lib_BlitObject(background, &buf, sclScreen2, &buf);
+			else
+				Lib_FillRect(sclScreen2, &buf, 0);
+			*/
+				
+			Lib_FillRect(sclScreen2, &buf, 0);
+			
+			redraw_erased_for_object(cur);
+
+			if (last)
+				last->next = cur->next;
+		
+			/* check to see if the element cur is either first_element 
+			 * or last_element and if so, we will destituate it.
+			 */
+			if (cur == first_element)
+				first_element = cur->next;
+
+			if (cur == last_element)
 			{
-				if (background)
-					Lib_BlitObject(background, &buf, sclScreen, &buf);
-				else
-					Lib_FillRect(sclScreen, &buf, 0);
+				last_element = last;
+				last_element->next = NULL;
 			}
 			
-			cur = cur->next;
+			
+			if (use_memory_pool)
+				Push_Data_To_Pool(POOL_QUEUE, cur);
+			else
+			{
+				Neuro_SCleanEBuf(_Raw, cur->current);
+				Neuro_SCleanEBuf(_Queue, cur);
+			}
 		}
+		else
+		{
+			if (cur->current->type == TDRAW_DYNAMIC)
+				cur->current->type = TDRAW_DYNAMIC_CLEAN;
+		}
+		
+		last = cur;
+		cur = cur->next;
 	}
+	
 	drawn_last_cycle = 0;
 }
 
@@ -619,31 +867,17 @@ clean_drawn_objects()
 static void
 clean_queue()
 {	
-	Neuro_CleanEBuf(&b_Raw);
-	Neuro_CleanEBuf(&b_Queue);
-	
-	Neuro_CreateEBuf(&b_Raw);
-	Neuro_CreateEBuf(&b_Queue);
-	
-	Neuro_CopyEBuf(b_Raw, _Raw);
-	Neuro_CopyEBuf(b_Queue, _Queue);
-	
-	Neuro_ResetEBuf(_Raw);
-	Neuro_ResetEBuf(_Queue);
-
+	/*
+	first_element = NULL;
 	last_element = NULL;
-#if debug_instruction_buffer2
-	printf("-B BEGIN debug print\n");
-	print_queue2();
-	printf("-B END debug print\n");
-#endif /* debug_instruction_buffer2 */
+	*/
 
-#if debug_instruction_buffer
-	printf("-BEGIN debug print\n");
-	print_queue();
-	printf("-END debug print\n");
-#endif /* debug_instruction_buffer2 */
-
+	if (debug_instruction_buffer)
+	{
+		Debug_Val(0, "-BEGIN debug print\n");
+		print_queue();
+		Debug_Val(0, "-END debug print\n");
+	}
 }
 
 /* a test to see if the bounds fix algo works 
@@ -702,6 +936,125 @@ BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst)
 	return 0;
 }
 
+static void
+Raw_Engine_All_To_Pool()
+{
+	register RAW_ENGINE *buf;
+	register u32 total;
+
+	if (Neuro_EBufIsEmpty(_Raw))
+		return;
+	
+	total = Neuro_GiveEBufCount(_Raw) + 1;
+	
+	while (total-- > 0)
+	{
+		buf = Neuro_GiveEBuf(_Raw, total);
+
+		if (buf->surface_ptr)
+		{
+			buf->surface_ptr = NULL;
+			Push_Data_To_Pool(POOL_RAWENGINE, buf);
+		}
+	}
+}
+
+static void
+Queue_All_To_Pool()
+{
+	INSTRUCTION_ENGINE *buf;
+
+	if (!first_element)
+		return;
+	
+	buf = first_element;
+	
+	while (buf != NULL)
+	{
+		/* Debug_Val(0, "queue dump\n"); */
+		buf->current = NULL;
+		Push_Data_To_Pool(POOL_QUEUE, buf);	
+
+		buf = buf->next;
+	}
+}
+
+/* returns a pointer corresponding to the type or
+ * NULL if none found 
+ */
+static void *
+Pull_Data_From_Pool(u8 type)
+{
+	STRUCT_POOL *tmp;
+	u32 total = 0;
+	void *ret = NULL;
+
+	if (Neuro_EBufIsEmpty(_pool))
+		return NULL;
+	
+	total = Neuro_GiveEBufCount(_pool) + 1;
+
+	while (total-- > 0)
+	{
+		tmp = Neuro_GiveEBuf(_pool, total);
+
+		if (tmp->type == type)
+		{
+			tmp->type = POOL_AVAILABLE;
+			ret = tmp->data;
+			tmp->data = NULL;
+			
+			return ret;
+		}
+	}
+
+	return NULL;
+}
+
+/* function to put a new element in the pool */
+static void
+Push_Data_To_Pool(u8 type, void *data)
+{
+	STRUCT_POOL *tmp;
+	u32 total = 0;
+
+	/* Debug_Val(0, "Pushed a struct to be in the pool\n"); */
+	if (!Neuro_EBufIsEmpty(_pool))
+	{
+		total = Neuro_GiveEBufCount(_pool) + 1;
+
+		/* loop the buffer to attempt to put the data 
+		 * into an available spot
+		 */
+		while (total-- > 0)
+		{
+			tmp = Neuro_GiveEBuf(_pool, total);
+	
+			if (tmp->type == POOL_AVAILABLE)
+			{
+				/* Debug_Val(0, "putting data into an available slot\n"); */
+				tmp->type = type;
+				tmp->data = data;
+	
+				return;
+			}
+		}
+	}
+
+	/* Debug_Val(0, "no more available slots, we need to allocate a new one\n"); */
+
+	/* if we are here, it means there was no available
+	 * spot found. We will have to create a new one.
+	 * and put the data in it.
+	 */
+	Neuro_AllocEBuf(_pool, sizeof(STRUCT_POOL*), sizeof(STRUCT_POOL));
+
+	tmp = Neuro_GiveCurEBuf(_pool);
+
+	tmp->type = type;
+	tmp->data = data;
+}
+
 /*--- Global Functions ---*/
 
 void
@@ -734,6 +1087,7 @@ Neuro_RedrawScreen()
 	draw_this_cycle = 1;
 }
 
+/* clean the whole screen */
 void
 Neuro_RefreshScreen()
 {
@@ -753,12 +1107,29 @@ Neuro_RefreshScreen()
 	}
 	else
 		Lib_FillRect(sclScreen, NULL, 0);
-}
 
-void
-Neuro_CycleClean()
-{
-	clean_this_cycle = 1;
+	/* Debug_Val(0, "before Pool total %d\n", Neuro_GiveEBufCount(_pool)); */
+	if (use_memory_pool)
+	{
+		Raw_Engine_All_To_Pool();
+		Queue_All_To_Pool();
+	}
+	else
+	{
+		Neuro_CleanEBuf(&_Raw);
+		Neuro_CleanEBuf(&_Queue);
+
+		Neuro_CreateEBuf(&_Raw);
+		Neuro_CreateEBuf(&_Queue);
+	}
+	/*Debug_Val(0, "Real Elements total %d\n", temp_count);
+	temp_count = 0;
+	Debug_Val(0, "Raw total %d\n", Neuro_GiveEBufCount(_Raw));
+	Debug_Val(0, "Queue total %d\n", Neuro_GiveEBufCount(_Queue));
+	Debug_Val(0, "after Pool total %d\n", Neuro_GiveEBufCount(_pool));*/
+	
+	first_element = NULL;
+	last_element = NULL;
 }
 
 void
@@ -770,13 +1141,13 @@ Neuro_GiveFPS(t_tick *output)
 void
 Neuro_PushStaticDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
-	AddDrawingInstruction(layer, 1, isrc, idst, isurface);
+	AddDrawingInstruction(layer, TDRAW_STATIC, isrc, idst, isurface);
 }
 
 void
 Neuro_PushDynamicDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
-	AddDrawingInstruction(layer, 2, isrc, idst, isurface);
+	AddDrawingInstruction(layer, TDRAW_DYNAMIC, isrc, idst, isurface);
 }
 
 /* use this function to set the background 
@@ -886,7 +1257,8 @@ Neuro_CleanPixels()
 void
 Graphics_Poll()
 {	
-	/* Debug_Val(0, "cycle\n"); */
+	if (debug_instruction_buffer)
+		Debug_Val(0, "cycle\n");
 
 	if (clean_pixel_in_this_cycle)
 	{
@@ -930,8 +1302,8 @@ Graphics_Poll()
 		DRAWING_ELEMENTS *bufa;
 		u32 total;
 		
-		total = Neuro_GiveEBufCount(_Drawing);
-		total++;
+		total = Neuro_GiveEBufCount(_Drawing) + 1;
+
 		while (total-- > 0)
 		{
 			bufa = Neuro_GiveEBuf(_Drawing, total);
@@ -939,11 +1311,12 @@ Graphics_Poll()
 		}
 	}
 	
-#if debug_instruction_buffer
-	printf("--BEGIN debug print\n");
-	print_queue();
-	printf("--END debug print\n");
-#endif /* debug_instruction_buffer */
+	if (debug_instruction_buffer)
+	{
+		Debug_Val(0, "--BEGIN debug print\n");
+		print_queue();
+		Debug_Val(0, "--END debug print\n");
+	}
 
 	/* construct the instruction buffer */
 	
@@ -956,12 +1329,6 @@ Graphics_Poll()
 		{
 			/*if (drawn_last_cycle)
 				clean_drawn_objects();*/
-
-			if (clean_this_cycle)
-			{
-				clean_drawn_objects();
-
-			}
 	
 			if (draw_this_cycle)
 				draw_objects();
@@ -974,21 +1341,48 @@ Graphics_Poll()
 	else
 		frameSkip_tmp--;
 	
-	/* clean some of the most important buffers */
-	clean_queue();
-
+#if temp
+	if (!drawn_last_cycle)
+	{
+		clean_drawn_objects(); /* clean dynamic objects already drawn */
+		draw_objects();
+	}
+	else
+		drawn_last_cycle = 0;
+	
 	/* update the full screen */
-	if (draw_this_cycle || clean_this_cycle)
+	if (draw_this_cycle)
 	{
 		if (screen_buffer)
 			Lib_BlitObject(sclScreen, NULL, screen, NULL);
 		
 		if (second_screen_buffer == 0)
 			updScreen(0);
-		clean_this_cycle = 0;
+		
 		draw_this_cycle = 0;
 	}
-
+#endif /* temp */
+	
+	if (drawn_last_cycle)
+		clean_drawn_objects(); /* clean dynamic objects already drawn */
+	
+	/* update the full screen */
+	if (draw_this_cycle)
+	{
+		draw_objects();
+		
+		if (screen_buffer)
+			Lib_BlitObject(sclScreen, NULL, screen, NULL);
+		
+		if (second_screen_buffer == 0)
+			updScreen(0);
+		
+		draw_this_cycle = 0;
+	}
+	
+	/* clean some of the most important buffers */
+	clean_queue();
+	
 	if (second_screen_buffer)
 	{
 		Lib_BlitObject(sclScreen2, NULL, screen, NULL);
@@ -1005,27 +1399,35 @@ Graphics_Init()
 	
 	_err_ = 0;
 	/* will need to be configurable from the projects that use Neuro */
-#if screen_buffer
-	_err_ = Lib_VideoInit(&screen, &sclScreen);
-#else /* NOT screen_buffer */
-	_err_ = Lib_VideoInit(&screen, NULL);
-	sclScreen = screen;
-#endif /* NOT screen_buffer */
+	
+	if (screen_buffer)
+	{
+		_err_ = Lib_VideoInit(&screen, &sclScreen);
+	}
+	else
+	{
+		_err_ = Lib_VideoInit(&screen, NULL);
+		sclScreen = screen;
+	}
 
-#if second_screen_buffer
-	sclScreen2 = Lib_CreateVObject(0, SCREEN_X, SCREEN_Y, Lib_GetDefaultDepth(), 0, 
-			0, 0, 0);
-#else /* NOT second_screen_buffer */
-	sclScreen2 = sclScreen;
-#endif /* NOT second_screen_buffer */
+	if (second_screen_buffer)
+	{
+		sclScreen2 = Lib_CreateVObject(0, SCREEN_X, SCREEN_Y, Lib_GetDefaultDepth(), 0, 
+				0, 0, 0);
+		Lib_SetColorKey(sclScreen2, 0);
+	}
+	else
+	{
+		sclScreen2 = sclScreen;
+	}
 
 	
 	Neuro_CreateEBuf(&_Drawing);
 	Neuro_CreateEBuf(&_Raw);
 	Neuro_CreateEBuf(&_Queue);
 	Neuro_CreateEBuf(&_Pixel);
-	Neuro_CreateEBuf(&b_Queue);
-	Neuro_CreateEBuf(&b_Raw);
+
+	Neuro_CreateEBuf(&_pool);
 
 	
 	screenSize.x = 0;
@@ -1047,12 +1449,18 @@ Graphics_Init()
 void 
 Graphics_Clean()
 {	
+	
+	Debug_Val(0, "Raw total %d\n", Neuro_GiveEBufCount(_Raw));
+	Debug_Val(0, "Queue total %d\n", Neuro_GiveEBufCount(_Queue));
+	Debug_Val(0, "Pool total %d\n", Neuro_GiveEBufCount(_pool));
+	
 	cleanDrawing();
 	cleanRaw();
 	cleanQueue();
-	Neuro_CleanEBuf(&b_Queue);
-	Neuro_CleanEBuf(&b_Raw);
 	Neuro_CleanEBuf(&_Pixel);
+
+	Neuro_CleanEBuf(&_pool);
+	
 	if (screen)
 	{
 		Lib_FreeVobject(screen);
