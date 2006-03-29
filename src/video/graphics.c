@@ -371,14 +371,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 {
 	register EBUF *tmp;	
 	register INSTRUCTION_ENGINE *buf = NULL, *cur = NULL, *last = NULL;
-	register u32 current; /* current number of elements in instruction */
-
-	if (dont_draw_this_cycle && drawn_last_cycle)
-	{
-		return;
-		/*if (drawn_last_cycle)
-			clean_drawn_objects();*/
-	}
+	register u32 current; /* current number of elements in instruction */	
 
 	temp_count++;
 
@@ -1370,52 +1363,30 @@ Graphics_Poll()
 	 */
 	if (frameSkip_tmp <= 0)
 	{
-		if (!dont_draw_this_cycle)
-		{	
-			if (drawn_last_cycle)
-				clean_drawn_objects();
-
-			if (draw_this_cycle)
-				draw_objects();
-		}
-		else
-			dont_draw_this_cycle = 0;
-		
 		frameSkip_tmp = frameSkip;
 	}
 	else
-		frameSkip_tmp--;
-	
-#if temp
-	if (!drawn_last_cycle)
 	{
-		clean_drawn_objects(); /* clean dynamic objects already drawn */
-		draw_objects();
+		dont_draw_this_cycle = 1;
+		frameSkip_tmp--;
+	}
+
+	
+	if (!dont_draw_this_cycle)
+	{	
+		if (drawn_last_cycle)
+			clean_drawn_objects();
+
+		if (draw_this_cycle)
+			draw_objects();
 	}
 	else
-		drawn_last_cycle = 0;
+		dont_draw_this_cycle = 0;
+
 	
 	/* update the full screen */
-	if (draw_this_cycle)
-	{
-		if (screen_buffer)
-			Lib_BlitObject(sclScreen, NULL, screen, NULL);
-		
-		if (second_screen_buffer == 0)
-			updScreen(0);
-		
-		draw_this_cycle = 0;
-	}
-#endif /* temp */
-	
-	/*if (drawn_last_cycle)
-		clean_drawn_objects(); *//* clean dynamic objects already drawn */
-	
-	/* update the full screen */
-	if (draw_this_cycle)
-	{
-		/* draw_objects(); */
-		
+	if (draw_this_cycle && !dont_draw_this_cycle)
+	{	
 		if (screen_buffer)
 			Lib_BlitObject(sclScreen, NULL, screen, NULL);
 		
