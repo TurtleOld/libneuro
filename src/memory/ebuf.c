@@ -80,11 +80,14 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	total = &eng->total;
 	mem = &eng->mem;
 	
+	/*
 	if (*mem > MEMORY_ALLOC_OVERH)
 	{
 		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", *mem);
 		return;
 	}
+	*/
+	
 	/*
 	printf("debug : %d\n", sptp);
 	printf("before mem %d\n", mem);
@@ -93,9 +96,9 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	{
 		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
 		*total = 0;
-		*mem = MEMORY_ALLOC_OVERH;
+		*mem = MEMORY_ALLOC_OVERH - 1;
 	}
-	else if ((*mem * sptp) <= sptp)
+	else if ((*mem * sptp) < sptp)
 	{
 		if (*buf == NULL)
 		{
@@ -103,14 +106,14 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 			Error_Print("Memory buffer unknown error");
 			return;
 		}
-		*buf = realloc(*buf, sptp * (MEMORY_ALLOC_OVERH * (*total + 1)));
-		*mem = MEMORY_ALLOC_OVERH;
+		*buf = realloc(*buf, sptp * (*total + MEMORY_ALLOC_OVERH));
+		*mem = MEMORY_ALLOC_OVERH - 1;
 	}
 	else
 		*mem -= 1;
-	/*
-	printf("after mem %d\n", mem);
-	*/
+	
+	/* Debug_Val(0, "EBUF -- after mem %d\n", *mem); */
+	
 	(*buf)[*total] = calloc(1, sobj);
 	
 	*total = *total + 1;
@@ -150,7 +153,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	/* make the last element point to NULL */
 	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL);
 
-	/* eng->mem++; */ /* add an extra mem because we now have an extra slot free */
+	eng->mem++; /* add an extra mem because we now have an extra slot free */
 	eng->total--;
 }
 

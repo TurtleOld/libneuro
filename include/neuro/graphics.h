@@ -77,9 +77,6 @@ extern void Neuro_AddBackground(void *isurface);
 /* refreshes the screen nicely also support backgrounds */
 extern void Neuro_RefreshScreen();
 
-/* tells neuro to clean the drawn images from the screen */
-extern void Neuro_CycleClean();
-
 /* tells neuro to redraw the screen 
  * might not work if the screen is not
  * buffered but it could work anyway.

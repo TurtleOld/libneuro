@@ -10,10 +10,10 @@
 extern void Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)());
 
 /*! TODO */
-extern void Neuro_AddPressedMouseEvent(u32 button, void (*callback)());
+extern void Neuro_AddPressedMouseEvent(u32 button, void (*callback)(int x, int y));
 
 /*! TODO */
-extern void Neuro_AddReleasedMouseEvent(u32 button, void (*callback)());
+extern void Neuro_AddReleasedMouseEvent(u32 button, void (*callback)(int x, int y));
 
 /*! TODO */
 extern void Neuro_CleanKeyboard();

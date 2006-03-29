@@ -22,8 +22,8 @@ typedef struct MOUSEEVENT
 {
 	u32 button;
 	u8 lastState; /* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
-	void (*callbackClick)(); /* callback to call when clicked */
-	void (*callbackRelease)(); /* callback to call when released */
+	void (*callbackClick)(int x, int y); /* callback to call when clicked */
+	void (*callbackRelease)(int x, int y); /* callback to call when released */
 }MOUSEEVENT;
 
 static EBUF *_klist; /* keyboard buffer */
@@ -96,7 +96,8 @@ handle_mouse()
 			{
 				if (!tmp->lastState)
 				{
-					(tmp->callbackClick)(x, y);
+					if (tmp->callbackClick)
+						(tmp->callbackClick)(x, y);
 					tmp->lastState = 1;
 				}
 			}
@@ -105,7 +106,8 @@ handle_mouse()
 		{
 			if (tmp->lastState == 1)
 			{
-				(tmp->callbackRelease)(x, y);
+				if (tmp->callbackRelease)
+					(tmp->callbackRelease)(x, y);
 				tmp->lastState = 0;
 					
 			}

@@ -334,6 +334,7 @@ Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height)
 u32 
 Neuro_RawGetPixel(v_object *srf, int x, int y)
 {
+#if temp
 	u8 bpp;
 	u8 *p;
 	void *pixels;
@@ -392,6 +393,8 @@ Neuro_RawGetPixel(v_object *srf, int x, int y)
 	Lib_UnlockVObject(srf);
 
 	return err;
+#endif /* temp */
+	return 0;
 }
 
 
@@ -402,6 +405,7 @@ Neuro_RawGetPixel(v_object *srf, int x, int y)
 void 
 Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
 {
+#if temp
 	/* SDL_Surface *surface = (SDL_Surface*)srf; */
 	/* SDL_LockSurface(surface); */
 	u8 bpp;
@@ -456,6 +460,7 @@ Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
 		
 	}
 	/* SDL_UnlockSurface(surface); */
+#endif /* temp */
 }
 
 void

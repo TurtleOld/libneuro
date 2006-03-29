@@ -80,6 +80,7 @@
  */
 
 #define debug_instruction_buffer 0
+#define dynamic_debug 0
 
 #define screen_buffer 1
 #define second_screen_buffer 0
@@ -312,6 +313,22 @@ cleanQueue()
 }
 
 static void
+cleanRawEngineElement(void *eng)
+{
+	RAW_ENGINE *buf;
+
+	buf = (RAW_ENGINE*)eng;
+
+	if (buf)
+	{
+		if (buf->override)
+			free(buf->override);
+		if (buf->override2)
+			free(buf->override2);
+	}
+}
+
+static void
 print_queue() 
 {
 	INSTRUCTION_ENGINE *cur;
@@ -324,8 +341,16 @@ print_queue()
 	
 	while (cur != NULL)
 	{
-		Debug_Val(0, "layer #%d\n", cur->current->layer);
-		if (cur->next == Neuro_GiveEBuf(_Queue, 0))
+		if (cur->current->type == TDRAW_SDRAWN)
+		{
+			cur = cur->next;
+			continue;
+		}
+		
+		Debug_Val(0, "layer #%d address &%x type %d\n", cur->current->layer, cur, 
+				cur->current->type);
+		
+		if (cur->next == first_element)
 		{
 			Debug_Val(0, "Error- this element points to the beginning element\n");
 			break;
@@ -626,6 +651,12 @@ draw_objects()
 			}
 			break;
 			
+			case TDRAW_DYNAMIC:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen2, &idst);
+			}
+			break;
 			
 			case TDRAW_DYNAMIC_CLEAN:
 			{
@@ -633,7 +664,7 @@ draw_objects()
 						sclScreen2, &idst);
 			}
 			break;
-			
+
 			
 			default:
 			break;
@@ -777,10 +808,8 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 
 				cur->current->type = TDRAW_STATIC;
 					
-				/*
 				if (bounds_ret == 3)
 					cur->current->double_rectangle = 1;
-				*/
 				
 			}
 			
@@ -821,7 +850,10 @@ clean_drawn_objects()
 			else
 				Lib_FillRect(sclScreen2, &buf, 0);
 			*/
-				
+		
+			if (dynamic_debug)
+				Debug_Val(0, "Dynamic : cleaning address %x\n", cur);
+			
 			Lib_FillRect(sclScreen2, &buf, 0);
 			
 			redraw_erased_for_object(cur);
@@ -846,14 +878,25 @@ clean_drawn_objects()
 				Push_Data_To_Pool(POOL_QUEUE, cur);
 			else
 			{
-				Neuro_SCleanEBuf(_Raw, cur->current);
-				Neuro_SCleanEBuf(_Queue, cur);
+				INSTRUCTION_ENGINE *temp;
+				
+				temp = cur;
+				cur = cur->next;
+
+				Neuro_SCleanEBuf(_Raw, temp->current);
+				Neuro_SCleanEBuf(_Queue, temp);
+				continue;
 			}
 		}
 		else
 		{
 			if (cur->current->type == TDRAW_DYNAMIC)
+			{
 				cur->current->type = TDRAW_DYNAMIC_CLEAN;
+				
+				if (dynamic_debug)
+					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
+			}
 		}
 		
 		last = cur;
@@ -1121,6 +1164,8 @@ Neuro_RefreshScreen()
 
 		Neuro_CreateEBuf(&_Raw);
 		Neuro_CreateEBuf(&_Queue);
+
+		Neuro_SetcallbEBuf(_Raw, cleanRawEngineElement);
 	}
 	/*Debug_Val(0, "Real Elements total %d\n", temp_count);
 	temp_count = 0;
@@ -1326,10 +1371,10 @@ Graphics_Poll()
 	if (frameSkip_tmp <= 0)
 	{
 		if (!dont_draw_this_cycle)
-		{
-			/*if (drawn_last_cycle)
-				clean_drawn_objects();*/
-	
+		{	
+			if (drawn_last_cycle)
+				clean_drawn_objects();
+
 			if (draw_this_cycle)
 				draw_objects();
 		}
@@ -1363,13 +1408,13 @@ Graphics_Poll()
 	}
 #endif /* temp */
 	
-	if (drawn_last_cycle)
-		clean_drawn_objects(); /* clean dynamic objects already drawn */
+	/*if (drawn_last_cycle)
+		clean_drawn_objects(); *//* clean dynamic objects already drawn */
 	
 	/* update the full screen */
 	if (draw_this_cycle)
 	{
-		draw_objects();
+		/* draw_objects(); */
 		
 		if (screen_buffer)
 			Lib_BlitObject(sclScreen, NULL, screen, NULL);
@@ -1427,7 +1472,11 @@ Graphics_Init()
 	Neuro_CreateEBuf(&_Queue);
 	Neuro_CreateEBuf(&_Pixel);
 
-	Neuro_CreateEBuf(&_pool);
+
+	Neuro_SetcallbEBuf(_Raw, cleanRawEngineElement);
+	
+	if (use_memory_pool)
+		Neuro_CreateEBuf(&_pool);
 
 	
 	screenSize.x = 0;
