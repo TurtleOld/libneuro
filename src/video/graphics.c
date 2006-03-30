@@ -86,6 +86,8 @@
 #define second_screen_buffer 0
 #define retain_image_inipos 0
 
+#define handle_double_rectangle 0
+ 
 #define use_memory_pool 0
  
 /*--- Extern Headers Including ---*/
@@ -610,7 +612,8 @@ draw_objects()
 
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, sclScreen, 
 						&idst);
-				
+			
+#if handle_double_rectangle
 				if (cur->current->double_rectangle == 1)
 				{
 					/* special case where we have to draw 
@@ -639,6 +642,7 @@ draw_objects()
 					Lib_BlitObject(cur->current->surface_ptr, &isrc, 
 						sclScreen, &idst);
 				}
+#endif /* handle_double_rectangle */
 				
 				cur->current->type = TDRAW_SDRAWN;
 			}
