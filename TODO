@@ -1,0 +1,43 @@
+Things to do in the neuro library.
+
+
+graphics engine : 
+	fix the dynamic redraw of the tiles below the dynamic object, it does not seem to work
+	perfectly; it redraw a very small portion of the dynamic object instead of the tile below.
+
+script engine :
+	code it.
+
+sound engine :
+	code it.
+
+network engine/module : 
+	code it.
+
+* GUI engine :
+	code it. Nothing too complicated is needed. In fact, I'm thinking of just ommiting
+	the GUI code in neuro and just leaving it to programs under it.
+
+listimg module :
+	move it to neuro.
+
+sprite module :
+	move it to neuro.
+
+** X11 abstraction layer : 
+	bob has very strange issues with it (the background is gray instead of black
+	and the dynamic characters do trails). I'm thinking it might be linked with
+	him having a 64 bit system (Big Endian).
+
+** bitmap loader module (X11) :
+	find a way to convert it so it creates an XImage directly (or indirectly by providing
+	its ressources so the X11 abstraction layer can take care of creating an XImage out
+	of those). Currently, the bitmap only saves to the pixmap format and then we push this
+	image to the pixmap standard lib in X11 which makes it all Very slow. 
+	This is an important change that will need to be worked on very soon because programs
+	depending on neuro will need to dynamically load images anytime to avoid using too
+	much memory.
+
+
+
+
