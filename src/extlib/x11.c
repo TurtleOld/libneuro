@@ -11,25 +11,21 @@
 #include <other.h>
 #include <graphics.h>
 
+#define buffer_old_method 1
+
 typedef struct V_OBJECT
 {
 	Display *display;
 	i32 screen;
 	GC GC;
 
-	GC *cGC; /* pointer to the current GC in use */
 	Window *cwin; /* pointer to the current window in use or pixmap */
-
 	Window rwin; /* the root window */
-	
 	Window win;
-	GC wGC;
-	XGCValues wValue;
 	
 	XImage *raw_data;
 	Pixmap data;
 	Pixmap shapemask;
-	XpmAttributes attrib;
 }V_OBJECT;
 
 static EBUF *vobjs;
@@ -77,10 +73,10 @@ clean_Vobjects(void *src)
 		XDestroyImage(buf->raw_data);
 	}
 	
-	if (buf->wGC)
+	if (buf->GC)
 	{
 		Debug_Val(10, "Freeing Graphic Context\n");
-		XFreeGC(buf->display, buf->wGC);
+		XFreeGC(buf->display, buf->GC);
 	}
 	
 	if (buf->win)
@@ -155,6 +151,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
 	V_OBJECT *tmp;
 	XSetWindowAttributes wattrib;
+	XGCValues wValue;
+
 	
 	Neuro_CreateEBuf(&vobjs);
 	Neuro_SetcallbEBuf(vobjs, clean_Vobjects);
@@ -165,7 +163,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	
 	tmp->display = XOpenDisplay(NULL);
 	tmp->screen = XDefaultScreen(tmp->display);
-	tmp->GC = XDefaultGC(tmp->display, tmp->screen);
 
 	tmp->rwin = XRootWindow(tmp->display, tmp->screen);
 
@@ -173,17 +170,16 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	 * and comment this if u want a window.
 	 */
 	/* tmp->cwin = &tmp->rwin; */
-
 	
-	wattrib.backing_store = WhenMapped;
-	wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
-	
-	tmp->win = XCreateWindow(tmp->display, tmp->rwin,
-			200, 200, width, height, 1, DefaultDepth(tmp->display, tmp->screen),
-			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
-		
 	if (tmp->cwin == NULL)
 	{
+		wattrib.backing_store = WhenMapped;
+		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
+	
+		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
+			200, 200, width, height, 1, DefaultDepth(tmp->display, tmp->screen),
+			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
+			
 		tmp->cwin = &tmp->win;
 	
 		XMapWindow(tmp->display, tmp->win);
@@ -192,40 +188,58 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask | FocusChangeMask);
 
 	XFlush(tmp->display);
-	
-	/*tmp->wGC = XCreateGC(tmp->display, *tmp->cwin, 
-			GCFunction | GCFillStyle | GCGraphicsExposures, 
-			&tmp->wValue);
-	*/
 
-	
-	tmp->wGC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &tmp->wValue);
-		
-	tmp->cGC = &tmp->wGC;
+	wValue.graphics_exposures = 1;
+	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &wValue);
 	
 	dmain = tmp;
 	*screen = tmp;
 
-	/*Debug_Print("before");
-	tmp->raw_data = XGetImage(tmp->display, *tmp->cwin, 0, 0, width, height, 32, ZPixmap);
-	Debug_Print("after");*/
-#if temp	
-	XCreatePixmap(tmp->display, *tmp->cwin, 1, 1, DefaultDepth(tmp->display, tmp->screen));
-#endif /* temp */
 	
 	if (screen_buf)
 	{
 		V_OBJECT *tmp2;
+		
 		Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
 		
 		tmp2 = Neuro_GiveCurEBuf(vobjs);
+		
+#if buffer_old_method
+		Debug_Print("Beacon 3");
+		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
+				DefaultDepth(tmp->display, tmp->screen));
 
-		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, DefaultDepth(tmp->display, tmp->screen));
+		Debug_Print("Beacon 4");
 		tmp2->cwin = &tmp2->data;
 		
 		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
-		XInitImage(tmp2->raw_data);
+		Debug_Print("Beacon 5");
+#else /* NOT buffer_old_method */
+		
+		Debug_Print("Beacon 3");
+		tmp2->raw_data = XCreateImage(tmp->display, 
+				XDefaultVisual(tmp->display, tmp->screen), 
+				DefaultDepth(tmp->display, tmp->screen), 
+				ZPixmap, 0, NULL, width, height, 32, 0);
 
+		Debug_Print("Beacon 4");
+
+		tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
+
+		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
+				DefaultDepth(tmp->display, tmp->screen));
+
+		Debug_Print("Beacon 5");
+		
+		XPutImage(tmp->display, tmp2->data, tmp->GC, tmp2->raw_data, 0, 0, 
+				0, 0, width, height);
+		
+		tmp2->cwin = &tmp2->data;
+
+		Debug_Print("Beacon 6");
+#endif /* NOT buffer_old_method */
+		
+		
 		scldmain = tmp2;
 		*screen_buf = tmp2;
 	}
@@ -263,14 +277,16 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	
 	/* Neuro_GiveImageSize(tmp, &w, &h); */
 
-#if temp
+	
 	/* a better depth input is needed, use the DefaultDepth macro to find it */
-	buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, 32, ZPixmap);
+	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, , ZPixmap);
 
-	buf->f.put_pixel(buf, x, y, pixel);
-#endif /* temp */
+	buf->f.put_pixel(buf, x, y, pixel);*/
 
-	XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y);
+	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
+
+	if (tmp->raw_data)
+		XPutPixel(tmp->raw_data, x, y, pixel);
 }
 
 u32 
@@ -286,7 +302,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	if (tmp->raw_data == NULL)
 	{
 		Error_Print("the XImage raw_data is empty");
-		return -1;
+		return 1;
 	}
 	/*Neuro_GiveImageSize(tmp, &w, &h);*/
 
@@ -309,16 +325,6 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	i32 h, w;
 	int _err = 0;
 	int ClipX, ClipY;
-	
-	/* Debug_Val(0, "Blit start\n"); */
-#if temp
-	if (source == dmain)
-	{
-		Error_Print("You cannot draw the screen to another v_object\n");
-		/* this is not allowed */
-		return;
-	}
-#endif /* temp */
 	
 	vsrc = (V_OBJECT*)source;
 	vdst = (V_OBJECT*)destination;
@@ -348,21 +354,6 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	}
 	else
 	{
-		/* Neuro_GiveImageSize(destination, &w, &h); */
-			
-		/*
-		if (dst->x <= 0)
-			dst->x = 1;
-		if (dst->y <= 0)
-			dst->y = 1;
-		*/
-		
-		/*
-		if (dst->x > w)
-			dst->x = w;
-		if (dst->y > h)
-			dst->y = h;
-		*/
 		Rdst.x = dst->x;
 		Rdst.y = dst->y;
 		Rdst.h = dst->h;
@@ -380,45 +371,16 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	
 		
 	
-	/* if (vsrc->shapemask) */
-	XSetClipMask(dmain->display, *dmain->cGC, vsrc->shapemask);
-	/*XSetClipMask(dmain->display, *dmain->cGC, None);*/
-	/*XSetClipOrigin(dmain->display, *dmain->cGC, (Rdst.x - Rsrc.w) * (Rsrc.x / Rsrc.w), 
-			(Rdst.y - Rsrc.h) * (Rsrc.y / Rsrc.h));*/
-	XSetClipOrigin(dmain->display, *dmain->cGC, ClipX, ClipY);
-	
-	/* TODO change vsrc->data and vdst->cwin to pointers which will change 
-	 * depending on the type of v_object the v_object is. Either core
-	 * or pixmap...
-	 */
-	/*
-	if (vdst == scldmain)
-		Debug_Val(0, "copy from unknown to screen buffer\n");
-	
-	if (vdst == dmain && vsrc == scldmain)
-		Debug_Val(0, "copy from screen buffer to the window\n");
-	*/
+	if (vsrc->shapemask)
+		XSetClipMask(dmain->display, dmain->GC, vsrc->shapemask);
+	XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
+		
 
-	/* Debug_Val(0, "XcopyArea attempt data\"%d\" cwin\"%d\" src(%d,%d,%d,%d) dst(%d,%d)\n",
-			vsrc->data, *vdst->cwin,
-			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
-			Rdst.x, Rdst.y );
-	*/
-
-	_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, *dmain->cGC, 
+	_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
 			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
 			Rdst.x, Rdst.y);
-	/* Debug_Val(0, "XcopyArea done\n"); */
 
-	/*
-	if (_err != 0)
-	{
-		Error_Print("Blit seems to have failed");
-		Debug_Val(0, "Debug value is %d\n", _err);
-	}
-	*/
-	XSetClipMask(dmain->display, *dmain->cGC, None);
-	/* Debug_Val(0, "Blit done\n"); */
+	XSetClipMask(dmain->display, dmain->GC, None);
 }
 
 void
@@ -431,13 +393,16 @@ Lib_LoadBMP(const char *path, v_object **img)
 	/* int i = 0; */
 	int _err = 0;
 
+	Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT));
 	if (Neuro_EBufIsEmpty(vobjs))
 	{
 		*img = NULL;
 		return;
 	}
+	
 	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(path, &temp);
+	
 	if (!temp)
 	{
 		Debug_Val(0, "Error loading the file %s, it might not exist or its not a bitmap\n", path);
@@ -452,23 +417,12 @@ Lib_LoadBMP(const char *path, v_object **img)
 	buffer = (char**)Neuro_GiveEBufCore(temp);	
 	
 	initbuf = buffer;
-	/*
-	while (*buffer)
-	{
-		Debug_Val(1, "%s\n", *buffer);
-		i++;
-		buffer++;
-	}
-	Debug_Val(1, "%s\nreal total == %d\n", *initbuf, i);
-	*/
 	
-	/*
-	tmp->attrib.valuemask = (XpmReturnPixels | XpmReturnExtensions | XpmExactColors | XpmCloseness);
-	tmp->attrib.exactColors = False;
-	tmp->attrib.closeness = 40000;
-	*/
-	
-	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, &tmp->data, &tmp->shapemask, &tmp->attrib);
+	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+			&tmp->data, &tmp->shapemask, &tmp->attrib);*/
+			
+	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+		&tmp->data, &tmp->shapemask, NULL);
 	
 	tmp->cwin = &tmp->data;
 	/* tmp->cwin = &tmp->shapemask; */
@@ -544,7 +498,7 @@ Lib_FillRect(v_object *source, Rectan *src, u32 color)
 		Vsrc.h = src->h;
 	}
 
-	XFillRectangle(dmain->display, *tmp->cwin, *dmain->cGC, 
+	XFillRectangle(dmain->display, *tmp->cwin, dmain->GC, 
 			Vsrc.x, Vsrc.y, Vsrc.w, Vsrc.h);
 }
 
@@ -587,17 +541,26 @@ Lib_GetDefaultDepth()
 void
 Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch, 
 		void **pixels, Rectan **clip_rect, u8 *bpp, 
-		u32 *Rmask, u32 *Gmask, u32 *Bmask,u32 *Amask)
+		u32 *Rmask, u32 *Gmask, u32 *Bmask, u32 *Amask)
 {
 	V_OBJECT *buf;
+	Window wroot;
+	int wx, wy;
+	u32 wwidth, wheight;
+	u32 wborder;
+	u32 wdepth;
 	
 	if (!vobj)
 		return;
 	
 	buf = vobj;
 	
+	XGetGeometry(dmain->display, *buf->cwin, &wroot, &wx, &wy, 
+			&wwidth, &wheight, &wborder, &wdepth);
+	
 	if (h)
 	{
+		/*
 		if (buf == dmain || buf == scldmain)
 		{
 			*h = height;
@@ -606,10 +569,16 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 		{
 			*h = buf->attrib.height;
 		}
+		
+		if (*h != wwdith)
+			Error_Print("doesn't match width");
+		*/
+		*h = wheight;
 	}
 	
 	if (w)
 	{
+		/*
 		if (buf == dmain || buf == scldmain)
 		{
 			*w = width;
@@ -618,6 +587,14 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 		{
 			*w = buf->attrib.width;
 		}
+		*/
+
+		*w = wwidth;
+	}
+
+	if (bpp)
+	{
+		*bpp = wdepth;
 	}
 }
 

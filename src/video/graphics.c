@@ -652,15 +652,20 @@ draw_objects()
 			{
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
 						sclScreen2, &idst);
+
+				cur->current->type = TDRAW_DYNAMIC_CLEAN;
+				
+				if (dynamic_debug)
+					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
 			}
 			break;
 			
-			case TDRAW_DYNAMIC_CLEAN:
+			/*case TDRAW_DYNAMIC_CLEAN:
 			{
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
 						sclScreen2, &idst);
 			}
-			break;
+			break;*/
 
 			
 			default:
@@ -885,6 +890,7 @@ clean_drawn_objects()
 				continue;
 			}
 		}
+#if temp
 		else
 		{
 			if (cur->current->type == TDRAW_DYNAMIC)
@@ -895,6 +901,7 @@ clean_drawn_objects()
 					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
 			}
 		}
+#endif /* temp */
 		
 		last = cur;
 		cur = cur->next;

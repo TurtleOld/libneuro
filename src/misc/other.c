@@ -19,6 +19,7 @@
 
 #include <other.h>
 #include <extlib.h>
+#include <sys/time.h>
 
 #include <graphics.h>
 #include <ebuf.h>
@@ -91,6 +92,19 @@ Neuro_Sleep(u32 t)
 #else /* NOT WIN32 */
 	usleep(t);
 #endif /* NOT WIN32 */
+}
+
+u32
+Neuro_GetTickCount()
+{
+#ifdef WIN32
+	return (GetTickCount() / 10) & 0x7fffffff;
+#else /* NOT WIN32 */
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0x7fffffff;
+#endif /* NOT WIN32 */
+	
 }
 
 void

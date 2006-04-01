@@ -49,6 +49,8 @@ extern void Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel);
 
 extern void Neuro_Sleep(u32 t);
 
+extern u32 Neuro_GetTickCount();
+
 extern void Neuro_PrintFPS();
 
 extern u8 Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen);
