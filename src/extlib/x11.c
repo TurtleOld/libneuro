@@ -11,7 +11,7 @@
 #include <other.h>
 #include <graphics.h>
 
-#define buffer_old_method 1
+#define buffer_old_method 0
 
 typedef struct V_OBJECT
 {
@@ -192,7 +192,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	XFlush(tmp->display);
 
-	tmp->wValue.graphics_exposures = 1;
+	/* Debug_Val(0, "graphics exposures %d\n", tmp->wValue.graphics_exposures); */
+	tmp->wValue.graphics_exposures = 0;
 	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &tmp->wValue);
 	
 	dmain = tmp;
@@ -208,15 +209,16 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		tmp2 = Neuro_GiveCurEBuf(vobjs);
 		
 #if buffer_old_method
-		Debug_Print("Beacon 3");
+		/* Debug_Print("Beacon 3"); */
 		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
 				DefaultDepth(tmp->display, tmp->screen));
 
-		Debug_Print("Beacon 4");
+		/* Debug_Print("Beacon 4"); */
 		tmp2->cwin = &tmp2->data;
 		
 		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
-		Debug_Print("Beacon 5");
+		/* XInitImage(tmp2->raw_data); */
+		/* Debug_Print("Beacon 5"); */
 #else /* NOT buffer_old_method */
 		
 		Debug_Print("Beacon 3");
@@ -275,8 +277,16 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	XImage *buf;
 #endif /* temp */
 	/* i32 h, w; */
+	Pixel pix;
+	XColor scrncolor;
+	XColor exactcolor;
 	
 	tmp = (V_OBJECT*)srf;
+	
+	XAllocNamedColor(dmain->display, DefaultColormap(dmain->display, dmain->screen),
+			"white", &scrncolor, &exactcolor);
+
+	pix = scrncolor.pixel;
 	
 	/* Neuro_GiveImageSize(tmp, &w, &h); */
 
@@ -288,8 +298,9 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 
 	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
 
-	/*if (tmp->raw_data)
-		XPutPixel(tmp->raw_data, x, y, pixel);*/
+	Debug_Val(0, "neuro white color %d\n", Neuro_GiveRGB24(255, 255, 255));
+	if (tmp->raw_data)
+		XPutPixel(tmp->raw_data, x, y, pix);
 }
 
 u32 
@@ -314,9 +325,9 @@ Lib_GetPixel(v_object *srf, int x, int y)
 
 	/* color = tmp->raw_data->f.get_pixel(tmp->raw_data, x, y); */
 	
-	/* color = XGetPixel(tmp->raw_data, x, y); */
+	color = XGetPixel(tmp->raw_data, x, y);
 	
-	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
+	Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color);
 	return color;
 	/* return 1; */
 }

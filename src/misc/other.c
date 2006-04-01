@@ -270,7 +270,65 @@ Neuro_SepChr2(const unsigned char chr, char *source)
 }
 
 u32
-Neuro_GiveRGB(u8 R, u8 G, u8 B)
+Neuro_GiveRGB8(u8 R, u8 G, u8 B)
+{
+	/* if the 2 not used bits are at the end
+	 * R : 0x00000030
+	 * G : 0x0000000C
+	 * B : 0x00000003
+	 *
+	 * if the 2 not used bits are at the beginning
+	 * R : 0x000000C0
+	 * G : 0x00000030
+	 * B : 0x0000000C
+	 */
+	return 1;
+}
+
+u32
+Neuro_GiveRGB16(u8 R, u8 G, u8 B)
+{
+	/* if the not used bit is at the end
+	 * R : 0x00007C00 
+	 * G : 0x000003E0
+	 * B : 0x0000001F
+	 *
+	 * if the not used bit is at the beginning
+	 * R : 0x0000F800
+	 * G : 0x000007C0
+	 * B : 0x0000003E
+	 */
+	return 1;
+}
+
+u32
+Neuro_GiveRGB24(u8 R, u8 G, u8 B)
+{
+	/* R : 0x00FF0000
+	 * G : 0x0000FF00
+	 * B : 0x000000FF
+	 */
+	return 1;
+}
+
+u32
+Neuro_GiveRGB32(u8 R, u8 G, u8 B)
+{
+	/* if the 2 not used bits are at the end
+	 * R : 0x3FF00000
+	 * G : 0x000FFC00
+	 * B : 0x000003FF
+	 * 
+	 * if the 2 not used bits are at the beginning
+	 * R : 0xFFC00000
+	 * G : 0x003FF000
+	 * B : 0x00000FFC
+	 */
+	return 1;
+}
+
+u32
+Neuro_GiveRGBA_special(u8 R, u8 G, u8 B)
 {
 	u32 out;
 	
@@ -329,6 +387,12 @@ Neuro_GiveRGB(u8 R, u8 G, u8 B)
 	out <<= 8;
 	
 	return out;
+}
+
+u32
+Neuro_GiveRGB(u8 R, u8 G, u8 B)
+{
+	return Neuro_GiveRGBA_special(R, G, B);
 }
 
 void
