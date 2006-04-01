@@ -22,10 +22,13 @@ typedef struct V_OBJECT
 	Window *cwin; /* pointer to the current window in use or pixmap */
 	Window rwin; /* the root window */
 	Window win;
+
+	XGCValues wValue;
 	
 	XImage *raw_data;
 	Pixmap data;
 	Pixmap shapemask;
+	XpmAttributes attrib;
 }V_OBJECT;
 
 static EBUF *vobjs;
@@ -151,7 +154,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
 	V_OBJECT *tmp;
 	XSetWindowAttributes wattrib;
-	XGCValues wValue;
+	/* XGCValues wValue; */
 
 	
 	Neuro_CreateEBuf(&vobjs);
@@ -189,8 +192,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	XFlush(tmp->display);
 
-	wValue.graphics_exposures = 1;
-	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &wValue);
+	tmp->wValue.graphics_exposures = 1;
+	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &tmp->wValue);
 	
 	dmain = tmp;
 	*screen = tmp;
@@ -285,8 +288,8 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 
 	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
 
-	if (tmp->raw_data)
-		XPutPixel(tmp->raw_data, x, y, pixel);
+	/*if (tmp->raw_data)
+		XPutPixel(tmp->raw_data, x, y, pixel);*/
 }
 
 u32 
@@ -304,12 +307,15 @@ Lib_GetPixel(v_object *srf, int x, int y)
 		Error_Print("the XImage raw_data is empty");
 		return 1;
 	}
+	
 	/*Neuro_GiveImageSize(tmp, &w, &h);*/
 
 	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, DefaultDepth(dmain->display, dmain->screen), ZPixmap); */
 
 	/* color = tmp->raw_data->f.get_pixel(tmp->raw_data, x, y); */
-	color = XGetPixel(tmp->raw_data, x, y);
+	
+	/* color = XGetPixel(tmp->raw_data, x, y); */
+	
 	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
 	return color;
 	/* return 1; */
@@ -393,7 +399,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	/* int i = 0; */
 	int _err = 0;
 
-	Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT));
+	/* Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT)); */
 	if (Neuro_EBufIsEmpty(vobjs))
 	{
 		*img = NULL;
@@ -418,11 +424,11 @@ Lib_LoadBMP(const char *path, v_object **img)
 	
 	initbuf = buffer;
 	
-	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-			&tmp->data, &tmp->shapemask, &tmp->attrib);*/
-			
 	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-		&tmp->data, &tmp->shapemask, NULL);
+			&tmp->data, &tmp->shapemask, &tmp->attrib);
+			
+	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+		&tmp->data, &tmp->shapemask, NULL);*/
 	
 	tmp->cwin = &tmp->data;
 	/* tmp->cwin = &tmp->shapemask; */
@@ -557,6 +563,9 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 	
 	XGetGeometry(dmain->display, *buf->cwin, &wroot, &wx, &wy, 
 			&wwidth, &wheight, &wborder, &wdepth);
+	
+	/* Debug_Val(0, "XGetGeometry root %d x,y (%d,%d) size (%dx%d) border %d %d bpp\n",
+			wroot, wx, wy, wwidth, wheight, wborder, wdepth);*/
 	
 	if (h)
 	{
