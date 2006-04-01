@@ -6,7 +6,12 @@ graphics engine :
 	perfectly; it redraw a very small portion of the dynamic object instead of the tile below.
 
 script engine :
-	code it.
+	code it. 
+	The script engine will need to include only simple things. 2 types of 
+	variables, doubles and strings. A function to start and clean. A function to 
+	pass a callback that the scripts can call easilly. Returning values of those would
+	be returned to the scripts. operators would be the minimal ones : if (); then;  else;  fi;
+	while (); do;  done;  for ( , ); do ;  done;.
 
 sound engine :
 	code it.
