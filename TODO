@@ -3,7 +3,8 @@ Things to do in the neuro library.
 
 graphics engine : 
 	fix the dynamic redraw of the tiles below the dynamic object, it does not seem to work
-	perfectly; it redraw a very small portion of the dynamic object instead of the tile below.
+	perfectly; it redraw a very small portion of the dynamic object instead of the tile below 
+	on the edges, barely noticeable.
 
 script engine :
 	code it. 
@@ -29,11 +30,6 @@ listimg module :
 sprite module :
 	move it to neuro.
 
-** X11 abstraction layer : 
-	bob has very strange issues with it (the background is gray instead of black
-	and the dynamic characters do trails). I'm thinking it might be linked with
-	him having a 64 bit system (Big Endian).
-
 ** bitmap loader module (X11) :
 	find a way to convert it so it creates an XImage directly (or indirectly by providing
 	its ressources so the X11 abstraction layer can take care of creating an XImage out
@@ -42,6 +38,13 @@ sprite module :
 	This is an important change that will need to be worked on very soon because programs
 	depending on neuro will need to dynamically load images anytime to avoid using too
 	much memory.
+
+	the core bitmap algorithm can also be made more performant. The key is loading the 
+	colors from the palette using process_RGB() before we start messing with the pixels
+	-- this will speed up the bitmap loading by 300% average for bitmaps that are not 
+	24 bits per pixels.
+	after that, we simply link the colors with the pixels. 
+	Core bitmap should be made independant and remove the char *symbol of the color struct.
 
 
 

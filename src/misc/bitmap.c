@@ -50,6 +50,8 @@ typedef struct BITMAP_MAP
 
 static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
 
+static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
+
 static void 
 clean_bmap_color(void *eng)
 {
@@ -61,7 +63,7 @@ clean_bmap_color(void *eng)
 		free(buf->symbol);
 }
 
-/*
+
 static void
 print_bitmap_infos(BITMAP_HDATA *bmap)
 {	
@@ -80,8 +82,39 @@ print_bitmap_infos(BITMAP_HDATA *bmap)
 		bmap->infoheader.ncolors,
 		bmap->infoheader.importantcolours);
 }
-*/
 
+static void
+process_palette(BITMAP_HDATA *bmap, u8 *palette, EBUF *bcolors)
+{
+	u32 i = 0;
+	BITMAP_COLOR *buf;
+
+	while (i < bmap->infoheader.ncolors)
+	{
+		Neuro_AllocEBuf(bcolors, sizeof(BITMAP_COLOR*), sizeof(BITMAP_COLOR));
+		
+		buf = Neuro_GiveCurEBuf(bcolors);
+		
+		buf->r = palette[(i * 4) + 2];
+		buf->g = palette[(i * 4) + 1];
+		buf->b = palette[(i * 4)];
+		
+		if (i == 0)
+		{
+			buf->symbol = calloc(2, sizeof(unsigned char));
+					
+			buf->symbol[0] = ' ';
+			buf->symbol[1] = '\0';
+		}
+		else
+		{
+			/* generate a character based on the current color count */
+			Uchar(i, &buf->symbol);
+		}
+		
+		i++;
+	}
+}
 
 static void
 process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
@@ -104,6 +137,7 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 		ctotal = Neuro_GiveEBufCount(bcolors);
 		/* printf("%d\n", ctotal); */
 		ctotal++;
+		
 		while (ctotal-- > 0)
 		{
 			cbuf = Neuro_GiveEBuf(bcolors, ctotal);
@@ -127,6 +161,7 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 	 */
 	if (!found)
 	{
+		/* Debug_Val(0, "had to allocate for a color\n"); */
 		Neuro_AllocEBuf(bcolors, sizeof(BITMAP_COLOR*), sizeof(BITMAP_COLOR));
 		cbuf = Neuro_GiveCurEBuf(bcolors);
 						
@@ -134,7 +169,7 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 		cbuf->g = g;
 		cbuf->b = b;
 						
-		if (ctotal == 0)
+		if (Neuro_GiveEBufCount(bcolors) == 0)
 		{
 			cbuf->symbol = calloc(2, sizeof(unsigned char));
 					
@@ -145,7 +180,6 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 		{
 			/* generate a character based on ctotal */
 			Uchar(Neuro_GiveEBufCount(bcolors), &cbuf->symbol);
-						
 		}
 	}	
 				
@@ -229,14 +263,27 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 
 			while (i < max)
 			{
+				BITMAP_COLOR *cbuf = NULL;
+				BITMAP_MAP *pbuf = NULL;
+
 				temp = *data & values[i];
 				if (temp)
 					temp = 1;
+#if old
 				r = palette[(temp * 4) + 2];
 				g = palette[(temp * 4) + 1];
 				b = palette[(temp * 4)];
 				/* printf("%d%d%d\n", r, g, b); */
 				process_RGB(bcolors, bpixels, r, g, b);
+#endif /* old */
+				
+				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+				pbuf = Neuro_GiveCurEBuf(bpixels);
+				
+				pbuf->color = cbuf;
+
 				i++;
 			}
 		}
@@ -282,15 +329,27 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 
 			while (i < max)
 			{
+				BITMAP_COLOR *cbuf = NULL;
+				BITMAP_MAP *pbuf = NULL;
+				
 				temp = *data & values[i];
 				if (temp > 0x0F)
 					temp >>= 4;
-				
+#if old
 				r = palette[(temp * 4) + 2];
 				g = palette[(temp * 4) + 1];
 				b = palette[(temp * 4)];
 				/* printf("%d%d%d\n", r, g, b); */
 				process_RGB(bcolors, bpixels, r, g, b);
+#endif /* old */
+
+				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+				pbuf = Neuro_GiveCurEBuf(bpixels);
+				
+				pbuf->color = cbuf;
+				
 				i++;
 			}
 
@@ -333,12 +392,25 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 
 			while (i < max)
 			{
+				BITMAP_COLOR *cbuf = NULL;
+				BITMAP_MAP *pbuf = NULL;
 				temp = *data;
+#if old
 				r = palette[(temp * 4) + 2];
 				g = palette[(temp * 4) + 1];
 				b = palette[(temp * 4)];
 				/* printf("%d%d%d\n", r, g, b); */
 				process_RGB(bcolors, bpixels, r, g, b);
+#endif /* old */
+				
+				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+				pbuf = Neuro_GiveCurEBuf(bpixels);
+				
+				pbuf->color = cbuf;
+
+				
 				i++;
 			}
 
@@ -679,6 +751,11 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	psize = bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
 	psize = psize - (bmap->infoheader.ncolors * 4);
 	/* printf("data size %d\n", psize); */
+
+	if (bmap->infoheader.ncolors)
+	{
+		process_palette(bmap, palette, bmap_colors);
+	}
 
 	/* semi static values to skip bytes that form 32 bit chunks in the data */
 

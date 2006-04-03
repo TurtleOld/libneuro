@@ -409,6 +409,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	char **initbuf;
 	/* int i = 0; */
 	int _err = 0;
+	t_tick chrono;
 
 	/* Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT)); */
 	if (Neuro_EBufIsEmpty(vobjs))
@@ -417,8 +418,10 @@ Lib_LoadBMP(const char *path, v_object **img)
 		return;
 	}
 	
+	chrono = Neuro_GetTickCount();
 	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(path, &temp);
+	Debug_Val(0, "Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
 	
 	if (!temp)
 	{
@@ -435,9 +438,11 @@ Lib_LoadBMP(const char *path, v_object **img)
 	
 	initbuf = buffer;
 	
+	chrono = Neuro_GetTickCount();
 	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-			&tmp->data, &tmp->shapemask, &tmp->attrib);
-			
+			&tmp->data, &tmp->shapemask, &tmp->attrib);		
+	Debug_Val(0, "Converting pixmap to Ximage %d\n", Neuro_GetTickCount() - chrono);
+	
 	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
 		&tmp->data, &tmp->shapemask, NULL);*/
 	
