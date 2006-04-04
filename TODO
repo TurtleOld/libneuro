@@ -31,20 +31,19 @@ sprite module :
 	move it to neuro.
 
 ** bitmap loader module (X11) :
-	find a way to convert it so it creates an XImage directly (or indirectly by providing
-	its ressources so the X11 abstraction layer can take care of creating an XImage out
-	of those). Currently, the bitmap only saves to the pixmap format and then we push this
-	image to the pixmap standard lib in X11 which makes it all Very slow. 
-	This is an important change that will need to be worked on very soon because programs
-	depending on neuro will need to dynamically load images anytime to avoid using too
-	much memory.
+	- find a way to convert it so it creates an XImage directly (or indirectly by providing
+	  its ressources so the X11 abstraction layer can take care of creating an XImage out
+	  of those). Currently, the bitmap only saves to the pixmap format and then we push this
+	  image to the pixmap standard lib in X11 which makes it all Very slow. 
+	  This is an important change that will need to be worked on very soon because programs
+	  depending on neuro will need to dynamically load images anytime to avoid using too
+	  much memory.
+	- Core bitmap should be made independant and remove the char *symbol of the color struct.
+	- 24 BPP could be made faster if we had a map of the colors already inputed; Instead
+	  of looping everytime the color buffer to see if a color was already added, we would
+	  simply do a certain & with the color binary map to see if it was already added or no.
+	  This method would use too much memory, need to find a way to implement this resonably.
 
-	the core bitmap algorithm can also be made more performant. The key is loading the 
-	colors from the palette using process_RGB() before we start messing with the pixels
-	-- this will speed up the bitmap loading by 300% average for bitmaps that are not 
-	24 bits per pixels.
-	after that, we simply link the colors with the pixels. 
-	Core bitmap should be made independant and remove the char *symbol of the color struct.
 
 
 

@@ -199,10 +199,16 @@ process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		buf->b = palette[(i * 4)];
 		*/
 
+		/*
 		fpdata8(input, &buf->b);
 		fpdata8(input, &buf->g);
 		fpdata8(input, &buf->r);
 		fpdata8(input, &buf->a);
+		*/
+		buf->b = fgetc(input);
+		buf->g = fgetc(input);
+		buf->r = fgetc(input);
+		buf->a = fgetc(input);
 		
 		if (i == 0)
 		{
@@ -879,7 +885,8 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 		}
 
 		
-		fpdata8(f_bitmap, &DATA);
+		/* fpdata8(f_bitmap, &DATA); */
+		DATA = fgetc(f_bitmap);
 		
 		process_bitmap(bmap, palette, &DATA, 
 				bmap_colors, bmap_map, 

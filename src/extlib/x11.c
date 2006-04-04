@@ -53,47 +53,47 @@ clean_Vobjects(void *src)
 
 	buf = (V_OBJECT*)src;	
 
-	Debug_Val(10, "cleaning process ...\n");
+	/* Debug_Val(10, "cleaning process ...\n"); */
 
-	if (dmain->display == buf->display)
-		Debug_Val(10, "This element is the main display --\n");
+	/*if (dmain->display == buf->display)
+		Debug_Val(10, "This element is the main display --\n");*/
 	
 	if (buf->data)
 	{
-		Debug_Val(10, "Freeing pixmap data\n");
+		/* Debug_Val(10, "Freeing pixmap data\n"); */
 		XFreePixmap(dmain->display, buf->data);
 	}
 
 	if (buf->shapemask)
 	{
-		Debug_Val(10, "Freeing pixmap mask\n");
+		/* Debug_Val(10, "Freeing pixmap mask\n"); */
 		XFreePixmap(dmain->display, buf->shapemask);
 	}
 
 	if (buf->raw_data)
 	{
-		Debug_Val(10, "destroying XImage raw data\n");
+		/* Debug_Val(10, "destroying XImage raw data\n"); */
 		XDestroyImage(buf->raw_data);
 	}
 	
 	if (buf->GC)
 	{
-		Debug_Val(10, "Freeing Graphic Context\n");
+		/* Debug_Val(10, "Freeing Graphic Context\n"); */
 		XFreeGC(buf->display, buf->GC);
 	}
 	
 	if (buf->win)
 	{
-		Debug_Val(10, "Destroying Window\n");
+		/* Debug_Val(10, "Destroying Window\n"); */
 		XDestroyWindow(buf->display, buf->win);
 	}
 	
 	if (buf->display)
 	{
-		Debug_Val(10, "Closing display\n");
+		/* Debug_Val(10, "Closing display\n"); */
 		XCloseDisplay(buf->display);
 	}
-	Debug_Val(10, "cleaning process done ...\n");
+	/* Debug_Val(10, "cleaning process done ...\n"); */
 }
 
 static char
@@ -221,27 +221,27 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		/* Debug_Print("Beacon 5"); */
 #else /* NOT buffer_old_method */
 		
-		Debug_Print("Beacon 3");
+		/* Debug_Print("Beacon 3"); */
 		tmp2->raw_data = XCreateImage(tmp->display, 
 				XDefaultVisual(tmp->display, tmp->screen), 
 				DefaultDepth(tmp->display, tmp->screen), 
 				ZPixmap, 0, NULL, width, height, 32, 0);
 
-		Debug_Print("Beacon 4");
+		/* Debug_Print("Beacon 4"); */
 
 		tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
 
 		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
 				DefaultDepth(tmp->display, tmp->screen));
 
-		Debug_Print("Beacon 5");
+		/* Debug_Print("Beacon 5"); */
 		
 		XPutImage(tmp->display, tmp2->data, tmp->GC, tmp2->raw_data, 0, 0, 
 				0, 0, width, height);
 		
 		tmp2->cwin = &tmp2->data;
 
-		Debug_Print("Beacon 6");
+		/* Debug_Print("Beacon 6"); */
 #endif /* NOT buffer_old_method */
 		
 		
@@ -298,7 +298,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 
 	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
 
-	Debug_Val(0, "neuro white color %d\n", Neuro_GiveRGB24(255, 255, 255));
+	/* Debug_Val(0, "neuro white color %d\n", Neuro_GiveRGB24(255, 255, 255)); */
 	if (tmp->raw_data)
 		XPutPixel(tmp->raw_data, x, y, pix);
 }
@@ -327,7 +327,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	
 	color = XGetPixel(tmp->raw_data, x, y);
 	
-	Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color);
+	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
 	return color;
 	/* return 1; */
 }
