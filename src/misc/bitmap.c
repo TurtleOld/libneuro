@@ -64,10 +64,109 @@ clean_bmap_color(void *eng)
 }
 
 
+/* returns 0 on success and puts the data in *output
+ * 1 on error dont touch output
+ */
+static int
+fpdata8(FILE *input, u8 *output)
+{
+	if (input == NULL || output == NULL)
+		return 1;
+
+	*output = fgetc(input);
+
+	return 0;
+}
+
+/* returns 0 on success and puts the data in *output
+ * 1 on error dont touch output
+ */
+static int
+fpdata16(FILE *input, u16 *output)
+{
+	u8 feed[2];
+	u16 *buf;
+	
+	if (input == NULL || output == NULL)
+		return 1;
+
+	feed[0] = fgetc(input);
+	feed[1] = fgetc(input);
+
+	buf = (u16*)&feed;
+	
+	*output = *buf;
+
+	return 0;
+}
+
+/* returns 0 on success and puts the data in *output
+ * 1 on error dont touch output
+ */
+static int
+fpdata32(FILE *input, u32 *output)
+{
+	/* register int feed; */
+	u8 feed[4];
+	u32 *buf;
+	
+	
+	if (input == NULL || output == NULL)
+		return 1;
+
+	feed[0] = fgetc(input);
+	feed[1] = fgetc(input);
+	feed[2] = fgetc(input);
+	feed[3] = fgetc(input);
+
+	buf = (u32*)&feed;
+	
+	*output = *buf;
+
+	return 0;
+}
+
+static BITMAP_HDATA *
+parse_bitmap_header(FILE *input)
+{
+	BITMAP_HDATA *buf;
+	BITMAP_INFOHEADER *tmp;
+
+	if (input == NULL)
+		return NULL;
+	
+	buf = calloc(1, sizeof(BITMAP_HDATA));
+
+	tmp = &buf->infoheader;
+	
+	fpdata16(input, &buf->header.type);
+	fpdata32(input, &buf->header.size);
+	fpdata16(input, &buf->header.reserved1);
+	fpdata16(input, &buf->header.reserved2);
+	fpdata32(input, &buf->header.offset);
+	
+	fpdata32(input, &tmp->size);
+	fpdata32(input, (u32*)&tmp->width);
+	fpdata32(input, (u32*)&tmp->height);
+	fpdata16(input, &tmp->planes);
+	fpdata16(input, &tmp->bits);
+	fpdata32(input, &tmp->compression);
+	fpdata32(input, &tmp->imagesize);
+	fpdata32(input, (u32*)&tmp->xresolution);
+	fpdata32(input, (u32*)&tmp->yresolution);
+	fpdata32(input, &tmp->ncolors);
+	fpdata32(input, &tmp->importantcolours);
+	
+	return buf;
+}
+
+
 static void
 print_bitmap_infos(BITMAP_HDATA *bmap)
 {	
-	printf("header data :\nsize %d\noffset %d\ninfoheader data :\nsize %d\nwidth %d\nheight %d\nplanes %d\nbits %d\ncompression %d\nimagesize %d\nxres %d\nyres %d\nncolors %d\nimportantcolors %d\n", 
+	printf("[%c%c] header data :\nsize %d\noffset %d\ninfoheader data :\nsize %d\nwidth %d\nheight %d\nplanes %d\nbits %d\ncompression %d\nimagesize %d\nxres %d\nyres %d\nncolors %d\nimportantcolors %d\n", 
+		bmap->header.type & 0x00FF,
+		(bmap->header.type & 0xFF00) >> 8,
 		bmap->header.size,
 		bmap->header.offset,
 		bmap->infoheader.size,
@@ -84,7 +183,7 @@ print_bitmap_infos(BITMAP_HDATA *bmap)
 }
 
 static void
-process_palette(BITMAP_HDATA *bmap, u8 *palette, EBUF *bcolors)
+process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
 	u32 i = 0;
 	BITMAP_COLOR *buf;
@@ -95,9 +194,15 @@ process_palette(BITMAP_HDATA *bmap, u8 *palette, EBUF *bcolors)
 		
 		buf = Neuro_GiveCurEBuf(bcolors);
 		
-		buf->r = palette[(i * 4) + 2];
+		/*buf->r = palette[(i * 4) + 2];
 		buf->g = palette[(i * 4) + 1];
 		buf->b = palette[(i * 4)];
+		*/
+
+		fpdata8(input, &buf->b);
+		fpdata8(input, &buf->g);
+		fpdata8(input, &buf->r);
+		fpdata8(input, &buf->a);
 		
 		if (i == 0)
 		{
@@ -222,7 +327,9 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 			 */
 			u8 temp;
 			/* double calc = 0; */
-			u8 r, g, b;
+			
+			/* u8 r, g, b; */
+			
 			const u8 values[8] = {
 				0x80,
 				0x40,
@@ -294,7 +401,9 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 			/* will do a loop to get each 2 pixels from the data */
 			u8 temp;
 			/* double calc = 0; */
-			u8 r, g, b;
+			
+			/* u8 r, g, b; */
+			
 			const u8 values[2] = {
 				0xF0,
 				0x0F,
@@ -361,7 +470,9 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 			/* will get the single pixel from the data */
 			u8 temp;
 			/* double calc = 0; */
-			u8 r, g, b;
+			
+			/* u8 r, g, b; */
+			
 			u32 i = 0;
 			u32 max = 0;
 			
@@ -464,55 +575,6 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 		break;
 
 	}
-}
-
-
-/* returns -1 if the file doesn't exist
- * returns the size of the file otherwise
- *
- * path : input -- the file path
- * data : output -- returns the whole data in the file. REMEMBER TO FREE IT because it is
- * allocated by this function
- */
-static long
-buffer_file(const char *path, u8 **data)
-{
-	/* an extra would be to check how big the file is and allocating buf before the
-	 * copy of the data.
-	 */	
-	FILE *file;
-
-	long size = 0, i = 0; /* the size of the buffer */
-	u8 *buf = NULL;
-	
-	file = fopen(path, "read");
-	
-	if (file == NULL)
-		return -1;
-
-	/* first get the size of the file (this is a portable solution and still fast) */
-	while(!feof(file))
-	{
-		fgetc(file);
-		size++;
-	}
-
-	fseek(file, 0, SEEK_SET); /* go back to the beginning of the file */
-	/* allocate the buffer before hand */
-	*data = calloc(1, size + 1);
-	
-	buf = *data;
-	
-	/* fill the buffer with the data from the file */
-	while (!feof(file))
-	{
-		buf[i] = fgetc(file);
-		i++;
-	}
-	
-	fclose(file);
-	
-	return size;
 }
 
 static void
@@ -700,11 +762,9 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	
 	/* minor (mostly pointers and temporary variables) */
 	u32 psize = 0; /* the full size of the pixels data */
-	u8 *bdata = NULL; /* the pointer to the data */
 	u8 *palette = NULL; /* the pointer to the palette if theres one */
 	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
 	i32 i = 0, t = 0; /* incremental variable */
-	long file_size = 0;
 	int aux_var = 0; /* auxiliary variable that can be used by external functions */
 	char *aux_buf = NULL; /* same as aux_var but a buffer */
 	double msize = 0;
@@ -713,23 +773,28 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	u32 wmult = 0;
 	double pixellen = 0;
 	u32 increm = 0;
+	FILE *f_bitmap;
+	u8 DATA;
 	
-	file_size = buffer_file(bitmap, &buf);
 
-	if (file_size == -1 || file_size == 0)
+	f_bitmap = fopen(bitmap, "r");
+	
+	if (f_bitmap == NULL)
 	{
-		/* error with the file reading, it doesn't seem to exist 
-		 * or it is empty.
-		 */
 		*output_pixmap = NULL;
 		return;
 	}
-
-	/* check here if the bitmap is valid or not */
-		/* first check for the BM word*/
-		/* then we check for the size of the file in header and size
-		 * we got when reading the file
-		 */
+	
+	bmap = parse_bitmap_header(f_bitmap);
+	
+	/* TODO TODO XXX check here if the bitmap is valid or not
+	 * first check for the BM word
+	 * then we check for the size of the file in header and size
+	 * we got when reading the file
+	 */
+	{
+		
+	}
 
 	/* if it is valid, we create the buffers */
 	Neuro_CreateEBuf(&bmap_colors);
@@ -737,12 +802,6 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 
 	Neuro_CreateEBuf(&bmap_map);
 	
-	/* printf("Initial test bmap_colors status : %d\n", Neuro_EBufIsEmpty(bmap_colors)); */
-	
-	/* assign pointers to their respective addresses */
-	bmap = (BITMAP_HDATA*)buf; /* headers */
-	palette = &buf[sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER)]; /* palette */
-	bdata = &buf[bmap->header.offset]; /* data */
 	
 	/* print_bitmap_infos(bmap); */
 	
@@ -754,7 +813,7 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 
 	if (bmap->infoheader.ncolors)
 	{
-		process_palette(bmap, palette, bmap_colors);
+		process_palette(f_bitmap, bmap, bmap_colors);
 	}
 
 	/* semi static values to skip bytes that form 32 bit chunks in the data */
@@ -781,6 +840,8 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 
 	t = 0;
 	
+	fseek(f_bitmap, bmap->header.offset, SEEK_SET);
+	
 	while (i < psize)
 	{			
 		if (tmp > 0)
@@ -795,6 +856,9 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 				}
 				t = (4 - t);
 				i += t;
+
+				
+				fseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
 				
 				/*
 				printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
@@ -814,10 +878,12 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 				break;
 		}
 
-		process_bitmap(bmap, palette, &bdata[i], 
+		
+		fpdata8(f_bitmap, &DATA);
+		
+		process_bitmap(bmap, palette, &DATA, 
 				bmap_colors, bmap_map, 
 				&aux_var, &aux_buf);
-
 
 		/* printf("i %d psize %d\n", i, psize); */
 		i++;
@@ -834,7 +900,9 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 		printf("Error, buffers are empty\n");
 	}
 	
-		
+	
+	if (bmap)
+		free(bmap);
 	if (buf)
 		free(buf);
 	if (aux_buf)
@@ -842,5 +910,8 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	
 	Neuro_CleanEBuf(&bmap_colors);
 	Neuro_CleanEBuf(&bmap_map);
+
+	if (f_bitmap)
+		fclose(f_bitmap);
 }
 
