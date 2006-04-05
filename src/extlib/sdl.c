@@ -30,8 +30,6 @@
  * Im not sure how exactly we should do it yet.
  */
 
-#if USE_SDL
-
 #include <SDL/SDL.h>
 /* #include <endian.h> */
 
@@ -531,5 +529,3 @@ Lib_EventsExit()
 {
 	/* nothing needed, done in the video exit */
 }
-
-#endif /* USE_SDL */

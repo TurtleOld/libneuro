@@ -65,7 +65,7 @@ extern void *Neuro_GetScreenBuffer();
  * @param [in] dst the coordinate where the image must be drawn to.
  * @param [in] surface the pointer to the image itself.
  */
-extern void Neuro_PushStaticDraw(u8 layer, Rectan *src, Rectan *dst, void *surface);
+extern void Neuro_PushStaticDraw(u32 layer, Rectan *src, Rectan *dst, void *surface);
 
 /*! Add a Dynamic Drawing Instruction to the graphics loop. This function will
  * put take the image, place it in a special buffer and then draw the image
@@ -78,7 +78,7 @@ extern void Neuro_PushStaticDraw(u8 layer, Rectan *src, Rectan *dst, void *surfa
  * @param [in] dst the coordinate where the image must be drawn to.
  * @param [in] surface the pointer to the image itself.
  */
-extern void Neuro_PushDynamicDraw(u8 layer, Rectan *src, Rectan *dst, void *surface);
+extern void Neuro_PushDynamicDraw(u32 layer, Rectan *src, Rectan *dst, void *surface);
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 

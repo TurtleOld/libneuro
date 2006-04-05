@@ -19423,7 +19423,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 
 # set the flags
-CFLAGS="-ansi -Wall -pedantic -I\$(top_srcdir)/src -I/usr/local/include -I/usr/include"
+CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src"
 #-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
@@ -19664,9 +19664,9 @@ _ACEOF
  LIBS="$LIBS $SDLFLAGS"
 		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"
 else
-  { { echo "$as_me:$LINENO: error: You don't have libSDL" >&5
-echo "$as_me: error: You don't have libSDL" >&2;}
-   { (exit you can get it from http://www.libsdl.org); exit you can get it from http://www.libsdl.org; }; }
+  { { echo "$as_me:$LINENO: error: You don't have libSDL you can get it from http://www.libsdl.org" >&5
+echo "$as_me: error: You don't have libSDL you can get it from http://www.libsdl.org" >&2;}
+   { (exit 1); exit 1; }; }
 
 fi
 

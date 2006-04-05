@@ -140,7 +140,7 @@ enum drawings_type
  
 typedef struct RAW_ENGINE
 {
-	u8 layer; /* the drawing level that the surface is drawn */
+	u32 layer; /* the drawing level that the surface is drawn */
 	u8 type; /* 1 is static, 2 is dynamic, 3 is static but already drawn*/
 	u8 double_rectangle; /* is set to 1 if we have to draw 2 identical rectangle
 			      * used with the overriding. something like this
@@ -287,7 +287,7 @@ static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
 /* the old function that used to push images into this engine 
  * now used as a backbone.
  */
-static void AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
+static void AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
 
 /* returns a pointer corresponding to the type or
  * NULL if none found 
@@ -711,7 +711,7 @@ draw_objects()
  *   testing : works
  */
 static void 
-AddDrawingInstruction(u8 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
+AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
 {
 	RAW_ENGINE *buf = NULL;
 	Rectan tIsrc, tIdst;
@@ -1209,13 +1209,13 @@ Neuro_GiveFPS(t_tick *output)
 }
 
 void
-Neuro_PushStaticDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+Neuro_PushStaticDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
 	AddDrawingInstruction(layer, TDRAW_STATIC, isrc, idst, isurface);
 }
 
 void
-Neuro_PushDynamicDraw(u8 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+Neuro_PushDynamicDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
 	AddDrawingInstruction(layer, TDRAW_DYNAMIC, isrc, idst, isurface);
 }
