@@ -134,6 +134,7 @@ enum drawings_type
 	TDRAW_DYNAMIC,
 	TDRAW_DYNAMIC_CLEAN,
 	TDRAW_SDRAWN, /* static but already drawn */
+	TDRAW_VOLATILE, /* a draw that gets deleted after being drawn (override replacement) */
 
 	TDRAW_END
 };
@@ -581,7 +582,7 @@ static void
 draw_objects()
 {
 	Rectan isrc, idst;
-	INSTRUCTION_ENGINE *cur;
+	INSTRUCTION_ENGINE *cur, *last = NULL;
 		
 	if (Neuro_EBufIsEmpty(_Queue))
 		return;	
@@ -688,12 +689,49 @@ draw_objects()
 			}
 			break;*/
 
+			case TDRAW_VOLATILE:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen, &idst);
+				
+				if (last)
+					last->next = cur->next;
+		
+				/* check to see if the element cur is either first_element 
+				 * or last_element and if so, we will destituate it.
+				 */
+				if (cur == first_element)
+					first_element = cur->next;
+
+				if (cur == last_element)
+				{
+					last->next = NULL;
+					last_element = last;
+				}
+			
+			
+				if (use_memory_pool)
+					Push_Data_To_Pool(POOL_QUEUE, cur);
+				else
+				{
+					INSTRUCTION_ENGINE *temp;
+				
+					temp = cur;
+					cur = cur->next;
+
+					Neuro_SCleanEBuf(_Raw, temp->current);
+					Neuro_SCleanEBuf(_Queue, temp);
+					continue;
+				}
+			}
+			break;
+
 			
 			default:
 			break;
 		}
 
-
+		last = cur;
 		cur = cur->next;
 	}
 
@@ -761,6 +799,16 @@ AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	draw_this_cycle = 1;
 }
 
+/* push a drawing instruction that will be deleted from the queue and raw 
+ * after being drawn. This replaces the hackish override method with an 
+ * ultra versatile one and much less costy ;P.
+ */
+static void
+PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+{
+	AddDrawingInstruction(layer, TDRAW_VOLATILE, isrc, idst, isurface);
+}
+
 /* clean_drawn_objects() might have cleaned objects
  * that should be drawn so we will redraw those in this
  * function.
@@ -806,14 +854,23 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 			
 			if (bounds_ret == 0)
 			{	
-				/*Lib_BlitObject(cur->current->surface_ptr, &cur->current->src, 
-						sclScreen, &cur->current->dst);*/
-
-				cur->current->type = TDRAW_STATIC;
+				PushVolatileDraw(cur->current->layer, &indep->current->src, &indep->current->dst, cur->current->surface_ptr);
 			}
 
 			if (bounds_ret == 2 || bounds_ret == 3)
 			{
+				Rectan isrc, idst;
+				
+				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+				memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+
+				Neuro_VerticalBoundFix(&indep_body, &isrc, &idst);
+				Neuro_HorizontalBoundFix(&indep_body, &isrc, &idst);
+
+				PushVolatileDraw(cur->current->layer, 
+						&isrc, &idst, cur->current->surface_ptr);
+
+#if old
 				Rectan *isrc, *idst;
 
 				
@@ -823,6 +880,9 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 				memcpy(isrc, &cur->current->src, sizeof(Rectan));
 				memcpy(idst, &cur->current->dst, sizeof(Rectan));
 
+				/* TODO test those and fix those because they don't 
+				 * seem to work perfectly!
+				 */
 				Neuro_VerticalBoundFix(&indep_body, isrc, idst);
 				Neuro_HorizontalBoundFix(&indep_body, isrc, idst);
 				
@@ -833,7 +893,7 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 					
 				if (bounds_ret == 3)
 					cur->current->double_rectangle = 1;
-				
+#endif /* old */				
 			}
 			
 			/* Debug_Val(0, "object end\n"); */
@@ -911,18 +971,6 @@ clean_drawn_objects()
 				continue;
 			}
 		}
-#if temp
-		else
-		{
-			if (cur->current->type == TDRAW_DYNAMIC)
-			{
-				cur->current->type = TDRAW_DYNAMIC_CLEAN;
-				
-				if (dynamic_debug)
-					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
-			}
-		}
-#endif /* temp */
 		
 		last = cur;
 		cur = cur->next;

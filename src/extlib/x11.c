@@ -66,6 +66,7 @@ static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 static i32 width = 800, height = 600; /* HACK WARNING TODO make this better and settable*/
 
 static u8 Toggle_Exposed = 1;
+static u8 mouse_wheel = 0; /* mouse wheel variable */
 
 static void
 clean_Vobjects(void *src)
@@ -209,7 +210,8 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		XMapWindow(tmp->display, tmp->win);
 	}
 
-	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask | FocusChangeMask);
+	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask |
+		       ButtonReleaseMask | FocusChangeMask);
 
 	XFlush(tmp->display);
 
@@ -733,32 +735,36 @@ Lib_GetMouseState(i32 *x, i32 *y)
 		return 0;
 	}
 	
-	XQueryPointer(dmain->display, *dmain->cwin, &croot, &cchild, &rx, &ry, x, y, &mask);
+	if (XQueryPointer(dmain->display, *dmain->cwin, &croot, &cchild, &rx, &ry, x, y, &mask) == 0)
+	{
+		return 0;
+	}
 
 	/* Debug_Val(0, "lib mouse state %d\n", mask); */
 
-	/* TODO might need to make this more extended... however, the 
-	 * speed gain by using this method is worth it :)
-	 */
-	if (mask & 0x00000600)
-		value = 6;
-
-	if (mask & 0x00000500)
+	if (mask & Button5Mask)
 		value = 5;
 	
-	if (mask & 0x00000400)
+	if (mask & Button4Mask)
 		value = 4;
 
-	if (mask & 0x00000300)
+	if (mask & Button3Mask)
 		value = 3;
 	
-	if (mask & 0x00000200)
+	if (mask & Button2Mask)
 		value = 2;
 	
-	if (mask & 0x00000100)
+	if (mask & Button1Mask)
 		value = 1;
+
+	if (mouse_wheel && value == 0)
+	{
+		value = mouse_wheel;
+		mouse_wheel = 0;
+	}
+		
 	
-	/* Debug_Val(0, "mouse status raw %d filtered %d\n", mask, value); */
+	/* Debug_Val(0, "mouse status raw %x filtered %d\n", mask, value); */
 	return value;
 }
 
@@ -817,6 +823,12 @@ Lib_PollEvent(void *event_input)
 	{
 		/* Debug_Print("Got Focus"); */
 		Toggle_Exposed = 1;
+	}
+	
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, ButtonRelease, &event) == True)  
+	{
+		/* Debug_Val(0, "Button event %d\n", event.xbutton.button); */
+		mouse_wheel = event.xbutton.button;
 	}
 	
 	return 0;
