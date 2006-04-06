@@ -665,6 +665,9 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
  * this function will calibrate isrc and idst so the image represented
  * by those 2 will not go over the rectangle indep.
  * This function only fixes the vertical way of the image.
+ *
+ * This method will only work with cases where Neuro_BoundsCheck 
+ * returned 2. No check is done, so watch out, only with case 2 please.
  */
 void
 Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
@@ -684,12 +687,18 @@ Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 	{
 		isrc->w -= (idst->x + isrc->w) - (indep->x + indep->w);
 	}
-	*/	
+	*/
 	
 	/* the mathematical method */
+	
 	isrc->x += Neuro_CalcOnlyPos(indep->x, idst->x);
-	isrc->w = Neuro_CalcOnlyPos(isrc->w, (Neuro_CalcOnlyPos(indep->x, idst->x) + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w)));
+	
+	isrc->w = Neuro_CalcOnlyPos(isrc->w, 
+			(Neuro_CalcOnlyPos(indep->x, idst->x) 
+			 + Neuro_CalcOnlyPos(idst->x + isrc->w, indep->x + indep->w)));
+	
 	idst->x += Neuro_CalcOnlyPos(indep->x, idst->x);
+	
 }
 
 /* only play with the y and height values 
@@ -706,13 +715,13 @@ Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 {
 	/* 2 methods : 1 is using statements and the other is mathematical */
 	
-	/* the statement method */
-	/*	
-	if ((indep->y + 1) > idst->y)
+	/* the statement method */	
+	/*
+	if (indep->y > idst->y)
 	{
-		isrc->y += abs((indep->y + 1) - idst->y);
-		isrc->h -= abs((indep->y + 1) - idst->y);
-		idst->y = (indep->y + 1);
+		isrc->y += abs(indep->y - idst->y);
+		isrc->h -= abs(indep->y - idst->y);
+		idst->y = indep->y;
 	}
 	if ((indep->y + indep->h) < (idst->y + isrc->h))
 	{
@@ -721,8 +730,14 @@ Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 	*/
 	
 	/* the mathematical method */
+	
 	isrc->y += Neuro_CalcOnlyPos(indep->y, idst->y);
-	isrc->h = Neuro_CalcOnlyPos(isrc->h, (Neuro_CalcOnlyPos(indep->y, idst->y) + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h)));
+	
+	isrc->h = Neuro_CalcOnlyPos(isrc->h, 
+			(Neuro_CalcOnlyPos(indep->y, idst->y) 
+			 + Neuro_CalcOnlyPos(idst->y + isrc->h, indep->y + indep->h)));
+	
 	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);
+	
 }
 

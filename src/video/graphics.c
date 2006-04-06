@@ -106,8 +106,6 @@
 #define screen_buffer 1
 #define second_screen_buffer 0
 #define retain_image_inipos 0
-
-#define handle_double_rectangle 0
  
 #define use_memory_pool 0
  
@@ -133,8 +131,8 @@ enum drawings_type
 	TDRAW_STATIC = 1,
 	TDRAW_DYNAMIC,
 	TDRAW_DYNAMIC_CLEAN,
-	TDRAW_SDRAWN, /* static but already drawn */
-	TDRAW_VOLATILE, /* a draw that gets deleted after being drawn (override replacement) */
+	TDRAW_SDRAWN, /* 4 static but already drawn */
+	TDRAW_VOLATILE, /* 5 a draw that gets deleted after being drawn (override replacement) */
 
 	TDRAW_END
 };
@@ -143,31 +141,11 @@ typedef struct RAW_ENGINE
 {
 	u32 layer; /* the drawing level that the surface is drawn */
 	u8 type; /* 1 is static, 2 is dynamic, 3 is static but already drawn*/
-	u8 double_rectangle; /* is set to 1 if we have to draw 2 identical rectangle
-			      * used with the overriding. something like this
-			      * (ASCII art)
-			      *
-			      * 1100011
-			      * 1100011
-			      * 1100011
-			      * 1100011
-			      *
-			      * or
-			      *
-			      * 1111111
-			      * 0000000
-			      * 0000000
-			      * 1111111
-			      */
 	Rectan src;
 	Rectan dst; /* will need to memcpy the data because 
 			* this will be used beyond the 
 			* scope of the calling function.
 			*/
-	void *override; /* if used, will point to a Rectan element that will override 
-			 * src and dst.
-			 */
-	void *override2;
 	void *surface_ptr; /* only the pointer needed cause its "static" */
 }RAW_ENGINE;
 
@@ -342,14 +320,6 @@ cleanRawEngineElement(void *eng)
 	RAW_ENGINE *buf;
 
 	buf = (RAW_ENGINE*)eng;
-
-	if (buf)
-	{
-		if (buf->override)
-			free(buf->override);
-		if (buf->override2)
-			free(buf->override2);
-	}
 }
 
 static void
@@ -365,11 +335,11 @@ print_queue()
 	
 	while (cur != NULL)
 	{
-		if (cur->current->type == TDRAW_SDRAWN)
+		/*if (cur->current->type == TDRAW_SDRAWN)
 		{
 			cur = cur->next;
 			continue;
-		}
+		}*/
 		
 		Debug_Val(0, "layer #%d address &%x type %d\n", cur->current->layer, cur, 
 				cur->current->type);
@@ -594,34 +564,6 @@ draw_objects()
 	{		
 		memcpy(&isrc, &cur->current->src, sizeof(Rectan));
 		memcpy(&idst, &cur->current->dst, sizeof(Rectan));
-
-		if (cur->current->override)
-		{
-			Rectan *buf;
-
-			buf = (Rectan*)cur->current->override;
-			
-			isrc.x = buf->x;
-			isrc.y = buf->y;
-			isrc.h = buf->h;
-			isrc.w = buf->w;
-
-			free(cur->current->override);
-			cur->current->override = NULL;
-			
-			
-
-			buf = (Rectan*)cur->current->override2;
-			
-			idst.x = buf->x;
-			idst.y = buf->y;
-			idst.h = buf->h;
-			idst.w = buf->w;
-
-			free(cur->current->override2);
-			cur->current->override2 = NULL;		
-		}
-		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
 		{
@@ -633,40 +575,15 @@ draw_objects()
 				*/
 
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, sclScreen, 
-						&idst);
-			
-#if handle_double_rectangle
-				if (cur->current->double_rectangle == 1)
-				{
-					/* special case where we have to draw 
-					 * an identical rectangle on the other
-					 * side of the image.
-					 */
-					cur->current->double_rectangle = 0;
-					
-					/* find out if its an horizontal or
-					 * vertical mirror we need.
-					 */
-					if (isrc.w == cur->current->src.w)
-					{
-						/* this is the horizontal mirror. */
-						
-						isrc.y = abs(isrc.y - cur->current->src.h);
-					}
-
-					if (isrc.h == cur->current->src.h)
-					{
-						/* this is the vertical mirror. */
-						
-						isrc.x = abs(isrc.x - cur->current->src.w);
-					}
-					
-					Lib_BlitObject(cur->current->surface_ptr, &isrc, 
-						sclScreen, &idst);
-				}
-#endif /* handle_double_rectangle */
+						&idst);			
 				
 				cur->current->type = TDRAW_SDRAWN;
+			}
+			break;
+
+			case TDRAW_SDRAWN:
+			{
+				/* nothing needed for this type */
 			}
 			break;
 			
@@ -728,10 +645,17 @@ draw_objects()
 
 			
 			default:
+			{
+				Debug_Val(0, "ERROR Draw unknown type %d\n", cur->current->type);
+			}
 			break;
 		}
 
 		last = cur;
+		if (cur->next == NULL && cur != last_element)
+		{
+			Debug_Val(0, "there u go, we got a party breaker...\n");
+		}
 		cur = cur->next;
 	}
 
@@ -760,7 +684,7 @@ AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 
 	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
 	{
-		Debug_Val(10, "a drawing instruction was dropped because its destination is outbound");
+		/* Debug_Val(10, "a drawing instruction was dropped because its destination is outbound"); */
 		return;
 	}
 	
@@ -806,19 +730,24 @@ AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 static void
 PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
+	if (debug_instruction_buffer)
+		Debug_Val(0, "volatile push -> %d\n", layer);
+
 	AddDrawingInstruction(layer, TDRAW_VOLATILE, isrc, idst, isurface);
 }
 
 /* clean_drawn_objects() might have cleaned objects
  * that should be drawn so we will redraw those in this
- * function.
+ * function. 
+ * returns non zero if a volatile type was pushed
  */
-static void
+static int
 redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 {
 	Rectan buf, indep_body;
 	INSTRUCTION_ENGINE *cur;
 	int bounds_ret = 0;
+	int output = 0;
 
 
 	indep_body.x = indep->current->dst.x;
@@ -828,7 +757,7 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 	
 
 	if (first_element == NULL)
-		return;
+		return 0;
 	
 	cur = first_element;
 
@@ -854,10 +783,14 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 			
 			if (bounds_ret == 0)
 			{	
-				PushVolatileDraw(cur->current->layer, &indep->current->src, &indep->current->dst, cur->current->surface_ptr);
+				PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&cur->current->dst, cur->current->surface_ptr);
+				
+				/* Debug_Val(0, "dynamic is inside this object\n"); */
+				output = 1;
 			}
 
-			if (bounds_ret == 2 || bounds_ret == 3)
+			if (bounds_ret == 2)
 			{
 				Rectan isrc, idst;
 				
@@ -869,38 +802,88 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 
 				PushVolatileDraw(cur->current->layer, 
 						&isrc, &idst, cur->current->surface_ptr);
-
-#if old
-				Rectan *isrc, *idst;
-
 				
-				isrc = calloc(1, sizeof(Rectan));
-				idst = calloc(1, sizeof(Rectan));
-					
-				memcpy(isrc, &cur->current->src, sizeof(Rectan));
-				memcpy(idst, &cur->current->dst, sizeof(Rectan));
+				output = 1;
+			}
 
-				/* TODO test those and fix those because they don't 
-				 * seem to work perfectly!
-				 */
-				Neuro_VerticalBoundFix(&indep_body, isrc, idst);
-				Neuro_HorizontalBoundFix(&indep_body, isrc, idst);
+			if (bounds_ret == 3)
+			{
+				Rectan isrc, idst;
 				
-				cur->current->override = isrc;
-				cur->current->override2 = idst;
+				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+				memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+				
+				
+				if (indep_body.x > buf.x)
+				{
+					isrc.x += indep_body.x - buf.x;
+					idst.x += indep_body.x - buf.x;
 
-				cur->current->type = TDRAW_STATIC;
-					
-				if (bounds_ret == 3)
-					cur->current->double_rectangle = 1;
-#endif /* old */				
+					/*isrc.y += buf.y - indep_body.y;
+					idst.y += buf.y - indep_body.y;*/
+
+					isrc.w -= buf.w - indep_body.w;
+					/* isrc.h += indep_body.h - buf.h; */
+				}
+				else
+				{
+					/*isrc.x += buf.x - indep_body.x;
+					idst.x += buf.x - indep_body.x;*/
+
+					isrc.y += indep_body.y - buf.y;
+					idst.y += indep_body.y - buf.y;
+
+					/* isrc.w += indep_body.w - buf.w; */
+					isrc.h -= buf.h - indep_body.h;
+				}
+				
+				PushVolatileDraw(cur->current->layer, 
+						&isrc, &idst, cur->current->surface_ptr);
+				
+				output = 1;
 			}
 			
 			/* Debug_Val(0, "object end\n"); */
 		}	
 		cur = cur->next;
 	}
+
+	return output;
 }
+
+/* a function to resolve a bug that made the volatile objects
+ * mysteriously disapear. It was because the last element of the
+ * Dynamic object was not refreshed so if an element was just
+ * before the Dynamic object, it just made it disapear :).
+ * 
+ * This function searches the element just before the input element
+ * and returns it.
+ */
+static INSTRUCTION_ENGINE *
+get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
+{
+	INSTRUCTION_ENGINE *cur, *last = NULL;
+	
+	if (first_element == NULL)
+		return NULL;
+
+	cur = first_element;
+
+	while (cur)
+	{
+		
+		if (cur == indep)
+			return last;
+
+		
+		last = cur;
+		cur = cur->next;
+	}
+
+
+	return NULL;
+}
+
 
 /* */
 static void
@@ -933,13 +916,17 @@ clean_drawn_objects()
 			else
 				Lib_FillRect(sclScreen2, &buf, 0);
 			*/
-		
-			if (dynamic_debug)
-				Debug_Val(0, "Dynamic : cleaning address %x\n", cur);
-			
+					
 			Lib_FillRect(sclScreen2, &buf, 0);
 			
-			redraw_erased_for_object(cur);
+			if (redraw_erased_for_object(cur))
+			{
+				last = get_Previous_Object_To_Object(cur);
+			}
+
+			if (dynamic_debug)
+				Debug_Val(0, "Dynamic : cleaning address %x\n", cur);
+
 
 			if (last)
 				last->next = cur->next;
@@ -965,9 +952,14 @@ clean_drawn_objects()
 				
 				temp = cur;
 				cur = cur->next;
+				/*Debug_Val(0, "before queue total %d\n", 
+						Neuro_GiveEBufCount(_Queue));*/
 
 				Neuro_SCleanEBuf(_Raw, temp->current);
 				Neuro_SCleanEBuf(_Queue, temp);
+
+				/* Debug_Val(0, "after queue total %d\n", 
+						Neuro_GiveEBufCount(_Queue));*/
 				continue;
 			}
 		}
@@ -1238,7 +1230,6 @@ Neuro_RefreshScreen()
 		Neuro_CreateEBuf(&_Raw);
 		Neuro_CreateEBuf(&_Queue);
 
-		Neuro_SetcallbEBuf(_Raw, cleanRawEngineElement);
 	}
 	/*Debug_Val(0, "Real Elements total %d\n", temp_count);
 	temp_count = 0;
@@ -1375,7 +1366,7 @@ Neuro_CleanPixels()
 void
 Graphics_Poll()
 {	
-	if (debug_instruction_buffer)
+	if (debug_instruction_buffer || dynamic_debug)
 		Debug_Val(0, "cycle\n");
 
 	if (clean_pixel_in_this_cycle)
@@ -1456,7 +1447,14 @@ Graphics_Poll()
 	{	
 		if (drawn_last_cycle)
 			clean_drawn_objects();
-
+		
+		if (debug_instruction_buffer)
+		{
+			Debug_Val(0, "*BEGIN debug print\n");
+			print_queue();
+			Debug_Val(0, "*END debug print\n");
+		}
+		
 		if (draw_this_cycle)
 			draw_objects();
 	}
@@ -1523,8 +1521,6 @@ Graphics_Init()
 	Neuro_CreateEBuf(&_Queue);
 	Neuro_CreateEBuf(&_Pixel);
 
-
-	Neuro_SetcallbEBuf(_Raw, cleanRawEngineElement);
 	
 	if (use_memory_pool)
 		Neuro_CreateEBuf(&_pool);
