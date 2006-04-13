@@ -29,67 +29,96 @@
 
 #include <extlib.h>
 #include <events.h>
-#include <ebuf.h>
+#include <ebuf.h> /* EBUF memory functions */
 
-/* keyboard buffers */
+/* define the structure to hold our keyboard key header.
+ * This header will be used for a EBUF buffer.
+ */
 typedef struct KEYBEVENT
 {
-	u32 key;
-	void (*callback)();
+	u32 key;		/* the actual keyboard key keysym */
+	void (*callback)(); 	/* a callback we will call when key is pressed*/
 }KEYBEVENT;
 
-/* mouse buffers */
+/* define the structure to hold our mouse button header. 
+ * This header will be used for a EBUF buffer.
+ */
 typedef struct MOUSEEVENT
 {
-	u32 button;
-	u8 lastState; /* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
-	void (*callbackClick)(int x, int y); /* callback to call when clicked */
-	void (*callbackRelease)(int x, int y); /* callback to call when released */
+	u32 button;		/* the actual button */
+	u8 lastState; 		/* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
+	void (*callbackClick)(int x, int y); 	/* callback to call when clicked */
+	void (*callbackRelease)(int x, int y); 	/* callback to call when released */
 }MOUSEEVENT;
 
-static EBUF *_klist; /* keyboard buffer */
-static EBUF *_mlist; /* mouse buffer */
+/* keyboard list buffer.
+ * to keep track of what callback to call when
+ * a certain key is triggered.
+ */
+static EBUF *_klist;
 
-/* this function is to check if keys are still being pushed.
- * It calls a function to get an array of all the keys on a
- * keyboard. We then check the keys we want to see the status of.
- * they give 1 if they r still being pushed and 0 if they aren't. 
+/* mouse list buffer. 
+ * to keep track of what callback to call when
+ * a certain mouse button is triggered.
+ */
+static EBUF *_mlist;
+
+
+/* 
+ * this function checks every elements in the _klist buffer, 
+ * checks which keys are being pressed in it and calls the
+ * corresponding callbacks.
  */
 static void
 handle_keys()
 {
-#if old_method
-	u8 *key;
-#endif /* old_method */
 	u32 total;
 	KEYBEVENT *tmp;
 	
+	
+	/* we check if _klist is empty, if it is, we leave. */
 	if (Neuro_EBufIsEmpty(_klist))
 		return;
 	
+	/* we put the total amount of elements in _klist to total 
+	 * and increment by 1 to support a while (somevar-- > 0) 
+	 * method.
+	 */
 	total = Neuro_GiveEBufCount(_klist) + 1;
 	
-#if old_method
-	key = Lib_GetKeyState(NULL);
+	while (total-- > 0)
+	{
+		/* pass the element total from the buffer _klist
+		 * to the pointer tmp.
+		 */
+		tmp = Neuro_GiveEBuf(_klist, total);
 
-	if (!key)
-		return;
-		
-	while (total-- > 0)
-	{
-		tmp = Neuro_GiveEBuf(_klist, total);
-		if (key[tmp->key])
-			(tmp->callback)();	
-	}
-#endif /* old_method */
-	while (total-- > 0)
-	{
-		tmp = Neuro_GiveEBuf(_klist, total);
-		if (Lib_CheckKeyStatus(tmp->key))
-			(tmp->callback)();
+		/* we check if the key is being pressed */
+		if (Lib_CheckKeyStatus(tmp->key) == 1)
+		{
+			
+			/* check if the callback exists */
+			if (tmp->callback)
+			{
+				/* the key is being pressed so we call the 
+				 * corresponding callback function.
+				 */
+				(tmp->callback)();
+			}
+		}
 	}
 }
 
+/* 
+ * this function checks every elements in the _mlist buffer.
+ * It checks to see if any corresponds to the current button on 
+ * the mouse being pressed or released.
+ *
+ * instead of using a switch method and getting mouse button pushed
+ * and released cases, we implement our own way to keep track of which
+ * one is being triggered by keeping track of the state of the button.
+ * 
+ */
 static void
 handle_mouse()
 {
@@ -98,17 +127,29 @@ handle_mouse()
 	u32 total;
 	MOUSEEVENT *tmp;
 	
+	/* check to see if the buffer _mlist is empty and leave if it is */
 	if (Neuro_EBufIsEmpty(_mlist))
 		return;	
 	
+	
+	/* put the current button state into button 
+	 * and put the current x,y coordinates in x and y.
+	 */
 	button = Lib_GetMouseState(&x, &y);
 	
+	/* we put the total amount of elements in _mlist to total 
+	 * and increment by 1 to support a while (somevar-- > 0) 
+	 * method.
+	 */
 	total = Neuro_GiveEBufCount(_mlist) + 1;
 
-	/* printf("mouse (%d,%d) button %d \n", x, y, button); */
+	/* Debug_Val(0, "mouse (%d,%d) button %d \n", x, y, button); */
 
 	while (total-- > 0)
 	{
+		/* pass the element total from the buffer 
+		 * _mlist into tmp
+		 */
 		tmp = Neuro_GiveEBuf(_mlist, total);
 		
 		if (button)
@@ -117,8 +158,18 @@ handle_mouse()
 			{
 				if (!tmp->lastState)
 				{
+					/* check if the callback exist */
 					if (tmp->callbackClick)
+					{
+						/* we call the click callback and pass it 
+						 * the current mouse coordinates.
+						 */
 						(tmp->callbackClick)(x, y);
+					}
+
+					/* this elements last state now is set to 1 
+					 * meaning it was last clicked.
+					 */
 					tmp->lastState = 1;
 				}
 			}
@@ -127,8 +178,16 @@ handle_mouse()
 		{
 			if (tmp->lastState == 1)
 			{
+				/* check if the callback exist */
 				if (tmp->callbackRelease)
+				{
+					/* we call the button release callback and 
+					 * pass it the current mouse coordinates.
+					 */
 					(tmp->callbackRelease)(x, y);
+				}
+
+				/* we reset the state back to nothing */
 				tmp->lastState = 0;
 					
 			}
@@ -136,6 +195,10 @@ handle_mouse()
 	}
 }
 
+/*
+ * Used to pass data to the
+ * MOUSEEVENT header.
+ */
 static void
 mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_release)
 {
@@ -173,6 +236,7 @@ Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 	}
 	else
 	{
+		
 		total = Neuro_GiveEBufCount(_mlist) + 1;
 		/* try to find the corresponding button so we can 
 		 * change its data -- if it exists.
@@ -187,6 +251,7 @@ Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 				return;
 			}
 		}
+		
 		/* the mouse button wasn't found so we will create a new one for it */
 		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	}
@@ -204,6 +269,7 @@ Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 	else
 	{
 		total = Neuro_GiveEBufCount(_mlist) + 1;
+		
 		/* try to find the corresponding button so we can 
 		 * change its data -- if it exists.
 		 */
@@ -217,6 +283,7 @@ Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 				return;
 			}
 		}
+		
 		/* the mouse button wasn't found so we will create a new one for it */
 		Neuro_AllocEBuf(_mlist, sizeof(MOUSEEVENT*), sizeof(MOUSEEVENT));
 	}

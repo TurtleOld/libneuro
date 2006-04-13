@@ -31,7 +31,7 @@
 #include <stdlib.h>
 
 #ifdef WIN32
-	#define WINDOWS_MEAN_AND_LEAN
+	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 #else /* NOT WIN32 */
 	#define __USE_BSD
@@ -109,8 +109,10 @@ void
 Neuro_Sleep(u32 t)
 {
 #ifdef WIN32
-	Sleep(t);
+	/* Sleep is in milli seconds */
+	Sleep(t / 1000);
 #else /* NOT WIN32 */
+	/* usleep is in nano seconds */
 	usleep(t);
 #endif /* NOT WIN32 */
 }
@@ -126,59 +128,6 @@ Neuro_GetTickCount()
 	return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0x7fffffff;
 #endif /* NOT WIN32 */
 	
-}
-
-void
-Neuro_CallbackBuf(OBJBUF *eng, void (*callback)(void *src))
-{
-	eng->callback = callback;
-}
-
-void
-Neuro_AllocBuf(OBJBUF *eng, size_t sptp)
-{
-	void ***buf = NULL;
-	u32 total = 0;
-		
-	buf = &eng->buffer;
-	total = eng->total;
-			
-	if (!*buf)
-	{
-		*buf = calloc(1, sptp);
-		total = 0;
-	}
-	else
-		*buf = realloc(*buf, sptp * (total + 1));	
-	
-	total++;
-	eng->total = total;
-}
-
-void
-Neuro_CleanBuf(OBJBUF *eng)
-{
-	void ***buf;
-	u32 i;
-	
-	if (!eng)
-		return;
-		
-	buf = &eng->buffer;
-	i = eng->total;
-
-	while (i-- > 0)
-	{
-		if ((*buf)[i])
-			(eng->callback)((*buf)[i]);
-	}
-
-	if (*buf)
-		free(*buf);
-	*buf = NULL;
-	
-	eng->total = 0;
-	eng->buffer = NULL;
 }
 
 /* this functions was made to separate a given character, 

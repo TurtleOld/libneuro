@@ -298,7 +298,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
 			NULL, NULL, NULL, NULL);
 
-	Lib_LockVObject(srf);
+	/* Lib_LockVObject(srf); */
 	/* int bpp = surface->format->BytesPerPixel; */
 	/* Here p is the address to the pixel we want to set */
 	/* p = (u8*)surface->pixels + y * surface->pitch + x * bpp; */
@@ -343,7 +343,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 		
 	}
 	/* SDL_UnlockSurface(surface); */
-	Lib_UnlockVObject(srf);
+	/* Lib_UnlockVObject(srf); */
 }
 
 void

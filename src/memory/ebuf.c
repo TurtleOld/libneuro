@@ -141,6 +141,34 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 }
 
 void
+Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
+{
+	void ***buf;
+	u32 *total;
+	u32 *mem;
+	int i = 0;
+	
+	buf = &eng->buffer;
+	total = &eng->total;
+	mem = &eng->mem;
+	
+	if (*buf == NULL)
+	{
+		*buf = calloc(amount, sptp);
+		*total = amount - 1;
+		*mem = 0;
+
+	
+		i = *total;
+
+		while (i-- > 0)
+		{
+			(*buf)[i] = calloc(1, sobj);
+		}
+	}
+}
+
+void
 Neuro_SCleanEBuf(EBUF *eng, void *object)
 {
 	void *buf;

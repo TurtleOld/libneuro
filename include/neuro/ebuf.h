@@ -95,6 +95,13 @@ extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
 /* allocation and reallocation */
 extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
 
+
+/* allocate for a certain amount of objects.
+ * will only work if the EBUF object hasn't
+ * been allocated before. 
+ */
+void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj);
+
 /* if you start with Create, you got to finish up with this function */
 extern void Neuro_CleanEBuf(EBUF **eng);
 

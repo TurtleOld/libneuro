@@ -266,7 +266,7 @@ static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
 /* the old function that used to push images into this engine 
  * now used as a backbone.
  */
-static void AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
+static void AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
 
 /* returns a pointer corresponding to the type or
  * NULL if none found 
@@ -673,11 +673,13 @@ draw_objects()
  *   testing : works
  */
 static void 
-AddDrawingInstruction(u16 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
+AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
 {
 	RAW_ENGINE *buf = NULL;
 	Rectan tIsrc, tIdst;
-	
+
+	if (isurface == NULL || isrc == NULL || idst == NULL)
+		return;
 
 	memcpy(&tIsrc, isrc, sizeof(Rectan));
 	memcpy(&tIdst, idst, sizeof(Rectan));	
@@ -939,8 +941,13 @@ clean_drawn_objects()
 
 			if (cur == last_element)
 			{
-				last_element = last;
-				last_element->next = NULL;
+				if (last)
+				{
+					last_element = last;
+					last_element->next = NULL;
+				}
+				else
+					last_element = NULL;
 			}
 			
 			
@@ -1285,7 +1292,10 @@ void
 Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
 {
 	Lib_BlitObject(isurface, isrc, sclScreen, idst);
-	/* Lib_Flip(screen); */
+	
+	/*Lib_BlitObject(sclScreen2, NULL, screen, NULL);
+	updScreen(0);
+	Lib_Flip(screen);*/
 }
 
 /* external modules call this function

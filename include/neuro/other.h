@@ -30,22 +30,6 @@
 
 #include <stdlib.h>
 
-typedef struct OBJBUF OBJBUF;
-
-struct OBJBUF
-{
-	void **buffer;
-	u32 total;
-	void (*callback)(void *src);
-};
-
-extern void Neuro_AllocBuf(OBJBUF *eng, size_t sptp);
-
-extern void Neuro_CleanBuf(OBJBUF *eng);
-
-extern void Neuro_CallbackBuf(OBJBUF *eng, void (*callback)(void *src));
-
-
 extern char **Neuro_SepChr(const unsigned char chr, char *source, int *items);
 
 /* the EBUF data uses this struct */

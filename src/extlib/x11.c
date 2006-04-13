@@ -50,6 +50,8 @@ typedef struct V_OBJECT
 	Pixmap data;
 	Pixmap shapemask;
 	XpmAttributes attrib;
+	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
+	to flush the pixels with the actual image on the server*/
 }V_OBJECT;
 
 static EBUF *vobjs;
@@ -67,6 +69,8 @@ static i32 width = 800, height = 600; /* HACK WARNING TODO make this better and 
 
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
+
+static XColor tpixel;
 
 static void
 clean_Vobjects(void *src)
@@ -167,6 +171,22 @@ keycode_value(char num, u8 *anchor)
 	if (*anchor == 1)
 		*anchor = 0;
 	return -1;
+}
+
+static void 
+sync_pixels(V_OBJECT *src)
+{
+	i32 h, w;
+	
+	if (src->pixel_data_changed == 1)
+	{
+		Neuro_GiveImageSize(src, &w, &h);
+
+		XPutImage(dmain->display, *src->cwin, dmain->GC, src->raw_data, 
+				0, 0, 0, 0, w, h);
+	
+		src->pixel_data_changed = 0;
+	}	
 }
 
 /*  video constructor destructor  */
@@ -276,6 +296,12 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		scldmain = tmp;
 	}
 
+	tpixel.red = 0xffff;
+	tpixel.green = 0;
+	tpixel.blue = 0;
+	tpixel.flags = DoRed | DoGreen | DoBlue;
+	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+	
 	/* Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain); */
 	return 0;
 }
@@ -283,7 +309,33 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
-	return Neuro_GiveRGB(r, g, b);
+	u16 br, bg, bb;
+	u32 output;
+
+	/* backup the previous values of the pixel struct */
+	br = tpixel.red;
+	bg = tpixel.green;
+	bb = tpixel.blue;
+
+	
+	tpixel.red = (u16)(r << 8) | r;
+	tpixel.green = (u16)(g << 8) | g;
+	tpixel.blue = (u16)(b << 8) | b;
+	tpixel.flags = DoRed | DoGreen | DoBlue;
+	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+
+	output = tpixel.pixel;
+
+	/* put back the pixel color values */
+	tpixel.red = br;
+	tpixel.green = bg;
+	tpixel.blue = bb;
+	tpixel.flags = DoRed | DoGreen | DoBlue;
+	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+	
+	/* output = tpixel.pixel; */
+
+	return output;
 }
 
 void
@@ -300,16 +352,19 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	XImage *buf;
 #endif /* temp */
 	/* i32 h, w; */
-	Pixel pix;
+	/*Pixel pix;
 	XColor scrncolor;
 	XColor exactcolor;
+	*/
 	
 	tmp = (V_OBJECT*)srf;
 	
+	/*
 	XAllocNamedColor(dmain->display, DefaultColormap(dmain->display, dmain->screen),
 			"white", &scrncolor, &exactcolor);
 
-	pix = scrncolor.pixel;
+	pix = scrncolor.pixel;*/
+	
 	
 	/* Neuro_GiveImageSize(tmp, &w, &h); */
 
@@ -322,8 +377,14 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
 
 	/* Debug_Val(0, "neuro white color %d\n", Neuro_GiveRGB24(255, 255, 255)); */
-	if (tmp->raw_data)
-		XPutPixel(tmp->raw_data, x, y, pix);
+	if (tmp)
+	{
+		if (tmp->raw_data)
+		{
+			XPutPixel(tmp->raw_data, x, y, pixel);
+			tmp->pixel_data_changed = 1;
+		}
+	}
 }
 
 u32 
@@ -368,6 +429,13 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	
 	vsrc = (V_OBJECT*)source;
 	vdst = (V_OBJECT*)destination;
+
+	/* if there was pixel manipulations 
+	 * we need to sync client server pixel data.
+	 */
+	sync_pixels(vsrc);
+	sync_pixels(vdst);
+
 
 	if (src == NULL)
 	{
@@ -414,7 +482,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	if (vsrc->shapemask)
 		XSetClipMask(dmain->display, dmain->GC, vsrc->shapemask);
 	XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
-		
+
+	XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
 
 	_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
 			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
@@ -494,17 +563,28 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 		u32 Bmask, u32 Amask)
 {
 	V_OBJECT *tmp2;
-	
-	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
-	
-	tmp2 = Neuro_GiveCurEBuf(vobjs);
-
-	tmp2->data = XCreatePixmap(dmain->display, *dmain->cwin, width, height, DefaultDepth(dmain->display, dmain->screen));
-	tmp2->cwin = &tmp2->data;
 		
-	tmp2->raw_data = XGetImage(dmain->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(dmain->display, dmain->screen), ZPixmap);
-	XInitImage(tmp2->raw_data);
+	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+		
+	tmp2 = Neuro_GiveCurEBuf(vobjs);
+		
+	tmp2->raw_data = XCreateImage(dmain->display, 
+			XDefaultVisual(dmain->display, dmain->screen), 
+			DefaultDepth(dmain->display, dmain->screen), 
+			ZPixmap, 0, NULL, width, height, depth, 0);
 
+	tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
+
+	tmp2->data = XCreatePixmap(dmain->display, *dmain->cwin, width, height, 
+			DefaultDepth(dmain->display, dmain->screen));
+
+		
+	XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
+			0, 0, width, height);
+		
+	tmp2->cwin = &tmp2->data;
+	
+	
 	return (v_object*)tmp2;
 }
 
@@ -543,6 +623,10 @@ Lib_FillRect(v_object *source, Rectan *src, u32 color)
 		Vsrc.h = src->h;
 	}
 
+	XSetForeground(dmain->display, dmain->GC, color);
+	
+	XSetForeground(dmain->display, dmain->GC, BlackPixel(dmain->display, dmain->screen));
+	
 	XFillRectangle(dmain->display, *tmp->cwin, dmain->GC, 
 			Vsrc.x, Vsrc.y, Vsrc.w, Vsrc.h);
 }
