@@ -112,7 +112,7 @@ extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
 extern u32 Neuro_GiveEBufCount(EBUF *eng);
 
 /* give the array number of the element [object] */
-extern i32 Neuro_GiveEBufElem(EBUF *eng, void *object);
+extern int Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem);
 
 /* gives the last element of the buffer */
 extern void *Neuro_GiveCurEBuf(EBUF *eng);

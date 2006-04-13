@@ -20,11 +20,15 @@
  */
 
 /* ebuf.c
+ *
+ * interface to the EBUF header. 
+ * EBUF is used in a same manner as we use linked lists;
+ * It is an easy way to have a growing structure array.
+ * The EBUF header elements are hidden to external programs.
  */
 
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
-#include <stdio.h>
 
 /*-------------------- Local Headers Including ---------------------*/
 
@@ -32,11 +36,36 @@
 #include <ebuf.h>
 
 /*--------------------      Other       ----------------------------*/
+
+/* take note that the typedef is in the ebuf.h header!!
+ *
+ * this is the core EBUF header. It is  
+ * 16 bytes in size and handles structures
+ * so their use is memory leak less, safe and
+ * easy. There is only one of this header
+ * structure per EBUF iteration. The actual
+ * data we hold is in the **buffer variable!
+ */
 struct EBUF
 {
+	/* this pointer will point to the structures
+	 * the external programs give us. This is where the
+	 * data is kept and grows.
+	 */
 	void **buffer;
+	
+	/* how many overhead memory inside the **buffer we have
+	 * allocated in advance.
+	 */
 	u32 mem;
+
+	/* the current total number of elements inside **buffer */
 	u32 total;
+
+	/* callback that is not necessarily needed. This callback 
+	 * is used if the input structure itself has allocated elements
+	 * that needs to be freed for every iteration.
+	 */
 	void (*callback)(void *src);
 };
 
@@ -72,16 +101,18 @@ struct EBUF
 void
 Neuro_CreateEBuf(EBUF **eng)
 {	
-	EBUF *tmp;
-		
+	
+	/* we allocate only the header EBUF structure */
 	*eng = (EBUF*)calloc(1, sizeof(EBUF));
-
+	
+	/* set ALL the elements in the header EBUF structure 
+	 * to their default NULL or 0 values.
+	 */
 	(*eng)->mem = 0;
 	(*eng)->total = 0;
 	(*eng)->buffer = NULL;
 	(*eng)->callback = NULL;
 
-	tmp = *eng;
 }
 
 void
@@ -90,6 +121,14 @@ Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src))
 	eng->callback = callback;
 }
 
+/* sptp stands for : size of the pointer type of the structure 
+ * the external program will pass to EBUF. example :
+ * sizeof(struct foo *) or sizeof(foo *)
+ *
+ * sobj stands for : size of the actual structure the external
+ * program will pass to EBUF. example : sizeof(struct foo)
+ * or sizeof(foo)
+ */
 void
 Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 {
@@ -97,26 +136,32 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	u32 *total;
 	u32 *mem;
 	
+	
 	buf = &eng->buffer;
 	total = &eng->total;
 	mem = &eng->mem;
 	
 	/*
-	if (*mem > MEMORY_ALLOC_OVERH)
-	{
-		printf("Theres a huge problem, the memory over head allocation doesnt seem to work properly -- debug value : %d\n", *mem);
-		return;
-	}
+	Debug_Val(0, "debug : %d\n", sptp);
+	Debug_Val(0, "before mem %d\n", mem);
 	*/
+
 	
-	/*
-	printf("debug : %d\n", sptp);
-	printf("before mem %d\n", mem);
-	*/
+	/* we will allocate or reallocate the ** 
+	 * which is what points to the * elements
+	 */
 	if (*buf == NULL)
 	{
+		/* we allocate extra amount of elements to speed up 
+		 * allocation time. MEMORY_ALLOC_OVERH is set in the
+		 * ebuf.h header.
+		 */
 		*buf = calloc(MEMORY_ALLOC_OVERH, sptp);
 		*total = 0;
+
+		/* we set the mem EBUF element to how many overhead 
+		 * times we could add data without the need to reallocate.
+		 */
 		*mem = MEMORY_ALLOC_OVERH - 1;
 	}
 	else if ((*mem * sptp) < sptp)
@@ -127,15 +172,31 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 			Error_Print("Memory buffer unknown error");
 			return;
 		}
+
+		/* we again allocate more memory than needed */
 		*buf = realloc(*buf, sptp * (*total + MEMORY_ALLOC_OVERH));
+
+		/* keep track of how many times we don't need to reallocate */
 		*mem = MEMORY_ALLOC_OVERH - 1;
 	}
 	else
+	{
+		/* We now will use an emplacement that was allocated in advance.
+		 * Since we will use an element, we decrement the overhead EBUF
+		 * mem variable value.
+		 */
 		*mem -= 1;
+	}
 	
 	/* Debug_Val(0, "EBUF -- after mem %d\n", *mem); */
 	
+	/* in addition to allocating the **buffer pointer, we also 
+	 * need to allocate the actual structure it will point to.
+	 *
+	 * in technical terms, we now allocate the * .
+	 */
 	(*buf)[*total] = calloc(1, sobj);
+	
 	
 	*total = *total + 1;
 }
@@ -152,6 +213,9 @@ Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
 	total = &eng->total;
 	mem = &eng->mem;
 	
+	/* we only do anything if the buffer doesn't contain anything 
+	 * to avoid memory leaks.
+	 */
 	if (*buf == NULL)
 	{
 		*buf = calloc(amount, sptp);
@@ -161,6 +225,7 @@ Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
 	
 		i = *total;
 
+		/* we need to allocate every * elements in the ** */
 		while (i-- > 0)
 		{
 			(*buf)[i] = calloc(1, sobj);
@@ -180,16 +245,31 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	
 	total = Neuro_GiveEBufCount(eng);
 	
-	elem = Neuro_GiveEBufElem(eng, object);
-
-	if (elem < 0)
+	/* normally, EBUF functions input integers which are 
+	 * corresponding to the ** array. But in this function
+	 * we input the actual pointer to the element. 
+	 * 
+	 * This puts the actual integer corresponding to the
+	 * pointer object from the ** array and puts it in elem.
+	 */
+	if (Neuro_GiveEBufElem(eng, object, &elem))
 		return;
 	
+	
+	/* we call the callback that will clean 
+	 * allocated pointers in the structure if 
+	 * theres one.
+	 */
 	if (eng->callback != NULL)
 		eng->callback(object);
 	
 	free(object);
 
+
+	/* now that the object is freed, we will attempt to fill its 
+	 * emplacement with the last one.
+	 */
+	
 	/* check to see if the one we want to remove is the last one */ 
 	if (total != elem)
 	{
@@ -199,10 +279,12 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 		/* make the one we just deleted point to the last one */
 		Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, elem), buf);
 	}
-	/* make the last element point to NULL */
+	
+	/* make the last element point to NULL so it can be reused*/
 	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL);
 
 	eng->mem++; /* add an extra mem because we now have an extra slot free */
+	
 	eng->total--;
 }
 
@@ -213,16 +295,29 @@ Neuro_CleanEBuf(EBUF **engi)
 	EBUF *eng;
 	u32 i;
 	
+	/*
+	 * this is to avoid very big and puzzling call to the **engi element like
+	 * (*engi)->mem  or engi[0]->mem. This is for cleaner code.
+	 */
 	eng = *engi;
+	
 	if (!eng)
 		return;
 		
 	buf = &eng->buffer;
 	i = eng->total;
 	
+	/* loop all the elements in the EBUF **, call the
+	 * callback(if theres one!) with the actual element 
+	 * as the argument and finally free the element.
+	 *
+	 * in short : free every * in the ** array.
+	 */
 	while (i-- > 0)
 	{
+		
 		buf = Neuro_GiveEBuf(eng, i);
+		
 		if (buf)
 		{
 			if (eng->callback)
@@ -231,19 +326,21 @@ Neuro_CleanEBuf(EBUF **engi)
 			}
 			free(buf);
 		}
-		/* printf("#%d -- cleaned\n", i); */
+		/* Debug_Val(0, "#%d -- cleaned\n", i); */
 	}
 
+	/* free the actual ** array */
 	if (eng->buffer != NULL)
 	{
 		free(eng->buffer);
 		eng->buffer = NULL;
 	}
 	
-	/* printf("cleaned %d elements\n", eng->total); */
+	/* Debug_Val(0, "cleaned %d elements\n", eng->total); */
 	eng->total = 0;
 	eng->mem = 0;
 
+	/* free the actual EBUF structure */
 	if (*engi != NULL)
 	{
 		free(*engi);
@@ -271,6 +368,7 @@ Neuro_GiveEBuf(EBUF *eng, u32 elem)
 
 	if (elem > eng->total)
 		return NULL;
+
 	
 	if (eng->buffer[elem])
 		return eng->buffer[elem];
@@ -287,6 +385,7 @@ Neuro_GiveCurEBuf(EBUF *eng)
 	if (Neuro_EBufIsEmpty(eng))
 		return NULL;
 
+	
 	if (eng->buffer[eng->total - 1])
 		return (eng->buffer[eng->total - 1]);
 	else
@@ -302,14 +401,22 @@ Neuro_GiveEBufCore(EBUF *eng)
 	return eng->buffer;
 }
 
-i32
-Neuro_GiveEBufElem(EBUF *eng, void *object)
+/* returns 1 on error and 0 if all is ok 
+ *
+ * for a certain pointer, we return its corresponding array
+ * number.
+ */
+int
+Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem)
 {
 	void *buf;
 	u32 i;
 
 	if (!eng || !object)
-		return -1;
+	{
+		*elem = 0;
+		return 1;
+	}
 		
 	buf = &eng->buffer;
 	i = eng->total;
@@ -318,11 +425,17 @@ Neuro_GiveEBufElem(EBUF *eng, void *object)
 	{
 		buf = Neuro_GiveEBuf(eng, i);
 		if (buf == object)
-			return i;
+		{
+			*elem = i;
+			return 0;
+		}
 	}
-	return -1;
+
+	
+	return 1;
 }
 
+/* give the address of an EBUF * element */
 void **
 Neuro_GiveEBufAddr(EBUF *eng, u32 elem)
 {
@@ -330,6 +443,7 @@ Neuro_GiveEBufAddr(EBUF *eng, u32 elem)
 	
 	if (!eng)
 		return NULL;
+	
 	
 	buf = (void***)&eng->buffer;
 	
@@ -339,6 +453,9 @@ Neuro_GiveEBufAddr(EBUF *eng, u32 elem)
 		return NULL;
 }
 
+/* to move EBUF elements from a position to another 
+ * watch out for memory leaks!
+ */
 void
 Neuro_SetEBuf(EBUF *eng, void **to, void *from)
 {
@@ -350,6 +467,7 @@ Neuro_SetEBuf(EBUF *eng, void **to, void *from)
 	return;
 }
 
+/* copy an EBUF header to another */
 void
 Neuro_CopyEBuf(EBUF *to, EBUF *from)
 {
@@ -361,6 +479,13 @@ Neuro_CopyEBuf(EBUF *to, EBUF *from)
 	to->total = from->total;
 }
 
+/* reset the EBUF element 
+ *
+ * NOTE : should only be called if the EBUF address
+ * was passed to another EBUF or it was copied to another
+ * using the Neuro_CopyEBuf function!!!
+ * Else, there will be a big memory leak.
+ */
 void
 Neuro_ResetEBuf(EBUF *eng)
 {
@@ -372,6 +497,8 @@ Neuro_ResetEBuf(EBUF *eng)
 	eng->mem = 0;
 }
 
+/* returns 1 if the EBUF is empty, 0 if its NOT empty and
+ * 2 if the EBUF passed does not exist. */
 u8
 Neuro_EBufIsEmpty(EBUF *eng)
 {
