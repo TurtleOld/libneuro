@@ -60,7 +60,7 @@ typedef struct BITMAP_HDATA
 
 typedef struct BITMAP_COLOR
 {
-	u8 r, g ,b, a; /* red green blue and alpha(alpha won't be used eheh) */
+	u8 r, g, b /*, a*/ ; /* red green blue */
 	u8 *symbol; /* unique symbol associated with this color */
 }BITMAP_COLOR;
 
@@ -72,6 +72,9 @@ typedef struct BITMAP_MAP
 static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
 
 static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
+static int fpdata8(FILE *input, u8 *output) __attribute__((unused));
+static int fpdata16(FILE *input, u16 *output) __attribute__((unused));
+static int fpdata32(FILE *input, u32 *output) __attribute__((unused));
 
 static void 
 clean_bmap_color(void *eng)
@@ -229,7 +232,12 @@ process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		buf->b = fgetc(input);
 		buf->g = fgetc(input);
 		buf->r = fgetc(input);
-		buf->a = fgetc(input);
+		
+		/* I leave this just in case */
+		/* buf->a = fgetc(input); */
+		
+		/* skip the alpha color */
+		fgetc(input);
 		
 		if (i == 0)
 		{
@@ -300,7 +308,8 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 		cbuf->r = r;
 		cbuf->g = g;
 		cbuf->b = b;
-						
+			
+
 		if (Neuro_GiveEBufCount(bcolors) == 0)
 		{
 			cbuf->symbol = calloc(2, sizeof(unsigned char));
@@ -403,13 +412,7 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 				temp = *data & values[i];
 				if (temp)
 					temp = 1;
-#if old
-				r = palette[(temp * 4) + 2];
-				g = palette[(temp * 4) + 1];
-				b = palette[(temp * 4)];
-				/* printf("%d%d%d\n", r, g, b); */
-				process_RGB(bcolors, bpixels, r, g, b);
-#endif /* old */
+				
 				
 				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
 
@@ -471,13 +474,6 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 				temp = *data & values[i];
 				if (temp > 0x0F)
 					temp >>= 4;
-#if old
-				r = palette[(temp * 4) + 2];
-				g = palette[(temp * 4) + 1];
-				b = palette[(temp * 4)];
-				/* printf("%d%d%d\n", r, g, b); */
-				process_RGB(bcolors, bpixels, r, g, b);
-#endif /* old */
 
 				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
 
@@ -533,13 +529,6 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 				BITMAP_COLOR *cbuf = NULL;
 				BITMAP_MAP *pbuf = NULL;
 				temp = *data;
-#if old
-				r = palette[(temp * 4) + 2];
-				g = palette[(temp * 4) + 1];
-				b = palette[(temp * 4)];
-				/* printf("%d%d%d\n", r, g, b); */
-				process_RGB(bcolors, bpixels, r, g, b);
-#endif /* old */
 				
 				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
 
@@ -609,25 +598,35 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 {
 	BITMAP_COLOR *cbuf = NULL; /* colors frontend pointer */
 	BITMAP_MAP *pbuf = NULL; /* pixels map frontend pointer */
+	
+	register u32 i = 0;
+
 	u32 symbol_count = 0; /* number of symbols maximum */
 	double temp = 0; /* temporary variable */
 	u32 ctotal = 0; /* colors frontend count */
 	u32 ptotal = 0; /* pixels frontend count */
-	char *control, *control2, *control3; /* control strings for printfish(printf ish) functions */
+	char *control2, *control3; /* control strings for printfish(printf ish) functions */
 	int width = 0, width2 = 0; /* used in the loops */
 	u8 done = 0; /* used in the loops */
-	u32 i = 0;
 	char *buf = NULL, *bufe = NULL;
 	EBUF *bufa = NULL;
-	
 
+	/* gather the number of colors and the address of the first 
+	 * color element.
+	 */
 	ctotal = Neuro_GiveEBufCount(bcolors);
 	cbuf = Neuro_GiveEBuf(bcolors, ctotal);
 	
-
+	/*
+	 * formula to get the maximum number of characters each symbols will have.
+	 * Those symbols are each attached to a color.
+	 * Note : Theres 81 symbols.
+	 */
 	temp = (log10(ctotal) / log10(81));
-	
+	/* temp is a double, this will drop the extra numbers after the dot. */
 	symbol_count = (u32)temp;
+	
+	/*  */
 	if (temp > symbol_count || (ctotal == 1 || !Neuro_EBufIsEmpty(bcolors)))
 	{
 		symbol_count++;
@@ -637,24 +636,25 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	
 	Neuro_CreateEBuf(output_pixmap);
 	bufa = *output_pixmap;
-#if temp	
-	printf("/* XPM */\nstatic char image_xpm = {\n");
-#endif /* temp */
+	
 	
 
 	Neuro_AllocEBuf(bufa, sizeof(char*), 512); /* static 512 is temporary */
 	
 	buf = Neuro_GiveCurEBuf(bufa);
 
+	/* prepare the control string for the header of the pixmap format */
 	sprintf(buf, "%d %d %d %d", 
 			bmap->infoheader.width, 
 			bmap->infoheader.height, 
 			ctotal + 1,
 			symbol_count);
 	
+	
 	control2 = calloc(40 + 25, sizeof(char));
 	control3 = calloc(40 + 25, sizeof(char)); /* this is too much mem I think */
-	
+
+		
 	sprintf(control2, "%%-%ds	c #%%02x%%02x%%02x", symbol_count);
 	sprintf(control3, "%%-%ds	c %%s", symbol_count);
 	
@@ -665,27 +665,17 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	{
 		int Rr, Gg, Bb;
 		
-		/*Rr = (color_key & 0x003e0000) >> 17;
-		Gg = (color_key & 0x0001f000) >> 12;
-		Bb = (color_key & 0x00000f80) >> 7;
-		*/
 
 		Rr = (color_key & 0xff000000) >> 24;
 		Gg = (color_key & 0x00ff0000) >> 16;
 		Bb = (color_key & 0x0000ff00) >> 8;
 
-		
-		/* Debug_Val(0, "%d COLOR KEY %d %d %d\n", color_key, Rr, Gg, Bb); */
-		
-		/*Rr = (Rr * 255) / 31;
-		Gg = (Gg * 255) / 31;
-		Bb = (Bb * 255) / 31;*/
 
-		/* Debug_Val(0, "output2 %d COLOR KEY %d %d %d\n", color_key, Rr, Gg, Bb); */
 		
 		cbuf = Neuro_GiveEBuf(bcolors, i);
 		
 		Neuro_AllocEBuf(bufa, sizeof(char*), 512);
+
 		buf = Neuro_GiveCurEBuf(bufa);
 		
 		if (cbuf->r == Rr && cbuf->g == Gg && cbuf->b == Bb)
@@ -697,11 +687,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 			sprintf(buf, control2, cbuf->symbol, cbuf->r, cbuf->g, cbuf->b);
 		}
 	}
-	
-	control = calloc(40 + 3, sizeof(char));
 
-	sprintf(control, "%%-%ds", symbol_count);
-			
 	ptotal = Neuro_GiveEBufCount(bpixels);
 	i = ptotal;
 
@@ -723,11 +709,10 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 			break;
 		}
 		else
-		{
-			/* printf("\"");*/ /* the leading " */
-					
+		{		
 			width = 0;
 			width2 = bmap->infoheader.width;
+
 			while (width < bmap->infoheader.width)
 			{
 				u32 t;
@@ -736,7 +721,6 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 				width2 -= 2;
 						
 				
-				/* sprintf(&bufe[width * symbol_count], control, pbuf->color->symbol); */
 				t = 0;
 				while (t < symbol_count)
 				{
@@ -744,6 +728,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 						bufe[(width * symbol_count) + t] = ' ';
 					else
 						bufe[(width * symbol_count) + t] = pbuf->color->symbol[t];
+
 					t++;
 				}
 				
@@ -763,7 +748,6 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 
 	free(control3);
 	free(control2);
-	free(control);
 	free(bufe);
 }
 
@@ -788,10 +772,11 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	u8 *buf = NULL; /* the buffer that will contain the content of the file */
 	
 	/* minor (mostly pointers and temporary variables) */
+	register i32 i = 0, t = 0; /* incremental variable */
+	
 	u32 psize = 0; /* the full size of the pixels data */
 	u8 *palette = NULL; /* the pointer to the palette if theres one */
 	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
-	i32 i = 0, t = 0; /* incremental variable */
 	int aux_var = 0; /* auxiliary variable that can be used by external functions */
 	char *aux_buf = NULL; /* same as aux_var but a buffer */
 	double msize = 0;

@@ -174,7 +174,6 @@ USE_X11_TRUE = @USE_X11_TRUE@
 USE_XML_FALSE = @USE_XML_FALSE@
 USE_XML_TRUE = @USE_XML_TRUE@
 VERSION = @VERSION@
-XML2FLAGS = @XML2FLAGS@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
 X_LIBS = @X_LIBS@
@@ -234,8 +233,8 @@ lib_sources = \
 libneuro_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
 #AM_CFLAGS= @SDLFLAGS@
-LIB_FLAGS = @NEUROLIBFLAGS@ -no-undefined -release $(LT_RELEASE) \
-	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+LIB_FLAGS = @NEUROLIBFLAGS@ -release $(LT_RELEASE) -version-info \
+	$(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 libneuro_la_LDFLAGS = $(LIB_FLAGS)
 SUBLIBLIST = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
 	video/libvideo.la events/libevents.la $(am__append_2)
@@ -605,11 +604,6 @@ uninstall-info: uninstall-info-recursive
 	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
 	uninstall-info-am uninstall-libLTLIBRARIES
 
-
-#include_HEADERS= \
-#		     debug.h \
-#		     NEURO.h \
-#		     neuro_engine.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

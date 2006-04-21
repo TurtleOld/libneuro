@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_RELEASE LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE XML2FLAGS USE_XML_TRUE USE_XML_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_RELEASE LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE EGREP LN_S ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CPP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE USE_XML_TRUE USE_XML_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -19424,12 +19424,9 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src"
-#-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
 SDLFLAGS="`sdl-config --libs`"
-#"`sdl-config --cflags` -lSDL" #"-lpthread"
-XML2FLAGS="-I/usr/include/libxml2"
 
 
 # Check whether --enable-libxml2 or --disable-libxml2 was given.
@@ -19558,7 +19555,7 @@ fi
 echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlFreeDoc" >&5
 echo "${ECHO_T}$ac_cv_lib_xml2_xmlFreeDoc" >&6
 if test $ac_cv_lib_xml2_xmlFreeDoc = yes; then
-  NEUROLIBS="$NEUROLIBS -lxml2"  LIBS="$LIBS -lxml2"
+  NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"
 else
   { { echo "$as_me:$LINENO: error: You must have libxml2" >&5
 echo "$as_me: error: You must have libxml2" >&2;}
@@ -19671,7 +19668,82 @@ echo "$as_me: error: You don't have libSDL you can get it from http://www.libsdl
 fi
 
 	else
-		LIBS="$LIBS -lSDL"
+		echo "$as_me:$LINENO: checking for SDL_Init in -lSDL" >&5
+echo $ECHO_N "checking for SDL_Init in -lSDL... $ECHO_C" >&6
+if test "${ac_cv_lib_SDL_SDL_Init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lSDL  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char SDL_Init ();
+int
+main ()
+{
+SDL_Init ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_SDL_SDL_Init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_SDL_SDL_Init=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_SDL_SDL_Init" >&5
+echo "${ECHO_T}$ac_cv_lib_SDL_SDL_Init" >&6
+if test $ac_cv_lib_SDL_SDL_Init = yes; then
+  cat >>confdefs.h <<\_ACEOF
+#define USE_SDL 1
+_ACEOF
+ LIBS="$LIBS -lSDL"
+else
+  { { echo "$as_me:$LINENO: error: You don't have libSDL you can get it from http://www.libsdl.org" >&5
+echo "$as_me: error: You don't have libSDL you can get it from http://www.libsdl.org" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
 	fi
 
 	cp include/extlib.h include/neuro
@@ -21102,7 +21174,7 @@ fi
 # set the installation path for the headers
 includedir=$includedir/neuro
 
-echo $LIBS
+echo
 
 # enumerate the Makefiles to be created
                                                                                 ac_config_files="$ac_config_files Makefile src/Makefile src/xml/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile"
@@ -21903,7 +21975,6 @@ s,@ac_ct_F77@,$ac_ct_F77,;t t
 s,@LIBTOOL@,$LIBTOOL,;t t
 s,@NO_UNDEFINED_TRUE@,$NO_UNDEFINED_TRUE,;t t
 s,@NO_UNDEFINED_FALSE@,$NO_UNDEFINED_FALSE,;t t
-s,@XML2FLAGS@,$XML2FLAGS,;t t
 s,@USE_XML_TRUE@,$USE_XML_TRUE,;t t
 s,@USE_XML_FALSE@,$USE_XML_FALSE,;t t
 s,@USE_SDL_TRUE@,$USE_SDL_TRUE,;t t

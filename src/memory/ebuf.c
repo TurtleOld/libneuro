@@ -237,7 +237,7 @@ void
 Neuro_SCleanEBuf(EBUF *eng, void *object)
 {
 	void *buf;
-	i32 elem;
+	u32 elem;
 	u32 total;
 	
 	if (!eng || !object)

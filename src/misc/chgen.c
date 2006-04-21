@@ -102,6 +102,7 @@ Uchar(int amount, unsigned char **buf)
 	
 	while (total-- > 0)
 	{
-		core_Uchar(buf, &c_pass_count, &cursor);	
+		core_Uchar(buf, &c_pass_count, &cursor);
 	}
 }
+

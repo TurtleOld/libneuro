@@ -30,7 +30,6 @@ AM_CFLAGS= @NEUROFLAGS@
 LIB_FLAGS= @NEUROLIBFLAGS@
 
 LIB_FLAGS += \
-	      -no-undefined \
 	      -release $(LT_RELEASE) \
 	      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 	      
@@ -54,9 +53,3 @@ endif
 
 libneuro_la_LIBADD = $(SUBLIBLIST)
 
-
-
-#include_HEADERS= \
-#		     debug.h \
-#		     NEURO.h \
-#		     neuro_engine.h

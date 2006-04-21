@@ -356,34 +356,22 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	XColor scrncolor;
 	XColor exactcolor;
 	*/
+
 	
 	tmp = (V_OBJECT*)srf;
-	
-	/*
-	XAllocNamedColor(dmain->display, DefaultColormap(dmain->display, dmain->screen),
-			"white", &scrncolor, &exactcolor);
 
-	pix = scrncolor.pixel;*/
-	
-	
-	/* Neuro_GiveImageSize(tmp, &w, &h); */
+	if (tmp == NULL)
+		return;	
 
 	
-	/* a better depth input is needed, use the DefaultDepth macro to find it */
-	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, , ZPixmap);
+	XSetForeground(dmain->display, dmain->GC, pixel);
+	XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y);
 
-	buf->f.put_pixel(buf, x, y, pixel);*/
-
-	/* XDrawPoint(dmain->display, *tmp->cwin, *dmain->cGC, x, y); */
-
-	/* Debug_Val(0, "neuro white color %d\n", Neuro_GiveRGB24(255, 255, 255)); */
-	if (tmp)
+	
+	if (tmp->raw_data)
 	{
-		if (tmp->raw_data)
-		{
-			XPutPixel(tmp->raw_data, x, y, pixel);
-			tmp->pixel_data_changed = 1;
-		}
+		/* XPutPixel(tmp->raw_data, x, y, pixel); */
+		/* tmp->pixel_data_changed = 1; */
 	}
 }
 
@@ -394,22 +382,34 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	V_OBJECT *tmp;
 	/* i32 h, w; */
 	unsigned long color = 0;
+	i32 h, w;
 
 	tmp = (V_OBJECT*)srf;
+
+	if (tmp == NULL)
+		return 1;
+
+	if (tmp->raw_data)
+		XDestroyImage(tmp->raw_data);
+
+	Neuro_GiveImageSize(tmp, &w, &h);
+			
+	tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+			x, y, 1, 1, 
+			/* DefaultDepth(dmain->display, dmain->screen), */
+			AllPlanes,
+			ZPixmap);
 
 	if (tmp->raw_data == NULL)
 	{
 		Error_Print("the XImage raw_data is empty");
 		return 1;
 	}
-	
-	/*Neuro_GiveImageSize(tmp, &w, &h);*/
 
 	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, DefaultDepth(dmain->display, dmain->screen), ZPixmap); */
-
-	/* color = tmp->raw_data->f.get_pixel(tmp->raw_data, x, y); */
 	
-	color = XGetPixel(tmp->raw_data, x, y);
+	/* color = XGetPixel(tmp->raw_data, x, y); */
+	color = XGetPixel(tmp->raw_data, 0, 0);
 	
 	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
 	return color;
@@ -433,8 +433,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	/* if there was pixel manipulations 
 	 * we need to sync client server pixel data.
 	 */
-	sync_pixels(vsrc);
-	sync_pixels(vdst);
+	/*sync_pixels(vsrc);
+	sync_pixels(vdst);*/
 
 
 	if (src == NULL)
@@ -542,12 +542,18 @@ Lib_LoadBMP(const char *path, v_object **img)
 	/* tmp->cwin = &tmp->shapemask; */
 	if (_err == 0)
 	{
-		i32 h, w;
+		/* i32 h, w; */
 
 		*img = tmp;
 
+		/*
 		Neuro_GiveImageSize(tmp, &w, &h);
-		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 0, 0, w, h, DefaultDepth(dmain->display, dmain->screen), ZPixmap);
+		
+		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+			0, 0, w, h, 
+			DefaultDepth(dmain->display, dmain->screen), 
+			ZPixmap);
+		*/
 		Debug_Val(0, "Successfully loaded the file %s\n", path);
 	}
 	else

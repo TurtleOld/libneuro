@@ -62,12 +62,9 @@ AM_PROG_LIBTOOL
 
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" 
-#-std=gnu99
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
 SDLFLAGS="`sdl-config --libs`" 
-#"`sdl-config --cflags` -lSDL" #"-lpthread"
-XML2FLAGS="-I/usr/include/libxml2"
 
 dnl ------ Configure Arguments ------
 
@@ -117,7 +114,7 @@ dnl ----------------
 if test x$enable_libxml2 = xyes; then
   AC_CHECK_LIB(xml2, 
 		 xmlFreeDoc, 
-		 [NEUROLIBS="$NEUROLIBS -lxml2" AC_SUBST(XML2FLAGS) LIBS="$LIBS -lxml2"] , 
+		 [NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"] , 
 		 AC_MSG_ERROR([You must have libxml2])
 		 )
 fi
@@ -141,7 +138,10 @@ if test $SELECTED_LOWLIB = sdl; then
 		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
 ])
 	else
-		LIBS="$LIBS -lSDL"
+		AC_CHECK_LIB(SDL, SDL_Init, 
+		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS -lSDL"], 
+		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
+])
 	fi
 
 	cp include/extlib.h include/neuro
@@ -183,7 +183,7 @@ AC_SUBST(NEUROLIBFLAGS)
 # set the installation path for the headers
 includedir=$includedir/neuro
 
-echo $LIBS
+echo 
 
 # enumerate the Makefiles to be created
 AC_CONFIG_FILES([
