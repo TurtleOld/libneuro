@@ -278,7 +278,15 @@ Neuro_GiveRGB24(u8 R, u8 G, u8 B)
 	 * G : 0x0000FF00
 	 * B : 0x000000FF
 	 */
-	return 1;
+	unsigned int output;
+
+	output = R;
+	output <<= 8;
+	output += G;
+	output <<= 8;
+	output += B;
+	
+	return output;
 }
 
 u32

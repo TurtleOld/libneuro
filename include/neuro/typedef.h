@@ -35,11 +35,11 @@
 /*! \section signed 
  * the 1st bit to the left is a negative toggle, the number can be negative 
  */
-/*! TODO */
+/*! signed char which is 8 bit */
 typedef signed char i8;
-/*! TODO */
+/*! signed short which is 16 bit */
 typedef signed short i16;
-/*! TODO */
+/*! signed int which is 32 bit */
 typedef signed int i32;
 /*! TODO long long is not ansi compliant */
 /* typedef signed long long i64; */

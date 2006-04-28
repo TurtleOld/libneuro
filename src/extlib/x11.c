@@ -181,9 +181,16 @@ sync_pixels(V_OBJECT *src)
 	if (src->pixel_data_changed == 1)
 	{
 		Neuro_GiveImageSize(src, &w, &h);
-
+#if old
 		XPutImage(dmain->display, *src->cwin, dmain->GC, src->raw_data, 
 				0, 0, 0, 0, w, h);
+#endif /* old */
+		if (src->raw_data)
+			XDestroyImage(src->raw_data);
+		
+		src->raw_data = XGetImage(dmain->display, *src->cwin, 
+			0, 0, w, h, 
+			AllPlanes, ZPixmap);
 	
 		src->pixel_data_changed = 0;
 	}	
@@ -301,7 +308,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	tpixel.blue = 0;
 	tpixel.flags = DoRed | DoGreen | DoBlue;
 	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
-	
+
 	/* Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain); */
 	return 0;
 }
@@ -348,15 +355,6 @@ void
 Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 {
 	V_OBJECT *tmp;
-#if temp
-	XImage *buf;
-#endif /* temp */
-	/* i32 h, w; */
-	/*Pixel pix;
-	XColor scrncolor;
-	XColor exactcolor;
-	*/
-
 	
 	tmp = (V_OBJECT*)srf;
 
@@ -366,54 +364,31 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	
 	XSetForeground(dmain->display, dmain->GC, pixel);
 	XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y);
-
 	
-	if (tmp->raw_data)
-	{
-		/* XPutPixel(tmp->raw_data, x, y, pixel); */
-		/* tmp->pixel_data_changed = 1; */
-	}
+	tmp->pixel_data_changed = 1;
 }
 
 u32 
 Lib_GetPixel(v_object *srf, int x, int y)
 {
-	/* XImage *buf; */
 	V_OBJECT *tmp;
-	/* i32 h, w; */
-	unsigned long color = 0;
-	i32 h, w;
 
 	tmp = (V_OBJECT*)srf;
 
 	if (tmp == NULL)
 		return 1;
 
-	if (tmp->raw_data)
-		XDestroyImage(tmp->raw_data);
-
-	Neuro_GiveImageSize(tmp, &w, &h);
-			
-	tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
-			x, y, 1, 1, 
-			/* DefaultDepth(dmain->display, dmain->screen), */
-			AllPlanes,
-			ZPixmap);
+	/* way too slow */
+	/*if (tmp->pixel_data_changed == 1)
+		sync_pixels(tmp);*/
 
 	if (tmp->raw_data == NULL)
 	{
 		Error_Print("the XImage raw_data is empty");
 		return 1;
 	}
-
-	/* buf = XGetImage(dmain->display, *tmp->cwin, x, y, 1, 1, DefaultDepth(dmain->display, dmain->screen), ZPixmap); */
 	
-	/* color = XGetPixel(tmp->raw_data, x, y); */
-	color = XGetPixel(tmp->raw_data, 0, 0);
-	
-	/* Debug_Val(0, "(%d,%d) Color Found %d\n", x, y, color); */
-	return color;
-	/* return 1; */
+	return XGetPixel(tmp->raw_data, x, y);
 }
 
 
@@ -433,8 +408,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	/* if there was pixel manipulations 
 	 * we need to sync client server pixel data.
 	 */
-	/*sync_pixels(vsrc);
-	sync_pixels(vdst);*/
+	sync_pixels(vsrc);
+	sync_pixels(vdst);
 
 
 	if (src == NULL)
@@ -511,8 +486,11 @@ Lib_LoadBMP(const char *path, v_object **img)
 	}
 	
 	chrono = Neuro_GetTickCount();
+
+	
 	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(path, &temp);
+	
 	Debug_Val(0, "Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
 	
 	if (!temp)
@@ -531,29 +509,29 @@ Lib_LoadBMP(const char *path, v_object **img)
 	initbuf = buffer;
 	
 	chrono = Neuro_GetTickCount();
-	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-			&tmp->data, &tmp->shapemask, &tmp->attrib);		
-	Debug_Val(0, "Converting pixmap to Ximage %d\n", Neuro_GetTickCount() - chrono);
-	
 	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-		&tmp->data, &tmp->shapemask, NULL);*/
+			&tmp->data, &tmp->shapemask, &tmp->attrib);*/
+	
+	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+		&tmp->data, &tmp->shapemask, NULL);
+
+	Debug_Val(0, "Converting pixmap to Ximage %d\n", Neuro_GetTickCount() - chrono);
 	
 	tmp->cwin = &tmp->data;
 	/* tmp->cwin = &tmp->shapemask; */
 	if (_err == 0)
 	{
-		/* i32 h, w; */
+		i32 h, w;
 
 		*img = tmp;
 
-		/*
+		
 		Neuro_GiveImageSize(tmp, &w, &h);
 		
 		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
 			0, 0, w, h, 
-			DefaultDepth(dmain->display, dmain->screen), 
-			ZPixmap);
-		*/
+			AllPlanes, ZPixmap);
+		
 		Debug_Val(0, "Successfully loaded the file %s\n", path);
 	}
 	else
@@ -631,10 +609,12 @@ Lib_FillRect(v_object *source, Rectan *src, u32 color)
 
 	XSetForeground(dmain->display, dmain->GC, color);
 	
-	XSetForeground(dmain->display, dmain->GC, BlackPixel(dmain->display, dmain->screen));
-	
 	XFillRectangle(dmain->display, *tmp->cwin, dmain->GC, 
 			Vsrc.x, Vsrc.y, Vsrc.w, Vsrc.h);
+
+	XSetForeground(dmain->display, dmain->GC, BlackPixel(dmain->display, dmain->screen));
+
+	/* tmp->pixel_data_changed = 1; */
 }
 
 void
@@ -658,7 +638,18 @@ Lib_LockVObject(v_object *vobj)
 void 
 Lib_UnlockVObject(v_object *vobj)
 {
+	V_OBJECT *tmp;
+
 	
+	tmp = (V_OBJECT*)vobj;
+
+	if (tmp == NULL)
+		return;
+	
+
+	tmp->pixel_data_changed = 1;
+	
+	sync_pixels(tmp);
 }
 
 void

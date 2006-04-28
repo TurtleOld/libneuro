@@ -2,27 +2,20 @@ Things to do in the neuro library.
 
 
 graphics engine : 
-	fix the dynamic redraw of the tiles below the dynamic object, it does not seem to work
-	perfectly; it redraw a very small portion of the dynamic object instead of the tile below 
-	on the edges, barely noticeable.
-
-script engine :
-	code it. 
-	The script engine will need to include only simple things. 2 types of 
-	variables, doubles and strings. A function to start and clean. A function to 
-	pass a callback that the scripts can call easilly. Returning values of those would
-	be returned to the scripts. operators would be the minimal ones : if (); then;  else;  fi;
-	while (); do;  done;  for ( , ); do ;  done;.
-
-sound engine :
-	code it.
+	- fix the dynamic redraw of the tiles below the dynamic object, it does not seem to work
+	  perfectly; it redraw a very small portion of the dynamic object instead of the tile below 
+	  on the edges, barely noticeable.
+	- also noticed bad redraws in isoe when the robot goes off screen; tiles around seems to
+	  blink black very fast, barely noticeable. Confirmed this is a bug with type 0 or 3
+	  bounds case. Quick fix done, need to test it.
+	- implement a way to change a certain color into an image to support things like
+	  font colors. Would need to be implemented low in the drawing process.
+	- implement a fast independant alpha module, something called after the actual low level
+	  draw.
+	
 
 network engine/module : 
 	code it.
-
-* GUI engine :
-	code it. Nothing too complicated is needed. In fact, I'm thinking of just ommiting
-	the GUI code in neuro and just leaving it to programs under it.
 
 listimg module :
 	move it to neuro.
@@ -43,8 +36,4 @@ sprite module :
 	  of looping everytime the color buffer to see if a color was already added, we would
 	  simply do a certain & with the color binary map to see if it was already added or no.
 	  This method would use too much memory, need to find a way to implement this resonably.
-
-
-
-
 

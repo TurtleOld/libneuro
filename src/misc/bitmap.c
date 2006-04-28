@@ -26,10 +26,22 @@
 #include <math.h>
 #include <string.h>
 
+#if USE_ZLIB
+/* this is used to open the bitmaps, 
+ * the beauty of this is it works 
+ * for compressed and uncompressed
+ * transparently, meaning no extra code
+ * for both!
+ */
+#include <zlib.h>
+typedef gzFile nFILE;
+#else /* NOT USE_ZLIB */
+typedef FILE nFILE;
+#endif /* USE_ZLIB */
+
 #include <ebuf.h>
 #include <other.h>
 
-/* #pragma pack (1) */ /* best is to avoid this */
 
 typedef struct BITMAP_HEADER
 {
@@ -71,10 +83,23 @@ typedef struct BITMAP_MAP
 
 static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
 
+
+/* position fast convertion variable for the hash table 
+ * this table converts numbers from 0 to 32 to their 
+ * corresponding position in an integer.
+ */
+static u32 pos_conv[32];
+
+/* buffer that will keep an hash table of bits used to 
+ * know the number of colors in the bitmap.
+ */
+static EBUF *color_hash;
+
+
 static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
-static int fpdata8(FILE *input, u8 *output) __attribute__((unused));
-static int fpdata16(FILE *input, u16 *output) __attribute__((unused));
-static int fpdata32(FILE *input, u32 *output) __attribute__((unused));
+static int fpdata8(nFILE *input, u8 *output) __attribute__((unused));
+static int fpdata16(nFILE *input, u16 *output) __attribute__((unused));
+static int fpdata32(nFILE *input, u32 *output) __attribute__((unused));
 
 static void 
 clean_bmap_color(void *eng)
@@ -92,12 +117,16 @@ clean_bmap_color(void *eng)
  * 1 on error dont touch output
  */
 static int
-fpdata8(FILE *input, u8 *output)
+fpdata8(nFILE *input, u8 *output)
 {
 	if (input == NULL || output == NULL)
 		return 1;
-
+#if USE_ZLIB
+	*output = gzgetc(input);
+#else /* NOT USE_ZLIB */
 	*output = fgetc(input);
+#endif /* NOT USE_ZLIB */
+
 
 	return 0;
 }
@@ -106,7 +135,7 @@ fpdata8(FILE *input, u8 *output)
  * 1 on error dont touch output
  */
 static int
-fpdata16(FILE *input, u16 *output)
+fpdata16(nFILE *input, u16 *output)
 {
 	u8 feed[2];
 	u16 *buf;
@@ -114,8 +143,13 @@ fpdata16(FILE *input, u16 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
+#if USE_ZLIB
+	feed[0] = gzgetc(input);
+	feed[1] = gzgetc(input);
+#else /* NOT USE_ZLIB */
 	feed[0] = fgetc(input);
 	feed[1] = fgetc(input);
+#endif /* NOT USE_ZLIB */
 
 	buf = (u16*)&feed;
 	
@@ -128,7 +162,7 @@ fpdata16(FILE *input, u16 *output)
  * 1 on error dont touch output
  */
 static int
-fpdata32(FILE *input, u32 *output)
+fpdata32(nFILE *input, u32 *output)
 {
 	/* register int feed; */
 	u8 feed[4];
@@ -138,10 +172,17 @@ fpdata32(FILE *input, u32 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
+#if USE_ZLIB
+	feed[0] = gzgetc(input);
+	feed[1] = gzgetc(input);
+	feed[2] = gzgetc(input);
+	feed[3] = gzgetc(input);
+#else /* NOT USE_ZLIB */
 	feed[0] = fgetc(input);
 	feed[1] = fgetc(input);
 	feed[2] = fgetc(input);
 	feed[3] = fgetc(input);
+#endif /* NOT USE_ZLIB */
 
 	buf = (u32*)&feed;
 	
@@ -151,7 +192,7 @@ fpdata32(FILE *input, u32 *output)
 }
 
 static BITMAP_HDATA *
-parse_bitmap_header(FILE *input)
+parse_bitmap_header(nFILE *input)
 {
 	BITMAP_HDATA *buf;
 	BITMAP_INFOHEADER *tmp;
@@ -207,7 +248,7 @@ print_bitmap_infos(BITMAP_HDATA *bmap)
 }
 
 static void
-process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
+process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
 	u32 i = 0;
 	BITMAP_COLOR *buf;
@@ -229,6 +270,17 @@ process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		fpdata8(input, &buf->r);
 		fpdata8(input, &buf->a);
 		*/
+#if USE_ZLIB
+		buf->b = gzgetc(input);
+		buf->g = gzgetc(input);
+		buf->r = gzgetc(input);
+		
+		/* I leave this just in case */
+		/* buf->a = fgetc(input); */
+		
+		/* skip the alpha color */
+		gzgetc(input);	
+#else /* NOT USE_ZLIB */
 		buf->b = fgetc(input);
 		buf->g = fgetc(input);
 		buf->r = fgetc(input);
@@ -238,6 +290,7 @@ process_palette(FILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		
 		/* skip the alpha color */
 		fgetc(input);
+#endif /* NOT USE_ZLIB */
 		
 		if (i == 0)
 		{
@@ -785,11 +838,14 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	u32 wmult = 0;
 	double pixellen = 0;
 	u32 increm = 0;
-	FILE *f_bitmap;
+	nFILE *f_bitmap;
 	u8 DATA;
 	
-
+#if USE_ZLIB
+	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
+#else /* NOT USE_ZLIB */
 	f_bitmap = fopen(bitmap, "r");
+#endif /* NOT USE_ZLIB */
 	
 	if (f_bitmap == NULL)
 	{
@@ -851,8 +907,11 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	tmp = tmp - 0.000001; /* to avoid bugs */
 
 	t = 0;
-	
+#if USE_ZLIB
+	gzseek(f_bitmap, bmap->header.offset, SEEK_SET);
+#else /* NOT USE_ZLIB */
 	fseek(f_bitmap, bmap->header.offset, SEEK_SET);
+#endif /* NOT USE_ZLIB */
 	
 	while (i < psize)
 	{			
@@ -869,8 +928,11 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 				t = (4 - t);
 				i += t;
 
-				
+#if USE_ZLIB
+				gzseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
+#else /* NOT USE_ZLIB */
 				fseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
+#endif /* NOT USE_ZLIB */
 				
 				/*
 				printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
@@ -891,8 +953,8 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 		}
 
 		
-		/* fpdata8(f_bitmap, &DATA); */
-		DATA = fgetc(f_bitmap);
+		fpdata8(f_bitmap, &DATA);
+		/* DATA = fgetc(f_bitmap); */
 		
 		process_bitmap(bmap, palette, &DATA, 
 				bmap_colors, bmap_map, 
@@ -924,7 +986,12 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	Neuro_CleanEBuf(&bmap_colors);
 	Neuro_CleanEBuf(&bmap_map);
 
+#if USE_ZLIB
+	if (f_bitmap)
+		gzclose(f_bitmap);
+#else /* NOT USE_ZLIB */
 	if (f_bitmap)
 		fclose(f_bitmap);
+#endif /* NOT USE_ZLIB */
 }
 

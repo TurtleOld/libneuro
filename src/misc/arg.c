@@ -63,8 +63,8 @@ enum
 	TYPE_NEST /* 3 */
 };
 
-EBUF *bufinput; /* buffer of argv */
-EBUF *loptions; /* Buffer of the list of options */
+static EBUF *bufinput; /* buffer of argv */
+static EBUF *loptions; /* Buffer of the list of options */
 
 static void
 clean_loptions(void *src)

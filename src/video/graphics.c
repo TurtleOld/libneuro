@@ -209,7 +209,7 @@ static EBUF *_pool;
 /* screen size */
 static Rectan screenSize;
 
-u32 temp_count;
+static u32 temp_count;
 
 /* a rectangle meant to test the bound fix algorithm */
 static Rectan test_BoundFix;
@@ -725,19 +725,6 @@ AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	draw_this_cycle = 1;
 }
 
-/* push a drawing instruction that will be deleted from the queue and raw 
- * after being drawn. This replaces the hackish override method with an 
- * ultra versatile one and much less costy ;P.
- */
-static void
-PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
-{
-	if (debug_instruction_buffer)
-		Debug_Val(0, "volatile push -> %d\n", layer);
-
-	AddDrawingInstruction(layer, TDRAW_VOLATILE, isrc, idst, isurface);
-}
-
 /* clean_drawn_objects() might have cleaned objects
  * that should be drawn so we will redraw those in this
  * function. 
@@ -785,10 +772,10 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 			
 			if (bounds_ret == 0)
 			{	
-				PushVolatileDraw(cur->current->layer, &cur->current->src, 
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
 						&cur->current->dst, cur->current->surface_ptr);
 				
-				/* Debug_Val(0, "dynamic is inside this object\n"); */
+				/*Debug_Val(0, "dynamic is inside this object\n");*/
 				output = 1;
 			}
 
@@ -802,7 +789,7 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 				Neuro_VerticalBoundFix(&indep_body, &isrc, &idst);
 				Neuro_HorizontalBoundFix(&indep_body, &isrc, &idst);
 
-				PushVolatileDraw(cur->current->layer, 
+				Neuro_PushVolatileDraw(cur->current->layer, 
 						&isrc, &idst, cur->current->surface_ptr);
 				
 				output = 1;
@@ -839,8 +826,18 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 					isrc.h -= buf.h - indep_body.h;
 				}
 				
-				PushVolatileDraw(cur->current->layer, 
-						&isrc, &idst, cur->current->surface_ptr);
+				/* Neuro_PushVolatileDraw(cur->current->layer, 
+						&isrc, &idst, cur->current->surface_ptr);*/
+				
+				/* temporary hack that seems to work, we draw the whole 
+				 * static image... this needs testing and a better 
+				 * algorithm.
+				 */
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&cur->current->dst, cur->current->surface_ptr);
+
+
+				/* Debug_Val(0, "we have a case 3 situation!\n"); */
 				
 				output = 1;
 			}
@@ -1264,6 +1261,16 @@ void
 Neuro_PushDynamicDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
 	AddDrawingInstruction(layer, TDRAW_DYNAMIC, isrc, idst, isurface);
+}
+
+/* push a drawing instruction that will be deleted from the queue and raw 
+ * after being drawn. This replaces the hackish override method with an 
+ * ultra versatile one and much less costy ;P.
+ */
+void
+Neuro_PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+{
+	AddDrawingInstruction(layer, TDRAW_VOLATILE, isrc, idst, isurface);
 }
 
 /* use this function to set the background 

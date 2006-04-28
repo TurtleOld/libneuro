@@ -39,7 +39,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 #AC_INIT(Neuro, $NEURO_VERSION)
-AC_CONFIG_SRCDIR(src/neuro_main.c)
+AC_CONFIG_SRCDIR([src/neuro_main.c])
 
 # init automake
 AM_INIT_AUTOMAKE(neuro, $NEURO_VERSION)
@@ -50,8 +50,15 @@ AC_DEFINE_UNQUOTED(OS, "${host}", [cpu-machine-OS])
 AC_MSG_RESULT($host)
 
 #dnl ----- set some variables ------
+
 # check for programs
+AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 # check for cygwin stuff
 AC_LIBTOOL_WIN32_DLL
@@ -81,6 +88,8 @@ AC_ARG_WITH(lowlib,
 lowlib="$withval", lowlib="sdl")
 
 
+# host related checkings
+
 AC_MSG_CHECKING([if we need -no-undefined])
 case $host in
 	*-*-cygwin | *-*-mingw* | *-*-pw32*)
@@ -98,15 +107,35 @@ esac
 AC_MSG_RESULT($need_no_undefined)
 AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
-dnl ignore this comment because the above now does a good job
-dnl --- cheap check for w32 ... --- please make this better, this section should be the
-dnl recognition of the platform Neuro is getting built on
+case $targ in
+	w32)
+		AC_CHECK_HEADERS([windows.h])
+	;;
 
-#AC_CHECK_FUNC(usleep, , [NEUROFLAGS="$NEUROFLAGS -DWIN32"])
-
+	unix)
+		AC_CHECK_HEADERS([unistd.h])
+	;;
+esac
 
 
 dnl --------- Checks -------------
+
+dnl ----------------
+dnl check for header files.
+dnl ----------------
+AC_HEADER_STDC
+AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+
+# Checks for library functions.
+AC_FUNC_REALLOC
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([gettimeofday memchr memset strchr])
 
 dnl ----------------
 dnl XML check
@@ -147,6 +176,13 @@ if test $SELECTED_LOWLIB = sdl; then
 	cp include/extlib.h include/neuro
 	cat include/extlib_sdl.h >> include/neuro/extlib.h
 fi
+dnl ----------------
+dnl Zlib check
+dnl ----------------
+AC_CHECK_LIB(z, gzgetc, 
+	     [AC_DEFINE(USE_ZLIB, 1) LIBS="$LIBS -lz"], 
+	     [AC_MSG_ERROR(You don't have the Z library)])
+
 
 dnl ----------------
 dnl X11 check

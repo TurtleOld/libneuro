@@ -42,6 +42,9 @@ extern void Neuro_CleanKeyboard();
 /*! TODO */
 extern void Neuro_CleanMouse();
 
+/* puts the mouse coordinates into x and y */
+extern void Neuro_GetMousePos(int *x, int *y);
+
 
 /* used internally */
 extern void Events_Poll(void);

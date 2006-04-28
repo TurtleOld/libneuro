@@ -32,6 +32,9 @@
 
 #include <SDL/SDL.h>
 /* #include <endian.h> */
+#if USE_ZLIB
+#include <zlib.h>
+#endif /* USE_ZLIB */
 
 #include <neuro/extlib.h>
 #include <neuro/other.h>
@@ -74,6 +77,8 @@ static options_list options = {
 	SDL_HWSURFACE | SDL_DOUBLEBUF, 
 	SDL_HWSURFACE
 };
+
+static u8 mouse_wheel = 0; /* mouse wheel variable */
 
 
 /*  video constructor destructor  */
@@ -137,10 +142,130 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	SDL_BlitSurface((SDL_Surface*)source, (SDL_Rect*)src, (SDL_Surface*)destination, (SDL_Rect*)dst);
 }
 
+static int 
+stdio_seek(SDL_RWops *context, int offset, int whence)
+{
+
+	return gzseek(context->hidden.stdio.fp, offset, whence);
+	/*
+	if ( gzseek(context->hidden.stdio.fp, offset, whence) == 0 ) 
+	{
+		return(gztell(context->hidden.stdio.fp));
+	} 
+	else 
+	{
+		SDL_Error(SDL_EFSEEK);
+		return(-1);
+	}
+	*/
+}
+
+static int 
+stdio_read(SDL_RWops *context, void *ptr, int size, int maxnum)
+{
+	size_t nread = 0;
+
+	/* nread = fread(ptr, size, maxnum, context->hidden.stdio.fp);  */
+
+	if (size == 1)
+		nread = gzread(context->hidden.stdio.fp, ptr, maxnum);
+
+	if (size == 2)
+	{
+		char *buf = NULL;
+		
+		buf = ptr;
+		
+		nread = gzread(context->hidden.stdio.fp, &buf[0], maxnum);
+		nread += gzread(context->hidden.stdio.fp, &buf[1], maxnum);
+	}
+
+	if (size == 4)
+	{
+		char *buf = NULL;
+		
+		buf = ptr;
+
+		nread = gzread(context->hidden.stdio.fp, &buf[0], maxnum);
+		nread += gzread(context->hidden.stdio.fp, &buf[1], maxnum);
+		nread += gzread(context->hidden.stdio.fp, &buf[2], maxnum);
+		nread += gzread(context->hidden.stdio.fp, &buf[3], maxnum);
+	}
+
+	/*Debug_Val(0, "asked for size %d maxnum %d -- read %d\n",
+			size, maxnum, nread);*/
+
+	if ( nread == 0) {
+		SDL_Error(SDL_EFREAD);
+	}
+	return(nread);
+}
+
+/* this won't be needed, we don't actually want to write
+ * bitmaps.
+ */
+static int 
+stdio_write(SDL_RWops *context, const void *ptr, int size, int num)
+{
+	size_t nwrote;
+
+	nwrote = fwrite(ptr, size, num, context->hidden.stdio.fp);
+	if ( nwrote == 0 && ferror(context->hidden.stdio.fp) ) {
+		SDL_Error(SDL_EFWRITE);
+	}
+	return(nwrote);
+}
+
+static int 
+stdio_close(SDL_RWops *context)
+{
+	if ( context ) {
+		if ( context->hidden.stdio.autoclose ) {
+			/* WARNING:  Check the return value here! */
+			/* fclose(context->hidden.stdio.fp); */
+			gzclose(context->hidden.stdio.fp);
+		}
+		free(context);
+	}
+	return(0);
+}
+
+
 void
 Lib_LoadBMP(const char *path, v_object **img)
-{
+{	
+#if USE_ZLIB
+	gzFile fp;
+	SDL_RWops *ops;
+
+	fp = gzopen(path, "rb");
+	if (fp == NULL)
+		return;
+
+	ops = SDL_AllocRW();
+	if (ops == NULL)
+		return;
+
+	ops->seek = stdio_seek;
+	ops->read = stdio_read;
+	ops->write = stdio_write;
+	ops->close = stdio_close;
+	ops->hidden.stdio.fp = fp;
+	ops->hidden.stdio.autoclose = 1;
+
+	*img = SDL_LoadBMP_RW(ops, 1);
+
+	if (*img == NULL)
+	{
+		Debug_Val(0, "Unable to load image \"%s\" SDL says : %s\n", path, SDL_GetError());
+	}
+
+	/*if (ops)
+		free(ops);*/
+
+#else /* NOT USE_ZLIB */
 	*img = SDL_LoadBMP(path);
+#endif /* NOT USE_ZLIB */
 }
 
 static u8 
@@ -257,7 +382,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 		}
 		break;
 		
-		/*case 3:
+		case 3:
 		{
 			if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
 				err = p[0] << 16 | p[1] << 8 | p[2];
@@ -265,7 +390,6 @@ Lib_GetPixel(v_object *srf, int x, int y)
 				err = p[0] | p[1] << 8 | p[2] << 16;
 		}
 		break;
-		*/
 		
 		case 4:
 		{
@@ -317,7 +441,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 			*(u16*)p = pixel;
 		}
 		break;
-		/*
+		
 		case 3:
 		{
 			if(SDL_BYTEORDER == SDL_BIG_ENDIAN) 
@@ -334,7 +458,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 			}
 		}
 		break;
-		*/
+		
 		case 4:
 		{
 			*(u32 *)p = pixel;
@@ -499,6 +623,7 @@ Lib_EventPoll()
 	{
 		switch (event.type)
 		{
+				
 			default:
 			break;
 		}
@@ -508,13 +633,51 @@ Lib_EventPoll()
 u8
 Lib_GetMouseState(i32 *x, i32 *y)
 {
-	return SDL_GetMouseState(x, y);
+	u8 value = 0;
+
+	value = SDL_BUTTON(SDL_GetMouseState(x, y));
+
+	/* to fix what appears to be a bug... might 
+	 * be a cheap hack... but it works :)
+	 */
+	if (value > 3)
+		value = 3;
+
+	if (mouse_wheel && value == 0)
+	{
+		value = mouse_wheel;
+		mouse_wheel = 0;
+	}
+	
+	return value;
 }
 
 i32
 Lib_PollEvent(void *event)
 {
-	return SDL_PollEvent((SDL_Event*)event);
+	SDL_Event event;
+	int _err = 0;
+
+	while(SDL_PollEvent(&event))
+	{
+		switch (event.type)
+		{
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				if (event.button.button == SDL_BUTTON_WHEELUP
+					|| event.button.button == SDL_BUTTON_WHEELDOWN)
+				{
+					mouse_wheel = event.button.button;
+				}
+			}
+			break;
+				
+			default:
+			break;
+		}
+	}
+	
+	return _err;
 }
 
 int

@@ -64,6 +64,12 @@ static EBUF *_klist;
 static EBUF *_mlist;
 
 
+/* those are the mouse coordinates so external 
+ * programs can get them from us.
+ */
+static int mouse_x, mouse_y;
+
+
 /* 
  * this function checks every elements in the _klist buffer, 
  * checks which keys are being pressed in it and calls the
@@ -136,6 +142,9 @@ handle_mouse()
 	 * and put the current x,y coordinates in x and y.
 	 */
 	button = Lib_GetMouseState(&x, &y);
+
+	mouse_x = x;
+	mouse_y = y;
 	
 	/* we put the total amount of elements in _mlist to total 
 	 * and increment by 1 to support a while (somevar-- > 0) 
@@ -210,6 +219,15 @@ mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_releas
 }
 
 /*--- Global Functions ---*/
+
+void
+Neuro_GetMousePos(int *x, int *y)
+{
+	if (x)
+		*x = mouse_x;
+	if (y)
+		*y = mouse_y;
+}
 
 void 
 Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
@@ -309,8 +327,6 @@ Neuro_CleanMouse()
 void
 Events_Poll()
 {	
-	Lib_EventPoll();
-
 	handle_keys();
 	handle_mouse();
 }

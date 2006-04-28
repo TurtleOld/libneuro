@@ -52,9 +52,11 @@
 /*! The Total screen height (can be changed before compile time to set the new size) */
 #define SCREEN_Y 600
 
+/** Neuro_GetScreenBuffer - returns the variable containing the screen buffer. 
+ */
 extern void *Neuro_GetScreenBuffer();
 
-/*! Add a Static Drawing Instruction to the graphics loop. This function will
+/** Add a Static Drawing Instruction to the graphics loop. This function will
  * put take the image, place it in a special buffer and then draw the image
  * with the desired draw time(in comparison with other to draw images : layer) and 
  * place it on the screen depending on the given coordinates (also draws the portion
@@ -80,6 +82,15 @@ extern void Neuro_PushStaticDraw(u32 layer, Rectan *src, Rectan *dst, void *surf
  */
 extern void Neuro_PushDynamicDraw(u32 layer, Rectan *src, Rectan *dst, void *surface);
 
+/* push a drawing instruction that will be deleted from the queue and raw 
+ * after being drawn. This replaces the hackish override method with an 
+ * ultra versatile one and much less costy ;P.
+ * same use as with the Dynamic and Static 
+ * functions above.
+ */
+extern void Neuro_PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface);
+
+
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 
  * @param [in] func this is the callback function that the graphics engine will loop and 
@@ -92,7 +103,9 @@ extern void Neuro_AddDrawingElement(void (*func)());
  */
 extern void Neuro_AddDirectDrawing(Rectan *src, Rectan *dst, void *surface);
 
-/*! use this function to set the background */
+/** use this function to set the background 
+ * @param [in] the pointer to an image.
+ */
 extern void Neuro_AddBackground(void *isurface);
 
 /* refreshes the screen nicely also support backgrounds */
