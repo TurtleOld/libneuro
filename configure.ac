@@ -109,6 +109,7 @@ AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
 case $targ in
 	w32)
+		AC_FUNC_REALLOC
 		AC_CHECK_HEADERS([windows.h])
 	;;
 
@@ -133,7 +134,6 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 
 # Checks for library functions.
-AC_FUNC_REALLOC
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([gettimeofday memchr memset strchr])
 
