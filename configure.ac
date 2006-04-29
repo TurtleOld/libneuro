@@ -109,11 +109,11 @@ AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
 case $targ in
 	w32)
-		AC_FUNC_REALLOC
 		AC_CHECK_HEADERS([windows.h])
 	;;
 
 	unix)
+		AC_FUNC_REALLOC
 		AC_CHECK_HEADERS([unistd.h])
 	;;
 esac
