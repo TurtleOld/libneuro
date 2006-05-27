@@ -3,20 +3,17 @@ AC_PREREQ(2.59)
 
 AC_INIT(README)
 
-# versionning technique from Simple DirectMedia Layer (which they took from Gtk apparently)
 #
 # NEURO_MICRO_VERSION += 1	when bug fixes were done or small changes
 # NEURO_MINOR_VERSION += 1	when new functions and or modules were added, anything more than mere bug fixes or small changes
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
-# if backward compatibility has been broken, put the 2 below to 0
-# NEURO_INTERFACE_AGE += 1	if new functions were added put this to 0, else += 1
-# NEURO_BINARY_AGE += 1		anything done adds 1
 #
 NEURO_MAJOR_VERSION=0
-NEURO_MINOR_VERSION=20
-NEURO_MICRO_VERSION=10
+NEURO_MINOR_VERSION=45
+NEURO_MICRO_VERSION=2
 NEURO_INTERFACE_AGE=0
-NEURO_BINARY_AGE=10
+NEURO_REVISION=1
+NEURO_BINARY_AGE=0
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
 AC_SUBST(NEURO_MAJOR_VERSION)
@@ -28,10 +25,10 @@ AC_SUBST(NEURO_VERSION)
 
 
 # libtool versioning
-LT_RELEASE=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION
-LT_CURRENT=`expr $NEURO_MICRO_VERSION - $NEURO_INTERFACE_AGE`
-LT_REVISION=$NEURO_INTERFACE_AGE
-LT_AGE=`expr $NEURO_BINARY_AGE - $NEURO_INTERFACE_AGE`
+#LT_RELEASE=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION
+LT_CURRENT=$NEURO_INTERFACE_AGE
+LT_REVISION=$NEURO_REVISION
+LT_AGE=$NEURO_BINARY_AGE
 
 AC_SUBST(LT_RELEASE)
 AC_SUBST(LT_CURRENT)
@@ -143,7 +140,7 @@ dnl ----------------
 if test x$enable_libxml2 = xyes; then
   AC_CHECK_LIB(xml2, 
 		 xmlFreeDoc, 
-		 [NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"] , 
+		 [NEUROFLAGS="$NEUROFLAGS -I/usr/include/libxml2 -I/usr/local/include/libxml2" NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"] , 
 		 AC_MSG_ERROR([You must have libxml2])
 		 )
 fi

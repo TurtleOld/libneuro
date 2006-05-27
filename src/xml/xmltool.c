@@ -117,7 +117,7 @@ Neuro_XMLPerror(char *message)
 }
 
 int 
-Neuro_XMLWriteToXml(char *filename, char *parent_name, char *node_name, char *node_info)
+Neuro_WriteToXml(char *filename, char *parent_name, char *node_name, char *node_info)
 {
 	xmlDocPtr doc;
 	xmlNodePtr cur;

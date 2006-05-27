@@ -196,12 +196,8 @@ target_alias = @target_alias@
 noinst_LTLIBRARIES = libxmltool.la
 libxmltool_la_SOURCES = $(SRCS)
 SRCS = xmltool.c \
-	xmltool.h \
-	nmap.c \
-	nmap.h
+	nmap.c
 
-
-#AM_CFLAGS= @NEUROFLAGS@
 AM_CFLAGS = @NEUROFLAGS@
 all: all-am
 
@@ -454,9 +450,6 @@ uninstall-am: uninstall-info-am
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-info-am
 
-
-#include_HEADERS= xmltool.h \
-#		 nmap.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

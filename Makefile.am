@@ -1,4 +1,7 @@
-
+EXTRA_DIST = .git \
+	     version.mk \
+	     include/extlib.h \
+	     include/extlib_sdl.h
 
 SUBDIRS=src
 

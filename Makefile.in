@@ -207,6 +207,11 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+EXTRA_DIST = .git \
+	     version.mk \
+	     include/extlib.h \
+	     include/extlib_sdl.h
+
 SUBDIRS = src
 include_HEADERS = \
 		 include/neuro/debug.h \
@@ -409,7 +414,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/include/neuro
+	$(mkdir_p) $(distdir)/include $(distdir)/include/neuro
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \

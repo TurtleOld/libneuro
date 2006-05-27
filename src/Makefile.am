@@ -30,9 +30,10 @@ AM_CFLAGS= @NEUROFLAGS@
 LIB_FLAGS= @NEUROLIBFLAGS@
 
 LIB_FLAGS += \
-	      -release $(LT_RELEASE) \
-	      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
-	      
+	    -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
+	     
+# -release $(LT_RELEASE)
+	     	      
 libneuro_la_LDFLAGS = $(LIB_FLAGS)
 
 
