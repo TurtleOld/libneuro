@@ -653,7 +653,7 @@ Lib_GetMouseState(i32 *x, i32 *y)
 }
 
 i32
-Lib_PollEvent(void *event)
+Lib_PollEvent(void *s_event)
 {
 	SDL_Event event;
 	int _err = 0;
