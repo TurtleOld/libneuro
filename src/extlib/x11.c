@@ -52,6 +52,8 @@ typedef struct V_OBJECT
 	XpmAttributes attrib;
 	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
 	to flush the pixels with the actual image on the server*/
+
+	u8 alpha; /* the alpha to be applied to the image */
 }V_OBJECT;
 
 static EBUF *vobjs;
@@ -196,6 +198,26 @@ sync_pixels(V_OBJECT *src)
 	}	
 }
 
+void
+Lib_SyncPixels(v_object *src)
+{
+	V_OBJECT *tmp;
+	i32 h, w;
+
+	tmp = (V_OBJECT*)src;
+
+	if (!tmp)
+		return;
+		
+	Neuro_GiveImageSize(tmp, &w, &h);
+	if (tmp->raw_data)
+		XDestroyImage(tmp->raw_data);
+		
+	tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+		0, 0, w, h, 
+		AllPlanes, ZPixmap);
+}
+
 /*  video constructor destructor  */
 /* will need to include the screen width and height also */
 int
@@ -325,9 +347,18 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 	bb = tpixel.blue;
 
 	
-	tpixel.red = (u16)(r << 8) | r;
-	tpixel.green = (u16)(g << 8) | g;
-	tpixel.blue = (u16)(b << 8) | b;
+	if (IsLittleEndian)
+	{
+		tpixel.red = (u16)(r << 8) | r;
+		tpixel.green = (u16)(g << 8) | g;
+		tpixel.blue = (u16)(b << 8) | b;
+	}
+	else
+	{
+		tpixel.red = (u16)(r >> 8) | r;
+		tpixel.green = (u16)(g >> 8) | g;
+		tpixel.blue = (u16)(b >> 8) | b;
+	}
 	tpixel.flags = DoRed | DoGreen | DoBlue;
 	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
 
@@ -349,6 +380,22 @@ void
 Lib_SetColorKey(v_object *vobj, u32 key)
 {
 	color_key = key;
+}
+
+void
+Lib_SetAlpha(v_object *vobj, u32 alpha)
+{
+	V_OBJECT *tmp;
+	
+	tmp = (V_OBJECT*)vobj;
+
+	if (tmp == NULL)
+		return;
+
+	if (alpha > 255)
+		alpha = 255;
+	
+	tmp->alpha = alpha;	
 }
 
 void 

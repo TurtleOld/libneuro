@@ -225,7 +225,7 @@ parse_bitmap_header(nFILE *input)
 	return buf;
 }
 
-
+/* the magic number will probably not show correctly if big endian */
 static void
 print_bitmap_infos(BITMAP_HDATA *bmap)
 {	
@@ -462,7 +462,12 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 				BITMAP_COLOR *cbuf = NULL;
 				BITMAP_MAP *pbuf = NULL;
 
-				temp = *data & values[i];
+				if (IsLittleEndian())
+					temp = *data & values[i];
+				else
+					temp = *data & values[7 - i];
+				
+
 				if (temp)
 					temp = 1;
 				
@@ -524,9 +529,21 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 				BITMAP_COLOR *cbuf = NULL;
 				BITMAP_MAP *pbuf = NULL;
 				
-				temp = *data & values[i];
-				if (temp > 0x0F)
-					temp >>= 4;
+				
+				if (IsLittleEndian())
+				{
+					temp = *data & values[i];
+					
+					if (temp > values[1])
+						temp >>= 4;	
+				}
+				else
+				{
+					temp = *data & values[1 - i];
+				
+					if (temp > values[0])
+						temp <<= 4;		
+				}
 
 				Neuro_AllocEBuf(bpixels, sizeof(BITMAP_MAP*), sizeof(BITMAP_MAP));
 
@@ -719,10 +736,18 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 		int Rr, Gg, Bb;
 		
 
-		Rr = (color_key & 0xff000000) >> 24;
-		Gg = (color_key & 0x00ff0000) >> 16;
-		Bb = (color_key & 0x0000ff00) >> 8;
-
+		if (IsLittleEndian())
+		{
+			Rr = (color_key & 0xff000000) >> 24;
+			Gg = (color_key & 0x00ff0000) >> 16;
+			Bb = (color_key & 0x0000ff00) >> 8;
+		}
+		else
+		{
+			Rr = (color_key & 0x0000ff00) << 24;
+			Gg = (color_key & 0x00ff0000) << 16;
+			Bb = (color_key & 0xff000000) << 8;
+		}
 
 		
 		cbuf = Neuro_GiveEBuf(bcolors, i);

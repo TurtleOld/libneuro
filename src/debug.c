@@ -88,6 +88,19 @@ Neuro_SetDebugLevel(u8 level)
 	debug_level = level;
 }
 
+int
+IsLittleEndian()
+{
+	int i = 1;
+	char *p;
+
+	p = (char*)&i;
+	if (p[0] == 1)
+		return 1;
+	else
+		return 0;
+}
+
 /*--- Poll ---*/
 
 /*--- Constructor Destructor ---*/

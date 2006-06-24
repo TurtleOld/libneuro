@@ -48,6 +48,26 @@ extern void Debug_Val(u8 level, char *control, ...);
 
 /* sets the current debug level */
 extern void Neuro_SetDebugLevel(u8 level);
+
+/* macro used to check for endianness.
+ * this macro returns 1 if the system
+ * is little endian and 0 if the system
+ * is anything else (big endian hopefully
+ * because we don't support middle endian.
+ */
+/*
+#define IsLittleEndian() 		\
+({					\
+		int __i;		\
+	        char *__p;		\
+		__p = (char*)&__i;	\
+		__i = 1;		\
+		if (__p[0] == 1)	\
+			1;	\
+		else			\
+			0;})
+*/
+extern int IsLittleEndian();
 	
 
 #endif /* __DEBUG_H */

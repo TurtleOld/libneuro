@@ -121,11 +121,17 @@ u32
 Neuro_GetTickCount()
 {
 #ifdef WIN32
-	return (GetTickCount() / 10) & 0x7fffffff;
+	if (IsLittleEndian())
+		return (GetTickCount() / 10) & 0x7fffffff;
+	else
+		return (GetTickCount() / 10) & 0xfffffff7;
 #else /* NOT WIN32 */
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-	return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0x7fffffff;
+	if (IsLittleEndian())
+		return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0x7fffffff;
+	else
+		return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0xfffffff7;
 #endif /* NOT WIN32 */
 	
 }
@@ -194,7 +200,11 @@ Neuro_SepChr2(const unsigned char chr, char *source)
 	char *buf;
 
 	if (source)
+	{
 		total = strlen(source);
+		if (total == 0)
+			return NULL;
+	}
 	else
 		return NULL;
 
@@ -258,6 +268,9 @@ Neuro_GiveRGB8(u8 R, u8 G, u8 B)
 u32
 Neuro_GiveRGB16(u8 R, u8 G, u8 B)
 {
+	/* actually, the Red color has 5 bits 
+	 * ditto for blue... green has 6 bits!
+	 */
 	/* if the not used bit is at the end
 	 * R : 0x00007C00 
 	 * G : 0x000003E0
@@ -267,6 +280,15 @@ Neuro_GiveRGB16(u8 R, u8 G, u8 B)
 	 * R : 0x0000F800
 	 * G : 0x000007C0
 	 * B : 0x0000003E
+	 *
+	 * R : 5 bit
+	 * G : 6 bit
+	 * B : 5 bit
+	 *
+	 * R : 0x0000F800
+	 * G : 0x000007E0
+	 * B : 0x0000001F
+	 * 
 	 */
 	return 1;
 }
@@ -280,11 +302,22 @@ Neuro_GiveRGB24(u8 R, u8 G, u8 B)
 	 */
 	unsigned int output;
 
-	output = R;
-	output <<= 8;
-	output += G;
-	output <<= 8;
-	output += B;
+	if (IsLittleEndian())
+	{
+		output = R;
+		output <<= 8;
+		output += G;
+		output <<= 8;
+		output += B;
+	}
+	else
+	{
+		output = R;
+		output >>= 8;
+		output += G;
+		output >>= 8;
+		output += B;
+	}
 	
 	return output;
 }
@@ -357,12 +390,24 @@ Neuro_GiveRGBA_special(u8 R, u8 G, u8 B)
 	 * A : 0x000000ff
 	 */
 	
-	out = R;
-	out <<= 8;
-	out += G;
-	out <<= 8;
-	out += B;
-	out <<= 8;
+	if (IsLittleEndian())
+	{
+		out = R;
+		out <<= 8;
+		out += G;
+		out <<= 8;
+		out += B;
+		out <<= 8;
+	}
+	else
+	{
+		out = R;
+		out >>= 8;
+		out += G;
+		out >>= 8;
+		out += B;
+		out >>= 8;
+	}
 	
 	return out;
 }
@@ -371,6 +416,81 @@ u32
 Neuro_GiveRGB(u8 R, u8 G, u8 B)
 {
 	return Neuro_GiveRGBA_special(R, G, B);
+}
+
+/* convert color of default screen depth to 
+ * 24 bit and gives each color separately in 
+ * R G and B.
+ */
+void
+Neuro_GiveConvertRGB(u32 color, u8 *R, u8 *G, u8 *B)
+{
+	/* 32, 24, 16, 8 */
+	u32 tempR = 0, tempG = 0, tempB = 0;
+
+	switch (Lib_GetDefaultDepth())
+	{
+		case 32:
+		{
+			if (IsLittleEndian())
+			{
+			}
+			else
+			{
+			}
+		}
+		break;
+
+		case 24:
+		{
+			if (IsLittleEndian())
+			{
+			}
+			else
+			{
+			}
+		}
+		break;
+
+		case 16:
+		{
+			if (IsLittleEndian())
+			{
+				tempR = color & 0x0000F800;
+				tempG = color & 0x000007E0;
+				tempB = color & 0x0000001F;
+				
+				tempR = tempR >> 11;
+				tempG = tempG >> 5;
+				/* *B = tempB; */
+
+				/* convert it to 255 (8 bit) */
+				*R = ((tempR * 255) / 31);
+				*G = ((tempG * 255) / 63);
+				*B = ((tempB * 255) / 31);
+			}
+			else
+			{
+			}
+		}
+		break;
+
+		case 8:
+		{
+			if (IsLittleEndian())
+			{
+			}
+			else
+			{
+			}
+		}
+		break;
+
+		default:
+		{
+		}
+		break;
+	}	
 }
 
 void

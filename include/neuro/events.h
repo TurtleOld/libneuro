@@ -36,6 +36,14 @@ extern void Neuro_AddPressedMouseEvent(u32 button, void (*callback)(int x, int y
 /*! TODO */
 extern void Neuro_AddReleasedMouseEvent(u32 button, void (*callback)(int x, int y));
 
+
+/* same as the normal pressedkeyevent but also 
+ * sends the key number as the first argument of
+ * the callback so one callback can be used for
+ * more than one key at once.
+ */
+extern void Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)());
+
 /*! TODO */
 extern void Neuro_CleanKeyboard();
 

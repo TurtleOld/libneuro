@@ -142,6 +142,12 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	SDL_BlitSurface((SDL_Surface*)source, (SDL_Rect*)src, (SDL_Surface*)destination, (SDL_Rect*)dst);
 }
 
+void
+Lib_SyncPixels(v_object *src)
+{
+	
+}
+
 static int 
 stdio_seek(SDL_RWops *context, int offset, int whence)
 {
@@ -308,7 +314,17 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 	if (fmt)
 	{
 		if ( fmt->palette == NULL ) 
-			return (r >> fmt->Rloss) << fmt->Rshift | (g >> fmt->Gloss) << fmt->Gshift | (b >> fmt->Bloss) << fmt->Bshift | fmt->Amask;
+		{
+			if (IsLittleEndian)
+			{
+				return (r >> fmt->Rloss) << fmt->Rshift | (g >> fmt->Gloss) << fmt->Gshift | (b >> fmt->Bloss) << fmt->Bshift | fmt->Amask;
+			}
+			else
+			{
+				return (r << fmt->Rloss) >> fmt->Rshift | (g << fmt->Gloss) >> fmt->Gshift | (b << fmt->Bloss) >> fmt->Bshift | fmt->Amask;
+
+			}
+		}
 		else 
 			return findColor(fmt->palette, r, g, b);
 	}
@@ -325,6 +341,15 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		return;
 
 	SDL_SetColorKey((SDL_Surface*)vobj, SDL_SRCCOLORKEY | SDL_RLEACCEL, key);
+}
+
+void
+Lib_SetAlpha(v_object *vobj, u32 alpha)
+{
+	if (vobj == NULL)
+		return;
+
+	SDL_SetAlpha((SDL_Surface*)vobj, SDL_SRCALPHA | SDL_RLEACCEL, alpha);
 }
 
 v_object *

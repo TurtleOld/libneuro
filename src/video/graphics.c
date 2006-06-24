@@ -141,11 +141,9 @@ typedef struct RAW_ENGINE
 {
 	u32 layer; /* the drawing level that the surface is drawn */
 	u8 type; /* 1 is static, 2 is dynamic, 3 is static but already drawn*/
-	Rectan src;
-	Rectan dst; /* will need to memcpy the data because 
-			* this will be used beyond the 
-			* scope of the calling function.
-			*/
+	Rectan src; /* size of the image */
+	u16 dx, dy; /* destination coordinates */
+	
 	void *surface_ptr; /* only the pointer needed cause its "static" */
 }RAW_ENGINE;
 
@@ -563,7 +561,10 @@ draw_objects()
 	while (cur)
 	{		
 		memcpy(&isrc, &cur->current->src, sizeof(Rectan));
-		memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+
+		idst.x = cur->current->dx;
+		idst.y = cur->current->dy;
+		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
 		{
@@ -717,7 +718,10 @@ AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	buf->layer = layer;
 	buf->type = type;
 	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
-	memcpy(&buf->dst, &tIdst, sizeof(Rectan));
+
+	buf->dx = tIdst.x;
+	buf->dy = tIdst.y;
+
 	buf->surface_ptr = isurface;
 	
 	computeRawEngine((RAW_ENGINE*)buf);
@@ -739,8 +743,8 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 	int output = 0;
 
 
-	indep_body.x = indep->current->dst.x;
-	indep_body.y = indep->current->dst.y;
+	indep_body.x = indep->current->dx;
+	indep_body.y = indep->current->dy;
 	indep_body.w = indep->current->src.w;
 	indep_body.h = indep->current->src.h;
 	
@@ -762,8 +766,8 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 		if (cur->current->type == TDRAW_SDRAWN)
 		{
 			
-			buf.x = cur->current->dst.x;
-			buf.y = cur->current->dst.y;
+			buf.x = cur->current->dx;
+			buf.y = cur->current->dy;
 			buf.w = cur->current->src.w;
 			buf.h = cur->current->src.h;
 			
@@ -771,10 +775,17 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 			/* bounds_ret = 2; */	
 			
 			if (bounds_ret == 0)
-			{	
-				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
-						&cur->current->dst, cur->current->surface_ptr);
+			{
+				Rectan bufa;
 				
+				bufa.x = cur->current->dx;
+				bufa.y = cur->current->dy;
+				bufa.w = 0;
+				bufa.h = 0;
+
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&bufa, cur->current->surface_ptr);
+			
 				/*Debug_Val(0, "dynamic is inside this object\n");*/
 				output = 1;
 			}
@@ -784,7 +795,11 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 				Rectan isrc, idst;
 				
 				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
-				memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+
+				idst.x = cur->current->dx;
+				idst.y = cur->current->dy;
+				idst.w = 0;
+				idst.h = 0;
 
 				Neuro_VerticalBoundFix(&indep_body, &isrc, &idst);
 				Neuro_HorizontalBoundFix(&indep_body, &isrc, &idst);
@@ -797,10 +812,14 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 
 			if (bounds_ret == 3)
 			{
-				Rectan isrc, idst;
+				Rectan isrc, idst, hack;
 				
 				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
-				memcpy(&idst, &cur->current->dst, sizeof(Rectan));
+
+				idst.x = cur->current->dx;
+				idst.y = cur->current->dy;
+				idst.w = 0;
+				idst.h = 0;
 				
 				
 				if (indep_body.x > buf.x)
@@ -833,9 +852,13 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 				 * static image... this needs testing and a better 
 				 * algorithm.
 				 */
-				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
-						&cur->current->dst, cur->current->surface_ptr);
 
+				
+				hack.x = cur->current->dx;
+				hack.y = cur->current->dy;
+				
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&hack, cur->current->surface_ptr);
 
 				/* Debug_Val(0, "we have a case 3 situation!\n"); */
 				
@@ -902,9 +925,9 @@ clean_drawn_objects()
 	 * if none.
 	 */
 	while (cur)
-	{		
-		buf.x = cur->current->dst.x;
-		buf.y = cur->current->dst.y;
+	{				
+		buf.x = cur->current->dx;
+		buf.y = cur->current->dy;
 		buf.w = cur->current->src.w;
 		buf.h = cur->current->src.h;
 			

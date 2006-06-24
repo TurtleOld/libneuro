@@ -792,6 +792,8 @@ extern u32 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b);
 
 extern void Lib_SetColorKey(v_object *vobj, u32 key);
 
+extern void Lib_SetAlpha(v_object *vobj, u32 alpha);
+
 extern void Lib_PutPixel(v_object *srf, int x, int y, u32 pixel);
 
 extern u32 Lib_GetPixel(v_object *srf, int x, int y);

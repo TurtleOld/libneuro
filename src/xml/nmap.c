@@ -193,7 +193,7 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 
 		if (new_pnode == 1)
 		{
-			n_map->parent_name = (char*)calloc(1, strlen(parent_name));
+			n_map->parent_name = (char*)calloc(1, strlen(parent_name) + 1);
 			memcpy(n_map->parent_name, parent_name, strlen(parent_name));
 			if (p_name)
 				printf("Adding the node %s into the parent name %s\n", parent_name, n_map->parent_name);
@@ -222,7 +222,7 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 		else
 			n_map[cur_p_node].child_nodes = (char**)realloc(n_map[cur_p_node].child_nodes, ((1 + c_total) * sizeof(char*)));
 		
-		n_map[cur_p_node].child_nodes[c_total] = (char*)calloc(1, strlen(child_name));
+		n_map[cur_p_node].child_nodes[c_total] = (char*)calloc(1, strlen(child_name) + 1);
 		strncpy(n_map[cur_p_node].child_nodes[c_total], child_name, strlen(child_name));
 		n_map[cur_p_node].total_child++;
 		
@@ -237,7 +237,7 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 		/* now lets copy the content, unless its NULL */
 		if (content)
 		{
-			n_map[cur_p_node].child_content[c_total] = (char*)calloc(1, strlen(content));
+			n_map[cur_p_node].child_content[c_total] = (char*)calloc(1, strlen(content) + 1);
 			strncpy(n_map[cur_p_node].child_content[c_total], content, strlen(content));
 		}
 		else
@@ -266,7 +266,7 @@ Neuro_XMLAdd(char *parent_name, char *child_name, char *content)
 				return cur_c_node;
 			}
 			if (!n_map[cur_p_node].child_content[cur_c_node])
-				n_map[cur_p_node].child_content[cur_c_node] = (char*)calloc(1, strlen(content));
+				n_map[cur_p_node].child_content[cur_c_node] = (char*)calloc(1, strlen(content) + 1);
 			else
 			{
 				
@@ -570,7 +570,8 @@ give_parent_number(char *parent_name)
 #endif
 		while (a < 1)
 		{
-			if (!strcmp(n_map[a].parent_name, parent_name))
+			printf("%s %s\n", n_map->parent_name, parent_name);
+			if (!strcmp(n_map->parent_name, parent_name))
 				return a;
 			a++;
 		}

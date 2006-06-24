@@ -345,6 +345,13 @@ Neuro_MultiAddXml(char *filename)
 	*/
 	
 	NODE_MAP *n_map = Neuro_XMLGetData();
+
+	if (!n_map)
+	{
+		printf("problem in the nmap module... XMLGetData returned void!\n");
+		return -1;
+	}
+
 	if (open(filename, 0644) == -1) /* check to see if the file exist */
 	{
 		xmlBufferPtr buf;
@@ -562,11 +569,18 @@ createdtdheader(xmlDocPtr doc, char **buf1)
 	 * FIXME : make it dynamic
 	 */
 	char *tmp1 = calloc(1, 512);
+
+	if (!doc)
+		return NULL;
+	
 	if (tmp1 == NULL)
 	{
 		perror("createdtdheader():line#547:xmltool.c");
 	}
 	/* printf("will now use the 2nd way of doing the dtd header\n"); */
+	if (!doc->children)
+		return NULL;
+	printf("------->  %s\n", doc->children->name);
 	sprintf(tmp1, "%s [\n%s%s ANY>", doc->children->name, elem, doc->children->name);
 	/* printf("here1\n"); */
 	sprintf(tmp1, "%s%s%s (", tmp1, elem, n_map->parent_name);

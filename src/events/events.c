@@ -38,6 +38,9 @@ typedef struct KEYBEVENT
 {
 	u32 key;		/* the actual keyboard key keysym */
 	void (*callback)(); 	/* a callback we will call when key is pressed*/
+	u8 send_key; 		/* werther or not we send to key value as argument 
+       				 * to the callback.
+				 */
 }KEYBEVENT;
 
 /* define the structure to hold our mouse button header. 
@@ -109,7 +112,10 @@ handle_keys()
 				/* the key is being pressed so we call the 
 				 * corresponding callback function.
 				 */
-				(tmp->callback)();
+				if (tmp->send_key == 0)
+					(tmp->callback)();
+				else
+					(tmp->callback)(tmp->key);
 			}
 		}
 	}
@@ -218,6 +224,20 @@ mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_releas
 		ptr->callbackClick = callback;
 }
 
+static void
+addKeyPressEvent(u32 keysym, void (*callback)(), u8 send_key)
+{
+	KEYBEVENT *tmp;
+
+	Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
+
+	tmp = Neuro_GiveCurEBuf(_klist);
+
+	tmp->key = keysym;
+	tmp->callback = callback;
+	tmp->send_key = send_key;
+}
+
 /*--- Global Functions ---*/
 
 void
@@ -232,14 +252,13 @@ Neuro_GetMousePos(int *x, int *y)
 void 
 Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 {
-	KEYBEVENT *tmp;
+	addKeyPressEvent(keysym, callback, 0);
+}
 
-	Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
-
-	tmp = Neuro_GiveCurEBuf(_klist);
-
-	tmp->key = keysym;
-	tmp->callback = callback;
+void
+Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)())
+{
+	addKeyPressEvent(keysym, callback, 1);
 }
 
 void

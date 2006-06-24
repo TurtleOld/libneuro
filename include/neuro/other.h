@@ -40,7 +40,12 @@ typedef struct SepChr_Data
 
 extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
 
-/* returns a u32 that contains a 16bit color system. */
+/* convert color of default screen depth to 24 bit 
+ * and gives each color separately in R G and B
+ */
+extern void Neuro_GiveConvertRGB(u32 color, u8 *R, u8 *G, u8 *B);
+
+/* returns a u32 that contains a 24bit color system. */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
 
 /* an interface to easily give the size of an image object 

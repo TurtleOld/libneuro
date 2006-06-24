@@ -53,10 +53,17 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 }
 
 void
-Lib_SetColorKey(v_object *vobj, u32 flag,u32 key)
+Lib_SetColorKey(v_object *vobj, u32 key)
 {
 	
 }
+
+void
+Lib_SetAlpha(v_object *vobj, u32 alpha)
+{
+	
+}
+
 v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
@@ -68,6 +75,12 @@ void
 Lib_UpdateRect(v_object *source, Rectan *src)
 {
 
+}
+
+void
+Lib_SyncPixels(v_object *src)
+{
+	
 }
 
 void
