@@ -72,9 +72,27 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 }
 
 void
+Lib_SetScreenSize(u32 width, u32 height)
+{
+
+}
+
+void
+Lib_GetScreenSize(u32 *width, u32 *height)
+{
+	
+}
+
+void
 Lib_UpdateRect(v_object *source, Rectan *src)
 {
 
+}
+
+u32
+Lib_GetDefaultDepth()
+{
+	return 0;
 }
 
 void

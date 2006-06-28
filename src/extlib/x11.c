@@ -24,6 +24,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
 
@@ -67,7 +68,7 @@ static u32 color_key = 0; /* a variable to set the transparent color when loadin
 static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 #endif /* temp */
 
-static i32 width = 800, height = 600; /* HACK WARNING TODO make this better and settable*/
+static u32 swidth = 1024, sheight = 768; /* externally settable screen size */
 
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
@@ -218,8 +219,21 @@ Lib_SyncPixels(v_object *src)
 		AllPlanes, ZPixmap);
 }
 
+void
+Lib_SetScreenSize(u32 width, u32 height)
+{
+	swidth = width;
+	sheight = height;
+}
+
+void
+Lib_GetScreenSize(u32 *width, u32 *height)
+{
+	*width = swidth;
+	*height = sheight;
+}
+
 /*  video constructor destructor  */
-/* will need to include the screen width and height also */
 int
 Lib_VideoInit(v_object **screen, v_object **screen_buf)
 {	
@@ -251,7 +265,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
 	
 		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
-			200, 200, width, height, 1, DefaultDepth(tmp->display, tmp->screen),
+			200, 200, swidth, sheight, 1, DefaultDepth(tmp->display, tmp->screen),
 			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
 			
 		tmp->cwin = &tmp->win;
@@ -282,13 +296,13 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		
 #if buffer_old_method
 		/* Debug_Print("Beacon 3"); */
-		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
+		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, swidth, sheight, 
 				DefaultDepth(tmp->display, tmp->screen));
 
 		/* Debug_Print("Beacon 4"); */
 		tmp2->cwin = &tmp2->data;
 		
-		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, width, height, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
+		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, swidth, sheight, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
 		/* XInitImage(tmp2->raw_data); */
 		/* Debug_Print("Beacon 5"); */
 #else /* NOT buffer_old_method */
@@ -297,19 +311,19 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		tmp2->raw_data = XCreateImage(tmp->display, 
 				XDefaultVisual(tmp->display, tmp->screen), 
 				DefaultDepth(tmp->display, tmp->screen), 
-				ZPixmap, 0, NULL, width, height, 32, 0);
+				ZPixmap, 0, NULL, swidth, sheight, 32, 0);
 
 		/* Debug_Print("Beacon 4"); */
 
-		tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
+		tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * sheight);
 
-		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, width, height, 
+		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, swidth, sheight, 
 				DefaultDepth(tmp->display, tmp->screen));
 
 		/* Debug_Print("Beacon 5"); */
 		
 		XPutImage(tmp->display, tmp2->data, tmp->GC, tmp2->raw_data, 0, 0, 
-				0, 0, width, height);
+				0, 0, swidth, sheight);
 		
 		tmp2->cwin = &tmp2->data;
 
@@ -438,6 +452,121 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	return XGetPixel(tmp->raw_data, x, y);
 }
 
+static u32
+AlphaPixels(v_object *screen, u32 alpha_color, u32 indep_color, u32 alpha)
+{
+	u8 aR, aG, aB; /* depend color (alpha on this one) */
+	u8 iR, iG, iB; /* indep color */
+	register u8 rR, rG, rB; /* result color */
+	register double invert_alpha;
+	register double lesser_alpha;
+
+	Neuro_GiveConvertRGB(alpha_color, &aR, &aG, &aB);
+	Neuro_GiveConvertRGB(indep_color, &iR, &iG, &iB);
+
+	/* invert the alpha so 255 is opaque and 0 is totally transparent */
+	invert_alpha = abs(255 - alpha) / 255;
+	lesser_alpha = 1 - invert_alpha;
+
+	rR = (iR * lesser_alpha) + aR * invert_alpha;
+	rG = (iG * lesser_alpha) + aG * invert_alpha;
+	rB = (iB * lesser_alpha) + aB * invert_alpha;
+
+		
+	return Lib_MapRGB(screen, rR, rG, rB);
+}
+
+static void
+DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
+{
+	u32 screen_color;
+	Rectan tmp;
+	v_object *screen;
+	u32 new_color;
+	
+	if (!rectangle)
+		return;
+
+	if (alpha > 255)
+		alpha = 255;
+
+	/* memcpy(&tmp, rectangle, sizeof(Rectan)); */
+	tmp.h = rectangle->h;
+	
+	screen = Neuro_GetScreenBuffer();
+	
+	/* sync the screen pixel map */
+	Lib_SyncPixels(screen);
+		
+	Lib_LockVObject(screen);
+
+	while (tmp.h-- > 0)
+	{
+		tmp.w = rectangle->w;
+		while (tmp.w-- > 0)
+		{
+			screen_color = Lib_GetPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h);
+
+			
+			new_color = AlphaPixels(screen, screen_color, color, alpha);
+
+			Lib_PutPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h, new_color);
+			
+		}
+	}
+
+	
+	Lib_UnlockVObject(screen);
+}
+
+static void
+DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *destination)
+{
+	Rectan rsrc, rdst;
+	u32 screen_color;
+	u32 image_color;
+	u32 new_color;
+	
+	if (!src || !dst || !image)
+		return;
+
+	memcpy(&rsrc, src, sizeof(Rectan));
+	rdst.x = dst->x;
+	rdst.y = dst->y;
+
+	/*Debug_Val(0, "rsrc coord (%d,%d) size (%dx%d)\n", 
+			rsrc.x, rsrc.y, 
+			rsrc.w, rsrc.h);*/
+	
+	/* sync the screen pixel map */
+	/* Lib_SyncPixels(destination); */
+	
+	
+	Lib_LockVObject(destination);
+	
+	while (rsrc.h-- > rsrc.y)
+	{
+		rsrc.w = src->w;
+
+		while (rsrc.w-- > rsrc.x)
+		{
+			
+			screen_color = Lib_GetPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h);
+			image_color = Lib_GetPixel(image, rsrc.x + rsrc.w, rsrc.y + rsrc.h);
+			
+			if (image_color == 0)
+				continue;
+			
+			new_color = AlphaPixels(destination, screen_color, image_color, alpha);
+
+
+			Lib_PutPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h, new_color);
+			
+		}
+	}
+	
+	Lib_UnlockVObject(destination);
+}
 
 
 void
@@ -498,20 +627,43 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		ClipX -= Rsrc.x;
 		ClipY -= Rsrc.y;
 	}
-	
+
+	/* Debug_Val(0, "Will draw object %d alpha %d on %d\n", *vsrc->cwin, vsrc->alpha, *vdst->cwin); */
+
+#if USE_ALPHA
+	if (vsrc->alpha == 255 || vsrc == scldmain) /* opaque */
+#endif /* USE_ALPHA */
+	{
+
+		if (vsrc->shapemask)
+			XSetClipMask(dmain->display, dmain->GC, vsrc->shapemask);
+		XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
+
+		XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
 		
+		_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
+				Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
+				Rdst.x, Rdst.y);
+
+		XSetClipMask(dmain->display, dmain->GC, None);	
+	}
+#if USE_ALPHA
+	else
+	{
+		if (vsrc->alpha > 0 )
+		{
+			/* we apply transparency based on the alpha value */
+			DirectDrawAlphaImage(&Rsrc, &Rdst, vsrc->alpha, source, destination);
+			/* Debug_Val(0, "Image drawn transparent\n"); */
+		}
+		else
+		{
+			/* an image with alpha 0 will not be drawn at all */
+			/* Debug_Val(0, "Image not drawn\n"); */
+		}
+	}
+#endif /* USE_ALPHA */
 	
-	if (vsrc->shapemask)
-		XSetClipMask(dmain->display, dmain->GC, vsrc->shapemask);
-	XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
-
-	XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
-
-	_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
-			Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
-			Rdst.x, Rdst.y);
-
-	XSetClipMask(dmain->display, dmain->GC, None);
 }
 
 void
@@ -566,6 +718,10 @@ Lib_LoadBMP(const char *path, v_object **img)
 	
 	tmp->cwin = &tmp->data;
 	/* tmp->cwin = &tmp->shapemask; */
+
+	/* by default the image is fully opaque */
+	tmp->alpha = 255;
+	
 	if (_err == 0)
 	{
 		i32 h, w;
@@ -580,6 +736,8 @@ Lib_LoadBMP(const char *path, v_object **img)
 			AllPlanes, ZPixmap);
 		
 		Debug_Val(0, "Successfully loaded the file %s\n", path);
+
+		/* Debug_Val(0, "At Address %d alpha %d\n", *tmp->cwin, tmp->alpha); */
 	}
 	else
 		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);

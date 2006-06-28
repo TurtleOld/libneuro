@@ -765,6 +765,10 @@ extern int Lib_EventInit();
 
 extern void Lib_EventExit();
 
+extern void Lib_SetScreenSize(u32 width, u32 height);
+
+extern void Lib_GetScreenSize(u32 *width, u32 *height);
+
 
 extern void Lib_LockVObject(v_object *vobj);
 

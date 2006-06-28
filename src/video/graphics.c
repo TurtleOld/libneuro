@@ -579,12 +579,14 @@ draw_objects()
 						&idst);			
 				
 				cur->current->type = TDRAW_SDRAWN;
+				/* Debug_Val(0, "drawn static\n"); */
 			}
 			break;
 
 			case TDRAW_SDRAWN:
 			{
 				/* nothing needed for this type */
+				/* Debug_Val(0, "already drawn\n"); */
 			}
 			break;
 			
@@ -597,6 +599,7 @@ draw_objects()
 				
 				if (dynamic_debug)
 					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
+				/* Debug_Val(0, "drawn dynamic\n"); */
 			}
 			break;
 			
@@ -1212,8 +1215,10 @@ Neuro_GiveScreenSize(u32 *width, u32 *height)
 	 * so the screen size values will be in variables rather than
 	 * hardcoded in macros.
 	 */
-	*width = SCREEN_X;
-	*height = SCREEN_Y;
+	/**width = SCREEN_X;
+	*height = SCREEN_Y;*/
+
+	Lib_GetScreenSize(width, height);
 }
 
 void
@@ -1530,6 +1535,9 @@ Graphics_Init()
 {
 	int _err_;
 	ltime = time(NULL);
+	u32 screenwidth, screenheight;
+
+	Lib_GetScreenSize(&screenwidth, &screenheight);
 	
 	_err_ = 0;
 	/* will need to be configurable from the projects that use Neuro */
@@ -1546,7 +1554,7 @@ Graphics_Init()
 
 	if (second_screen_buffer)
 	{
-		sclScreen2 = Lib_CreateVObject(0, SCREEN_X, SCREEN_Y, Lib_GetDefaultDepth(), 0, 
+		sclScreen2 = Lib_CreateVObject(0, screenwidth, screenheight, Lib_GetDefaultDepth(), 0, 
 				0, 0, 0);
 		Lib_SetColorKey(sclScreen2, 0);
 	}
@@ -1568,8 +1576,8 @@ Graphics_Init()
 	
 	screenSize.x = 0;
 	screenSize.y = 0;
-	screenSize.w = SCREEN_X;
-	screenSize.h = SCREEN_Y;
+	screenSize.w = screenwidth;
+	screenSize.h = screenheight;
 	
 	test_BoundFix.x = screenSize.w / 2;
 	test_BoundFix.y = 500 + 10;

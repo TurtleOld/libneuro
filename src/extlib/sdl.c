@@ -80,6 +80,19 @@ static options_list options = {
 
 static u8 mouse_wheel = 0; /* mouse wheel variable */
 
+void
+Lib_SetScreenSize(u32 width, u32 height)
+{
+	options.Xsize = width;
+	options.Ysize = height;
+}
+
+void
+Lib_GetScreenSize(u32 *width, u32 *height)
+{
+	*width = options.Xsize;
+	*height = options.Ysize;
+}
 
 /*  video constructor destructor  */
 int
