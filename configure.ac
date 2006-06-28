@@ -9,10 +9,10 @@ AC_INIT(README)
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
 #
 NEURO_MAJOR_VERSION=0
-NEURO_MINOR_VERSION=45
-NEURO_MICRO_VERSION=4
-NEURO_INTERFACE_AGE=0
-NEURO_REVISION=2
+NEURO_MINOR_VERSION=46
+NEURO_MICRO_VERSION=0
+NEURO_INTERFACE_AGE=1
+NEURO_REVISION=0
 NEURO_BINARY_AGE=0
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
