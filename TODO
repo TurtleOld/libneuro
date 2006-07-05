@@ -38,8 +38,12 @@ sprite module :
 	  This method would use too much memory, need to find a way to implement this resonably.
 
 
-*** core graphics
+*** core graphics :
 	- Make an abstraction of the images themselves, only the screen would be in common
 	  with the library in use (Would place neuro in direct competition with SDL).
 	  Perhaps keep being semi independant(to, for example, keep using the ultra performant
 	  X11 blitter) and only use our own blitter for special things like alpha rendering.
+
+* add a function to Load bitmaps from memory :
+	- Initially to support Unicode Truetype fonts but would probably be very useful for
+	  other things too.
