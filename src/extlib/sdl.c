@@ -287,6 +287,34 @@ Lib_LoadBMP(const char *path, v_object **img)
 #endif /* NOT USE_ZLIB */
 }
 
+void
+Lib_LoadBMPBuffer(void *data, v_object **img)
+{
+	SDL_RWops *ops;
+
+	if (data == NULL)
+		return;
+	
+	ops = SDL_AllocRW();
+	if (ops == NULL)
+		return;
+
+	ops->seek = stdio_seek;
+	ops->read = stdio_read;
+	ops->write = stdio_write;
+	ops->close = stdio_close;
+	/*ops->hidden.stdio.fp = fp;
+	ops->hidden.stdio.autoclose = 1;*/
+	ops->hidden.unknown.data1 = data;
+
+	*img = SDL_LoadBMP_RW(ops, 1);
+
+	if (*img == NULL)
+	{
+		Debug_Val(0, "Unable to load buffer image SDL says : %s\n", SDL_GetError());
+	}
+}
+
 static u8 
 findColor(SDL_Palette *pal, u8 r, u8 g, u8 b)
 {

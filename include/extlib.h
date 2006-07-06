@@ -792,6 +792,8 @@ extern void Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *
 
 extern void Lib_LoadBMP(const char *path, v_object **img);
 
+extern void Lib_LoadBMPBuffer(void *data, v_object **img);
+
 extern u32 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b);
 
 extern void Lib_SetColorKey(v_object *vobj, u32 key);

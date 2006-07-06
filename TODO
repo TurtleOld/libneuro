@@ -46,4 +46,4 @@ sprite module :
 
 * add a function to Load bitmaps from memory :
 	- Initially to support Unicode Truetype fonts but would probably be very useful for
-	  other things too.
+	  other things too. DONE in SDL... TODO in X11(need to add new functions to bitmap module)

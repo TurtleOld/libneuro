@@ -46,6 +46,12 @@ Lib_LoadBMP(const char *path, v_object **img)
 
 }
 
+void
+Lib_LoadBMPBuffer(void *data, v_object **img)
+{
+
+}
+
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {

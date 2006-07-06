@@ -747,6 +747,12 @@ Lib_LoadBMP(const char *path, v_object **img)
 	return; /* int needed */
 }
 
+void
+Lib_LoadBMPBuffer(void *data, v_object **img)
+{
+
+}
+
 v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
