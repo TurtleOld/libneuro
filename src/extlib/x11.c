@@ -34,6 +34,10 @@
 #include <graphics.h>
 
 #define buffer_old_method 0
+#define USE_ALPHA 1
+
+/* hardcoded generated alpha results */
+#include "alpha.inc"
 
 typedef struct V_OBJECT
 {
@@ -68,7 +72,7 @@ static u32 color_key = 0; /* a variable to set the transparent color when loadin
 static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 #endif /* temp */
 
-static u32 swidth = 1024, sheight = 768; /* externally settable screen size */
+static u32 swidth = 800, sheight = 600; /* externally settable screen size */
 
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
@@ -349,43 +353,69 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	return 0;
 }
 
+/* TODO rewrite this so it uses our own color functions in other.c 
+ * which is Much faster(like instant compared to 3ms) than asking 
+ * X11 to give us those informations.
+ */
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
-	u16 br, bg, bb;
-	u32 output;
-
-	/* backup the previous values of the pixel struct */
-	br = tpixel.red;
-	bg = tpixel.green;
-	bb = tpixel.blue;
-
+#if ask_X11_for_color
+	XColor color;
 	
 	if (IsLittleEndian)
 	{
-		tpixel.red = (u16)(r << 8) | r;
-		tpixel.green = (u16)(g << 8) | g;
-		tpixel.blue = (u16)(b << 8) | b;
+		color.red = (u16)(r << 8) | r;
+		color.green = (u16)(g << 8) | g;
+		color.blue = (u16)(b << 8) | b;
 	}
 	else
 	{
-		tpixel.red = (u16)(r >> 8) | r;
-		tpixel.green = (u16)(g >> 8) | g;
-		tpixel.blue = (u16)(b >> 8) | b;
+		color.red = (u16)(r >> 8) | r;
+		color.green = (u16)(g >> 8) | g;
+		color.blue = (u16)(b >> 8) | b;
 	}
-	tpixel.flags = DoRed | DoGreen | DoBlue;
-	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+	color.flags = DoRed | DoGreen | DoBlue;
+	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &color);
 
-	output = tpixel.pixel;
+	return color.pixel;
+#endif /* ask_X11_for_color */
 
-	/* put back the pixel color values */
-	tpixel.red = br;
-	tpixel.green = bg;
-	tpixel.blue = bb;
-	tpixel.flags = DoRed | DoGreen | DoBlue;
-	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+	u32 output;
 	
-	/* output = tpixel.pixel; */
+	switch (DefaultDepth(dmain->display, dmain->screen))
+	{
+		case 32:
+		{
+			output = Neuro_GiveRGB32(r, g, b);
+		}
+		break;
+
+		case 24:
+		{
+			output = Neuro_GiveRGB24(r, g, b);
+		}
+		break;
+
+		case 16:
+		{
+			output = Neuro_GiveRGB16(r, g, b);
+		}
+		break;
+
+		case 8:
+		{
+			output = Neuro_GiveRGB8(r, g, b);
+		}
+		break;
+
+		default:
+		{
+			Error_Print("INVALID Depth! we only support 32, 24, 16 or 8 bits screen depth");
+			return 0;
+		}
+		break;
+	}
 
 	return output;
 }
@@ -452,28 +482,33 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	return XGetPixel(tmp->raw_data, x, y);
 }
 
+/* TODO optimization is HIGHLY needed... 
+ * we will buffer all possible matches with
+ * i* a* with alpha (example of i* is iR... same for a*)
+ * when thats done, put the argument alpha back to an unsigned
+ * integer instead of a double
+ */
 static u32
-AlphaPixels(v_object *screen, u32 alpha_color, u32 indep_color, u32 alpha)
+AlphaPixels(u32 alpha_color, u32 indep_color, u32 alpha)
 {
 	u8 aR, aG, aB; /* depend color (alpha on this one) */
 	u8 iR, iG, iB; /* indep color */
 	register u8 rR, rG, rB; /* result color */
-	register double invert_alpha;
-	register double lesser_alpha;
 
 	Neuro_GiveConvertRGB(alpha_color, &aR, &aG, &aB);
 	Neuro_GiveConvertRGB(indep_color, &iR, &iG, &iB);
 
-	/* invert the alpha so 255 is opaque and 0 is totally transparent */
-	invert_alpha = abs(255 - alpha) / 255;
-	lesser_alpha = 1 - invert_alpha;
 
-	rR = (iR * lesser_alpha) + aR * invert_alpha;
-	rG = (iG * lesser_alpha) + aG * invert_alpha;
-	rB = (iB * lesser_alpha) + aB * invert_alpha;
+	/* rR = (iR * (1 - (alpha / 255))) + aR * (alpha / 255);
+	rG = (iG * (1 - (alpha / 255))) + aG * (alpha / 255);
+	rB = (iB * (1 - (alpha / 255))) + aB * (alpha / 255);*/
+
+	rR = HCD_IAlpha[iR][alpha] + HCD_Alpha[aR][alpha];
+	rG = HCD_IAlpha[iG][alpha] + HCD_Alpha[aG][alpha];
+	rB = HCD_IAlpha[iB][alpha] + HCD_Alpha[aB][alpha];
 
 		
-	return Lib_MapRGB(screen, rR, rG, rB);
+	return Neuro_MapRGB(rR, rG, rB);
 }
 
 static void
@@ -508,7 +543,7 @@ DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
 			screen_color = Lib_GetPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h);
 
 			
-			new_color = AlphaPixels(screen, screen_color, color, alpha);
+			new_color = AlphaPixels(screen_color, color, alpha);
 
 			Lib_PutPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h, new_color);
 			
@@ -539,7 +574,7 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 			rsrc.w, rsrc.h);*/
 	
 	/* sync the screen pixel map */
-	/* Lib_SyncPixels(destination); */
+	Lib_SyncPixels(destination);
 	
 	
 	Lib_LockVObject(destination);
@@ -550,14 +585,15 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 
 		while (rsrc.w-- > rsrc.x)
 		{
-			
-			screen_color = Lib_GetPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h);
 			image_color = Lib_GetPixel(image, rsrc.x + rsrc.w, rsrc.y + rsrc.h);
 			
 			if (image_color == 0)
 				continue;
+
+			screen_color = Lib_GetPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h);
 			
-			new_color = AlphaPixels(destination, screen_color, image_color, alpha);
+			/* new_color = AlphaPixels(screen_color, image_color, alpha); */
+			new_color = AlphaPixels(image_color, screen_color, alpha);
 
 
 			Lib_PutPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h, new_color);
@@ -750,7 +786,82 @@ Lib_LoadBMP(const char *path, v_object **img)
 void
 Lib_LoadBMPBuffer(void *data, v_object **img)
 {
+	EBUF *temp;
+	V_OBJECT *tmp;
+	char **buffer;
+	char **initbuf;
+	/* int i = 0; */
+	int _err = 0;
+	t_tick chrono;
 
+	/* Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT)); */
+	if (Neuro_EBufIsEmpty(vobjs))
+	{
+		*img = NULL;
+		return;
+	}
+	
+	chrono = Neuro_GetTickCount();
+
+	
+	setBitmapColorKey(color_key);
+	readBitmapFileToPixmap(data, &temp);
+	
+	Debug_Val(0, "Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
+	
+	if (!temp)
+	{
+		Debug_Val(0, "Error loading the buffer file, it might not exist or its not a bitmap\n");
+		return;
+	}
+
+	
+	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
+
+	tmp = Neuro_GiveCurEBuf(vobjs);
+
+	buffer = (char**)Neuro_GiveEBufCore(temp);	
+	
+	initbuf = buffer;
+	
+	chrono = Neuro_GetTickCount();
+	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+			&tmp->data, &tmp->shapemask, &tmp->attrib);*/
+	
+	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
+		&tmp->data, &tmp->shapemask, NULL);
+
+	Debug_Val(0, "Converting pixmap to Ximage %d\n", Neuro_GetTickCount() - chrono);
+	
+	tmp->cwin = &tmp->data;
+	/* tmp->cwin = &tmp->shapemask; */
+
+	/* by default the image is fully opaque */
+	tmp->alpha = 255;
+	
+	if (_err == 0)
+	{
+		i32 h, w;
+
+		*img = tmp;
+
+		
+		Neuro_GiveImageSize(tmp, &w, &h);
+		
+		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+			0, 0, w, h, 
+			AllPlanes, ZPixmap);
+		
+		Debug_Val(0, "Successfully loaded the buffer file %s\n");
+
+		/* Debug_Val(0, "At Address %d alpha %d\n", *tmp->cwin, tmp->alpha); */
+	}
+	else
+		Debug_Val(0, "Error loading the buffer file with error %d\n", _err);
+	
+	Neuro_CleanEBuf(&temp);
+	
+	return; /* int needed */
 }
 
 v_object *

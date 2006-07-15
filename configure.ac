@@ -103,12 +103,12 @@ AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 
 case $targ in
 	w32)
-		AC_CHECK_HEADERS([windows.h])
+		AC_CHECK_HEADERS([windows.h], [AC_MSG_ERROR([the required header windows is missing.])])
 	;;
 
 	unix)
 		AC_FUNC_REALLOC
-		AC_CHECK_HEADERS([unistd.h])
+		AC_CHECK_HEADERS([unistd.h], [AC_MSG_ERROR([the required header unistd is missing.])])
 	;;
 esac
 
@@ -119,7 +119,7 @@ dnl ----------------
 dnl check for header files.
 dnl ----------------
 AC_HEADER_STDC
-AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h])
+AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h], [AC_MSG_ERROR([a required header is missing.])])
 
 # Checks for typedefs, structures, and compiler characteristics.
 
@@ -129,7 +129,7 @@ AC_HEADER_TIME
 
 # Checks for library functions.
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([gettimeofday memchr memset strchr])
+AC_CHECK_FUNCS([gettimeofday memchr memset strchr], [AC_MSG_ERROR([a required function is missing.])])
 
 dnl ----------------
 dnl XML check
@@ -155,17 +155,24 @@ dnl ----------------
 AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
 if test $SELECTED_LOWLIB = sdl; then
 	if test $targ = unix; then
-	AC_CHECK_LIB(SDL, SDL_Init, 
+		AC_CHECK_LIB(SDL, SDL_Init, 
 		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS"
 		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"], 
 		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
 ])
+
+		
 	else
 		AC_CHECK_LIB(SDL, SDL_Init, 
 		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS -lSDL"], 
 		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
 ])
+
+		
 	fi
+
+	AC_CHECK_LIB(SDL_ttf, TTF_RenderUNICODE_Solid, ,
+		     [AC_MSG_ERROR(You don't have libSDL_ttf you can get it from http://libsdl.org)])
 
 	cp include/extlib.h include/neuro
 	cat include/extlib_sdl.h >> include/neuro/extlib.h

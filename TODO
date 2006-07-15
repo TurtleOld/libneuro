@@ -47,3 +47,8 @@ sprite module :
 * add a function to Load bitmaps from memory :
 	- Initially to support Unicode Truetype fonts but would probably be very useful for
 	  other things too. DONE in SDL... TODO in X11(need to add new functions to bitmap module)
+
+* video -- graphics module : 
+	- Change the Dynamic type so it stays drawn until the external program explicitly tells it
+	  to clean it. (Eventually, this will completely remplace the static dynamic method and
+	  only this method will be used for both cases).

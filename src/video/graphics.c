@@ -1534,8 +1534,9 @@ int
 Graphics_Init()
 {
 	int _err_;
-	ltime = time(NULL);
 	u32 screenwidth, screenheight;
+
+	ltime = time(NULL);
 
 	Lib_GetScreenSize(&screenwidth, &screenheight);
 	

@@ -281,6 +281,8 @@ Neuro_GiveRGB16(u8 R, u8 G, u8 B)
 	 * G : 0x000007C0
 	 * B : 0x0000003E
 	 *
+	 * NEW correct way it is
+	 * 
 	 * R : 5 bit
 	 * G : 6 bit
 	 * B : 5 bit
@@ -290,7 +292,26 @@ Neuro_GiveRGB16(u8 R, u8 G, u8 B)
 	 * B : 0x0000001F
 	 * 
 	 */
-	return 1;
+	u32 output = 0;
+
+	if (IsLittleEndian())
+	{
+		output = ((R * 31) / 255);
+		output <<= 6;
+		output += ((G * 63) / 255);
+		output <<= 5;
+		output += ((B * 31) / 255);
+	}
+	else
+	{
+		output = ((R * 31) / 255);
+		output >>= 6;
+		output += ((G * 63) / 255);
+		output >>= 5;
+		output += ((B * 31) / 255);	
+	}
+	
+	return output;
 }
 
 u32
@@ -336,6 +357,16 @@ Neuro_GiveRGB32(u8 R, u8 G, u8 B)
 	 * B : 0x00000FFC
 	 */
 	return 1;
+}
+
+u32
+Neuro_MapRGB(u8 R, u8 G, u8 B)
+{
+	v_object *screen;
+
+	screen = Neuro_GetScreenBuffer();
+
+	return Lib_MapRGB(screen, R, G, B);
 }
 
 u32

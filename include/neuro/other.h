@@ -45,6 +45,17 @@ extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
  */
 extern void Neuro_GiveConvertRGB(u32 color, u8 *R, u8 *G, u8 *B);
 
+/* 4 functions to convert R G B values to the depth each of them do */
+extern u32 Neuro_GiveRGB32(u8 R, u8 G, u8 B);
+extern u32 Neuro_GiveRGB24(u8 R, u8 G, u8 B);
+extern u32 Neuro_GiveRGB16(u8 R, u8 G, u8 B);
+extern u32 Neuro_GiveRGB8(u8 R, u8 G, u8 B);
+
+/* instead of using the above(Neuro_GiveRGB*), use this function that automatically 
+ * check the current depth in use and use the correct one.
+ */
+extern u32 Neuro_MapRGB(u8 R, u8 G, u8 B);
+
 /* returns a u32 that contains a 24bit color system. */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
 
@@ -76,6 +87,7 @@ extern void Uchar(int amount, unsigned char **buf);
 
 /* internal function (source is bitmap.c in src/misc) */
 extern void readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap);
+extern void readBitmapBufferToPixmap(char *data, EBUF **output_pixmap);
 extern void setBitmapColorKey(u32 key);
 /* internal function (source is bitmap.c in src/misc) 
  * pretty much useless, use Neuro_CleanEBuf() instead

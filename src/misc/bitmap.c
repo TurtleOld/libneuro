@@ -26,6 +26,9 @@
 #include <math.h>
 #include <string.h>
 
+/* this is the only way I found so theres no warning with this function */
+extern FILE *fmemopen(void *_s, size_t size, __const char *modes) __THROW;
+
 #if USE_ZLIB
 /* this is used to open the bitmaps, 
  * the beauty of this is it works 
@@ -95,11 +98,16 @@ static u32 pos_conv[32];
  */
 static EBUF *color_hash;
 
-
+/* static function prototypes */
 static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
 static int fpdata8(nFILE *input, u8 *output) __attribute__((unused));
 static int fpdata16(nFILE *input, u16 *output) __attribute__((unused));
 static int fpdata32(nFILE *input, u32 *output) __attribute__((unused));
+
+
+
+/* static functions */
+
 
 static void 
 clean_bmap_color(void *eng)
@@ -829,20 +837,8 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	free(bufe);
 }
 
-void
-cleanPixmapEbuf(EBUF **pixmap)
-{
-	Neuro_CleanEBuf(pixmap);
-}
-
-void
-setBitmapColorKey(u32 key)
-{
-	color_key = key;
-}
-
-void
-readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
+static void
+processFD_BMP2XPM(nFILE *f_bitmap, EBUF **output_pixmap)
 {
 	/* major (buffers) */
 	EBUF *bmap_colors = NULL; /* the colors */
@@ -863,14 +859,7 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	u32 wmult = 0;
 	double pixellen = 0;
 	u32 increm = 0;
-	nFILE *f_bitmap;
 	u8 DATA;
-	
-#if USE_ZLIB
-	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
-#else /* NOT USE_ZLIB */
-	f_bitmap = fopen(bitmap, "r");
-#endif /* NOT USE_ZLIB */
 	
 	if (f_bitmap == NULL)
 	{
@@ -1018,5 +1007,46 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 	if (f_bitmap)
 		fclose(f_bitmap);
 #endif /* NOT USE_ZLIB */
+}
+
+
+
+
+/* Global functions */
+
+void
+cleanPixmapEbuf(EBUF **pixmap)
+{
+	Neuro_CleanEBuf(pixmap);
+}
+
+void
+setBitmapColorKey(u32 key)
+{
+	color_key = key;
+}
+
+void
+readBitmapBufferToPixmap(char *data, EBUF **output_pixmap)
+{
+	FILE *f_bitmap;
+
+	f_bitmap = fmemopen((void*)data, 512, "r");
+
+	processFD_BMP2XPM((nFILE*)f_bitmap, output_pixmap);
+}
+
+void
+readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
+{
+	nFILE *f_bitmap;
+
+#if USE_ZLIB
+	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
+#else /* NOT USE_ZLIB */
+	f_bitmap = fopen(bitmap, "r");
+#endif /* NOT USE_ZLIB */
+	
+	processFD_BMP2XPM(f_bitmap, output_pixmap);
 }
 
