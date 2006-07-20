@@ -52,3 +52,7 @@ sprite module :
 	- Change the Dynamic type so it stays drawn until the external program explicitly tells it
 	  to clean it. (Eventually, this will completely remplace the static dynamic method and
 	  only this method will be used for both cases).
+
+* extlib -- Add abstract Fonts (Unicode) support :
+	- To make SDL have fonts, we will use SDL_ttf and for X11, we will use the freetype2
+	  library(and X11 bitmap for them).

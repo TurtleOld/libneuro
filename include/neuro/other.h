@@ -74,8 +74,17 @@ extern u32 Neuro_GetTickCount();
 
 extern void Neuro_PrintFPS();
 
+/* use Neuro_BoundsCheck instead */
 extern u8 Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen);
 
+/* rectangle or square bounds check function.
+ * return values :
+ * 0 = depen is inside indep.
+ * 1 = depen and indep are not touching each others(they are far away).
+ * 2 = depen is overlaping indep. 
+ * 3 = depen and indep links between corners are into the other but the corners
+ *     are not touching.
+ */
 extern u8 Neuro_BoundsCheck(Rectan *indep, Rectan *depen);
 
 extern void Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst);

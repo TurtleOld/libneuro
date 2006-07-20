@@ -19736,7 +19736,9 @@ if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
- { { echo "$as_me:$LINENO: error: the required header windows is missing." >&5
+
+else
+  { { echo "$as_me:$LINENO: error: the required header windows is missing." >&5
 echo "$as_me: error: the required header windows is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -20122,7 +20124,9 @@ if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
- { { echo "$as_me:$LINENO: error: the required header unistd is missing." >&5
+
+else
+  { { echo "$as_me:$LINENO: error: the required header unistd is missing." >&5
 echo "$as_me: error: the required header unistd is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -20448,7 +20452,9 @@ if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
- { { echo "$as_me:$LINENO: error: a required header is missing." >&5
+
+else
+  { { echo "$as_me:$LINENO: error: a required header is missing." >&5
 echo "$as_me: error: a required header is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -21000,7 +21006,9 @@ if test `eval echo '${'$as_ac_var'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
 _ACEOF
- { { echo "$as_me:$LINENO: error: a required function is missing." >&5
+
+else
+  { { echo "$as_me:$LINENO: error: a required function is missing." >&5
 echo "$as_me: error: a required function is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
