@@ -37,7 +37,9 @@
 typedef struct KEYBEVENT
 {
 	u32 key;		/* the actual keyboard key keysym */
+	u8 lastState;		/* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
 	void (*callback)(); 	/* a callback we will call when key is pressed*/
+	void (*callbackReleased)(); /* a callback we will call when the key is no longer pressed */
 	u8 send_key; 		/* werther or not we send to key value as argument 
        				 * to the callback.
 				 */
@@ -102,20 +104,56 @@ handle_keys()
 		 */
 		tmp = Neuro_GiveEBuf(_klist, total);
 
-		/* we check if the key is being pressed */
-		if (Lib_CheckKeyStatus(tmp->key) == 1)
+		if (tmp->lastState == 0)
 		{
-			
-			/* check if the callback exists */
-			if (tmp->callback)
+
+			/* we check if the key is being pressed */
+			if (Lib_CheckKeyStatus(tmp->key) == 1)
 			{
-				/* the key is being pressed so we call the 
-				 * corresponding callback function.
-				 */
-				if (tmp->send_key == 0)
-					(tmp->callback)();
-				else
-					(tmp->callback)(tmp->key);
+				tmp->lastState = 1;
+				/* check if the callback exists */
+				if (tmp->callback)
+				{
+					/* the key is being pressed so we call the 
+					 * corresponding callback function.
+					 */
+					if (tmp->send_key == 0)
+						(tmp->callback)();
+					else
+						(tmp->callback)(tmp->key);
+				}
+			}
+		}
+		else
+		{
+			if (Lib_CheckKeyStatus(tmp->key) == 0)
+			{
+				tmp->lastState = 0;
+				if (tmp->callbackReleased)
+				{
+					/* the key is not pressed anymore so we call the 
+					 * corresponding callback function.
+					 */
+				
+					if (tmp->send_key == 0)
+						(tmp->callbackReleased)();
+					else
+						(tmp->callbackReleased)(tmp->key);
+				
+				}
+			}
+			else
+			{
+				if (tmp->callback)
+				{
+					/* the key is being pressed so we call the 
+					 * corresponding callback function.
+					 */
+					if (tmp->send_key == 0)
+						(tmp->callback)();
+					else
+						(tmp->callback)(tmp->key);
+				}
 			}
 		}
 	}
@@ -173,6 +211,11 @@ handle_mouse()
 			{
 				if (!tmp->lastState)
 				{
+					/* this elements last state now is set to 1 
+					 * meaning it was last clicked.
+					 */
+					tmp->lastState = 1;
+
 					/* check if the callback exist */
 					if (tmp->callbackClick)
 					{
@@ -180,12 +223,8 @@ handle_mouse()
 						 * the current mouse coordinates.
 						 */
 						(tmp->callbackClick)(x, y);
+						return;
 					}
-
-					/* this elements last state now is set to 1 
-					 * meaning it was last clicked.
-					 */
-					tmp->lastState = 1;
 				}
 			}
 		}
@@ -193,6 +232,9 @@ handle_mouse()
 		{
 			if (tmp->lastState == 1)
 			{
+				/* we reset the state back to nothing */
+				tmp->lastState = 0;
+				
 				/* check if the callback exist */
 				if (tmp->callbackRelease)
 				{
@@ -200,10 +242,8 @@ handle_mouse()
 					 * pass it the current mouse coordinates.
 					 */
 					(tmp->callbackRelease)(x, y);
+					return;
 				}
-
-				/* we reset the state back to nothing */
-				tmp->lastState = 0;
 					
 			}
 		}	
@@ -225,17 +265,61 @@ mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_releas
 }
 
 static void
-addKeyPressEvent(u32 keysym, void (*callback)(), u8 send_key)
+addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), u8 send_key)
 {
-	KEYBEVENT *tmp;
+	KEYBEVENT *tmp = NULL;
 
-	Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
+	if (Neuro_EBufIsEmpty(_klist))
+	{
+		Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
+		tmp = Neuro_GiveCurEBuf(_klist);
+	}
+	else
+	{
+		u32 total = 0;
 
-	tmp = Neuro_GiveCurEBuf(_klist);
+		total = Neuro_GiveEBufCount(_klist) + 1;
+
+		/* here we search to see if the keysym was already added so we can 
+		 * update it directly instead of dumbly make a new one.
+		 */
+		while (total-- > 0)
+		{
+			tmp = Neuro_GiveEBuf(_klist, total);
+
+			if (tmp->key == keysym)
+				break;
+			
+			tmp = NULL;
+		}
+
+		if (tmp == NULL)
+		{
+			Neuro_AllocEBuf(_klist, sizeof(KEYBEVENT*), sizeof(KEYBEVENT));
+			tmp = Neuro_GiveCurEBuf(_klist);
+		}
+	}
 
 	tmp->key = keysym;
-	tmp->callback = callback;
+	if (pressedCallback)
+		tmp->callback = pressedCallback;
+	if (releasedCallback)
+		tmp->callbackReleased = releasedCallback;
+	
 	tmp->send_key = send_key;
+	tmp->lastState = 0;
+}
+
+static void
+addKeyPressEvent(u32 keysym, void (*callback)(), u8 send_key)
+{
+	addKeyEvent(keysym, callback, NULL, send_key);
+}
+
+static void
+addKeyReleaseEvent(u32 keysym, void (*callback)(), u8 send_key)
+{
+	addKeyEvent(keysym, NULL, callback, send_key);
 }
 
 /*--- Global Functions ---*/
@@ -255,10 +339,22 @@ Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 	addKeyPressEvent(keysym, callback, 0);
 }
 
+void 
+Neuro_AddReleasedKeyEvent(u32 keysym, void (*callback)())
+{
+	addKeyReleaseEvent(keysym, callback, 0);
+}
+
 void
 Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)())
 {
 	addKeyPressEvent(keysym, callback, 1);
+}
+
+void
+Neuro_AddReleasedMultiKeyEvent(u32 keysym, void (*callback)())
+{
+	addKeyReleaseEvent(keysym, callback, 1);
 }
 
 void
@@ -332,6 +428,8 @@ void
 Neuro_CleanKeyboard()
 {
 	Neuro_CleanEBuf(&_klist);
+	_klist = NULL;
+
 	Neuro_CreateEBuf(&_klist);
 }
 
@@ -339,6 +437,8 @@ void
 Neuro_CleanMouse()
 {
 	Neuro_CleanEBuf(&_mlist);
+	_mlist = NULL;
+	
 	Neuro_CreateEBuf(&_mlist);
 }
 

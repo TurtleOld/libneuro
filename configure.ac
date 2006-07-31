@@ -104,14 +104,17 @@ AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 case $targ in
 	w32)
 		AC_CHECK_HEADERS([windows.h], , [AC_MSG_ERROR([the required header windows is missing.])])
+		AC_CHECK_FUNCS([GetTickCount], , [AC_MSG_ERROR([a required function is missing.])])
 	;;
 
 	unix)
 		AC_FUNC_REALLOC
 		AC_CHECK_HEADERS([unistd.h], , [AC_MSG_ERROR([the required header unistd is missing.])])
+		AC_CHECK_FUNCS([gettimeofday], , [AC_MSG_ERROR([a required function is missing.])])
 	;;
 esac
 
+AM_CONDITIONAL(USE_X11, test x$lowlib = xx11)
 
 dnl --------- Checks -------------
 
@@ -129,7 +132,7 @@ AC_HEADER_TIME
 
 # Checks for library functions.
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([gettimeofday memchr memset strchr], , [AC_MSG_ERROR([a required function is missing.])])
+AC_CHECK_FUNCS([memchr memset strchr], , [AC_MSG_ERROR([a required function is missing.])])
 
 dnl ----------------
 dnl XML check

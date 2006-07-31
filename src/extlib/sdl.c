@@ -74,8 +74,8 @@ typedef struct options_list
 
 static options_list options = {
 	800, 600, 16, 
-	SDL_HWSURFACE | SDL_DOUBLEBUF, 
-	SDL_HWSURFACE
+	0, 
+	SDL_SWSURFACE
 };
 
 static u8 mouse_wheel = 0; /* mouse wheel variable */
@@ -102,12 +102,19 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	SDL_Surface *temp1 = NULL, *temp2 = NULL;
 	
 	_err_ = SDL_Init(SDL_INIT_VIDEO);
+	
 	if (_err_)
+	{
+		Error_Print("SDL_Init failure");
 		return _err_;
+	}
 
 	temp1 = SDL_SetVideoMode(options.Xsize, options.Ysize, options.bpp, options.Primary_screen_flags);
 	if (temp1 == NULL)
+	{
+		Error_Print("SDL_SetVideoMode failure");
 		return 1;
+	}
 	
 	
 	{
@@ -138,7 +145,10 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask);
 
 		if (temp2 == NULL)
+		{
+			Error_Print("Lib_CreateVObject failure");
 			return 1;
+		}
 	}
 	*screen = temp1;
 	if (screen_buf)

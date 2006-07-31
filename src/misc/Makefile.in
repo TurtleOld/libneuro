@@ -50,7 +50,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libmisc_la_LIBADD =
-am__objects_1 = other.lo chgen.lo arg.lo bitmap.lo
+am__objects_1 = other.lo chgen.lo arg.lo
 am_libmisc_la_OBJECTS = $(am__objects_1)
 libmisc_la_OBJECTS = $(am_libmisc_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
@@ -198,8 +198,7 @@ noinst_LTLIBRARIES = libmisc.la
 lib_sources = \
 		other.c \
 		chgen.c \
-		arg.c \
-		bitmap.c
+		arg.c
 
 libmisc_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
@@ -255,7 +254,6 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arg.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chgen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/other.Plo@am__quote@
 
@@ -456,6 +454,8 @@ uninstall-am: uninstall-info-am
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-info-am
 
+
+@USE_X11_TRUE@	lib_sources += bitmap.c
 #AM_CFLAGS= @SDLFLAGS@
 
 #include_HEADERS= \

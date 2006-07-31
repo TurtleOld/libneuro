@@ -1533,23 +1533,34 @@ Graphics_Poll()
 int
 Graphics_Init()
 {
-	int _err_;
+	int _err_ = 0;
 	u32 screenwidth, screenheight;
 
 	ltime = time(NULL);
 
 	Lib_GetScreenSize(&screenwidth, &screenheight);
 	
-	_err_ = 0;
-	/* will need to be configurable from the projects that use Neuro */
-	
 	if (screen_buffer)
 	{
 		_err_ = Lib_VideoInit(&screen, &sclScreen);
+
+		if (_err_ == 1)
+		{
+			Error_Print("Lib_VideoInit failed");
+			return 1;
+		}
 	}
 	else
 	{
 		_err_ = Lib_VideoInit(&screen, NULL);
+		
+		if (_err_ == 1)
+		{
+			Error_Print("Lib_VideoInit failed");
+			return 1;
+		}
+		
+		
 		sclScreen = screen;
 	}
 
@@ -1557,6 +1568,13 @@ Graphics_Init()
 	{
 		sclScreen2 = Lib_CreateVObject(0, screenwidth, screenheight, Lib_GetDefaultDepth(), 0, 
 				0, 0, 0);
+
+		if (sclScreen2 == NULL)
+		{
+			Error_Print("Couldn't create a v object : sclScreen2");
+			return 1;
+		}
+		
 		Lib_SetColorKey(sclScreen2, 0);
 	}
 	else

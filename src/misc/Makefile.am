@@ -5,8 +5,11 @@ noinst_LTLIBRARIES = libmisc.la
 lib_sources = 	\
 		other.c \
 		chgen.c \
-		arg.c \
-		bitmap.c
+		arg.c
+
+if USE_X11
+	lib_sources += bitmap.c
+endif
 
 libmisc_la_SOURCES = $(lib_sources)
 
