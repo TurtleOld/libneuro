@@ -104,7 +104,9 @@ AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
 case $targ in
 	w32)
 		AC_CHECK_HEADERS([windows.h], , [AC_MSG_ERROR([the required header windows is missing.])])
-		AC_CHECK_FUNCS([GetTickCount], , [AC_MSG_ERROR([a required function is missing.])])
+		#AC_CHECK_FUNCS([GetTickCount], , [AC_MSG_ERROR([a required function is missing.])])
+	
+
 	;;
 
 	unix)
