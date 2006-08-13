@@ -116,8 +116,6 @@ case $targ in
 	;;
 esac
 
-AM_CONDITIONAL(USE_X11, test x$lowlib = xx11)
-
 dnl --------- Checks -------------
 
 dnl ----------------
@@ -197,15 +195,16 @@ AM_CONDITIONAL(USE_X11, test x$SELECTED_LOWLIB = xX11)
 if test $SELECTED_LOWLIB = X11; then
 	AC_PATH_X
 	AC_PATH_XTRA
-	#AC_CHECK_LIB(X11, XCopyArea, 
-	#	     [AC_DEFINE(USE_X11, 1) LIBS="$LIBS -lX11"
-	#	      NEUROFLAGS="$NEUROFLAGS -L/usr/X11R6/lib -I/usr/X11R6/include"], 
-	#	     [AC_MSG_ERROR(You don't have libX11)])
-	LIBS="$LIBS $X_PRE_LIBS $X_LIBS -lXpm $X_EXTRA_LIBS"
-	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
-	#AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
-	#	     [LIBS="$LIBS -lXpm"],
-	#	     [AC_MSG_ERROR(You don't have libXpm)])
+	LDFLAGS="$CFLAGS $X_LIBS"
+	CFLAGS="$CFLAGS $X_CFLAGS"
+	AC_CHECK_LIB(X11, XCreateGC, 
+		     [AC_DEFINE(USE_X11, 1) LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"], 
+		     [AC_MSG_ERROR(You don't have libX11)])
+#	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+#	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
+	AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
+		     [LIBS="$LIBS -lXpm"],
+		     [AC_MSG_ERROR(You don't have libXpm)])
 	cp include/extlib.h include/neuro
 fi
 

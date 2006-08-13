@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CC CFLAGS ac_ct_CC CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_X11_TRUE USE_X11_FALSE USE_XML_TRUE USE_XML_FALSE USE_SDL_TRUE USE_SDL_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CC CFLAGS ac_ct_CC CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_XML_TRUE USE_XML_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -20246,17 +20246,6 @@ done
 esac
 
 
-
-if test x$lowlib = xx11; then
-  USE_X11_TRUE=
-  USE_X11_FALSE='#'
-else
-  USE_X11_TRUE='#'
-  USE_X11_FALSE=
-fi
-
-
-
 echo "$as_me:$LINENO: checking for ANSI C header files" >&5
 echo $ECHO_N "checking for ANSI C header files... $ECHO_C" >&6
 if test "${ac_cv_header_stdc+set}" = set; then
@@ -22952,15 +22941,157 @@ fi
 
 fi
 
-	#AC_CHECK_LIB(X11, XCopyArea,
-	#	     [AC_DEFINE(USE_X11, 1) LIBS="$LIBS -lX11"
-	#	      NEUROFLAGS="$NEUROFLAGS -L/usr/X11R6/lib -I/usr/X11R6/include"],
-	#	     [AC_MSG_ERROR(You don't have libX11)])
-	LIBS="$LIBS $X_PRE_LIBS $X_LIBS -lXpm $X_EXTRA_LIBS"
-	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
-	#AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
-	#	     [LIBS="$LIBS -lXpm"],
-	#	     [AC_MSG_ERROR(You don't have libXpm)])
+	LDFLAGS="$CFLAGS $X_LIBS"
+	CFLAGS="$CFLAGS $X_CFLAGS"
+	echo "$as_me:$LINENO: checking for XCreateGC in -lX11" >&5
+echo $ECHO_N "checking for XCreateGC in -lX11... $ECHO_C" >&6
+if test "${ac_cv_lib_X11_XCreateGC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lX11  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XCreateGC ();
+int
+main ()
+{
+XCreateGC ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_X11_XCreateGC=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_X11_XCreateGC=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_X11_XCreateGC" >&5
+echo "${ECHO_T}$ac_cv_lib_X11_XCreateGC" >&6
+if test $ac_cv_lib_X11_XCreateGC = yes; then
+  cat >>confdefs.h <<\_ACEOF
+#define USE_X11 1
+_ACEOF
+ LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+else
+  { { echo "$as_me:$LINENO: error: You don't have libX11" >&5
+echo "$as_me: error: You don't have libX11" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+#	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+#	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
+	echo "$as_me:$LINENO: checking for XpmCreatePixmapFromData in -lXpm" >&5
+echo $ECHO_N "checking for XpmCreatePixmapFromData in -lXpm... $ECHO_C" >&6
+if test "${ac_cv_lib_Xpm_XpmCreatePixmapFromData+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lXpm  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char XpmCreatePixmapFromData ();
+int
+main ()
+{
+XpmCreatePixmapFromData ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_Xpm_XpmCreatePixmapFromData=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_Xpm_XpmCreatePixmapFromData=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_Xpm_XpmCreatePixmapFromData" >&5
+echo "${ECHO_T}$ac_cv_lib_Xpm_XpmCreatePixmapFromData" >&6
+if test $ac_cv_lib_Xpm_XpmCreatePixmapFromData = yes; then
+  LIBS="$LIBS -lXpm"
+else
+  { { echo "$as_me:$LINENO: error: You don't have libXpm" >&5
+echo "$as_me: error: You don't have libXpm" >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
 	cp include/extlib.h include/neuro
 fi
 
@@ -23139,13 +23270,6 @@ if test -z "${NO_UNDEFINED_TRUE}" && test -z "${NO_UNDEFINED_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"NO_UNDEFINED\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"NO_UNDEFINED\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${USE_X11_TRUE}" && test -z "${USE_X11_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"USE_X11\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"USE_X11\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23785,12 +23909,12 @@ s,@LIBTOOL@,$LIBTOOL,;t t
 s,@NO_UNDEFINED_TRUE@,$NO_UNDEFINED_TRUE,;t t
 s,@NO_UNDEFINED_FALSE@,$NO_UNDEFINED_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
-s,@USE_X11_TRUE@,$USE_X11_TRUE,;t t
-s,@USE_X11_FALSE@,$USE_X11_FALSE,;t t
 s,@USE_XML_TRUE@,$USE_XML_TRUE,;t t
 s,@USE_XML_FALSE@,$USE_XML_FALSE,;t t
 s,@USE_SDL_TRUE@,$USE_SDL_TRUE,;t t
 s,@USE_SDL_FALSE@,$USE_SDL_FALSE,;t t
+s,@USE_X11_TRUE@,$USE_X11_TRUE,;t t
+s,@USE_X11_FALSE@,$USE_X11_FALSE,;t t
 s,@X_CFLAGS@,$X_CFLAGS,;t t
 s,@X_PRE_LIBS@,$X_PRE_LIBS,;t t
 s,@X_LIBS@,$X_LIBS,;t t
