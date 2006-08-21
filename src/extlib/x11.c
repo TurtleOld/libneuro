@@ -907,10 +907,6 @@ Lib_FillRect(v_object *source, Rectan *src, u32 color)
 	Rectan Vsrc;
 	i32 h, w;
 
-	/* support only black filling for now 
-	 * TODO support the use of u32 color
-	 */
-
 	tmp = (V_OBJECT*)source;
 
 	if (src == NULL)

@@ -52,6 +52,10 @@
 /*! The Total screen height (can be changed before compile time to set the new size) */
 #define SCREEN_Y 600
 
+typedef struct INSTRUCTION_ENGINE INSTRUCTION_ENGINE;
+
+typedef INSTRUCTION_ENGINE v_elem;
+
 /** Neuro_GetScreenBuffer - returns the variable containing the screen buffer. 
  */
 extern void *Neuro_GetScreenBuffer();
@@ -90,6 +94,46 @@ extern void Neuro_PushDynamicDraw(u32 layer, Rectan *src, Rectan *dst, void *sur
  */
 extern void Neuro_PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface);
 
+/* this is the new generation of the drawing push functions, this will 
+ * replace completely the current drawing system method if it presents
+ * better performances than the old (dynamic, static and volatile) system.
+ *
+ * the "older" system is however kept for backward compatibility and this
+ * function uses the same algorithm so it would be unwise to remove the
+ * other functions.
+ */
+extern v_elem *Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface);
+
+/* this function is used to fetch the pointer of the source rectangle, 
+ * destination (x and y) and the pointer to the surface so those can
+ * be directly changed by the external application.
+ * only osurface is output only, the rest returns the actual variable
+ * address so the data can changed/read directly.
+ *
+ * returns 0 if all is ok and 1 on error
+ */
+extern int Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurface);
+
+/* this function's sole purpose is the input a new surface for the
+ * element. 
+ */
+extern int Neuro_SetDraw(v_elem *eng, v_object *isurface);
+
+/* cleans the drawn element on screen so it is no longer visible, this 
+ * action should be taken before touching the element's source
+ * or destination variables or else undesirable trails will subsist
+ * because no buffer is kept for the coordinates to clean.
+ */
+extern int Neuro_CleanDraw(v_elem *eng);
+
+/* tags the element to be redrawn by the engine, without this functions, 
+ * changes made with the Neuro_FetchDraw function would not be applied to
+ * the element.
+ */
+extern int Neuro_FlushDraw(v_elem *eng);
+
+/* destroys the element */
+extern int Neuro_DestroyDraw(v_elem *eng);
 
 /*! This function is used to add a callback function in a buffer. This buffer is looped and 
  * the callback functions(which are added using this function) are ran one by one every cycles. 

@@ -120,7 +120,7 @@
 #include <ebuf.h>
 
 /*--- Main Module Header ---*/
-#include "graphics.h"
+#include <graphics.h>
  
 /*--- Global Variables ---*/
 
@@ -128,37 +128,43 @@
 
 enum drawings_type
 {
-	TDRAW_STATIC = 1,
+	TDRAW_BEGIN,
+       	
+	TDRAW_STATIC,
 	TDRAW_DYNAMIC,
 	TDRAW_DYNAMIC_CLEAN,
-	TDRAW_SDRAWN, /* 4 static but already drawn */
-	TDRAW_VOLATILE, /* 5 a draw that gets deleted after being drawn (override replacement) */
+	TDRAW_SDRAWN, /* static but already drawn */
+	TDRAW_SREDRAW, /* flag to make a static element redrawn */
+	TDRAW_VOLATILE, /* a draw that gets deleted after being drawn (override replacement) */
 
 	TDRAW_END
 };
- 
-typedef struct RAW_ENGINE
+
+typedef struct RAW_ENGINE RAW_ENGINE;
+
+struct RAW_ENGINE
 {
 	u32 layer; /* the drawing level that the surface is drawn */
-	u8 type; /* 1 is static, 2 is dynamic, 3 is static but already drawn*/
+	u8 type; /* see the drawings_type enumeration */
 	Rectan src; /* size of the image */
 	u16 dx, dy; /* destination coordinates */
 	
-	void *surface_ptr; /* only the pointer needed cause its "static" */
-}RAW_ENGINE;
+	void *surface_ptr; /* points to the image held by the external application */
+};
 
-/* this linked list will be computed 
- * unless, RAW_ENGINE is empty, every frames. 
- * It will not be possible to change entries 
- * in it once they r in, new stuff r added 
- * to the end of this linked list and done
- * stuff r removed, exactly like a fifo pipe.
+/* typedef struct INSTRUCTION_ENGINE INSTRUCTION_ENGINE; */
+
+/* 
+ * this structure is the core of the linked list
+ * drawing priority algorithm. The layer for each
+ * added entries is the only dependency to change
+ * the drawing position of an entry.
  */
-typedef struct INSTRUCTION_ENGINE
+struct INSTRUCTION_ENGINE
 {
 	RAW_ENGINE *current;
-	struct INSTRUCTION_ENGINE *next;
-}INSTRUCTION_ENGINE;
+	INSTRUCTION_ENGINE *next;
+};
 
 typedef struct DRAWING_ELEMENTS
 {
@@ -180,6 +186,18 @@ enum POOL_TYPES
 	POOL_LAST
 };
 
+/* this is the memory pool structure 
+ * made to keep track of unused memory
+ * so it can be used again if necessary.
+ *
+ * ** note **
+ * this test (although working well technically) was
+ * an awful performance failure so it was dropped.
+ * 
+ * the code was kept for future reference,
+ * see the macro use_memory_pool to toggle the use
+ * of this feature.
+ */
 typedef struct STRUCT_POOL
 {
 	u8 type;
@@ -243,7 +261,7 @@ static void cleanDrawing();
 static void cleanQueue();
 static void cleanRaw();
 
-static void computeRawEngine(RAW_ENGINE *toadd);
+static INSTRUCTION_ENGINE *computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
 static void print_queue() __attribute__ ((__unused__));
@@ -264,7 +282,7 @@ static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
 /* the old function that used to push images into this engine 
  * now used as a backbone.
  */
-static void AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
+static INSTRUCTION_ENGINE *AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
 
 /* returns a pointer corresponding to the type or
  * NULL if none found 
@@ -276,6 +294,8 @@ static void Push_Data_To_Pool(u8 type, void *data);
 
 static void Raw_Engine_All_To_Pool();
 static void Queue_All_To_Pool();
+
+static int redraw_erased_for_object(INSTRUCTION_ENGINE *indep);
 
 /*--- Static Functions ---*/
 
@@ -312,14 +332,7 @@ cleanQueue()
 	last_element = NULL;
 }
 
-static void
-cleanRawEngineElement(void *eng)
-{
-	RAW_ENGINE *buf;
-
-	buf = (RAW_ENGINE*)eng;
-}
-
+/* debug function */
 static void
 print_queue() 
 {
@@ -353,12 +366,12 @@ print_queue()
 } __attribute__ ((__unused__))
 
 /* compute the instruction_engine everytime
- * a new raw is added.
+ * a new raw element is added.
  *
  * convertion : done
  * testing : works
  */
-static void
+static INSTRUCTION_ENGINE *
 computeRawEngine(RAW_ENGINE *toadd)
 {
 	register EBUF *tmp;	
@@ -369,7 +382,8 @@ computeRawEngine(RAW_ENGINE *toadd)
 
 	tmp = _Queue;
 	
-	buf = Pull_Data_From_Pool(POOL_QUEUE);
+	if (use_memory_pool)
+		buf = Pull_Data_From_Pool(POOL_QUEUE);
 	
 	if (buf == NULL)
 	{
@@ -396,7 +410,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 			printf("CAUGHT ERROR in last_element current == %d -- debug %d\nDropping this call\n", 
 				current, 
 				(int)last_element->current);
-			return;
+			return NULL;
 		}
 		
 		/* printf("last_element layer %d\n", last_element->current->layer); */
@@ -410,7 +424,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 					(*last_element)->current->layer,
 					(int)(*last_element)->current);*/
 			/* Debug_Val(0, "Placed the object at the end of the queue\n"); */
-			return;
+			return buf;
 		}
 	}
 	else
@@ -418,7 +432,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 		first_element = buf;
 		last_element = buf;
 		/* Debug_Val(0, "Just placed the frame as the first element, starting the queue\n"); */
-		return;
+		return buf;
 	}
 
 #if temp
@@ -507,6 +521,8 @@ computeRawEngine(RAW_ENGINE *toadd)
 		print_queue();
 		Debug_Val(0, "END inside computeRawEngine debug print\n");
 	}
+
+	return buf;
 }
 
 static void
@@ -589,6 +605,29 @@ draw_objects()
 				/* Debug_Val(0, "already drawn\n"); */
 			}
 			break;
+
+			case TDRAW_SREDRAW:
+			{
+				/* Debug_Val(0, "address of surface 0x%x\n", cur->current->surface_ptr); */
+
+				/* now we redraw the actual element */
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, sclScreen2, 
+						&idst);
+
+				/* then we redraw the stuff that could have been 
+				 * there and actually need to be visible(and are above
+				 * our element, ie layers).
+				 */
+				redraw_erased_for_object(cur);
+
+				/* we cleanly redrawn the static element so we
+				 * set the element's flag to drawn
+				 */
+				cur->current->type = TDRAW_SDRAWN;
+
+				/* Debug_Val(0, "Redrawn a static element\n"); */
+			}
+			break;
 			
 			case TDRAW_DYNAMIC:
 			{
@@ -613,7 +652,7 @@ draw_objects()
 			case TDRAW_VOLATILE:
 			{
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
-						sclScreen, &idst);
+						sclScreen2, &idst);
 				
 				if (last)
 					last->next = cur->next;
@@ -676,14 +715,14 @@ draw_objects()
  *   convertion : done
  *   testing : works
  */
-static void 
+static INSTRUCTION_ENGINE *
 AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
 {
 	RAW_ENGINE *buf = NULL;
 	Rectan tIsrc, tIdst;
 
 	if (isurface == NULL || isrc == NULL || idst == NULL)
-		return;
+		return NULL;
 
 	memcpy(&tIsrc, isrc, sizeof(Rectan));
 	memcpy(&tIdst, idst, sizeof(Rectan));	
@@ -691,7 +730,7 @@ AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	if (BoundFixChecker(&screenSize, &tIsrc, &tIdst) == 1)
 	{
 		/* Debug_Val(10, "a drawing instruction was dropped because its destination is outbound"); */
-		return;
+		return NULL;
 	}
 	
 #if retain_image_inipos
@@ -710,7 +749,9 @@ AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	 */
 	/* BoundFixChecker(&test_BoundFix, &tIsrc, &tIdst); */
 	
-	buf = Pull_Data_From_Pool(POOL_RAWENGINE);
+	if (use_memory_pool)
+		buf = Pull_Data_From_Pool(POOL_RAWENGINE);
+
 	if (buf == NULL)
 	{
 		Neuro_AllocEBuf(_Raw, sizeof(RAW_ENGINE*), sizeof(RAW_ENGINE));
@@ -726,10 +767,10 @@ AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isur
 	buf->dy = tIdst.y;
 
 	buf->surface_ptr = isurface;
-	
-	computeRawEngine((RAW_ENGINE*)buf);
 
 	draw_this_cycle = 1;
+
+	return computeRawEngine((RAW_ENGINE*)buf);
 }
 
 /* clean_drawn_objects() might have cleaned objects
@@ -909,6 +950,74 @@ get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
 	return NULL;
 }
 
+static void
+clean_object(INSTRUCTION_ENGINE *cur)
+{
+	Rectan buf;
+	INSTRUCTION_ENGINE *last = NULL;
+	
+	if (!cur)
+		return;
+	
+	buf.x = cur->current->dx;
+	buf.y = cur->current->dy;
+	buf.w = cur->current->src.w;
+	buf.h = cur->current->src.h;
+			
+	/*if (background)
+		Lib_BlitObject(background, &buf, sclScreen2, &buf);
+	else
+		Lib_FillRect(sclScreen2, &buf, 0);
+	*/
+					
+	Lib_FillRect(sclScreen2, &buf, 0);
+			
+	if (redraw_erased_for_object(cur))
+	{
+		last = get_Previous_Object_To_Object(cur);
+	}
+
+
+	if (last)
+		last->next = cur->next;
+		
+	/* check to see if the element cur is either first_element 
+	 * or last_element and if so, we will destituate it.
+	 */
+	if (cur == first_element)
+		first_element = cur->next;
+
+	if (cur == last_element)
+	{
+		if (last)
+		{
+			last_element = last;
+			last_element->next = NULL;
+		}
+		else
+			last_element = NULL;
+	}
+			
+			
+	if (use_memory_pool)
+		Push_Data_To_Pool(POOL_QUEUE, cur);
+	else
+	{
+		INSTRUCTION_ENGINE *temp;
+			
+		temp = cur;
+		cur = cur->next;
+		/*Debug_Val(0, "before queue total %d\n", 
+				Neuro_GiveEBufCount(_Queue));*/
+
+		Neuro_SCleanEBuf(_Raw, temp->current);
+		Neuro_SCleanEBuf(_Queue, temp);
+
+		/* Debug_Val(0, "after queue total %d\n", 
+				Neuro_GiveEBufCount(_Queue));*/
+		/* continue; */
+	}
+}
 
 /* */
 static void
@@ -1277,6 +1386,132 @@ void
 Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;
+}
+
+v_elem *
+Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
+{
+	return AddDrawingInstruction(layer, TDRAW_STATIC, isrc, idst, isurface);
+}
+
+int
+Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurface)
+{
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (psrc)
+		*psrc = &eng->current->src;
+
+	if (px)
+		*px = &eng->current->dx;
+
+	if (py)
+		*py = &eng->current->dy;
+
+	if (osurface)
+	{
+		/*Debug_Val(0, "surface_ptr 0x%x addr surface_ptr 0x%x\n", 
+				eng->surface_ptr, &eng->surface_ptr);*/
+		*osurface = eng->current->surface_ptr;
+	}
+	
+	return 0;
+}
+
+int
+Neuro_SetDraw(v_elem *eng, v_object *isurface)
+{
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (!isurface)
+		return 1;
+	
+	eng->current->surface_ptr = isurface;
+
+	return 0;
+}
+
+int
+Neuro_CleanDraw(v_elem *eng)
+{
+	Rectan buf;
+
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	buf.x = eng->current->dx;
+	buf.y = eng->current->dy;
+	buf.w = eng->current->src.w;
+	buf.h = eng->current->src.h;
+
+	/* we start by redrawing above the static 
+	 * image location to reset its image.
+	 * it may be the background or black.
+	 */
+	if (background)
+	{
+		Lib_BlitObject(background, &buf, sclScreen2, NULL);
+	}
+	else
+		Lib_FillRect(sclScreen2, &buf, 0);
+
+	redraw_erased_for_object(eng);
+
+	return 0;
+}
+
+/* this function is to tag the element to be
+ * redrawn.
+ */
+int
+Neuro_FlushDraw(v_elem *eng)
+{
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (eng->current->type == TDRAW_SDRAWN)
+	{
+		eng->current->type = TDRAW_SREDRAW;
+
+		/* flag the algorithm to tell it something changed 
+		 * and an action needs to be taken.
+		 */
+		draw_this_cycle = 1;
+	}
+	else
+		return 1;
+
+	return 0;
+}
+
+int
+Neuro_DestroyDraw(v_elem *eng)
+{
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+	
+	clean_object(eng);
+	
+	draw_this_cycle = 1;
+
+	return 0;
 }
 
 void

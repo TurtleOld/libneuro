@@ -56,3 +56,19 @@ sprite module :
 * extlib -- Add abstract Fonts (Unicode) support :
 	- To make SDL have fonts, we will use SDL_ttf and for X11, we will use the freetype2
 	  library(and X11 bitmap for them).
+
+extlib -- change the Lib_ prefix (low priority):
+	- Change the Lib_ prefix of the extlib module to something less common so apps that use
+	  Neuro won't have conflits if they themselves use the prefix Lib_.
+
+extlib | other -- indirect extlib access :
+	- External applications should not at all call the functions directly from the extlib
+	  module. We need to have redundant functions that will serve as an interim between
+	  extlib and the extern application. I suggest NEURO.h get its include of extlib.h
+	  removed so external programs will have a warning if they use the extlib functions.
+
+graphics engine -- drawing push functions to return address :
+	- In order for external applications to be able to destroy or modify drawing entries,
+	  the graphics engine's drawing push functions will now return the address of the 
+	  elements it adds and new functions will be made to either modify those elements
+	  or destroy them.

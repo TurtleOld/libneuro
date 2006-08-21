@@ -213,9 +213,11 @@ dnl ----------------
 dnl Debug toggle
 dnl ----------------
 if test x$enable_Debug = xyes; then
-	NEUROFLAGS="$NEUROFLAGS -g"
+	#NEUROFLAGS="$NEUROFLAGS -g"
+	CFLAGS="$CFLAGS -g"
 else
-	NEUROFLAGS="$NEUROFLAGS -O2 -s"
+	#NEUROFLAGS="$NEUROFLAGS -O2 -s"
+	CFLAGS="$CFLAGS -0s -s"
 fi
 
 AC_SUBST(NEUROFLAGS)

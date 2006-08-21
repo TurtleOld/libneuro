@@ -56,7 +56,10 @@ extern u32 Neuro_GiveRGB8(u8 R, u8 G, u8 B);
  */
 extern u32 Neuro_MapRGB(u8 R, u8 G, u8 B);
 
-/* returns a u32 that contains a 24bit color system. */
+/* uses the SDL special RGBA system, if in doubt, use
+ * Neuro_MapRGB instead. (used internally)
+ * returns a u32 that contains a 24bit color system. 
+ */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
 
 /* an interface to easily give the size of an image object 

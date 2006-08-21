@@ -738,6 +738,15 @@ Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen)
  * 2 = depen is overlaping indep. 
  * 3 = depen and indep links between corners are into the other but the corners
  *     are not touching.
+ *	like this :
+ *     		   _________
+ *		 _|_________|_	
+ *     		| |         | |
+ *     		| |         | |
+ *     		| |         | |
+ *     		|_|_________|_|
+ *		  |_________|
+ *     		
  * this function needs to be converted to a macro so its lightning quick
  */
 u8
