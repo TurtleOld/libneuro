@@ -70,4 +70,7 @@ typedef struct Rectan
 /* video object */
 typedef void v_object;
 
+/* font "face" object */
+typedef void font_object;
+
 #endif /* __TYPEDEF_H */

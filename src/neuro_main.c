@@ -82,6 +82,12 @@ Neuro_Init()
 	{
 		return _err;
 	}
+
+	_err = Lib_FontsInit();
+	if (_err)
+	{
+		return _err;
+	}
 	
 	return _err;
 }
@@ -89,6 +95,7 @@ Neuro_Init()
 void
 Neuro_Quit()
 {
+	Lib_FontsExit();
 	Events_Clean();
 	Graphics_Clean();
 }

@@ -168,10 +168,10 @@ extern void Neuro_GiveFPS(t_tick *output);
 extern void Neuro_GiveScreenSize(u32 *width, u32 *height);
 
 /* draw a pixel on the screen */
-extern void Neuro_PutPixel(u32 x, u32 y, u32 pixel);
+extern void Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel);
 
 /* get the color of a pixel on the screen */
-extern u32 Neuro_GetPixel(u32 x, u32 y);
+extern u32 Neuro_GetPixel(v_object *vobj, u32 x, u32 y);
 
 /* clean all the pixels that were drawn using the handled pixel drawer in this module */
 extern void Neuro_CleanPixels();

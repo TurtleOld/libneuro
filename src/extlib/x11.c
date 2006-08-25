@@ -33,6 +33,11 @@
 #include <other.h>
 #include <graphics.h>
 
+/* freetype includes */
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+
 #define buffer_old_method 0
 #define USE_ALPHA 1
 
@@ -77,7 +82,11 @@ static u32 swidth = 800, sheight = 600; /* externally settable screen size */
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
 
+static FT_Library font_lib;
+
 static XColor tpixel;
+
+static void DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha) __attribute__((__unused__));
 
 static void
 clean_Vobjects(void *src)
@@ -353,10 +362,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	return 0;
 }
 
-/* TODO rewrite this so it uses our own color functions in other.c 
- * which is Much faster(like instant compared to 3ms) than asking 
- * X11 to give us those informations.
- */
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
@@ -427,7 +432,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 }
 
 void
-Lib_SetAlpha(v_object *vobj, u32 alpha)
+Lib_SetAlpha(v_object *vobj, u8 alpha)
 {
 	V_OBJECT *tmp;
 	
@@ -435,9 +440,6 @@ Lib_SetAlpha(v_object *vobj, u32 alpha)
 
 	if (tmp == NULL)
 		return;
-
-	if (alpha > 255)
-		alpha = 255;
 	
 	tmp->alpha = alpha;	
 }
@@ -672,10 +674,13 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	{
 
 		if (vsrc->shapemask)
+		{
 			XSetClipMask(dmain->display, dmain->GC, vsrc->shapemask);
-		XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
+		
+			XSetClipOrigin(dmain->display, dmain->GC, ClipX, ClipY);
 
-		XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
+			XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
+		}
 		
 		_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
 				Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
@@ -887,12 +892,282 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 		
 	XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
 			0, 0, width, height);
-		
+	
+	tmp2->alpha = 255;
+
 	tmp2->cwin = &tmp2->data;
 	
 	
 	return (v_object*)tmp2;
 }
+
+/* unicode renderer */
+v_object *
+Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst)
+{
+	int _err = 0;
+	static u32 expect = 0;
+	static u32 codepoint = 0;
+	v_object *output = NULL;
+	u8 space_char = 0;
+	FT_Face face;
+
+	face = (FT_Face)ttf;
+
+	if (!face)
+		return NULL;
+
+	if (character == ' ')
+	{
+		space_char = 1;
+	}
+	else
+	{
+		if (!src || !dst)
+			return NULL;
+	}
+
+	_err = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
+	if (_err)
+	{
+		Error_Print("Couldn't select the encoding unicode");
+		return NULL;
+	}
+	
+	_err = FT_Set_Char_Size(face, size * 64, size * 64, 72, 72);
+	if (_err)
+	{
+		Error_Print("Couldn't set face character size");
+		return NULL;
+	}
+
+	/* support for multi bytes characters */	
+	if (character >= 0xC0)
+	{
+		if (character < 0xE0)
+		{
+			codepoint = character & 0x1F;
+			expect = 1;
+		}
+		else if (character < 0xF0)
+		{
+			codepoint = character & 0x0F;
+			expect = 2;
+		}
+		else if (character < 0xF8)
+		{
+			codepoint = character & 0x07;
+			expect = 3;
+		}
+		return NULL;
+	}
+	else if (character >= 0x80)
+	{
+		--expect;
+
+		if (expect >= 0)
+		{
+			codepoint <<= 6;
+			codepoint += character & 0x3F;
+		}
+
+		if (expect > 0)
+			return NULL;
+
+		expect = 0;
+	}
+	else
+		codepoint = character;
+
+	_err = FT_Load_Char(face, codepoint, FT_LOAD_RENDER | FT_LOAD_MONOCHROME);
+	/* _err = FT_Load_Char(face, character, FT_LOAD_MONOCHROME); */
+
+	if (_err)
+	{
+		Error_Print("Couldn't load character");
+		return NULL;
+	}
+
+	{
+		v_object *screen;
+		u32 pixel, row;
+		u32 black;
+		FT_BitmapGlyph bitmap;
+		u8 R, G, B;
+
+		Neuro_GiveConvertRGB(color, &R, &G, &B);
+		
+		if (face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
+		{
+			Debug_Print("Unknown non bitmap format");
+			return NULL;
+		}
+		/*if (face->glyph->format == FT_GLYPH_FORMAT_BITMAP)
+		{
+			Debug_Print("Bitmap format");
+		}
+		else
+		{
+			Debug_Print("Unknown non bitmap format");
+		}
+		*/
+		
+		/* Debug_Val(0, "font size %dx%d\n", face->glyph->bitmap.width,
+				face->glyph->bitmap.rows); */
+		if (!space_char)
+		{
+			/* allocate the surface */
+			output = Lib_CreateVObject(0, face->glyph->bitmap.width, 
+					face->glyph->bitmap.rows, 16, 0, 0, 0, 0);
+		}
+		
+		bitmap = (FT_BitmapGlyph)face->glyph;
+		pixel = 0;
+		row = 0;
+
+		black = Neuro_MapRGB(0, 0, 0);
+
+		screen = Neuro_GetScreenBuffer();
+
+		Lib_SyncPixels(output);
+
+		Lib_LockVObject(output);
+		
+		if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY && !space_char)
+		{
+			while (row < face->glyph->bitmap.rows)
+			{	
+				pixel = 0;	
+				
+				while (pixel < face->glyph->bitmap.width)
+				{
+					u32 gray;
+					
+					if ((gray = face->glyph->bitmap.buffer[(row * face->glyph->bitmap.pitch) + pixel]))
+					{
+						u32 tcolor, rcolor;
+						i16 tx, ty;
+						
+						tx = (*x + pixel) + face->glyph->metrics.horiBearingX / 64;
+						ty = (*y + row) - face->glyph->metrics.horiBearingY / 64;
+
+						/*Debug_Val(0, "tcolor %d rcolor %d alpha %d\n", tcolor, 
+							rcolor, gray);*/
+						tcolor = Lib_GetPixel(screen, tx, ty);
+						rcolor = AlphaPixels(color, tcolor, (double)(256 - gray));
+						Lib_PutPixel(screen, tx, ty, rcolor);
+						
+					}
+					else
+					{
+						/* if (character == 'X')
+							Debug_Val(0, "0");*/
+					}
+
+					pixel++;
+				}
+				
+				if (character == 'X')
+					Debug_Val(0, "\n");
+				row++;
+			}
+		}
+
+		if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_MONO && !space_char)
+		{
+			u16 cbits[8];
+			u16 i = 8;
+			i16 tx, ty;
+			u8 gray;
+			u8 *bm, *rstart;
+
+			bm = face->glyph->bitmap.buffer;
+			rstart = bm;
+
+			if (IsLittleEndian())
+			{
+				cbits[7] = 0x80;
+				cbits[6] = 0x40;
+				cbits[5] = 0x20;
+				cbits[4] = 0x10;
+				cbits[3] = 0x08;
+				cbits[2] = 0x04;
+				cbits[1] = 0x02;
+				cbits[0] = 0x01;
+			}
+			else
+			{
+				cbits[7] = 0x08;
+				cbits[6] = 0x04;
+				cbits[5] = 0x02;
+				cbits[4] = 0x01;
+				cbits[3] = 0x80;
+				cbits[2] = 0x40;
+				cbits[1] = 0x20;
+				cbits[0] = 0x10;
+			}
+			
+			pixel = 0;
+			while (row < face->glyph->bitmap.rows)
+			{
+				gray = *bm;
+				i = 8;
+				while (i-- > 0)
+				{			
+					/* tx = (*x + pixel) + face->glyph->metrics.horiBearingX / 64;
+					ty = (*y + row) - face->glyph->metrics.horiBearingY / 64; */
+					/* tx = pixel + face->glyph->metrics.horiBearingX / 64;
+					ty = row - face->glyph->metrics.horiBearingY / 64;*/
+					tx = pixel;
+					ty = row;
+						
+					if (gray & cbits[i])
+					{
+						/* Debug_Val(0, "dot at (%d,%d)\n", tx, ty); */
+						Lib_PutPixel(output, tx, ty, color);
+					}	
+
+					if (pixel >= face->glyph->bitmap.width - 1)
+					{
+						row++;
+
+						pixel = 0;
+						rstart += face->glyph->bitmap.pitch;
+						bm = rstart;
+						bm--;
+						
+						break;
+					}
+					pixel++;
+				}
+
+				bm++;
+			}
+		}	
+
+
+		if (!space_char)
+		{
+			src->x = 0;
+			src->y = 0;
+			src->w = face->glyph->bitmap.width;
+			src->h = face->glyph->bitmap.rows;
+
+			dst->x = *x + face->glyph->metrics.horiBearingX / 64;
+			dst->y = *y - face->glyph->metrics.horiBearingY / 64;
+			dst->w = 0;
+			dst->h = 0;
+		}
+
+		*x = *x + face->glyph->metrics.horiAdvance / 64;
+		/* *y = *y + face->glyph->metrics.vertAdvance / 64; */
+
+		Lib_UnlockVObject(output);
+	}
+
+	return output;
+}
+
 
 void
 Lib_UpdateRect(v_object *source, Rectan *src)
@@ -1043,6 +1318,34 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 	{
 		*bpp = wdepth;
 	}
+}
+
+font_object *
+Lib_LoadFontFile(char *fonts_file_path)
+{
+	FT_Face face;
+	int _err = 0;
+	
+	_err = FT_New_Face(font_lib, fonts_file_path, 0, &face);
+
+	if (_err != 0)
+	{
+		return NULL;
+	}
+
+	return face;
+}
+
+int
+Lib_FontsInit()
+{
+	return FT_Init_FreeType(&font_lib);
+}
+
+void
+Lib_FontsExit()
+{
+	FT_Done_FreeType(font_lib);
 }
 
 void

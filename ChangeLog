@@ -1,0 +1,16 @@
+version 0.49
+	*Major
+		- Added 4 new functions to the extlib modules. 
+		  All 4 are for the freetype library abstraction.
+		  2 of those are core creation/cleaning functions and
+		  the 2 others are to load a face and to render characters
+		  in monochrome. 			- Nicholas Niro  nik34_2000@yahoo.com
+		  
+		- Added a few set of new functions to the graphics engine
+		  that might replace the old dynamic/static method, see
+		  the commit comment for more details.  - Nicholas Niro  nik34_2000@yahoo.com
+
+	*Minor
+		- Made the configure script more robust and included the
+		  freetype library as a dependency. 	- Nicholas Niro  nik34_2000@yahoo.com
+	

@@ -273,7 +273,7 @@ static void clean_drawn_objects();
 /* update only a part of the screen */
 static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
-static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__));
+static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__, __unused__));
 /* clean the screen of the handled pixels drawn */
 static void cleanPixels();
 
@@ -806,7 +806,18 @@ redraw_erased_for_object(INSTRUCTION_ENGINE *indep)
 			cur = cur->next;
 			continue;
 		}
-			
+		
+		if (!cur->current)
+		{
+			Debug_Val(0, "BAD : the instruction 0x%x has an empty content!\n", 
+					cur);
+
+			Debug_Val(0, "DEBUG data : indep 0x%x  its next element 0x%x\n",
+					indep, indep->next);
+			/* odd error, this ain't supposed to happen :L */
+			return 0;
+		}
+		
 		if (cur->current->type == TDRAW_SDRAWN)
 		{
 			
@@ -972,11 +983,10 @@ clean_object(INSTRUCTION_ENGINE *cur)
 					
 	Lib_FillRect(sclScreen2, &buf, 0);
 			
-	if (redraw_erased_for_object(cur))
-	{
-		last = get_Previous_Object_To_Object(cur);
-	}
+	redraw_erased_for_object(cur);
 
+	
+	last = get_Previous_Object_To_Object(cur);
 
 	if (last)
 		last->next = cur->next;
@@ -1003,15 +1013,18 @@ clean_object(INSTRUCTION_ENGINE *cur)
 		Push_Data_To_Pool(POOL_QUEUE, cur);
 	else
 	{
-		INSTRUCTION_ENGINE *temp;
-			
+		/* INSTRUCTION_ENGINE *temp; */
+		
+		/*	
 		temp = cur;
 		cur = cur->next;
+		*/
+		
 		/*Debug_Val(0, "before queue total %d\n", 
 				Neuro_GiveEBufCount(_Queue));*/
 
-		Neuro_SCleanEBuf(_Raw, temp->current);
-		Neuro_SCleanEBuf(_Queue, temp);
+		Neuro_SCleanEBuf(_Raw, cur->current);
+		Neuro_SCleanEBuf(_Queue, cur);
 
 		/* Debug_Val(0, "after queue total %d\n", 
 				Neuro_GiveEBufCount(_Queue));*/
@@ -1589,9 +1602,9 @@ Neuro_AddDrawingElement(void (*func)())
 }
 
 void
-Neuro_PutPixel(u32 x, u32 y, u32 pixel)
+Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel)
 {
-	EBUF *tmp;
+	/*EBUF *tmp;
 	PIXEL_ENGINE *buf;
 	u32 current;
 	Rectan check;
@@ -1612,12 +1625,13 @@ Neuro_PutPixel(u32 x, u32 y, u32 pixel)
 	Neuro_AllocEBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
 	
 	current = Neuro_GiveEBufCount(tmp);
-	buf = Neuro_GiveEBuf(tmp, current);
+	buf = Neuro_GiveEBuf(tmp, current);*/
 	
-	Neuro_RawPutPixel(sclScreen, x, y, pixel);
-	
+	Lib_PutPixel(vobj, x, y, pixel);
+	/*
 	buf->x = x;
 	buf->y = y;
+	*/
 }
 
 void *
@@ -1627,9 +1641,9 @@ Neuro_GetScreenBuffer()
 }
 
 u32
-Neuro_GetPixel(u32 x, u32 y)
+Neuro_GetPixel(v_object *vobj, u32 x, u32 y)
 {
-	return Neuro_RawGetPixel(screen, x, y);
+	return Lib_GetPixel(vobj, x, y);
 }
 
 void

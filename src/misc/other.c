@@ -541,6 +541,9 @@ Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height)
 u32 
 Neuro_RawGetPixel(v_object *srf, int x, int y)
 {
+
+	return Lib_GetPixel(srf, x, y);
+
 #if temp
 	u8 bpp;
 	u8 *p;
@@ -612,6 +615,9 @@ Neuro_RawGetPixel(v_object *srf, int x, int y)
 void 
 Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
 {
+
+	Lib_PutPixel(srf, x, y, pixel);
+	
 #if temp
 	/* SDL_Surface *surface = (SDL_Surface*)srf; */
 	/* SDL_LockSurface(surface); */
@@ -856,5 +862,85 @@ Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
 	
 	idst->y += Neuro_CalcOnlyPos(indep->y, idst->y);
 	
+}
+
+void
+Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst)
+{
+	Lib_BlitObject(source, src, destination, dst);
+}
+
+void
+Neuro_FreeVobject(v_object *source)
+{
+	Lib_FreeVobject(source);
+}
+
+void
+Neuro_LoadBMP(const char *path, v_object **img)
+{
+	Lib_LoadBMP(path, img);
+}
+
+void
+Neuro_SetColorKey(v_object *vobj, u32 key)
+{
+	Lib_SetColorKey(vobj, key);
+}
+
+void
+Neuro_SetAlpha(v_object *vobj, u8 alpha)
+{
+	Lib_SetAlpha(vobj, alpha);
+}
+
+void
+Neuro_SyncPixels(v_object *src)
+{
+	Lib_SyncPixels(src);
+}
+
+v_object *
+Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
+		u32 Bmask, u32 Amask)
+{
+	return Lib_CreateVObject(flags, width, height, depth, Rmask, Gmask, Bmask, Amask);
+}
+
+font_object *
+Neuro_LoadFontFile(char *fonts_file_path)
+{
+	return Lib_LoadFontFile(fonts_file_path);
+}
+
+v_object *
+Neuro_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst)
+{
+	return Lib_RenderUnicode(ttf, size, character, x, y, color, src, dst);
+}
+
+void
+Neuro_SetScreenSize(u32 width, u32 height)
+{
+	Lib_SetScreenSize(width, height);
+}
+
+void
+Neuro_GetScreenSize(u32 *width, u32 *height)
+{
+	Lib_GetScreenSize(width, height);
+}
+
+
+void 
+Neuro_LockVObject(v_object *vobj)
+{
+	Lib_LockVObject(vobj);
+}
+
+void 
+Neuro_UnlockVObject(v_object *vobj)
+{
+	Lib_UnlockVObject(vobj);
 }
 

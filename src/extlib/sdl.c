@@ -630,6 +630,21 @@ Lib_GetDefaultDepth()
 	return 16; /* TEMPORARY please make get the real value from somewhere!!! TODO TODO */
 }
 
+/* TODO code this up */
+int
+Lib_FontsInit()
+{
+	return 0;
+}
+
+/* TODO code this up */
+void
+Lib_FontsExit()
+{
+	
+}
+
+
 void
 Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch, 
 		void **pixels, Rectan **clip_rect, u8 *bpp, 

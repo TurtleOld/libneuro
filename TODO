@@ -9,9 +9,9 @@ graphics engine :
 	  blink black very fast, barely noticeable. Confirmed this is a bug with type 0 or 3
 	  bounds case. Quick fix done, need to test it.
 	- implement a way to change a certain color into an image to support things like
-	  font colors. Would need to be implemented low in the drawing process.
+	  font colors. Would need to be implemented low in the drawing process. - won't do it
 	- implement a fast independant alpha module, something called after the actual low level
-	  draw.
+	  draw.  - done
 	
 
 network engine/module : 
@@ -51,7 +51,7 @@ sprite module :
 * video -- graphics module : 
 	- Change the Dynamic type so it stays drawn until the external program explicitly tells it
 	  to clean it. (Eventually, this will completely remplace the static dynamic method and
-	  only this method will be used for both cases).
+	  only this method will be used for both cases). - done
 
 * extlib -- Add abstract Fonts (Unicode) support :
 	- To make SDL have fonts, we will use SDL_ttf and for X11, we will use the freetype2
@@ -71,4 +71,11 @@ graphics engine -- drawing push functions to return address :
 	- In order for external applications to be able to destroy or modify drawing entries,
 	  the graphics engine's drawing push functions will now return the address of the 
 	  elements it adds and new functions will be made to either modify those elements
-	  or destroy them.
+	  or destroy them. - done (actually, this is a duplicate)
+
+* extlib sdl -- default depth currently static 16 :
+	- make this so it is settable and not just a static 16.
+
+extlib sdl -- code the fonts :
+	- code the fonts, I think we will use our own freetype function instead of
+	  SDL_ttf after all.

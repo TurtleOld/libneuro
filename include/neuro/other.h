@@ -131,4 +131,88 @@ extern int Neuro_ArgProcess();
 /* ---------- End of the Argument System ---------- */
 
 
+/* blit one surface to another one with this function */
+extern void Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst);
+
+/* free a v_object after its use is no longer needed. */
+extern void Neuro_FreeVobject(v_object *source);
+
+/* load a M$ bitmap from a file that you input 
+ * pass the address of a pointer v_object :
+ * v_object *image;
+ *
+ * and pointer for that is &image
+ */
+extern void Neuro_LoadBMP(const char *path, v_object **img);
+
+/* sets the color key that will not be drawn (for transparency) of a surface.
+ * this needs to be done strictly before loading a surface with X11 and 
+ * can be done anytime with SDL.
+ */
+extern void Neuro_SetColorKey(v_object *vobj, u32 key);
+
+/* sets the alpha (transparency) of a surface */
+extern void Neuro_SetAlpha(v_object *vobj, u8 alpha);
+
+/* syncs the pixels so subsequent input or output on them 
+ * are getting correct informations.
+ */
+extern void Neuro_SyncPixels(v_object *src);
+
+/* create visual surfaces with this function */
+extern v_object * Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask, u32 Bmask, u32 Amask);
+
+
+/* you can load a truetype (or any other that the freetype library
+ * supports) with this function. 
+ * returns NULL on error or a pointer to a font_object.
+ */
+extern font_object *Neuro_LoadFontFile(char *fonts_file_path);
+
+/* even though the input arguments seem to be quite complicated, it is not. 
+ * the ttf input address can be given with the load fonts function, the size
+ * is the size of the fonts you want in pixels, the character is the character
+ * code you want to render.
+ *
+ * The x and y coordinates are a bit special, the value in those are changed so
+ * characters in a string have the correct spacing(instead of overlapping).
+ *
+ * color is the color you want your character to be and the 2 Rectan output
+ * the basic informations about the surface so it can be blit easily.
+ *
+ * returns the v_object pointer if the character got loaded well or
+ * NULL if either there was an error or the character that was input
+ * requires more than one byte to be complete.
+ *
+ * NOTE This function do handle spaces! ie ' '. just input the corresponding
+ * x and y addresses so the function can calculate itself the size they take.
+ * For this purpose, you CAN leave color, src and dst to 0 or NULL!
+ * just remember to put the correct size and character (to ' ') so the size
+ * of the space is correct.
+ */
+extern v_object *Neuro_RenderUnicode(font_object *ttf, u32 size, u32 character, 
+		i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst);
+
+/* you can set the size of the screen with this function.
+ * note that this function will not work on the fly, you
+ * can only use this __before__ you init Neuro! or
+ * else it won't work.
+ */
+extern void Lib_SetScreenSize(u32 width, u32 height);
+
+/* puts the size of the screen in current use in the input variables */
+extern void Lib_GetScreenSize(u32 *width, u32 *height);
+
+/* for pixel manipulations (input/output) this locks the lock on
+ * the pixels buffer. So nothing can be done in the background on
+ * them.
+ */
+extern void Lib_LockVObject(v_object *vobj);
+
+/* for pixel manipulations (input/output) this unlocks the lock on
+ * the pixels buffer.
+ */
+extern void Lib_UnlockVObject(v_object *vobj);
+
+
 #endif /* __OTHER_H */
