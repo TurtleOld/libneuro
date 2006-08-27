@@ -196,20 +196,88 @@ sync_pixels(V_OBJECT *src)
 	
 	if (src->pixel_data_changed == 1)
 	{
-		Neuro_GiveImageSize(src, &w, &h);
+		/* Neuro_GiveImageSize(src, &w, &h); */
+		h = src->raw_data->height;
+		w = src->raw_data->width;
 #if old
 		XPutImage(dmain->display, *src->cwin, dmain->GC, src->raw_data, 
 				0, 0, 0, 0, w, h);
 #endif /* old */
 		if (src->raw_data)
 			XDestroyImage(src->raw_data);
-		
+		/* Debug_Val(0, "cwin %d size %dx%d\n", *src->cwin, w, h); */
 		src->raw_data = XGetImage(dmain->display, *src->cwin, 
 			0, 0, w, h, 
 			AllPlanes, ZPixmap);
-	
 		src->pixel_data_changed = 0;
 	}	
+}
+
+/*  */
+static void
+CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
+{
+	GC gc;
+	XGCValues values;
+	int _err = 0;
+
+	if (!image)
+	{
+		*pix = 0;
+		return;
+	}
+	
+	*pix = XCreatePixmap(dmain->display, master, image->width, image->height, image->depth);
+
+	values.foreground = 1;
+	values.background = 0;
+
+	gc = XCreateGC(dmain->display, *pix, GCForeground | GCBackground, &values);
+	
+	_err = XPutImage(dmain->display, *pix, gc, image, 0, 0, 
+		 0, 0, image->width, image->height);
+	
+	if (_err != 0)
+	{
+		Debug_Val(0, "error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+		XFreePixmap(dmain->display, *pix);
+
+		*pix = 0;
+	}
+
+	XFreeGC(dmain->display, gc);
+}
+
+/* creates a mask */
+static XImage *
+CreateMask(v_object *vobj, i32 width, i32 height)
+{
+	XImage *mask = NULL;
+	V_OBJECT *obj;
+
+	obj = (V_OBJECT*)vobj;
+	
+	if (!obj)
+		return NULL;
+	
+	mask = XCreateImage(dmain->display, XDefaultVisual(dmain->display, dmain->screen), 
+			1, XYBitmap, 0, NULL, width, height, 8, 0);
+
+	if (!mask)
+		return NULL;
+
+	if (mask->height != height)
+	{
+		Debug_Val(0, "Incorrect mask height %d need to be %d\n", mask->height, height);
+		
+		return NULL;
+	}
+	
+	/* Debug_Val(0, "BYTES PER LINE %d\n", mask->bytes_per_line); */
+	
+	mask->data = malloc(mask->bytes_per_line * height);
+	
+	return mask;
 }
 
 void
@@ -222,11 +290,11 @@ Lib_SyncPixels(v_object *src)
 
 	if (!tmp)
 		return;
-		
+	
 	Neuro_GiveImageSize(tmp, &w, &h);
 	if (tmp->raw_data)
-		XDestroyImage(tmp->raw_data);
-		
+		XDestroyImage(tmp->raw_data);	
+
 	tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
 		0, 0, w, h, 
 		AllPlanes, ZPixmap);
@@ -293,7 +361,10 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	/* Debug_Val(0, "graphics exposures %d\n", tmp->wValue.graphics_exposures); */
 	tmp->wValue.graphics_exposures = 0;
-	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures, &tmp->wValue);
+	tmp->wValue.foreground = 1;
+	tmp->wValue.background = 0;
+	tmp->GC = XCreateGC(tmp->display, *tmp->cwin, GCGraphicsExposures |
+			GCForeground | GCBackground, &tmp->wValue);
 	
 	dmain = tmp;
 	*screen = tmp;
@@ -911,6 +982,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	v_object *output = NULL;
 	u8 space_char = 0;
 	FT_Face face;
+	XImage *mask_data = NULL;
 
 	face = (FT_Face)ttf;
 
@@ -991,7 +1063,6 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	{
 		v_object *screen;
 		u32 pixel, row;
-		u32 black;
 		FT_BitmapGlyph bitmap;
 		u8 R, G, B;
 
@@ -1019,19 +1090,27 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			/* allocate the surface */
 			output = Lib_CreateVObject(0, face->glyph->bitmap.width, 
 					face->glyph->bitmap.rows, 16, 0, 0, 0, 0);
+
+			/* create the mask */
+			/* mask_data = CreateMask(output, face->glyph->bitmap.width, face->glyph->bitmap.rows); */
 		}
 		
 		bitmap = (FT_BitmapGlyph)face->glyph;
 		pixel = 0;
 		row = 0;
 
-		black = Neuro_MapRGB(0, 0, 0);
 
 		screen = Neuro_GetScreenBuffer();
 
 		Lib_SyncPixels(output);
 
 		Lib_LockVObject(output);
+
+		if (!space_char)
+		{
+			/* create the mask */
+			mask_data = CreateMask(output, face->glyph->bitmap.width, face->glyph->bitmap.rows);
+		}
 		
 		if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY && !space_char)
 		{
@@ -1125,7 +1204,15 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 					{
 						/* Debug_Val(0, "dot at (%d,%d)\n", tx, ty); */
 						Lib_PutPixel(output, tx, ty, color);
-					}	
+						
+						if (mask_data)
+							XPutPixel(mask_data, tx, ty, 1);
+					}
+					else
+					{
+						if (mask_data)
+							XPutPixel(mask_data, tx, ty, 0);
+					}
 
 					if (pixel >= face->glyph->bitmap.width - 1)
 					{
@@ -1148,6 +1235,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 		if (!space_char)
 		{
+			V_OBJECT *obj;
 			src->x = 0;
 			src->y = 0;
 			src->w = face->glyph->bitmap.width;
@@ -1157,6 +1245,11 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			dst->y = *y - face->glyph->metrics.horiBearingY / 64;
 			dst->w = 0;
 			dst->h = 0;
+			
+			obj = (V_OBJECT*)output;
+			
+			CreatePixmap(mask_data, *obj->cwin, &obj->shapemask);
+			XDestroyImage(mask_data);
 		}
 
 		*x = *x + face->glyph->metrics.horiAdvance / 64;
@@ -1164,6 +1257,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 		Lib_UnlockVObject(output);
 	}
+
 
 	return output;
 }
@@ -1272,8 +1366,9 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 	if (!vobj)
 		return;
 	
-	buf = vobj;
+	buf = (V_OBJECT*)vobj;
 	
+	/* Debug_Val(0, "Fetching from cwin id %d shapemask id %d\n", *buf->cwin, buf->shapemask); */
 	XGetGeometry(dmain->display, *buf->cwin, &wroot, &wx, &wy, 
 			&wwidth, &wheight, &wborder, &wdepth);
 	

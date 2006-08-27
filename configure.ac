@@ -81,6 +81,7 @@ AC_ARG_WITH(lowlib,
 [			     dummy, X11, sdl ],
 lowlib="$withval", lowlib="sdl")
 
+freetype_enable=no
 
 # host related checkings
 
@@ -214,7 +215,7 @@ fi
 dnl ----------------
 dnl Freetype2 Check
 dnl ----------------
-if test $freetype_enable = xyes; then
+if test x$freetype_enable = xyes; then
 	AC_CHECK_LIB(freetype, FT_New_Face,
 		     [LIBS="$LIBS `freetype-config --libs`" CFLAGS="$CFLAGS `freetype-config --cflags`"], 
 		     [AC_MSG_ERROR(You don't have the libfreetype2 library you can get it from freetype.sourceforge.net)])

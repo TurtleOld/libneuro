@@ -19558,6 +19558,7 @@ else
   lowlib="sdl"
 fi;
 
+freetype_enable=no
 
 # host related checkings
 
@@ -23098,7 +23099,7 @@ fi
 	cp include/extlib.h include/neuro
 fi
 
-if test $freetype_enable = xyes; then
+if test x$freetype_enable = xyes; then
 	echo "$as_me:$LINENO: checking for FT_New_Face in -lfreetype" >&5
 echo $ECHO_N "checking for FT_New_Face in -lfreetype... $ECHO_C" >&6
 if test "${ac_cv_lib_freetype_FT_New_Face+set}" = set; then
