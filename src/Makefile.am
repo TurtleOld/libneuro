@@ -12,10 +12,6 @@ SUBDIRS = \
 #	  sound 
 #	  gui 
 
-if USE_XML
-SUBDIRS += xml
-endif
-
 lib_LTLIBRARIES = libneuro.la
 
 lib_sources = 	\
@@ -47,10 +43,6 @@ SUBLIBLIST= \
 #		     script/libscript.la 
 #		     sound/libsound.la 
 #		     gui/libgui.la 
-
-if USE_XML
-SUBLIBLIST += xml/libxmltool.la
-endif
 
 libneuro_la_LIBADD = $(SUBLIBLIST)
 

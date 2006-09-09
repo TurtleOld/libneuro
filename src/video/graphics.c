@@ -101,6 +101,7 @@
  */
 
 #define debug_instruction_buffer 0
+#define debug_clean_instruction_buffer 0
 #define dynamic_debug 0
 
 #define screen_buffer 1
@@ -136,6 +137,7 @@ enum drawings_type
 	TDRAW_SDRAWN, /* static but already drawn */
 	TDRAW_SREDRAW, /* flag to make a static element redrawn */
 	TDRAW_VOLATILE, /* a draw that gets deleted after being drawn (override replacement) */
+	TDRAW_SDESTROY, /* the flag to destroy a static element */
 
 	TDRAW_END
 };
@@ -171,17 +173,18 @@ typedef struct DRAWING_ELEMENTS
 	void (*callback)(void);
 }DRAWING_ELEMENTS;
 
-typedef struct PIXEL_ENGINE
+typedef struct debug_status
 {
-	u32 x, y;
-}PIXEL_ENGINE;
+	u32 missing; 
+	u32 duplicates; 
+}debug_status;
 
 enum POOL_TYPES
 {
 	POOL_AVAILABLE = 0, /* an available spot */
 	POOL_RAWENGINE = 1, /* RAW_ENGINE */
 	POOL_QUEUE, /* INSTRUCTION_ENGINE */
-	POOL_PIXELS, /* PIXEL_ENGINE */
+	/*POOL_PIXELS,*/ /* PIXEL_ENGINE */
 	
 	POOL_LAST
 };
@@ -217,7 +220,6 @@ static INSTRUCTION_ENGINE *last_element;
 static EBUF *_Drawing;
 static EBUF *_Raw;
 static EBUF *_Queue;
-static EBUF *_Pixel;
 
 /* pool used to reuse allocated memory */
 static EBUF *_pool; 
@@ -238,9 +240,6 @@ static u8 fps_dotincr; /* used to after dot increment for the fps limiter algori
 /*static u8 fps_incr; *//* used to increment for the fps limiter algorithm */
 static u32 frameSkip = 0; /* holds the number of frames we have to skip. */
 static u32 frameSkip_tmp = 0; /* the count of frames skipped already. */
-
-/* 1 is that the pixels will be cleaned during this cycle and 0 is no it won't */
-static u8 clean_pixel_in_this_cycle;
 
 /* 1 is that we have drawn the last cycle and 0 is no */
 static u8 drawn_last_cycle;
@@ -265,6 +264,8 @@ static INSTRUCTION_ENGINE *computeRawEngine(RAW_ENGINE *toadd);
 
 /* debug print of the instruction queue */
 static void print_queue() __attribute__ ((__unused__));
+static void buffer_queue(EBUF *src) __attribute__ ((__unused__));
+static void print_missing(EBUF *src) __attribute__ ((__unused__));
 
 /* draw the objects on the screen */
 static void draw_objects();
@@ -275,7 +276,7 @@ static void updScreen(Rectan *rect);
 /* security, check if a rect is in bound with the main screen */
 static int secureBoundsCheck(Rectan *rect) __attribute__ ((__always_inline__, __unused__));
 /* clean the screen of the handled pixels drawn */
-static void cleanPixels();
+/* static void cleanPixels(); */
 
 /* test function for the bounds fixer algorithm */
 static u8 BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst);
@@ -296,6 +297,8 @@ static void Raw_Engine_All_To_Pool();
 static void Queue_All_To_Pool();
 
 static int redraw_erased_for_object(INSTRUCTION_ENGINE *indep);
+
+static void clean_object(INSTRUCTION_ENGINE *cur);
 
 /*--- Static Functions ---*/
 
@@ -363,7 +366,149 @@ print_queue()
 		else
 			cur = cur->next;
 	}
-} __attribute__ ((__unused__))
+}
+
+static void
+buffer_queue(EBUF *src)
+{
+	INSTRUCTION_ENGINE *cur;
+	
+	if (Neuro_EBufIsEmpty(_Queue))
+		return;
+
+	cur = first_element;
+	
+	while (cur != NULL)
+	{	
+		debug_status *tmp = NULL;
+		Neuro_AllocEBuf(src, sizeof(debug_status*), sizeof(debug_status));
+
+		tmp = Neuro_GiveCurEBuf(src);
+
+		/* memcpy(tmp, cur, sizeof(INSTRUCTION_ENGINE*)); */
+		tmp->missing = (u32)cur;
+
+		/* Debug_Val(0, "layer #%d address &%x (%x) type %d\n", cur->current->layer, cur, 
+				tmp->missing, cur->current->type);*/
+		
+		if (cur->next == first_element)
+		{
+			Debug_Val(0, "Error- this element points to the beginning element\n");
+			break;
+		}
+		else
+			cur = cur->next;
+	}
+}
+
+static void
+print_missing(EBUF *src)
+{
+	INSTRUCTION_ENGINE *cur;
+	debug_status *tmp;
+	EBUF *missing_list;
+	u32 total;
+	u8 found = 0;
+	
+	if (Neuro_EBufIsEmpty(_Queue))
+		return;
+
+	if (Neuro_EBufIsEmpty(src))
+		return;
+
+	Neuro_CreateEBuf(&missing_list);
+
+	cur = first_element;
+	
+	while (cur != NULL)
+	{
+		total = Neuro_GiveEBufCount(src) + 1;
+		found = 0;
+
+		while (total-- > 0)
+		{
+			tmp = Neuro_GiveEBuf(src, total);
+
+			/* Debug_Val(0, "is 0x%x the same as 0x%x? ", tmp->missing, cur); */
+			if (tmp->missing == (u32)cur)
+			{
+				/* Debug_Val(0, "yes\n"); */
+				found++;
+			}
+			/*else
+				Debug_Val(0, "no\n");*/
+		}
+
+		if (found == 0)
+		{
+			struct debug_status *dstmp;
+			Neuro_AllocEBuf(missing_list, sizeof(struct debug_status*), sizeof(struct debug_status));
+
+			dstmp = Neuro_GiveCurEBuf(missing_list);
+
+			dstmp->missing = (u32)cur;
+
+			dstmp->duplicates = 0;
+		}
+		else if (found > 1)
+		{
+			struct debug_status *dstmp;
+			Neuro_AllocEBuf(missing_list, sizeof(struct debug_status*), sizeof(struct debug_status));
+
+			dstmp = Neuro_GiveCurEBuf(missing_list);
+
+			dstmp->missing = (u32)cur;
+
+			dstmp->duplicates = found;
+		}
+		
+		if (cur->next == first_element)
+		{
+			Error_Print("This element points to the beginning element\n");
+			break;
+		}
+		else
+			cur = cur->next;
+	}
+
+	/* now that we filled the missing_list buffer, we can output
+	 * its data. 
+	 */
+
+	Debug_Print("Debug queue status report");
+
+	if (!Neuro_EBufIsEmpty(missing_list))
+	{
+		total = Neuro_GiveEBufCount(missing_list) + 1;
+		Debug_Val(0, "We found %d missing/destroyed/duplicate addresses on %d\n", total, 
+			Neuro_GiveEBufCount(_Queue) + 1);
+	}
+	else
+	{
+		Debug_Val(0, "NO missing/destroyed/duplicate addresses!\n");
+		total = 0;
+		Neuro_CleanEBuf(&missing_list);
+		return;
+	}
+
+	while (total-- > 0)
+	{
+		struct debug_status *dstmp = NULL;
+
+		dstmp = Neuro_GiveEBuf(missing_list, total);
+
+		if (!dstmp)
+			continue;
+
+		if (dstmp->duplicates == 0)
+			Debug_Val(0, "the address 0x%x is missing\n", dstmp->missing);
+		else
+			Debug_Val(0, "the address 0x%x is present %d times\n", 
+					dstmp->duplicates);
+	}
+
+	Neuro_CleanEBuf(&missing_list);
+}
 
 /* compute the instruction_engine everytime
  * a new raw element is added.
@@ -525,39 +670,6 @@ computeRawEngine(RAW_ENGINE *toadd)
 	return buf;
 }
 
-static void
-cleanPixels()
-{
-	EBUF *tmp;
-	Rectan buf;
-	PIXEL_ENGINE *pix;
-	u32 current;
-	
-	tmp = _Pixel;
-
-	current = Neuro_GiveEBufCount(tmp);
-	
-	if (current <= 0)
-		return;
-
-	
-	if (!Neuro_EBufIsEmpty(tmp))
-	{
-		while (current-- > 0)
-		{
-			pix = Neuro_GiveEBuf(tmp, current);
-			buf.x = pix->x;
-			buf.y = pix->y;
-			
-			buf.w = 1;
-			buf.h = 1;
-			
-			Lib_BlitObject(background, &buf, sclScreen, &buf);
-		}
-	}
-	Neuro_CleanEBuf(&_Pixel);
-}
-
 /* 
  * convertion : done
  * testing : works
@@ -626,6 +738,12 @@ draw_objects()
 				cur->current->type = TDRAW_SDRAWN;
 
 				/* Debug_Val(0, "Redrawn a static element\n"); */
+			}
+			break;
+
+			case TDRAW_SDESTROY:
+			{
+				clean_object(cur);
 			}
 			break;
 			
@@ -697,7 +815,7 @@ draw_objects()
 		last = cur;
 		if (cur->next == NULL && cur != last_element)
 		{
-			Debug_Val(0, "there u go, we got a party breaker...\n");
+			Debug_Val(0, "there you go, we got a party breaker...\n");
 		}
 		cur = cur->next;
 	}
@@ -944,13 +1062,20 @@ get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
 	if (first_element == NULL)
 		return NULL;
 
+	if (indep == first_element)
+		return NULL;
+
 	cur = first_element;
 
 	while (cur)
 	{
 		
 		if (cur == indep)
+		{
+			/* Debug_Val(0, "found the previous elem 0x%x, (his next 0x%x)\n", 
+					last, last->next);*/
 			return last;
+		}
 
 		
 		last = cur;
@@ -966,9 +1091,12 @@ clean_object(INSTRUCTION_ENGINE *cur)
 {
 	Rectan buf;
 	INSTRUCTION_ENGINE *last = NULL;
+	EBUF *verify_m;
 	
 	if (!cur)
 		return;
+
+	/* Debug_Val(0, "destroying element address 0x%x\n", cur); */
 	
 	buf.x = cur->current->dx;
 	buf.y = cur->current->dy;
@@ -982,14 +1110,33 @@ clean_object(INSTRUCTION_ENGINE *cur)
 	*/
 					
 	Lib_FillRect(sclScreen2, &buf, 0);
-			
+
 	redraw_erased_for_object(cur);
 
-	
-	last = get_Previous_Object_To_Object(cur);
+	if (debug_clean_instruction_buffer)
+	{
+		Neuro_CreateEBuf(&verify_m);
+		buffer_queue(verify_m);
+	}
 
+	if (debug_clean_instruction_buffer)
+	{
+		Debug_Print("*initial values");
+		print_missing(verify_m);
+	}
+
+	/* only set the previous element (last) if the element we need to
+	 * destroy isn't the first one 
+	 */
+	if (cur != first_element)
+		last = get_Previous_Object_To_Object(cur);
 	if (last)
+	{
+		/* Debug_Val(0, "changing last's(0x%x) next 0x%x to 0x%x\n", last, 
+				last->next, cur->next);*/
+
 		last->next = cur->next;
+	}	
 		
 	/* check to see if the element cur is either first_element 
 	 * or last_element and if so, we will destituate it.
@@ -1007,8 +1154,13 @@ clean_object(INSTRUCTION_ENGINE *cur)
 		else
 			last_element = NULL;
 	}
-			
-			
+
+	if (debug_clean_instruction_buffer)
+	{
+		Debug_Print("*before real destroy");
+		print_missing(verify_m);
+	}
+		
 	if (use_memory_pool)
 		Push_Data_To_Pool(POOL_QUEUE, cur);
 	else
@@ -1020,15 +1172,22 @@ clean_object(INSTRUCTION_ENGINE *cur)
 		cur = cur->next;
 		*/
 		
-		/*Debug_Val(0, "before queue total %d\n", 
-				Neuro_GiveEBufCount(_Queue));*/
+		/* Debug_Val(0, "before queue total %d\n", 
+				Neuro_GiveEBufCount(_Queue) + 1);*/
 
 		Neuro_SCleanEBuf(_Raw, cur->current);
+		/* Debug_Val(0, "-- element address 0x%x destroyed\n", cur); */
 		Neuro_SCleanEBuf(_Queue, cur);
 
 		/* Debug_Val(0, "after queue total %d\n", 
-				Neuro_GiveEBufCount(_Queue));*/
+				Neuro_GiveEBufCount(_Queue) + 1); */
 		/* continue; */
+	}
+
+	if (debug_clean_instruction_buffer)
+	{
+		print_missing(verify_m);
+		Neuro_CleanEBuf(&verify_m);
 	}
 }
 
@@ -1317,18 +1476,43 @@ Push_Data_To_Pool(u8 type, void *data)
 
 /*--- Global Functions ---*/
 
+u8
+Neuro_DrawIsPresent(v_elem *elem)
+{
+	INSTRUCTION_ENGINE *tmp = NULL;
+	u32 total = 0;
+
+	if (!elem)
+		return 0;
+
+	total = Neuro_GiveEBufCount(_Queue) + 1;
+
+	while(total-- > 0)
+	{
+		tmp = Neuro_GiveEBuf(_Queue, total);
+
+		if (tmp == elem)
+			return 1;
+	}
+
+	return 0;
+}
+
+/* might become obsolete */
 void
 Neuro_SetFrameSkip(u32 frameskip)
 {
 	frameSkip = frameskip;
 }
 
+/* might become obsolete */
 void
 Neuro_SetFpsLimit(u32 fpsLimit)
 {
 	fps_limit = fpsLimit;
 }
 
+/* we need to move that to the interface function */
 void
 Neuro_GiveScreenSize(u32 *width, u32 *height)
 {
@@ -1520,6 +1704,10 @@ Neuro_DestroyDraw(v_elem *eng)
 	if (!eng->current)
 		return 1;
 	
+	if (Neuro_DrawIsPresent(eng) == 0)
+		return 1;
+
+	/* eng->current->type = TDRAW_SDESTROY; */
 	clean_object(eng);
 	
 	draw_this_cycle = 1;
@@ -1601,55 +1789,10 @@ Neuro_AddDrawingElement(void (*func)())
 	
 }
 
-void
-Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel)
-{
-	/*EBUF *tmp;
-	PIXEL_ENGINE *buf;
-	u32 current;
-	Rectan check;
-
-	
-	check.x = x;
-	check.y = y;
-	check.h = 1;
-	check.w = 1;
-	
-	if (secureBoundsCheck(&check))
-	{
-		printf("Unsecure Pixel position have been catched, dropping the instruction\n");
-		return;
-	}
-
-	tmp = _Pixel;
-	Neuro_AllocEBuf(tmp, sizeof(PIXEL_ENGINE*), sizeof(PIXEL_ENGINE));
-	
-	current = Neuro_GiveEBufCount(tmp);
-	buf = Neuro_GiveEBuf(tmp, current);*/
-	
-	Lib_PutPixel(vobj, x, y, pixel);
-	/*
-	buf->x = x;
-	buf->y = y;
-	*/
-}
-
 void *
 Neuro_GetScreenBuffer()
 {
 	return (void*)sclScreen;
-}
-
-u32
-Neuro_GetPixel(v_object *vobj, u32 x, u32 y)
-{
-	return Lib_GetPixel(vobj, x, y);
-}
-
-void
-Neuro_CleanPixels()
-{
-	clean_pixel_in_this_cycle = 1;
 }
 
 /*--- Poll ---*/
@@ -1663,11 +1806,16 @@ Graphics_Poll()
 	if (debug_instruction_buffer || dynamic_debug)
 		Debug_Val(0, "cycle\n");
 
+	/* we will call a function in the module pixels in a near future */
+	/*
 	if (clean_pixel_in_this_cycle)
 	{
 		cleanPixels();
 		clean_pixel_in_this_cycle = 0;
-	}	
+	}
+	*/
+
+
 	if (ltime + 1 <= time(NULL))
 	{
 		lFps = fps;
@@ -1815,8 +1963,8 @@ Graphics_Init()
 
 	if (second_screen_buffer)
 	{
-		sclScreen2 = Lib_CreateVObject(0, screenwidth, screenheight, Lib_GetDefaultDepth(), 0, 
-				0, 0, 0);
+		sclScreen2 = Lib_CreateVObject(0, screenwidth, screenheight, 
+				Lib_GetDefaultDepth(), 0, 0, 0, 0);
 
 		if (sclScreen2 == NULL)
 		{
@@ -1835,7 +1983,6 @@ Graphics_Init()
 	Neuro_CreateEBuf(&_Drawing);
 	Neuro_CreateEBuf(&_Raw);
 	Neuro_CreateEBuf(&_Queue);
-	Neuro_CreateEBuf(&_Pixel);
 
 	
 	if (use_memory_pool)
@@ -1869,7 +2016,6 @@ Graphics_Clean()
 	cleanDrawing();
 	cleanRaw();
 	cleanQueue();
-	Neuro_CleanEBuf(&_Pixel);
 
 	Neuro_CleanEBuf(&_pool);
 	
@@ -1888,6 +2034,6 @@ Graphics_Clean()
 		Lib_FreeVobject(sclScreen2);
 		sclScreen2 = NULL;
 	}
-	
+
 	Lib_VideoExit();
 }

@@ -41,12 +41,24 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 #define Error_Print(x) Neuro_DebugPrint("Error Message", x, __FILE__, __FUNCTION__, __LINE__)
 #define Info_Print(x) Neuro_DebugPrint("Information Message", x, __FILE__, __FUNCTION__, __LINE__)
 
-/* depending on the current debug level, will 
+/**
+ * @sdescri flexible formatted text output function with levels
+ * @description depending on the current debug level, will 
  * output those formatted debug informations.
+ *
+ * @related Neuro_SetDebugLevel(3)
  */
 extern void Debug_Val(u8 level, char *control, ...);
 
-/* sets the current debug level */
+/** 
+ * @sdescri sets the current debug level
+ *
+ * @description this function's sole purpose is to set
+ * the current debug level which will only change the 
+ * behavior of the function Debug_Val.
+ *
+ * @related Debug_Val(3)
+ */
 extern void Neuro_SetDebugLevel(u8 level);
 
 /* macro used to check for endianness.

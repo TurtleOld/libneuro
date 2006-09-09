@@ -871,7 +871,7 @@ Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *d
 }
 
 void
-Neuro_FreeVobject(v_object *source)
+Neuro_FreeVObject(v_object *source)
 {
 	Lib_FreeVobject(source);
 }

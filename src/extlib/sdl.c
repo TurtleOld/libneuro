@@ -353,6 +353,18 @@ findColor(SDL_Palette *pal, u8 r, u8 g, u8 b)
 	return(pixel);
 }
 
+v_object *
+Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst)
+{
+	return NULL;
+}
+
+font_object *
+Lib_LoadFontFile(char *fonts_file_path)
+{
+	return NULL;
+}
+
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
@@ -395,7 +407,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 }
 
 void
-Lib_SetAlpha(v_object *vobj, u32 alpha)
+Lib_SetAlpha(v_object *vobj, u8 alpha)
 {
 	if (vobj == NULL)
 		return;

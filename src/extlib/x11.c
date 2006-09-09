@@ -93,9 +93,12 @@ clean_Vobjects(void *src)
 {
 	V_OBJECT *buf;
 
-	buf = (V_OBJECT*)src;	
+	buf = (V_OBJECT*)src;
 
-	/* Debug_Val(10, "cleaning process ...\n"); */
+	/* if (!buf)
+		return; */
+
+	Debug_Val(10, "cleaning process ... elem 0x%x\n", buf);
 
 	/*if (dmain->display == buf->display)
 		Debug_Val(10, "This element is the main display --\n");*/
@@ -132,7 +135,7 @@ clean_Vobjects(void *src)
 	
 	if (buf->display)
 	{
-		/* Debug_Val(10, "Closing display\n"); */
+		/* Debug_Val(10, "Closing display elem 0x%x display 0x%x\n", buf, buf->display); */
 		XCloseDisplay(buf->display);
 	}
 	/* Debug_Val(10, "cleaning process done ...\n"); */
@@ -196,9 +199,11 @@ sync_pixels(V_OBJECT *src)
 	
 	if (src->pixel_data_changed == 1)
 	{
-		/* Neuro_GiveImageSize(src, &w, &h); */
+		Neuro_GiveImageSize(src, &w, &h);
+		/*
 		h = src->raw_data->height;
 		w = src->raw_data->width;
+		*/
 #if old
 		XPutImage(dmain->display, *src->cwin, dmain->GC, src->raw_data, 
 				0, 0, 0, 0, w, h);
@@ -815,6 +820,8 @@ Lib_LoadBMP(const char *path, v_object **img)
 
 	tmp = Neuro_GiveCurEBuf(vobjs);
 
+	/* Debug_Val(0, "created elem 0x%x\n", tmp); */
+
 	buffer = (char**)Neuro_GiveEBufCore(temp);	
 	
 	initbuf = buffer;
@@ -833,6 +840,8 @@ Lib_LoadBMP(const char *path, v_object **img)
 
 	/* by default the image is fully opaque */
 	tmp->alpha = 255;
+
+	tmp->display = NULL;
 	
 	if (_err == 0)
 	{
@@ -965,6 +974,8 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 			0, 0, width, height);
 	
 	tmp2->alpha = 255;
+
+	tmp2->display = NULL;
 
 	tmp2->cwin = &tmp2->data;
 	
@@ -1242,7 +1253,8 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			src->h = face->glyph->bitmap.rows;
 
 			dst->x = *x + face->glyph->metrics.horiBearingX / 64;
-			dst->y = *y - face->glyph->metrics.horiBearingY / 64;
+			dst->y = (size + *y) - face->glyph->metrics.horiBearingY / 64;
+
 			dst->w = 0;
 			dst->h = 0;
 			
@@ -1313,7 +1325,18 @@ Lib_Flip(v_object *source)
 void
 Lib_FreeVobject(v_object *source)
 {
+	if (!source)
+		return;
 
+	/* forbid the cleaning of the main screen and its buffer 
+	 * (those will be cleaned when the module quits).
+	 */
+
+	if (source == dmain || source == scldmain)
+		return;
+	
+	Neuro_SCleanEBuf(vobjs, source);
+	/* clean_Vobjects(source); */
 }
 
 void 
@@ -1451,6 +1474,10 @@ Lib_VideoExit()
 	if (pixel)
 		XFreePixmap(dmain->display, pixel);
 #endif /* temp */
+	
+	/* Debug_Val(0, "there are %d elements in the main vobjects buffer\n", 
+			Neuro_GiveEBufCount(vobjs));*/
+	
 	Neuro_CleanEBuf(&vobjs);
 }
 

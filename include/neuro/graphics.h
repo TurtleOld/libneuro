@@ -60,16 +60,22 @@ typedef INSTRUCTION_ENGINE v_elem;
  */
 extern void *Neuro_GetScreenBuffer();
 
-/** Add a Static Drawing Instruction to the graphics loop. This function will
+/** 
+ * Neuro_PushStaticDraw - Add a static drawing instruction to the gfx loop.
+ * @param[in] layer the drawing order by which the frame needs to be drawn on screen 
+ * @param[in] src the image rectangle to draw (to select different parts of a single image)
+ * @param[in] dst the coordinate where the image must be drawn to.
+ * @param[in] surface the pointer to the image itself.
+ *
+ * @description - Add a Static Drawing Instruction to the graphics loop. This function will
  * put take the image, place it in a special buffer and then draw the image
  * with the desired draw time(in comparison with other to draw images : layer) and 
  * place it on the screen depending on the given coordinates (also draws the portion
  * of the image that you set). This function is in general meant to be inside a function
- * that has a pointer callback set in graphics_AddDrawingElement().
- * @param [in] layer the drawing order by which the frame needs to be drawn on screen 
- * @param [in] src the image rectangle to draw (to select different parts of a single image)
- * @param [in] dst the coordinate where the image must be drawn to.
- * @param [in] surface the pointer to the image itself.
+ * that has a pointer callback set in Neuro_AddDrawingElement().
+ *
+ * @related - Neuro_PushDynamicDraw Neuro_PushDraw
+ *
  */
 extern void Neuro_PushStaticDraw(u32 layer, Rectan *src, Rectan *dst, void *surface);
 
@@ -78,7 +84,7 @@ extern void Neuro_PushStaticDraw(u32 layer, Rectan *src, Rectan *dst, void *surf
  * with the desired draw time(in comparison with other to draw images : layer) and 
  * place it on the screen depending on the given coordinates (also draws the portion
  * of the image that you set). This function is in general meant to be inside a function
- * that has a pointer callback set in graphics_AddDrawingElement().
+ * that has a pointer callback set in Neuro_AddDrawingElement().
  * @param [in] layer the drawing order by which the frame needs to be drawn on screen 
  * @param [in] src the image rectangle to draw (to select different parts of a single image)
  * @param [in] dst the coordinate where the image must be drawn to.

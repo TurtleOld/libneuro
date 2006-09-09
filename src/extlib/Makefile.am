@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EXTRA_DIST = alpha.inc
+
 noinst_LTLIBRARIES = libextlib.la
 
 AM_CFLAGS= @NEUROFLAGS@

@@ -69,8 +69,6 @@ SDLFLAGS="`sdl-config --libs`"
 
 dnl ------ Configure Arguments ------
 
-AC_ARG_ENABLE(libxml2, [  --enable-libxml2	enable the use of libxml2 for use with the xmltools [[default=yes]]], , enable_libxml2=yes)
-
 AC_ARG_ENABLE(Debug, [  --enable-Debug	enable the debugging of this program [[default=no]]], , enable_Debug=no)
 
 AC_ARG_WITH(lowlib, 
@@ -134,18 +132,6 @@ AC_HEADER_TIME
 # Checks for library functions.
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memchr memset strchr], , [AC_MSG_ERROR([a required function is missing.])])
-
-dnl ----------------
-dnl XML check
-dnl ----------------
-if test x$enable_libxml2 = xyes; then
-  AC_CHECK_LIB(xml2, 
-		 xmlFreeDoc, 
-		 [NEUROFLAGS="$NEUROFLAGS -I/usr/include/libxml2 -I/usr/local/include/libxml2" NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"] , 
-		 AC_MSG_ERROR([You must have libxml2])
-		 )
-fi
-AM_CONDITIONAL(USE_XML, test x$enable_libxml2 = xyes)
 
 dnl ----------------
 dnl List of libraries Neuro can use
@@ -230,7 +216,7 @@ if test x$enable_Debug = xyes; then
 	CFLAGS="$CFLAGS -g"
 else
 	#NEUROFLAGS="$NEUROFLAGS -O2 -s"
-	CFLAGS="$CFLAGS -0s -s"
+	CFLAGS="$CFLAGS -Os -s"
 fi
 
 AC_SUBST(NEUROFLAGS)
@@ -245,12 +231,12 @@ echo
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-src/xml/Makefile
 src/memory/Makefile
 src/video/Makefile
 src/events/Makefile
 src/extlib/Makefile
 src/misc/Makefile
+docs/Makefile
 ])
 #add those above when they are started
 #src/gui/Makefile

@@ -3,7 +3,7 @@ EXTRA_DIST = .git \
 	     include/extlib.h \
 	     include/extlib_sdl.h
 
-SUBDIRS=src
+SUBDIRS=src docs
 
 include_HEADERS= \
 		 include/neuro/debug.h \

@@ -464,7 +464,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CC CFLAGS ac_ct_CC CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_XML_TRUE USE_XML_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CXX CXXFLAGS LDFLAGS CPPFLAGS ac_ct_CXX EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CC CFLAGS ac_ct_CC CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S EGREP ECHO AR ac_ct_AR RANLIB ac_ct_RANLIB DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLIBFLAGS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1037,7 +1037,6 @@ Optional Features:
   --enable-fast-install[=PKGS]
                           optimize for fast installation [default=yes]
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-libxml2	enable the use of libxml2 for use with the xmltools [default=yes]
   --enable-Debug	enable the debugging of this program [default=no]
 
 Optional Packages:
@@ -4514,7 +4513,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4517 "configure"' > conftest.$ac_ext
+  echo '#line 4516 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5637,7 +5636,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5640:" \
+echo "$as_me:5639:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6694,11 +6693,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6697: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6696: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6701: \$? = $ac_status" >&5
+   echo "$as_me:6700: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6937,11 +6936,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6940: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6939: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6944: \$? = $ac_status" >&5
+   echo "$as_me:6943: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6997,11 +6996,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7000: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6999: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7004: \$? = $ac_status" >&5
+   echo "$as_me:7003: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9182,7 +9181,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9185 "configure"
+#line 9184 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9280,7 +9279,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9283 "configure"
+#line 9282 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11473,11 +11472,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11476: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11475: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11480: \$? = $ac_status" >&5
+   echo "$as_me:11479: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11533,11 +11532,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11536: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11535: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11540: \$? = $ac_status" >&5
+   echo "$as_me:11539: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12894,7 +12893,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12897 "configure"
+#line 12896 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12992,7 +12991,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12995 "configure"
+#line 12994 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13829,11 +13828,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13832: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13831: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13836: \$? = $ac_status" >&5
+   echo "$as_me:13835: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13889,11 +13888,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13892: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13891: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13896: \$? = $ac_status" >&5
+   echo "$as_me:13895: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -15924,11 +15923,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15927: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15926: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15931: \$? = $ac_status" >&5
+   echo "$as_me:15930: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16167,11 +16166,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16170: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16169: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16174: \$? = $ac_status" >&5
+   echo "$as_me:16173: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16227,11 +16226,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16230: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16229: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16234: \$? = $ac_status" >&5
+   echo "$as_me:16233: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18412,7 +18411,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18415 "configure"
+#line 18414 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18510,7 +18509,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18513 "configure"
+#line 18512 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19532,14 +19531,6 @@ NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
 SDLFLAGS="`sdl-config --libs`"
 
-
-# Check whether --enable-libxml2 or --disable-libxml2 was given.
-if test "${enable_libxml2+set}" = set; then
-  enableval="$enable_libxml2"
-
-else
-  enable_libxml2=yes
-fi;
 
 # Check whether --enable-Debug or --disable-Debug was given.
 if test "${enable_Debug+set}" = set; then
@@ -21121,92 +21112,6 @@ echo "$as_me: error: a required function is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
 done
-
-
-if test x$enable_libxml2 = xyes; then
-  echo "$as_me:$LINENO: checking for xmlFreeDoc in -lxml2" >&5
-echo $ECHO_N "checking for xmlFreeDoc in -lxml2... $ECHO_C" >&6
-if test "${ac_cv_lib_xml2_xmlFreeDoc+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lxml2  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char xmlFreeDoc ();
-int
-main ()
-{
-xmlFreeDoc ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_xml2_xmlFreeDoc=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_xml2_xmlFreeDoc=no
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_xml2_xmlFreeDoc" >&5
-echo "${ECHO_T}$ac_cv_lib_xml2_xmlFreeDoc" >&6
-if test $ac_cv_lib_xml2_xmlFreeDoc = yes; then
-  NEUROFLAGS="$NEUROFLAGS -I/usr/include/libxml2 -I/usr/local/include/libxml2" NEUROLIBS="$NEUROLIBS -lxml2" LIBS="$LIBS -lxml2"
-else
-  { { echo "$as_me:$LINENO: error: You must have libxml2" >&5
-echo "$as_me: error: You must have libxml2" >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-
-
-if test x$enable_libxml2 = xyes; then
-  USE_XML_TRUE=
-  USE_XML_FALSE='#'
-else
-  USE_XML_TRUE='#'
-  USE_XML_FALSE=
-fi
 
 
 SELECTED_LOWLIB=`echo $lowlib`
@@ -23180,7 +23085,7 @@ if test x$enable_Debug = xyes; then
 	CFLAGS="$CFLAGS -g"
 else
 	#NEUROFLAGS="$NEUROFLAGS -O2 -s"
-	CFLAGS="$CFLAGS -0s -s"
+	CFLAGS="$CFLAGS -Os -s"
 fi
 
 
@@ -23192,7 +23097,7 @@ includedir=$includedir/neuro
 echo
 
 # enumerate the Makefiles to be created
-                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/xml/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile"
+                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile docs/Makefile"
 
 #add those above when they are started
 #src/gui/Makefile
@@ -23351,13 +23256,6 @@ if test -z "${NO_UNDEFINED_TRUE}" && test -z "${NO_UNDEFINED_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"NO_UNDEFINED\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"NO_UNDEFINED\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-if test -z "${USE_XML_TRUE}" && test -z "${USE_XML_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"USE_XML\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"USE_XML\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -23816,12 +23714,12 @@ do
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-  "src/xml/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/xml/Makefile" ;;
   "src/memory/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/memory/Makefile" ;;
   "src/video/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/video/Makefile" ;;
   "src/events/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/events/Makefile" ;;
   "src/extlib/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/extlib/Makefile" ;;
   "src/misc/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/misc/Makefile" ;;
+  "docs/Makefile" ) CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -23990,8 +23888,6 @@ s,@LIBTOOL@,$LIBTOOL,;t t
 s,@NO_UNDEFINED_TRUE@,$NO_UNDEFINED_TRUE,;t t
 s,@NO_UNDEFINED_FALSE@,$NO_UNDEFINED_FALSE,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
-s,@USE_XML_TRUE@,$USE_XML_TRUE,;t t
-s,@USE_XML_FALSE@,$USE_XML_FALSE,;t t
 s,@USE_SDL_TRUE@,$USE_SDL_TRUE,;t t
 s,@USE_SDL_FALSE@,$USE_SDL_FALSE,;t t
 s,@USE_X11_TRUE@,$USE_X11_TRUE,;t t

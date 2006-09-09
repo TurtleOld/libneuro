@@ -40,16 +40,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-
-#	  script 
-#	  sound 
-#	  gui 
-@USE_XML_TRUE@am__append_1 = xml
-
-#		     script/libscript.la 
-#		     sound/libsound.la 
-#		     gui/libgui.la 
-@USE_XML_TRUE@am__append_2 = xml/libxmltool.la
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -67,11 +57,9 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-@USE_XML_TRUE@am__DEPENDENCIES_1 = xml/libxmltool.la
-am__DEPENDENCIES_2 = memory/libmemory.la misc/libmisc.la \
-	extlib/libextlib.la video/libvideo.la events/libevents.la \
-	$(am__DEPENDENCIES_1)
-libneuro_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_1 = memory/libmemory.la misc/libmisc.la \
+	extlib/libextlib.la video/libvideo.la events/libevents.la
+libneuro_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = debug.lo neuro_main.lo
 am_libneuro_la_OBJECTS = $(am__objects_1)
 libneuro_la_OBJECTS = $(am_libneuro_la_OBJECTS)
@@ -96,7 +84,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = memory misc extlib video events xml
+DIST_SUBDIRS = $(SUBDIRS)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -170,8 +158,6 @@ USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
 USE_X11_FALSE = @USE_X11_FALSE@
 USE_X11_TRUE = @USE_X11_TRUE@
-USE_XML_FALSE = @USE_XML_FALSE@
-USE_XML_TRUE = @USE_XML_TRUE@
 VERSION = @VERSION@
 X_CFLAGS = @X_CFLAGS@
 X_EXTRA_LIBS = @X_EXTRA_LIBS@
@@ -223,7 +209,17 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = memory misc extlib video events $(am__append_1)
+SUBDIRS = \
+	  memory \
+	  misc \
+	  extlib \
+	  video \
+	  events
+
+
+#	  script 
+#	  sound 
+#	  gui 
 lib_LTLIBRARIES = libneuro.la
 lib_sources = \
 		debug.c \
@@ -237,8 +233,17 @@ LIB_FLAGS = @NEUROLIBFLAGS@ -version-info \
 
 # -release $(LT_RELEASE)
 libneuro_la_LDFLAGS = $(LIB_FLAGS)
-SUBLIBLIST = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
-	video/libvideo.la events/libevents.la $(am__append_2)
+SUBLIBLIST = \
+	     memory/libmemory.la \
+	     misc/libmisc.la \
+	     extlib/libextlib.la \
+	     video/libvideo.la \
+	     events/libevents.la 
+
+
+#		     script/libscript.la 
+#		     sound/libsound.la 
+#		     gui/libgui.la 
 libneuro_la_LIBADD = $(SUBLIBLIST)
 all: all-recursive
 
