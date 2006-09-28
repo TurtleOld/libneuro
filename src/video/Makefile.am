@@ -3,7 +3,8 @@
 noinst_LTLIBRARIES = libvideo.la
 
 lib_sources = 	\
-		graphics.c
+		graphics.c \
+		drawing.c
 
 libvideo_la_SOURCES = $(lib_sources)
 

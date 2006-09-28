@@ -79,3 +79,10 @@ graphics engine -- drawing push functions to return address :
 extlib sdl -- code the fonts :
 	- code the fonts, I think we will use our own freetype function instead of
 	  SDL_ttf after all.
+
+graphics engine -- cleaning of same layers priority :
+	- We need to bring up a priority inside items with the same layers so that instructions
+	  to clean are actually PUT in the beginning of tasks to do and the rest after;
+	  So precedence would always put the cleaning tasks in the front line. This would avoid
+	  tasks to draw (especially text) never be done before it is cleaned... This might
+	  be a bug however because the redraw function is supposed to handle that...

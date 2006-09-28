@@ -23,7 +23,7 @@
 #define __EBUF_H
 
 #include "neuro_engine.h"
-#include <stdlib.h>
+#include <stdlib.h> /* for the size_t type */
 
 /*  
  *  The EBUF module. Stands for Engine Buffer, it is named this
@@ -60,47 +60,191 @@
  */
 typedef struct EBUF EBUF;
 
-/* 
- * This function needs to be called only once before any other
- * functions from this module is used. It cleans the EBUF variable 
- * completely. 
- * Example : Neuro_CreateEBuf(&myeng);
+/** Neuro_CreateEBuf
+ * @sdescri 
+ * sole constructor of an EBUF element.
+ *
+ * @description 
+ * This function initializes and makes operationnal
+ * an EBUF element.
+ * 
+ * @param[in] 
+ * the address of an EBUF pointer.
+ *
+ * @examples 
+ *
+ * static EBUF *myeng; \n \n
+ * 
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng);
+ *
+ * @related 
+ * Neuro_CleanEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_EBufIsEmpty(3)
+ *
  */
 extern void Neuro_CreateEBuf(EBUF **eng);
 
-/* 
- * This function is used to set a callback function to the EBUF.
+/** Neuro_SetcallbEBuf
+ * @sdescri 
+ * Set a callback that will be called for each array elements
+ * when the EBUF element is cleaning itself after a call to Neuro_CleanEBuf
+ * or Neuro_SCleanEBuf.
+ *
+ * @description 
+ * This function is used to set a callback function to the EBUF element.
  * This callback function will be called (during the cleaning
  * time) for every arrays right before they are each freed.
  * This is so you can free custom stuff that you allocated in the
  * struct you put in EBUF. The callback function will need a single
  * argument which will be a void pointer. This will point to the
  * array(single element of the big array) which is being freed.
- * Example : 
- * 
- * static void
- * callbackclean(void *src)
- * {
- * 	ST *temp;
- * 	temp = (ST*)src;
- * 	if (src->someString)
- *		free(src->someString);
- * }
  *
- * -- in some initialisation function you put :
- * Neuro_SetcallbEBuf(myeng, &callbackclean);
+ *
+ * @param[in]
+ * an EBUF element.
+ *
+ * @param[in]
+ * a callback which itself contain an argument to a void pointer.
+ *
+ * @examples
+ *
+ * typedef struct ST \n
+ * { \n
+ * 	char *someString; \n
+ * }ST; \n \n \n
+ *
+ *
+ * static EBUF *myeng; \n \n
+ *
+ * static void \n
+ * callbackclean(void *src) \n
+ * { \n
+ * 	ST *temp; \n \n
+ *
+ * 	temp = (ST*)src; \n \n
+ *
+ * 	if (temp) \n
+ * 	{ \n
+ * 		if (temp->someString) \n
+ * 			free(temp->someString); \n
+ * 	} \n
+ * } \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_SetcallbEBuf(myeng, &callbackclean); \n \n
+ *
+ * ... \n \n
+ *
+ * ST *foo; \n \n
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ *
+ * foo = Neuro_GiveCurEBuf(myeng); \n \n
+ *
+ * foo->someString = (char*)malloc(50); \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng);
+ *
+ * @related
+ * Neuro_CreateEBuf(3), Neuro_CleanEBuf(3)
+ *
  */
 extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
 
-/* allocation and reallocation */
+/** Neuro_AllocEBuf
+ * @sdescri
+ * Simple Allocation and reallocation of an EBuf element.
+ *
+ * @description
+ * This function is pretty much the most useful function in the lot,
+ * it actually creates a new "slot" which can then be used to add
+ * data to an EBUF element. This function and Neuro_MultiAllocEBuf
+ * are the two only functions which allocate/reallocate memory in
+ * an EBUF element. 
+ *
+ * Take good note that an EBUF element can buffer
+ * any kinds of structure (so it can dynamically grow easily and avoid memory
+ * leaks). To support this, this function needs only 2 informations 
+ * about the structure : 
+ * the size of its pointer form and the size of its normal form. It might
+ * also be possible to work with other variable types than structures, although
+ * it is not really recommended unless you know what you are doing.
+ *
+ * @param[in]
+ * an EBUF element.
+ *
+ * @param[in]
+ * the size of the pointer form of the structure (usually sizeof can be used to find it).
+ *
+ * @param[in]
+ * the size of the normal form of the structure (usually sizeof can be used to find it).
+ *
+ * @examples
+ * typedef struct ST \n
+ * { \n
+ * 	int foobar; \n
+ * }ST; \n \n \n
+ *
+ *
+ * static EBUF *myeng; \n \n
+ *
+ *
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng); \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng);
+ *
+ * @related
+ * Neuro_GiveEBufCount(3), Neuro_GiveEBuf(3), Neuro_GiveCurEBuf(3), 
+ * Neuro_MultiAllocEBuf(3)
+ */
 extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
 
 
-/* allocate for a certain amount of objects.
- * will only work if the EBUF object hasn't
- * been allocated before. 
+/** Neuro_MultiAllocEBuf
+ * @sdescri
+ * initial allocation of a bigger amount of slots than one.
+ * 
+ * @description
+ * This function works exactly the same as Neuro_AllocEBuf except
+ * for one single thing : It can allocate more than one slot at once.
+ * Take very good note that this will only work if the EBUF object hasn't
+ * been allocated before, ie only if it is empty. For security purpose, this 
+ * function won't work if theres already allocated slots in the EBUF.
+ *
+ * @param[in]
+ * an EBUF element.
+ *
+ * @param[in]
+ * the amount of slots to allocate.
+ *
+ * @param[in]
+ * the size of the pointer form of the structure (usually sizeof can be used to find it).
+ *
+ * @param[in]
+ * the size of the normal form of the structure (usually sizeof can be used to find it).* 
+ *
+ * @examples
+ * see the example in Neuro_AllocEBuf(3)
+ *
+ * @related
+ * Neuro_GiveEBufCount(3), Neuro_GiveEBuf(3), Neuro_GiveCurEBuf(3), 
+ * Neuro_AllocEBuf(3)
  */
-void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj);
+extern void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj);
 
 /* if you start with Create, you got to finish up with this function */
 extern void Neuro_CleanEBuf(EBUF **eng);
