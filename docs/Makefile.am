@@ -1,0 +1,16 @@
+#!/bin/bash
+
+EXTRA_DIST = neuroman.tcl make_man.sh man.conf
+
+manuals = *.3
+
+man_MANS = $(manuals)
+
+
+noinst_SCRIPTS = $(manuals)
+
+$(manuals): neuroman.tcl make_man.sh
+	./make_man.sh
+
+clean-local:
+	-rm -f $(manuals)
