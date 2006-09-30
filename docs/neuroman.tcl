@@ -98,7 +98,7 @@
 
 # -- constants --
 # put the version here
-set version "0.7.3"
+set version "1.0.0b"
 
 # -- global variables --
 
@@ -165,45 +165,84 @@ proc handleArgs { } {
 	return 0
 }
 
+
+# this function parses a C function prototype to remove its leading
+# and ending brackets.
+# it will not touch brackets that are not leading and ending.
 proc arrangeFunction {function} {
 	set t 0
-	set total [llength $function]
+	set i 0
+	#set total [llength $function]
+	#set found_start 0
+	#set found_end 0
+	#set coord_end 0
+
+	# gets rid of all the commas
+	#while {$t < [string length $function]} {
+	#	set t [string first "," $function $t]
+		
+	#	if {$t == -1} {
+	#		break;
+	#	} else {
+			#echo $t
+	#		set function [string replace $function $t $t " "]
+	#	}
+	#	incr t
+	#}
+
+	# we find the first opening bracket
+	set t [string first "(" $function]
+	
+	# if we found one, we remove it
+	if {$t > 0} {
+		set function [string replace $function $t $t " "]
+	}
+
+	# we find the last opening bracket
+	set t [string last ")" $function]
+	
+	# if we found one, we remove it
+	if {$t > 0} {
+		set function [string replace $function $t $t " "]
+	}
 
 
-	while {$t < $total} {
-		set str [lindex $function $t]
-		set i 0
-		set len [string length $str]
-
-		while {$i < $len} {
-			set c [string index $str $i]
-
-			if {$c == "(" || $c == ")"} {
-
-				set newstr [string replace $str $i $i " "]
-				#echo $newstr
-				set trail [lindex $newstr 1]
-				set newstr [lindex $newstr 0]
-				set function [lreplace $function $t $t $newstr]
-				#echo $newstr [string length $newstr]
-				if {[string length $trail] > 0} {
-					set function [linsert $function [expr "$t + 1"] $trail]
-					incr total
-				}
-
-				if {[string length $newstr] == 0} {
-					set function [lrange $function 0 [expr "$total - 2"]]
-					set total [expr "$total - 1"]
-				}
-
-				set str $newstr
-			}
-
-			incr i
+	# now we will kind of hack a way to assemble ()() function pointers
+	# into an whole
+	set t 0
+	set found_begin 0
+	set found_end 0
+	set coord_begin 0
+	set coord_end 0
+	while {$t < [string length $function]} {
+		set t [string first "(" $function $t]
+		
+		if {$t == -1} {
+			break
+		} elseif {$found_begin == 0} {
+			#echo $t
+			#set function [string replace $function [expr $t - 1] [expr $t - 1] "\{"]
+			#set coord_begin $t
+			set found_begin 1
+			set found_end 0
 		}
 
-		incr t
+
+		set t [string first ")" $function $t]
+
+		if {$t == -1} {
+			break
+		} elseif {$found_end == 1} {
+			#echo $t
+			#set function [string replace $function [expr $t + 1] [expr $t + 1] "\}"]
+			set found_begin 0
+		} else {
+			incr found_end
+		}
+
 	}
+
+	#echo $function
 
 	return $function
 }
@@ -310,10 +349,12 @@ proc parseComment {comment sdescri ldescri options returnval example errors rela
 
 }
 
-proc parseOptions {comment options} {
-	upvar $options opt
+proc parseFunctionProto {function} {
+	upvar $function func
+	set output ""
 
-
+	
+	
 }
 
 proc GetStringWord { str current} {
@@ -464,6 +505,7 @@ proc genMan {comment function config} {
 	}
 
 
+	#echo $function
 	puts $fp ".SH SYNOPSIS"
 	puts $fp "[lindex $function 0] [lindex $function 1]([lrange $function 2 [llength $function]])"
 	if {[llength $mdescription] > 0} {
@@ -479,14 +521,16 @@ proc genMan {comment function config} {
 		set i 1
 		set cfunc 3
 
-		#echo "$moptions"
-
 		replace_Stars_By_Void moptions
+
+		#echo "$moptions"
 
 		puts $fp ".SH ARGUMENTS"
 
 		while {$i < $ototal} {
 			set ctype [lindex $moptions [expr "$i - 1"]]
+			set t 0
+			set is_funcptr 0
 
 			if {$ctype == 0} {
 				set type "(input)"
@@ -496,8 +540,54 @@ proc genMan {comment function config} {
 				set type "(input and output)"
 			}
 
-			set nfunc [string trim [lindex $function $cfunc] "*"]
-			set nfunc [string trim $nfunc ","]
+			#set nfunc [string trim [lindex $function $cfunc] "*"]
+			set nfunc [lindex $function $cfunc]
+
+			# we check to see if the current argument is a pointer to
+			# a function and if yes, we do something special to include
+			# all its arguments
+			if {[string index $nfunc 0] == "("} {
+				set is_funcptr 1
+			}
+
+			if {$is_funcptr == 1} {
+				set go_on 1
+				set found_one 0
+
+				set str $nfunc
+				while { $go_on == 1 } {
+					set cur [string last ")" $str]
+
+					# this is a special case where the function pointer
+					# has no arguments at all.
+					# like : void (*callback)()
+					if {$cur > 0} {
+						if {[lindex $function [expr $cur - 1]] == "("} {
+							break;
+						} elseif {$found_one == 1} {
+							break;
+						} else {
+							incr found_one
+						}
+					}
+					
+					incr cfunc
+					set str [lindex $function $cfunc]
+
+					set nfunc [linsert $nfunc [llength $nfunc] $str]
+					#echo "SPECIAL $nfunc  -> $str"
+
+				}
+			}
+
+			# we remove the last comma if we find one
+			set t [string last "," $nfunc]
+
+			#echo "cur $cfunc last [llength $function]"
+			if {$t > 0 && [expr [llength $function] - 1] > $cfunc} {
+				set nfunc [string replace $nfunc $t $t " "]
+			}
+
 			puts $fp ".TP"
 			puts $fp ".BI \"$nfunc \" $type"
 			puts $fp "[lindex $moptions $i]\n"
@@ -567,18 +657,10 @@ proc parseFile {file config} {
 	while {[eof $file] == 0} {
 		set line [gets $file]
 		set a 0
-
-		# to avoid tcl errors
-		#set line [string trim $line "\{"]
-		#set line [string trim $line "\}"]
-
-		# count the number of elements (strings) in the list
-		#set telems [llength "$line"]
 		
 		# count the number of characters in the string/list
 		set line_len [string length $line]
 
-		#foreach str $line \{
 		while {$a < $line_len} {
 			
 			set str [GetStringWord $line a]

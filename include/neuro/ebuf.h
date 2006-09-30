@@ -246,46 +246,109 @@ extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
  */
 extern void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj);
 
-/* if you start with Create, you got to finish up with this function */
+/** Neuro_CleanEBuf
+ * @sdescri 
+ * Standard destructor of an EBUF element.
+ *
+ * @description 
+ *
+ * 
+ * @param[in] 
+ * the address of an EBUF pointer.
+ *
+ * @examples 
+ *
+ * static EBUF *myeng; \n \n
+ * 
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng);
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng);
+ *
+ * @related 
+ * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_SCleanEBuf(3)
+ *
+ */
 extern void Neuro_CleanEBuf(EBUF **eng);
 
-/* clean a single element */
+/* clean a single element 
+ * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_CleanEBuf(3)
+ *
+ */
 extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
 
-/* give the count of elements in the array */
+/* give the count of elements in the array 
+ * Neuro_AllocEBuf(3), Neuro_GiveEBuf(3),
+ * Neuro_GiveCurEBuf(3), Neuro_EBufIsEmpty(3)
+ */
 extern u32 Neuro_GiveEBufCount(EBUF *eng);
 
-/* give the array number of the element [object] */
+/* give the array number of the element [object] 
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
+ * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
+ * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+ */
 extern int Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem);
 
-/* gives the last element of the buffer */
+/* gives the last element of the buffer 
+ * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3)
+ */
 extern void *Neuro_GiveCurEBuf(EBUF *eng);
 
-/* give the real address of the element of the number [elem] */
+/* give the real address of the element of the number [elem] 
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufElem(3)
+ * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
+ * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+ */
 extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 
-/* give the element corresponding to the number [elem] */
+/* give the element corresponding to the number [elem] 
+ * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3), 
+ * Neuro_GiveEBufCount(3)
+ */
 extern void *Neuro_GiveEBuf(EBUF *eng, u32 elem);
 
-/* give the core buffer of the EBuf element */
+/* give the core buffer of the EBuf element 
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
+ * Neuro_GiveEBufAddr(3), Neuro_SetEBuf(3),
+ * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+ */
 extern void **Neuro_GiveEBufCore(EBUF *eng);
 
 
-/* copy the content of an element to another */
+/* copy the content of an element to another 
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
+ * Neuro_GiveEBufCore(3), Neuro_GiveEBufCore(3),
+ * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+ *
+ */
 extern void Neuro_SetEBuf(EBUF *eng, void **to, void *from);
 
 /* copy the content of an EBUF variable to another EBUF variable
  * Note : this is very fast because it is only address copy.
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
+ * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
+ * Neuro_SetEBuf(3), Neuro_ResetEBuf(3)
  */
 extern void Neuro_CopyEBuf(EBUF *to, EBUF *from);
 
 /* resets the EBUF variable WITHOUT FREEING IT -- Warning this 
  * is a mem leak if you didn't copy the content to another one 
+ * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
+ * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
+ * Neuro_CopyEBuf(3), Neuro_CopyEBuf(3)
  */
 extern void Neuro_ResetEBuf(EBUF *eng);
 
 /* this is a simple boolean returning function that returns
  * 1 if [eng] is empty and 0 if it holds stuff. 
+ *
+ * Neuro_GiveEBufCount(3)
  */
 extern u8 Neuro_EBufIsEmpty(EBUF *eng);
 
