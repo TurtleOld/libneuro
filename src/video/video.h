@@ -6,6 +6,25 @@
 #define __VIDEO_H
 
 #include <graphics.h>
+#include <ebuf.h>
+
+#define debug_instruction_buffer 0
+#define debug_clean_instruction_buffer 0
+#define verbose_missing_output 0
+#define dynamic_debug 0
+#define check_integrity_on_draw 0
+
+#define debug_track_fonts 0
+#define debug_track_special_font 1 /* child of the above, won't work if the above is 0 */
+#define debug_track_special_font_x 6 /* ditto */
+#define debug_track_special_font_y 6 /* above above ditto */
+
+#define screen_buffer 1
+#define second_screen_buffer 0
+#define retain_image_inipos 0
+ 
+#define use_memory_pool 0
+ 
 
 enum drawings_type
 {
@@ -69,6 +88,23 @@ extern int Graphics_RedrawSection(INSTRUCTION_ENGINE *indep);
 extern u8  Graphics_GetSafeDrawOp();
 
 extern void Graphics_SetSafeDrawOp(u8 safe);
+
+extern void Graphics_ResetScreenDraw();
+
+
+/* inside painter.c */
+extern EBUF *Graphics_GetRawBuffer();
+extern EBUF *Graphics_GetQueueBuffer();
+
+extern void Graphics_CoreDrawAll();
+extern void graphics_CoreCleanAll();
+
+extern INSTRUCTION_ENGINE *Graphics_GetFirstElem();
+extern void Graphics_SetFirstElem(INSTRUCTION_ENGINE *elem);
+
+extern INSTRUCTION_ENGINE *Graphics_GetLastElem();
+extern void Graphics_SetLastElem(INSTRUCTION_ENGINE *elem);
+
 
 /*
 #include "spool.h"

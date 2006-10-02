@@ -1,0 +1,619 @@
+/* coredraw.c
+ * the core drawing algorithm.
+ */
+
+/*-------------------- Extern Headers Including --------------------*/
+#include <string.h> /* memcpy */
+
+/*-------------------- Local Headers Including ---------------------*/
+#include <extlib.h> /* we mainly use the blitting function and screen updating functions */
+#include <ebuf.h> /* we mainly use the single item cleaning function Neuro_SCleanEBuf */
+
+/*-------------------- Main Module Header --------------------------*/
+#include "video.h"
+#include <graphics.h>
+
+
+/*--------------------      Other       ----------------------------*/
+
+/*-------------------- Global Variables ----------------------------*/
+
+/*-------------------- Static Variables ----------------------------*/
+
+/*-------------------- Static Prototypes ---------------------------*/
+
+
+
+/*-------------------- Static Functions ----------------------------*/
+
+/* a function to resolve a bug that made the volatile objects
+ * mysteriously disapear. It was because the last element of the
+ * Dynamic object was not refreshed so if an element was just
+ * before the Dynamic object, it just made it disapear :).
+ * 
+ * This function searches the element just before the input element
+ * and returns it.
+ */
+static INSTRUCTION_ENGINE *
+get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
+{
+	INSTRUCTION_ENGINE *cur, *last = NULL;
+	
+	cur = Graphics_GetFirstElem();
+
+	if (cur == NULL)
+		return NULL;
+
+	if (indep == cur)
+		return NULL;
+
+	while (cur)
+	{
+		
+		if (cur == indep)
+		{
+			/* Debug_Val(0, "found the previous elem 0x%x, (his next 0x%x)\n", 
+					last, last->next);*/
+			return last;
+		}
+
+		
+		last = cur;
+		cur = cur->next;
+	}
+
+
+	return NULL;
+}
+
+static void
+clean_object(INSTRUCTION_ENGINE *cur)
+{
+	Rectan buf;
+	INSTRUCTION_ENGINE *last = NULL;
+	EBUF *verify_m;
+
+	/* this functions needs to destroy an element
+	 * from both the instruction buffer and the raw
+	 * buffer. 
+	 *
+	 * the first step we do is fill a special Rectan
+	 * rectangle with the position and size of 
+	 * the image. Then, we draw this position and
+	 * size black on screen. After that is done, we
+	 * have to redraw previous objects (if theres any).
+	 *
+	 *
+	 */
+
+	if (debug_track_fonts)
+	{
+		if (cur->current->layer >= 99999)
+		{
+			Debug_Print("Destroying font");
+			Debug_Val(0, "&0x%x\n", cur);
+		}
+	}
+
+	/* Queue_Integrity_Check(); */
+
+	if (!cur)
+		return;
+
+	/* Debug_Val(0, "destroying element address 0x%x\n", cur); */
+	
+	buf.x = cur->current->dx;
+	buf.y = cur->current->dy;
+	buf.w = cur->current->src.w;
+	buf.h = cur->current->src.h;
+			
+	/*if (background)
+		Lib_BlitObject(background, &buf, sclScreen2, &buf);
+	else
+		Lib_FillRect(sclScreen2, &buf, 0);
+	*/
+					
+	Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
+
+	Graphics_RedrawSection(cur);
+
+	if (debug_clean_instruction_buffer)
+	{
+		Neuro_CreateEBuf(&verify_m);
+		buffer_queue(verify_m);
+	}
+
+	if (debug_clean_instruction_buffer)
+	{
+		Debug_Print("*initial values");
+		Debug_Val(0, "Amount of elems %d\n", Neuro_GiveEBufCount(verify_m) - 1);
+		print_missing(verify_m);
+	}
+
+	/* only set the previous element (last) if the element we need to
+	 * destroy isn't the first one 
+	 */
+	if (cur != Graphics_GetFirstElem())
+		last = get_Previous_Object_To_Object(cur);
+	if (last)
+	{
+		/* Debug_Val(0, "changing last's(0x%x) next 0x%x to 0x%x\n", last, 
+				last->next, cur->next);*/
+
+		last->next = cur->next;
+	}	
+		
+	/* check to see if the element cur is either first_element 
+	 * or last_element and if so, we will destituate it.
+	 */
+	if (cur == Graphics_GetFirstElem())
+	{
+		Graphics_SetFirstElem(cur->next);
+	}
+
+	if (cur == Graphics_GetLastElem())
+	{
+		if (last)
+		{
+			last->next = NULL;
+			Graphics_SetLastElem(last);
+		}
+		else
+			Graphics_SetLastElem(NULL);
+	}
+
+	if (debug_clean_instruction_buffer)
+	{
+		Debug_Print("*before real destroy");
+		print_missing(verify_m);
+	}
+		
+	/*if (use_memory_pool)
+		Push_Data_To_Pool(POOL_QUEUE, cur);
+	else*/
+	{
+		/* INSTRUCTION_ENGINE *temp; */
+		
+		/*	
+		temp = cur;
+		cur = cur->next;
+		*/
+		
+		/* Debug_Val(0, "before queue total %d\n", 
+				Neuro_GiveEBufCount(_Queue) + 1);*/
+
+		Neuro_SCleanEBuf(Graphics_GetRawBuffer(), cur->current);
+		/* Debug_Val(0, "-- element address 0x%x destroyed\n", cur); */
+		Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), cur);
+
+		/* Debug_Val(0, "after queue total %d\n", 
+				Neuro_GiveEBufCount(_Queue) + 1); */
+		/* continue; */
+	}
+
+	if (debug_clean_instruction_buffer)
+	{
+		Debug_Print("**After the destroy");
+		/*Debug_Val(0, "Amount of elems in verify %d in queue %d\n", 
+				Neuro_GiveEBufCount(verify_m) - 1, 
+				Neuro_GiveEBufCount(_Queue) - 1);*/
+		Debug_Print("**Full output");
+
+		print_queue();
+
+		print_missing(verify_m);
+		Neuro_CleanEBuf(&verify_m);
+	}
+
+	/* Queue_Integrity_Check(); */
+}
+
+/*-------------------- Global Functions ----------------------------*/
+
+void
+Graphics_CoreDrawAll()
+{
+	Rectan isrc, idst;
+	INSTRUCTION_ENGINE *cur, *last = NULL;
+		
+	if (Neuro_EBufIsEmpty(Graphics_GetQueueBuffer()))
+		return;	
+
+	cur = Graphics_GetFirstElem();
+
+	/* start the real drawing */
+	while (cur)
+	{	
+
+		if (check_integrity_on_draw)
+		{
+			Debug_Print("Data integrity check before drawing");
+			Queue_Integrity_Check();
+		}
+
+		memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+
+		idst.x = cur->current->dx;
+		idst.y = cur->current->dy;
+		
+		/* draw the surface_ptr to the screen buffer. */
+		switch (cur->current->type)
+		{
+			case TDRAW_STATIC:
+			{
+				
+				/*Debug_Val(0, "after x y (%d,%d) size %d %d\n", 
+						buf.x, buf.y, buf.w, buf.h);
+				*/
+
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
+						&idst);			
+				
+				cur->current->type = TDRAW_SDRAWN;
+				/* Debug_Val(0, "drawn static\n"); */
+
+				if (debug_track_fonts)
+				{
+					if (cur->current->layer >= 99999)
+					{
+						Debug_Print("Drawing font");
+						Debug_Val(0, "Coord (%d,%d) &0x%x\n", 
+								cur->current->dx,
+								cur->current->dy, cur);
+					}
+				}
+			}
+			break;
+
+			case TDRAW_SDRAWN:
+			{
+				/* nothing needed for this type */
+				/* Debug_Val(0, "already drawn\n"); */
+			}
+			break;
+
+			case TDRAW_SREDRAW:
+			{
+				/* Debug_Val(0, "address of surface 0x%x\n", cur->current->surface_ptr); */
+
+				/* now we redraw the actual element */
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
+						&idst);
+
+				/* then we redraw the stuff that could have been 
+				 * there and actually need to be visible(and are above
+				 * our element, ie layers).
+				 */
+				redraw_erased_for_object(cur);
+
+				/* we cleanly redrawn the static element so we
+				 * set the element's flag to drawn
+				 */
+				cur->current->type = TDRAW_SDRAWN;
+
+				/* Debug_Val(0, "Redrawn a static element\n"); */
+			}
+			break;
+
+			case TDRAW_SDESTROY:
+			{
+				INSTRUCTION_ENGINE *tmp;
+				/*
+				if (cur->current->layer > 1000)
+					Debug_Print("Cleaned a static image");
+				*/
+
+				tmp = cur;
+
+				cur = cur->next;
+
+				clean_object(tmp);
+				
+				if (cur)
+					continue;
+				else
+					return;
+			}
+			break;
+			
+			case TDRAW_DYNAMIC:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						Neuro_GetScreenBuffer(), &idst);
+
+				cur->current->type = TDRAW_DYNAMIC_CLEAN;
+				
+				if (dynamic_debug)
+					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
+				/* Debug_Val(0, "drawn dynamic\n"); */
+			}
+			break;
+			
+			/*case TDRAW_DYNAMIC_CLEAN:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen2, &idst);
+			}
+			break;*/
+
+			case TDRAW_VOLATILE:
+			{
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						Neuro_GetScreenBuffer(), &idst);
+				
+				if (last)
+					last->next = cur->next;
+		
+				/* check to see if the element cur is either first_element 
+				 * or last_element and if so, we will destituate it.
+				 */
+				if (cur == Graphics_GetFirstElem())
+				{
+					Graphics_SetFirstElem(cur->next);
+				}
+
+				if (cur == Graphics_GetLastElem())
+				{
+					last->next = NULL;
+					Graphics_SetLastElem(last);
+				}
+			
+			
+				/*if (use_memory_pool)
+					Push_Data_To_Pool(POOL_QUEUE, cur);
+				else*/
+				{
+					INSTRUCTION_ENGINE *temp;
+				
+					temp = cur;
+					cur = cur->next;
+
+					Neuro_SCleanEBuf(Graphics_GetRawBuffer(), temp->current);
+					Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), temp);
+					continue;
+				}
+			}
+			break;
+
+			
+			default:
+			{
+				Debug_Val(0, "ERROR Draw unknown type %d\n", cur->current->type);
+			}
+			break;
+		}
+
+		last = cur;
+		if (cur->next == NULL && cur != Graphics_GetLastElem())
+		{
+			Error_Print("cur->next is NULL AND it isn't the last element, bad, very bad...");
+		}
+		cur = cur->next;
+	}
+
+
+	Neuro_RedrawScreen();
+	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
+}
+
+/* Graphics_CoreCleanAll might have cleaned objects
+ * that should be drawn so we will redraw those in this
+ * function. 
+ * returns non zero if a volatile type was pushed
+ */
+int
+Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
+{
+	Rectan buf, indep_body;
+	INSTRUCTION_ENGINE *cur;
+	int bounds_ret = 0;
+	int output = 0;
+
+
+	indep_body.x = indep->current->dx;
+	indep_body.y = indep->current->dy;
+	indep_body.w = indep->current->src.w;
+	indep_body.h = indep->current->src.h;
+	
+	cur = Graphics_GetFirstElem();
+
+	if (cur == NULL)
+		return 0;
+
+	while (cur)
+	{		
+		
+		if (cur == indep)
+		{
+			cur = cur->next;
+			continue;
+		}
+		
+		if (!cur->current)
+		{
+			Debug_Val(0, "BAD : the instruction 0x%x has an empty content!\n", 
+					cur);
+
+			Debug_Val(0, "DEBUG data : indep 0x%x  its next element 0x%x\n",
+					indep, indep->next);
+			/* odd error, this ain't supposed to happen :L */
+			return 0;
+		}
+
+		if (debug_track_fonts)
+		{
+			if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
+			{
+				Debug_Print("INITIAL Redrawing font");
+
+				Debug_Val(0, "Font type %d (%d,%d) &0x%x\n", cur->current->type, 
+						buf.x, buf.y, cur);
+			}
+		}
+		
+		if (cur->current->type == TDRAW_SDRAWN)
+		{
+			
+			buf.x = cur->current->dx;
+			buf.y = cur->current->dy;
+			buf.w = cur->current->src.w;
+			buf.h = cur->current->src.h;
+			
+			bounds_ret = Neuro_BoundsCheck(&indep_body, &buf);
+			/* bounds_ret = 2; */	
+
+			if (debug_track_fonts)
+			{
+				if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
+				{
+					Debug_Print("INITIAL 2 Redrawing font");
+					Debug_Val(0, "bounds_ret %d current (%d,%d) indep (%d,%d)\n", 
+							bounds_ret, 
+							buf.x, buf.y,
+							indep_body.x, indep_body.y);
+				}	
+			}
+
+			if (bounds_ret == 0)
+			{
+				Rectan bufa;
+				
+				bufa.x = cur->current->dx;
+				bufa.y = cur->current->dy;
+				bufa.w = 0;
+				bufa.h = 0;
+
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&bufa, cur->current->surface_ptr);
+			
+				/*Debug_Val(0, "dynamic is inside this object\n");*/
+
+				if (debug_track_fonts)
+				{
+					if (cur->current->layer >= 99999)
+						Debug_Print("Redrawing font #0");
+				}
+
+				output = 1;
+			}
+
+			if (bounds_ret == 2)
+			{
+				Rectan isrc, idst;
+				
+				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+
+				idst.x = cur->current->dx;
+				idst.y = cur->current->dy;
+				idst.w = 0;
+				idst.h = 0;
+
+				Neuro_VerticalBoundFix(&indep_body, &isrc, &idst);
+				Neuro_HorizontalBoundFix(&indep_body, &isrc, &idst);
+
+				Neuro_PushVolatileDraw(cur->current->layer, 
+						&isrc, &idst, cur->current->surface_ptr);
+
+				if (debug_track_fonts)
+				{
+					if (cur->current->layer >= 99999)
+						Debug_Print("Redrawing font #2");
+				}
+				
+				output = 1;
+			}
+
+			if (bounds_ret == 3)
+			{
+				Rectan isrc, idst, hack;
+				
+				memcpy(&isrc, &cur->current->src, sizeof(Rectan));
+
+				idst.x = cur->current->dx;
+				idst.y = cur->current->dy;
+				idst.w = 0;
+				idst.h = 0;
+				
+				
+				if (indep_body.x > buf.x)
+				{
+					isrc.x += indep_body.x - buf.x;
+					idst.x += indep_body.x - buf.x;
+
+					/*isrc.y += buf.y - indep_body.y;
+					idst.y += buf.y - indep_body.y;*/
+
+					isrc.w -= buf.w - indep_body.w;
+					/* isrc.h += indep_body.h - buf.h; */
+				}
+				else
+				{
+					/*isrc.x += buf.x - indep_body.x;
+					idst.x += buf.x - indep_body.x;*/
+
+					isrc.y += indep_body.y - buf.y;
+					idst.y += indep_body.y - buf.y;
+
+					/* isrc.w += indep_body.w - buf.w; */
+					isrc.h -= buf.h - indep_body.h;
+				}
+				
+				/* Neuro_PushVolatileDraw(cur->current->layer, 
+						&isrc, &idst, cur->current->surface_ptr);*/
+				
+				/* temporary hack that seems to work, we draw the whole 
+				 * static image... this needs testing and a better 
+				 * algorithm.
+				 */
+				
+				hack.x = cur->current->dx;
+				hack.y = cur->current->dy;
+				hack.w = 0;
+				hack.h = 0;
+
+				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+						&hack, cur->current->surface_ptr);
+
+				/* Debug_Val(0, "we have a case 3 situation!\n"); */
+
+				if (debug_track_fonts)
+				{
+					if (cur->current->layer >= 99999)
+						Debug_Print("Redrawing font #3");
+				}
+				
+				output = 1;
+			}	
+			
+			/* Debug_Val(0, "object end\n"); */
+		}	
+		cur = cur->next;
+	}
+
+	return output;
+}
+
+void
+Graphics_CoreCleanAll()
+{
+	INSTRUCTION_ENGINE *cur;
+
+	cur = Graphics_GetFirstElem();
+		
+	if (cur == NULL)
+		return;
+	
+	/* "reset" the emplacement of the last position of the image
+	 * with the background if theres one or with the color black 
+	 * if none.
+	 */
+	while (cur)
+	{			
+		clean_object(cur);
+		
+		cur = cur->next;
+	}
+	
+	Graphics_ResetScreenDraw();
+}
+

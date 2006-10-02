@@ -50,7 +50,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libvideo_la_LIBADD =
-am__objects_1 = graphics.lo drawing.lo
+am__objects_1 = painter.lo coredraw.lo graphics.lo interface.lo
 am_libvideo_la_OBJECTS = $(am__objects_1)
 libvideo_la_OBJECTS = $(am_libvideo_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
@@ -194,8 +194,10 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libvideo.la
 lib_sources = \
+		painter.c \
+		coredraw.c \
 		graphics.c \
-		drawing.c
+		interface.c 
 
 libvideo_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
@@ -250,8 +252,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drawing.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/coredraw.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/graphics.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/interface.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/painter.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

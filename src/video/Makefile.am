@@ -3,8 +3,10 @@
 noinst_LTLIBRARIES = libvideo.la
 
 lib_sources = 	\
+		painter.c \
+		coredraw.c \
 		graphics.c \
-		drawing.c
+		interface.c 
 
 libvideo_la_SOURCES = $(lib_sources)
 

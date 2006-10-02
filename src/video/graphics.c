@@ -102,50 +102,33 @@
 
 /* this code is my own version of the painter's algorithm. 
  * It is thus used to draw images in an order you have to
- * input when "pushing" an image, called the layer. 
+ * input when "pushing" an image, called layers. 
  * This module also requires 3 other variables which contain
  * the size of the image, a pointer to the image and the 
  * destination of the image.
  *
- * To handle the problem, I used 2 types of data. I use raw
- * data which contains exactly what the external process
- * gives us and then theres the instruction data which
+ * To make the painter's algorithm, I used 2 types of data. 
+ * I use raw data which contains exactly what the external 
+ * process gives us and then theres the instruction data which
  * contains a pointer to a single raw data and a pointer
  * to the next instruction data.
  *
- * The instruction datas order are changed everytime a new
- * image is pushed. It is organised in a growing order, 
+ * The instruction datas order are changed every time a new
+ * image is pushed. It is organized in a growing order, 
  * the smallest layers are the first ones and the biggest
  * are the last instructions drawn.
  *
  * Now, you see, the major advantage of this is we can also
  * redraw images that were below another one which would for
- * example be deleted. But for this, we do an expansive bounds
- * search for images which have to be redrawn.
+ * example be deleted. But for this, we have do an expansive 
+ * bounds search for images which have to be redrawn.
  *
  * Also note that raw datas have different types that trigger
- * behaviors. Static and dynamic and the two most important
- * types, when then have the temporary type and the rest
- * is pretty much sub types for those that I mentionned earlier.
+ * behaviors. Static and dynamic are the two most important
+ * types, then theres the temporary type and the rest
+ * are pretty much sub types for those that I mentioned earlier.
  */
 
-#define debug_instruction_buffer 0
-#define debug_clean_instruction_buffer 0
-#define verbose_missing_output 0
-#define dynamic_debug 0
-#define check_integrity_on_draw 0
-
-#define debug_track_fonts 1
-#define debug_track_special_font 1 /* child of the above, won't work if the above is 0 */
-#define debug_track_special_font_x 6 /* ditto */
-#define debug_track_special_font_y 6 /* above above ditto */
-
-#define screen_buffer 1
-#define second_screen_buffer 0
-#define retain_image_inipos 0
- 
-#define use_memory_pool 0
- 
 /*--- Extern Headers Including ---*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -663,8 +646,7 @@ Queue_Integrity_Check()
 /* compute the instruction_engine everytime
  * a new raw element is added.
  *
- * convertion : done
- * testing : works
+ * TODO move to painter.c
  */
 static INSTRUCTION_ENGINE *
 computeRawEngine(RAW_ENGINE *toadd)
@@ -1663,8 +1645,7 @@ Queue_All_To_Pool()
  * - dst is the destination X Y on the screen
  * - surface is the pointer of the loaded image. 
  *
- *   convertion : done
- *   testing : works
+ *   TODO : move to painter.c
  */
 INSTRUCTION_ENGINE *
 Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface)
@@ -1800,6 +1781,12 @@ void
 Neuro_RedrawScreen()
 {
 	draw_this_cycle = 1;
+}
+
+void
+Graphics_ResetScreenDraw()
+{
+	draw_this_cycle = 0;
 }
 
 /* clean the whole screen */
@@ -2122,9 +2109,6 @@ Graphics_Init()
 	return _err_;
 }
 
-/* convertion : done
- * testing : seems to work
- */
 void 
 Graphics_Clean()
 {	
