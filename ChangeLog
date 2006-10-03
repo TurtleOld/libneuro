@@ -1,11 +1,11 @@
 version 0.50 - [under development]
 	*Major
 		[not yet finished]
-		- Fully documented using the special syntax needed to be
+		- Fully documented external interface functions 
+		  using the special syntax needed to be
 		  parsed by the application neuroman.tcl.
-		  The documentation includes examples and full description
-		  of all the externally available functions.
-		  Documentation of the inner code is an ever going process.
+		  The documentation includes examples and full description 
+		  of each of the the functions.
 
 		[finished]
 		- Spreaded the code of the video module (especially the code
