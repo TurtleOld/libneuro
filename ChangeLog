@@ -1,16 +1,46 @@
+version 0.50 - [under development]
+	*Major
+		[not yet finished]
+		- Fully documented using the special syntax needed to be
+		  parsed by the application neuroman.tcl.
+		  The documentation includes examples and full description
+		  of all the externally available functions.
+		  Documentation of the inner code is an ever going process.
+
+		[finished]
+		- Spreaded the code of the video module (especially the code
+		  concerning the painter's algorithm) among more than one
+		  source file for a better split of tasks and thus a better
+		  organisation of the code.
+		  			- Nicholas Niro	 nik_89@neuroponic.com
+
+	*Minor
+		[not yet finished]
+		- Fixed the bugs concerning the new Draw function when 
+		  cleaning and the whole Data to be drawn were previously
+		  destroyed. It used to randomly make images blink around.
+
+		[not yet finished]
+		- Fixed the bugs that made destroyed and immediatelly added
+		  elements show with either a black background or not showing
+		  at all. (especially with fonts for now)
+
 version 0.49
 	*Major
 		- Added 4 new functions to the extlib modules. 
 		  All 4 are for the freetype library abstraction.
 		  2 of those are core creation/cleaning functions and
 		  the 2 others are to load a face and to render characters
-		  in monochrome. 			- Nicholas Niro  nik34_2000@yahoo.com
+		  in monochrome. 			
+		  			- Nicholas Niro nik_89@neuroponic.com
 		  
 		- Added a few set of new functions to the graphics engine
 		  that might replace the old dynamic/static method, see
-		  the commit comment for more details.  - Nicholas Niro  nik34_2000@yahoo.com
+		  the commit comment for more details.  
+		  			- Nicholas Niro nik_89@neuroponic.com
 
 	*Minor
 		- Made the configure script more robust and included the
-		  freetype library as a dependency. 	- Nicholas Niro  nik34_2000@yahoo.com
+		  freetype library as a dependency. 	
+		  			- Nicholas Niro  nik_89@neuroponic.com
 	

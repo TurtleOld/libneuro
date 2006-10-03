@@ -91,8 +91,14 @@ extern void Graphics_SetSafeDrawOp(u8 safe);
 
 extern void Graphics_ResetScreenDraw();
 
+extern void Graphics_SetDrawnLastCycle();
+
 
 /* inside painter.c */
+extern int Graphics_PainterInit();
+extern int Graphics_PainterReset();
+extern void Graphics_PainterClean();
+
 extern EBUF *Graphics_GetRawBuffer();
 extern EBUF *Graphics_GetQueueBuffer();
 
@@ -104,6 +110,26 @@ extern void Graphics_SetFirstElem(INSTRUCTION_ENGINE *elem);
 
 extern INSTRUCTION_ENGINE *Graphics_GetLastElem();
 extern void Graphics_SetLastElem(INSTRUCTION_ENGINE *elem);
+
+
+/* inside coredraw.c */
+extern void Graphics_CoreDrawAll(); /* old draw_objects */
+
+extern int Graphics_RedrawSection(); /* old redraw_erased_for_object */
+
+extern void Graphics_CoreCleanAll();
+
+extern void Graphics_CoreCleanDoneDynamics(); /* old clean_drawn_objects */
+
+/* inside debug.c */
+extern void Graphics_DebugPrintQueue(); /* old print_queue */
+
+extern void Graphics_DebugBufferQueue(EBUF *src); /* old buffer_queue */
+
+extern void Graphics_DebugPrintMissing(EBUF *src); /* old print_missing */
+
+extern void Graphics_DebugQueueIntegrityCheck(); /* old Queue_Integrity_Check */
+
 
 
 /*

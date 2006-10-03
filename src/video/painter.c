@@ -298,7 +298,7 @@ computeRawEngine(RAW_ENGINE *toadd)
 	if (debug_instruction_buffer)
 	{
 		Debug_Val(0, "BEGIN inside computeRawEngine debug print\n");
-		print_queue();
+		Graphics_DebugPrintQueue();
 		Debug_Val(0, "END inside computeRawEngine debug print\n");
 	}
 

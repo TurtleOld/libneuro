@@ -1,3 +1,23 @@
+/*    
+ * libneuro, a light weight abstraction of high or lower libraries 
+ * and toolkit for applications.
+ * Copyright (C) 2005-2006  Nicholas Niro, Robert Lemay
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
 /* coredraw.c
  * the core drawing algorithm.
  */
@@ -95,7 +115,7 @@ clean_object(INSTRUCTION_ENGINE *cur)
 		}
 	}
 
-	/* Queue_Integrity_Check(); */
+	/* Graphics_DebugQueueIntegrityCheck(); */
 
 	if (!cur)
 		return;
@@ -120,14 +140,14 @@ clean_object(INSTRUCTION_ENGINE *cur)
 	if (debug_clean_instruction_buffer)
 	{
 		Neuro_CreateEBuf(&verify_m);
-		buffer_queue(verify_m);
+		Graphics_DebugBufferQueue(verify_m);
 	}
 
 	if (debug_clean_instruction_buffer)
 	{
 		Debug_Print("*initial values");
 		Debug_Val(0, "Amount of elems %d\n", Neuro_GiveEBufCount(verify_m) - 1);
-		print_missing(verify_m);
+		Graphics_DebugPrintMissing(verify_m);
 	}
 
 	/* only set the previous element (last) if the element we need to
@@ -165,7 +185,7 @@ clean_object(INSTRUCTION_ENGINE *cur)
 	if (debug_clean_instruction_buffer)
 	{
 		Debug_Print("*before real destroy");
-		print_missing(verify_m);
+		Graphics_DebugPrintMissing(verify_m);
 	}
 		
 	/*if (use_memory_pool)
@@ -199,13 +219,13 @@ clean_object(INSTRUCTION_ENGINE *cur)
 				Neuro_GiveEBufCount(_Queue) - 1);*/
 		Debug_Print("**Full output");
 
-		print_queue();
+		Graphics_DebugPrintQueue();
 
-		print_missing(verify_m);
+		Graphics_DebugPrintMissing(verify_m);
 		Neuro_CleanEBuf(&verify_m);
 	}
 
-	/* Queue_Integrity_Check(); */
+	/* Graphics_DebugQueueIntegrityCheck(); */
 }
 
 /*-------------------- Global Functions ----------------------------*/
@@ -228,7 +248,7 @@ Graphics_CoreDrawAll()
 		if (check_integrity_on_draw)
 		{
 			Debug_Print("Data integrity check before drawing");
-			Queue_Integrity_Check();
+			Graphics_DebugQueueIntegrityCheck();
 		}
 
 		memcpy(&isrc, &cur->current->src, sizeof(Rectan));
@@ -284,7 +304,7 @@ Graphics_CoreDrawAll()
 				 * there and actually need to be visible(and are above
 				 * our element, ie layers).
 				 */
-				redraw_erased_for_object(cur);
+				Graphics_RedrawSection(cur);
 
 				/* we cleanly redrawn the static element so we
 				 * set the element's flag to drawn
@@ -329,12 +349,16 @@ Graphics_CoreDrawAll()
 			}
 			break;
 			
-			/*case TDRAW_DYNAMIC_CLEAN:
+#if temp
+			case TDRAW_DYNAMIC_CLEAN:
 			{
-				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
-						sclScreen2, &idst);
+				/* Lib_BlitObject(cur->current->surface_ptr, &isrc, 
+						sclScreen2, &idst);*/
+
+				/* clean_object(cur); */
 			}
-			break;*/
+			break;
+#endif /* temp */
 
 			case TDRAW_VOLATILE:
 			{
@@ -392,7 +416,7 @@ Graphics_CoreDrawAll()
 	}
 
 
-	Neuro_RedrawScreen();
+	Graphics_SetDrawnLastCycle();
 	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
 }
 
@@ -615,5 +639,31 @@ Graphics_CoreCleanAll()
 	}
 	
 	Graphics_ResetScreenDraw();
+}
+
+/* only clean those with the type TDRAW_DYNAMIC_CLEAN */
+void
+Graphics_CoreCleanDoneDynamics()
+{
+	INSTRUCTION_ENGINE *cur;
+
+	cur = Graphics_GetFirstElem();
+		
+	if (cur == NULL)
+		return;
+	
+	/* "reset" the emplacement of the last position of the image
+	 * with the background if theres one or with the color black 
+	 * if none.
+	 */
+	while (cur)
+	{
+		if (cur->current->type == TDRAW_DYNAMIC_CLEAN)
+		{
+			clean_object(cur);
+		}
+		
+		cur = cur->next;
+	}
 }
 

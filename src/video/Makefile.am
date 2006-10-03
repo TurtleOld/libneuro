@@ -6,6 +6,7 @@ lib_sources = 	\
 		painter.c \
 		coredraw.c \
 		graphics.c \
+		debug.c \
 		interface.c 
 
 libvideo_la_SOURCES = $(lib_sources)
