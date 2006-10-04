@@ -87,6 +87,7 @@ extern u8 Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen);
  * 2 = depen is overlaping indep. 
  * 3 = depen and indep links between corners are into the other but the corners
  *     are not touching.
+ * 4 = indep is inside depen (reverse of 0)
  */
 extern u8 Neuro_BoundsCheck(Rectan *indep, Rectan *depen);
 
@@ -168,6 +169,11 @@ extern v_object * Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 dept
  * returns NULL on error or a pointer to a font_object.
  */
 extern font_object *Neuro_LoadFontFile(char *fonts_file_path);
+
+/* this function is to clean a font file 
+ * loaded using the function Neuro_LoadFontFile()
+ */
+extern void Neuro_CleanFont(font_object *font);
 
 /* even though the input arguments seem to be quite complicated, it is not. 
  * the ttf input address can be given with the load fonts function, the size

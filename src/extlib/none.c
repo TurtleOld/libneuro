@@ -163,6 +163,12 @@ Lib_LoadFontFile(char *fonts_file_path)
 	return NULL;
 }
 
+void
+Lib_CleanFont(font_object *font)
+{
+
+}
+
 int
 Lib_FontsInit()
 {

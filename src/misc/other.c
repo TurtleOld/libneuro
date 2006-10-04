@@ -752,6 +752,7 @@ Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen)
  *     		| |         | |
  *     		|_|_________|_|
  *		  |_________|
+ * 4 = indep is inside depen (reverse of 0)
  *     		
  * this function needs to be converted to a macro so its lightning quick
  */
@@ -763,14 +764,15 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
 	status = Neuro_DumbBoundsCheck(indep, depen);
 
 	/* check to see if depen is bigger than indep and indep is inside depen 
-	 * if its the case, the status will be 2.
+	 * if its the case, the status will be 4.
 	 */
 	if (status == 1)
 	{
 		if (Neuro_DumbBoundsCheck(depen, indep) != 1)
-			status = 2;
+			status = 4;
 	}
 
+	/* we check to see if we have a type 3 status */
 	if (status == 0)
 	{
 		if (Neuro_DumbBoundsCheck(depen, indep) == 0)
@@ -911,6 +913,12 @@ font_object *
 Neuro_LoadFontFile(char *fonts_file_path)
 {
 	return Lib_LoadFontFile(fonts_file_path);
+}
+
+void
+Neuro_CleanFont(font_object *font)
+{
+	Lib_CleanFont(font);
 }
 
 v_object *

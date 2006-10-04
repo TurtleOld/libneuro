@@ -47,6 +47,7 @@ sprite module :
 * add a function to Load bitmaps from memory :
 	- Initially to support Unicode Truetype fonts but would probably be very useful for
 	  other things too. DONE in SDL... TODO in X11(need to add new functions to bitmap module)
+	  - done (untested)
 
 * video -- graphics module : 
 	- Change the Dynamic type so it stays drawn until the external program explicitly tells it
@@ -55,7 +56,7 @@ sprite module :
 
 * extlib -- Add abstract Fonts (Unicode) support :
 	- To make SDL have fonts, we will use SDL_ttf and for X11, we will use the freetype2
-	  library(and X11 bitmap for them).
+	  library(and X11 bitmap for them). - done (with issues)
 
 extlib -- change the Lib_ prefix (low priority):
 	- Change the Lib_ prefix of the extlib module to something less common so apps that use
@@ -66,6 +67,7 @@ extlib | other -- indirect extlib access :
 	  module. We need to have redundant functions that will serve as an interim between
 	  extlib and the extern application. I suggest NEURO.h get its include of extlib.h
 	  removed so external programs will have a warning if they use the extlib functions.
+	   - done (didn't remove extlib.h from NEURO.h yet)
 
 graphics engine -- drawing push functions to return address :
 	- In order for external applications to be able to destroy or modify drawing entries,
@@ -86,3 +88,15 @@ graphics engine -- cleaning of same layers priority :
 	  So precedence would always put the cleaning tasks in the front line. This would avoid
 	  tasks to draw (especially text) never be done before it is cleaned... This might
 	  be a bug however because the redraw function is supposed to handle that...
+	    - I think this ain't needed anymore
+
+graphics engine -- change draw_this_cycle flag behavior :
+	- Change this flag's behavior so it handles volatile images the correct way.
+
+extlib -- memory leak with the fonts :
+	- I noticed we have a memory leak concerning our interfacing with the
+	  library freetype2, we need to fix it asap.
+
+graphics engine : coredraw -- review and heavily test Graphics_RedrawSection :
+	- I noticed this function is really the weak point of the painter's algorithm
+	  and thus needs heavy testing and consolidation.

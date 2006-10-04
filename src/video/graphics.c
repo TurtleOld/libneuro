@@ -98,7 +98,17 @@ Graphics_DrawIsPresent(v_elem *elem)
 	INSTRUCTION_ENGINE *tmp = NULL;
 	u32 total = 0;
 
+	if (safe_draw_operation == 0)
+		return 0;
+
 	if (!elem)
+		return 0;
+
+
+	if (!elem->current)
+		return 0;
+
+	if (!elem->current->surface_ptr)
 		return 0;
 
 	total = Neuro_GiveEBufCount(Graphics_GetQueueBuffer()) + 1;
@@ -172,7 +182,6 @@ Graphics_SetDrawnLastCycle()
 void
 Neuro_RefreshScreen()
 {
-
 	Lib_FillRect(sclScreen, NULL, 0);
 
 	Graphics_PainterReset();
@@ -264,7 +273,7 @@ Graphics_Poll()
 	if (debug_instruction_buffer)
 	{
 		Debug_Val(0, "--BEGIN debug print\n");
-		print_queue();
+		Graphics_DebugPrintQueue();
 		Debug_Val(0, "--END debug print\n");
 	}
 
@@ -295,12 +304,14 @@ Graphics_Poll()
 		if (debug_instruction_buffer)
 		{
 			Debug_Val(0, "*BEGIN debug print\n");
-			print_queue();
+			Graphics_DebugPrintQueue();
 			Debug_Val(0, "*END debug print\n");
 		}
 		
-		if (draw_this_cycle)
+		/* if (draw_this_cycle) */
 			Graphics_CoreDrawAll();
+		/* debug */
+		draw_this_cycle = 1;
 	}
 	else
 		dont_draw_this_cycle = 0;

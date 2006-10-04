@@ -214,26 +214,19 @@ computeRawEngine(RAW_ENGINE *toadd)
 		/* Debug_Val(0, "Just placed the frame as the first element, starting the queue\n"); */
 		return buf;
 	}
-
-#if temp
-	/* search for the first element and if we find any,
-	 * put its number in "first"
-	 */
-	while (current-- > 0)
-	{
-		cur = Neuro_GiveEBuf(tmp, current);
-
-		if (cur->current)
-		{
-			if (cur->current->surface_ptr)
-			{
-				first = current;
-				break;
-			}
-		}
-	}
-#endif /* temp */
 	
+	/* TODO TODO TODO TODO
+	 * special case so volatile types always are put in the 
+	 * beginning of the queue. Both to make the process
+	 * faster and to make the volatiles have precedence
+	 * over everything to avoid conflicts.
+	 */
+	if (buf->current->type = TDRAW_VOLATILE)
+	{
+
+	}
+
+
 	cur = first_element;
 	/* cur = Neuro_GiveEBuf(tmp, first); */
 	while (cur != NULL)

@@ -1454,6 +1454,12 @@ Lib_LoadFontFile(char *fonts_file_path)
 	return face;
 }
 
+void
+Lib_CleanFont(font_object *font)
+{
+	FT_Done_Face(font);
+}
+
 int
 Lib_FontsInit()
 {

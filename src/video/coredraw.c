@@ -87,7 +87,7 @@ get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
 }
 
 static void
-clean_object(INSTRUCTION_ENGINE *cur)
+clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
 {
 	Rectan buf;
 	INSTRUCTION_ENGINE *last = NULL;
@@ -135,7 +135,8 @@ clean_object(INSTRUCTION_ENGINE *cur)
 					
 	Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
 
-	Graphics_RedrawSection(cur);
+	if (dont_redraw_section == 0)
+		Graphics_RedrawSection(cur);
 
 	if (debug_clean_instruction_buffer)
 	{
@@ -255,6 +256,8 @@ Graphics_CoreDrawAll()
 
 		idst.x = cur->current->dx;
 		idst.y = cur->current->dy;
+
+		/* Debug_Val(0, "cur type %d\n", cur->current->type); */
 		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
@@ -262,8 +265,10 @@ Graphics_CoreDrawAll()
 			case TDRAW_STATIC:
 			{
 				
-				/*Debug_Val(0, "after x y (%d,%d) size %d %d\n", 
-						buf.x, buf.y, buf.w, buf.h);
+				/* Debug_Val(0, "static draw (%d,%d) %dx%d to (%d,%d)\n", 
+						isrc.x, isrc.y, isrc.w, isrc.h, 
+						idst.x, idst.y);
+
 				*/
 
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
@@ -327,12 +332,10 @@ Graphics_CoreDrawAll()
 
 				cur = cur->next;
 
-				clean_object(tmp);
+				clean_object(tmp, 0);
 				
 				if (cur)
 					continue;
-				else
-					return;
 			}
 			break;
 			
@@ -362,9 +365,19 @@ Graphics_CoreDrawAll()
 
 			case TDRAW_VOLATILE:
 			{
+				/*Debug_Val(0, "Volatile draw (%d,%d) %dx%d to (%d,%d) image 0x%x\n", 
+						isrc.x, isrc.y, isrc.w, isrc.h,
+						idst.x, idst.y, 
+						cur->current->surface_ptr);
+				*/
+
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, 
 						Neuro_GetScreenBuffer(), &idst);
-				
+
+				/* NOTE that we CAN't USE clean_object() BECAUSE 
+				 * it actually makes the image all BLACK
+				 * so it nullifies the action of this COMPLETELY.
+				 */
 				if (last)
 					last->next = cur->next;
 		
@@ -394,7 +407,9 @@ Graphics_CoreDrawAll()
 
 					Neuro_SCleanEBuf(Graphics_GetRawBuffer(), temp->current);
 					Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), temp);
-					continue;
+					
+					if (cur)
+						continue;
 				}
 			}
 			break;
@@ -407,12 +422,17 @@ Graphics_CoreDrawAll()
 			break;
 		}
 
-		last = cur;
-		if (cur->next == NULL && cur != Graphics_GetLastElem())
+		if (cur)
 		{
-			Error_Print("cur->next is NULL AND it isn't the last element, bad, very bad...");
+			last = cur;
+			if (cur->next == NULL && cur != Graphics_GetLastElem())
+			{
+				Error_Print("cur->next is NULL AND it isn't the last element, bad, very bad...");
+			}
+			cur = cur->next;
 		}
-		cur = cur->next;
+		else
+			break;
 	}
 
 
@@ -607,9 +627,49 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				}
 				
 				output = 1;
-			}	
+			}
+
+			/* indep is inside cur */
+			if (bounds_ret == 4)
+			{
+				Rectan bufa;
+				Rectan nsrc;
+
+				bufa.x = indep_body.x;
+				bufa.y = indep_body.y;
+				bufa.w = 0;
+				bufa.h = 0;
+
+				nsrc.x = indep_body.x - cur->current->dx;
+				nsrc.y = indep_body.y - cur->current->dy;
+				nsrc.w = indep_body.w;
+				nsrc.h = indep_body.h;	
+
+				/*
+				bufa.x = 0;
+				bufa.y = 0;
+				bufa.w = 0;
+				bufa.h = 0;
+
+				nsrc.x = 0;
+				nsrc.y = 0;
+				nsrc.w = cur->current->src.w;
+				nsrc.h = cur->current->src.h;
+				*/
+
+				Neuro_PushVolatileDraw(cur->current->layer, &nsrc, 
+						&bufa, cur->current->surface_ptr);
+
+				if (debug_track_fonts)
+				{
+					if (cur->current->layer >= 99999)
+						Debug_Print("Redrawing font #4");
+				}
+
+				output = 1;
+			}
 			
-			/* Debug_Val(0, "object end\n"); */
+			/* Debug_Val(0, "Redraw Section debug #%d\n", bounds_ret); */
 		}	
 		cur = cur->next;
 	}
@@ -633,7 +693,7 @@ Graphics_CoreCleanAll()
 	 */
 	while (cur)
 	{			
-		clean_object(cur);
+		clean_object(cur, 1);
 		
 		cur = cur->next;
 	}
@@ -660,7 +720,7 @@ Graphics_CoreCleanDoneDynamics()
 	{
 		if (cur->current->type == TDRAW_DYNAMIC_CLEAN)
 		{
-			clean_object(cur);
+			clean_object(cur, 0);
 		}
 		
 		cur = cur->next;

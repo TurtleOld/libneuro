@@ -902,6 +902,11 @@ extern u8 Lib_GetMouseState(i32 *x, i32 *y);
  */
 extern font_object *Lib_LoadFontFile(char *fonts_file_path);
 
+/* this function is to clean a font file loaded 
+ * using Lib_LoadFontFile
+ */
+extern void Lib_CleanFont(font_object *font);
+
 /* even though the input arguments seem to be quite complicated, it is not. 
  * the ttf input address can be given with the load fonts function, the size
  * is the size of the fonts you want in pixels, the character is the character

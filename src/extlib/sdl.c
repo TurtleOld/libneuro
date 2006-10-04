@@ -359,12 +359,6 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	return NULL;
 }
 
-font_object *
-Lib_LoadFontFile(char *fonts_file_path)
-{
-	return NULL;
-}
-
 u32 
 Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 {
@@ -640,6 +634,19 @@ u32
 Lib_GetDefaultDepth()
 {
 	return 16; /* TEMPORARY please make get the real value from somewhere!!! TODO TODO */
+}
+
+
+font_object *
+Lib_LoadFontFile(char *fonts_file_path)
+{
+	return NULL;
+}
+
+void
+Lib_CleanFont(font_object *font)
+{
+
 }
 
 /* TODO code this up */

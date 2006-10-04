@@ -50,7 +50,10 @@
 v_elem *
 Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 {
-	Graphics_SetSafeDrawOp(1);
+	if (Graphics_GetSafeDrawOp() == 0)
+		return NULL;
+
+
 	return Graphics_AddDrawingInstruction(layer, TDRAW_STATIC, isrc, idst, isurface);
 }
 
