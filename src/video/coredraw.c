@@ -132,11 +132,12 @@ clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
 	else
 		Lib_FillRect(sclScreen2, &buf, 0);
 	*/
-					
-	Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
 
 	if (dont_redraw_section == 0)
-		Graphics_RedrawSection(cur);
+	{
+		if (Graphics_RedrawSection(cur) == 0)
+			Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
+	}
 
 	if (debug_clean_instruction_buffer)
 	{

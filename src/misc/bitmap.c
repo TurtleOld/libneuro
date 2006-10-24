@@ -86,18 +86,6 @@ typedef struct BITMAP_MAP
 
 static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
 
-
-/* position fast convertion variable for the hash table 
- * this table converts numbers from 0 to 32 to their 
- * corresponding position in an integer.
- */
-static u32 pos_conv[32];
-
-/* buffer that will keep an hash table of bits used to 
- * know the number of colors in the bitmap.
- */
-static EBUF *color_hash;
-
 /* static function prototypes */
 static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
 static int fpdata8(nFILE *input, u8 *output) __attribute__((unused));

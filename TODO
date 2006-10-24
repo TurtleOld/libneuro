@@ -100,3 +100,8 @@ extlib -- memory leak with the fonts :
 graphics engine : coredraw -- review and heavily test Graphics_RedrawSection :
 	- I noticed this function is really the weak point of the painter's algorithm
 	  and thus needs heavy testing and consolidation.
+
+extlib X11 -- Lib_SetColorKey :
+	- I want this function to create a bitmask to the input image it recieves.
+	  Currently, it just sets a flag so libxpm makes the correct pixel type
+	  transparent with a bitmask, but we'll get rid of libxpm very soon.

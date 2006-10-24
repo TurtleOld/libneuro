@@ -199,6 +199,12 @@ if test $SELECTED_LOWLIB = X11; then
 fi
 
 dnl ----------------
+dnl libmath check
+dnl ----------------
+AC_CHECK_LIB(m, log10, , [AC_MSG_ERROR(You don't have libm -- math)])
+
+
+dnl ----------------
 dnl Freetype2 Check
 dnl ----------------
 if test x$freetype_enable = xyes; then

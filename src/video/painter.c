@@ -223,7 +223,14 @@ computeRawEngine(RAW_ENGINE *toadd)
 	 */
 	if (buf->current->type = TDRAW_VOLATILE)
 	{
+		/* we make the type be of the layer 0 so it is 
+		 * always the first in the list.
+		 *
+		 * the layer 0 is reserved stricly for volatile
+		 * types.
+		 */
 
+		buf->current->layer = 0;
 	}
 
 
@@ -351,7 +358,11 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 		buf = Neuro_GiveCurEBuf(Raw);
 	}
 	
-	buf->layer = layer;
+	/* we reserve the 0 spot for out need 
+	 * we might reserve more than just one
+	 * if the need comes out.
+	 */
+	buf->layer = layer + 1;
 	buf->type = type;
 	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
 

@@ -70,7 +70,7 @@ static u8 draw_this_cycle;
  * else they should not be considered safe 
  * and should be ignored 
  */
-static u8 safe_draw_operation;
+static u8 safe_draw_operation = 1;
 
 /* last frame we redrawn the pixels? */
 /* static u8 lastPdraw; */
@@ -307,11 +307,28 @@ Graphics_Poll()
 			Graphics_DebugPrintQueue();
 			Debug_Val(0, "*END debug print\n");
 		}
+
+		/* we check to see if the first element 
+		 * is a volatile type, if it is we will
+		 * make the draw_this_cycle flag 
+		 * positive.
+		 */
+		if (draw_this_cycle == 0)
+		{
+			INSTRUCTION_ENGINE *tmp;
+
+			tmp = Graphics_GetFirstElem();
+
+			if (tmp)
+			{
+				if (tmp->current->type == TDRAW_VOLATILE)
+					draw_this_cycle = 1;
+			}
+		}
 		
-		/* if (draw_this_cycle) */
+		
+		if (draw_this_cycle)
 			Graphics_CoreDrawAll();
-		/* debug */
-		draw_this_cycle = 1;
 	}
 	else
 		dont_draw_this_cycle = 0;
