@@ -183,6 +183,24 @@ computeRawEngine(RAW_ENGINE *toadd)
 	
 	if (debug_instruction_buffer)
 		Debug_Val(0, "Push --> %d\n", toadd->layer);
+
+	/* TODO TODO TODO TODO
+	 * special case so volatile types always are put in the 
+	 * beginning of the queue. Both to make the process
+	 * faster and to make the volatiles have precedence
+	 * over everything to avoid conflicts.
+	 */
+	if (buf->current->type == TDRAW_VOLATILE)
+	{
+		/* we make the type be of the layer 0 so it is 
+		 * always the first in the list.
+		 *
+		 * the layer 0 is reserved stricly for volatile
+		 * types.
+		 */
+
+		buf->current->layer = 0;
+	}
 	
 	if (last_element != NULL)
 	{
@@ -214,25 +232,6 @@ computeRawEngine(RAW_ENGINE *toadd)
 		/* Debug_Val(0, "Just placed the frame as the first element, starting the queue\n"); */
 		return buf;
 	}
-	
-	/* TODO TODO TODO TODO
-	 * special case so volatile types always are put in the 
-	 * beginning of the queue. Both to make the process
-	 * faster and to make the volatiles have precedence
-	 * over everything to avoid conflicts.
-	 */
-	if (buf->current->type = TDRAW_VOLATILE)
-	{
-		/* we make the type be of the layer 0 so it is 
-		 * always the first in the list.
-		 *
-		 * the layer 0 is reserved stricly for volatile
-		 * types.
-		 */
-
-		buf->current->layer = 0;
-	}
-
 
 	cur = first_element;
 	/* cur = Neuro_GiveEBuf(tmp, first); */
@@ -358,7 +357,7 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 		buf = Neuro_GiveCurEBuf(Raw);
 	}
 	
-	/* we reserve the 0 spot for out need 
+	/* we reserve the 0 spot for our need 
 	 * we might reserve more than just one
 	 * if the need comes out.
 	 */
@@ -376,6 +375,8 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	 * redrawn.
 	 */
 	Neuro_RedrawScreen();
+
+	Graphics_SetAllToRedraw();
 
 	return computeRawEngine((RAW_ENGINE*)buf);
 }

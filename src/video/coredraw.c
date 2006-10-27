@@ -135,8 +135,9 @@ clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
 
 	if (dont_redraw_section == 0)
 	{
-		if (Graphics_RedrawSection(cur) == 0)
-			Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
+		Lib_FillRect(Neuro_GetScreenBuffer(), &buf, 0);
+
+		Graphics_RedrawSection(cur);
 	}
 
 	if (debug_clean_instruction_buffer)
@@ -276,6 +277,7 @@ Graphics_CoreDrawAll()
 						&idst);			
 				
 				cur->current->type = TDRAW_SDRAWN;
+
 				/* Debug_Val(0, "drawn static\n"); */
 
 				if (debug_track_fonts)
@@ -295,6 +297,7 @@ Graphics_CoreDrawAll()
 			{
 				/* nothing needed for this type */
 				/* Debug_Val(0, "already drawn\n"); */
+				/* Graphics_RedrawSection(cur); */
 			}
 			break;
 
@@ -392,8 +395,11 @@ Graphics_CoreDrawAll()
 
 				if (cur == Graphics_GetLastElem())
 				{
-					last->next = NULL;
-					Graphics_SetLastElem(last);
+					if (last)
+					{
+						last->next = NULL;
+						Graphics_SetLastElem(last);
+					}
 				}
 			
 			
@@ -441,6 +447,25 @@ Graphics_CoreDrawAll()
 	/* Lib_FillRect(sclScreen, &test_BoundFix, 0); */
 }
 
+void
+Graphics_SetAllToRedraw()
+{
+	INSTRUCTION_ENGINE *cur;
+	
+	cur = Graphics_GetFirstElem();
+
+	if (cur == NULL)
+		return;
+
+	while (cur)
+	{
+		if (cur->current->type == TDRAW_SDRAWN)
+			cur->current->type = TDRAW_STATIC; /* TDRAW_SREDRAW seems to do a flaw */
+
+		cur = cur->next;
+	}
+}
+
 /* Graphics_CoreCleanAll might have cleaned objects
  * that should be drawn so we will redraw those in this
  * function. 
@@ -466,7 +491,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 		return 0;
 
 	while (cur)
-	{		
+	{
 		
 		if (cur == indep)
 		{

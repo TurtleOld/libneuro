@@ -136,7 +136,7 @@ extern int Neuro_ArgProcess();
 extern void Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst);
 
 /* free a v_object after its use is no longer needed. */
-extern void Neuro_FreeVobject(v_object *source);
+extern void Neuro_FreeVObject(v_object *source);
 
 /* load a M$ bitmap from a file that you input 
  * pass the address of a pointer v_object :
