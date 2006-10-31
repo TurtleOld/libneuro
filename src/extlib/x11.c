@@ -222,18 +222,20 @@ sync_pixels(V_OBJECT *src)
 static void
 CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
 {
-	GC gc;
+	GC gc = NULL;
 	XGCValues values;
 	int _err = 0;
 
+	*pix = 0;
+
 	if (!image)
-	{
-		*pix = 0;
 		return;
-	}
+
+	/* Debug_Val(0, "%dx%d bpp %d\n", image->width, image->height, image->depth); */
 	
 	*pix = XCreatePixmap(dmain->display, master, image->width, image->height, image->depth);
 
+	/* in case we have a XYBitmap */
 	values.foreground = 1;
 	values.background = 0;
 
@@ -242,15 +244,16 @@ CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
 	_err = XPutImage(dmain->display, *pix, gc, image, 0, 0, 
 		 0, 0, image->width, image->height);
 	
+	
 	if (_err != 0)
 	{
 		Debug_Val(0, "error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
-		XFreePixmap(dmain->display, *pix);
-
-		*pix = 0;
+		if (*pix)
+			XFreePixmap(dmain->display, *pix);
 	}
 
-	XFreeGC(dmain->display, gc);
+	if (gc)
+		XFreeGC(dmain->display, gc);
 }
 
 /* creates a mask */
@@ -994,11 +997,22 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	u8 space_char = 0;
 	FT_Face face;
 	XImage *mask_data = NULL;
+	u32 bg_color;
 
 	face = (FT_Face)ttf;
 
 	if (!face)
 		return NULL;
+
+	/* our first pick for the background is pure pink */
+	bg_color = Neuro_MapRGB(255, 0, 255);
+
+	/* in case the fancy of the external program 
+	 * is having pure pink color fonts (heh it can happen)
+	 * we make the background color to pure black.
+	 */
+	if (bg_color == color)
+		bg_color = Neuro_MapRGB(0, 0, 0);
 
 	if (character == ' ')
 	{
@@ -1101,9 +1115,6 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			/* allocate the surface */
 			output = Lib_CreateVObject(0, face->glyph->bitmap.width, 
 					face->glyph->bitmap.rows, 16, 0, 0, 0, 0);
-
-			/* create the mask */
-			/* mask_data = CreateMask(output, face->glyph->bitmap.width, face->glyph->bitmap.rows); */
 		}
 		
 		bitmap = (FT_BitmapGlyph)face->glyph;
@@ -1120,7 +1131,9 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 		if (!space_char)
 		{
 			/* create the mask */
-			mask_data = CreateMask(output, face->glyph->bitmap.width, face->glyph->bitmap.rows);
+			/* XXX if (output)
+				mask_data = CreateMask(output, face->glyph->bitmap.width, face->glyph->bitmap.rows);
+			*/
 		}
 		
 		if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY && !space_char)
@@ -1221,6 +1234,12 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 					}
 					else
 					{
+						/* the background pixels... we will 
+						 * make the pixels of this color 
+						 * transparent.
+						 */
+						Lib_PutPixel(output, tx, ty, bg_color); 
+
 						if (mask_data)
 							XPutPixel(mask_data, tx, ty, 0);
 					}
@@ -1259,9 +1278,26 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			dst->h = 0;
 			
 			obj = (V_OBJECT*)output;
-			
-			CreatePixmap(mask_data, *obj->cwin, &obj->shapemask);
-			XDestroyImage(mask_data);
+#if font_mask
+			if (obj && mask_data)
+			{
+				/* copy the mask data (for transparency) to the V_OBJECT 
+				 * shapemask variable properly.
+				 */
+				CreatePixmap(mask_data, *obj->cwin, &obj->shapemask);
+
+				/* we no longer need the mask_data variable, it got copied 
+				 * to the good place so we destroy it.
+				 */
+				XDestroyImage(mask_data);
+			}
+#endif /* font_mask XXX */
+
+			/* we will need to call the function Lib_SetColorKey 
+			 * which will itself generate the transparency 
+			 * mask.
+			 */
+			Lib_SetColorKey(output, bg_color);
 		}
 
 		*x = *x + face->glyph->metrics.horiAdvance / 64;
@@ -1269,7 +1305,6 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 		Lib_UnlockVObject(output);
 	}
-
 
 	return output;
 }
@@ -1386,10 +1421,10 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 	u32 wborder;
 	u32 wdepth;
 	
-	if (!vobj)
-		return;
-	
 	buf = (V_OBJECT*)vobj;
+
+	if (!buf)
+		return;
 	
 	/* Debug_Val(0, "Fetching from cwin id %d shapemask id %d\n", *buf->cwin, buf->shapemask); */
 	XGetGeometry(dmain->display, *buf->cwin, &wroot, &wx, &wy, 

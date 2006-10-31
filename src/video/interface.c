@@ -197,8 +197,14 @@ Neuro_DestroyDraw(v_elem *eng)
 	if (Graphics_DrawIsPresent(eng) == 0)
 		return 1;
 
-	eng->current->type = TDRAW_SDESTROY;
+	/* eng->current->type = TDRAW_SDESTROY; */
+
+	/* the official way of deleting an element */
+	Graphics_DestroyElement(eng);
+
 	/* clean_object(eng); */
+
+
 	
 	Neuro_RedrawScreen();
 	/* draw_this_cycle = 1; */

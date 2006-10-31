@@ -8,8 +8,8 @@
 #include <graphics.h>
 #include <ebuf.h>
 
-#define debug_instruction_buffer 1
-#define debug_clean_instruction_buffer 1
+#define debug_instruction_buffer 0
+#define debug_clean_instruction_buffer 0
 #define verbose_missing_output 0
 #define dynamic_debug 0
 #define check_integrity_on_draw 0
@@ -131,6 +131,9 @@ extern void Graphics_DebugBufferQueue(EBUF *src); /* old buffer_queue */
 extern void Graphics_DebugPrintMissing(EBUF *src); /* old print_missing */
 
 extern void Graphics_DebugQueueIntegrityCheck(); /* old Queue_Integrity_Check */
+
+extern void Graphics_DestroyElement(INSTRUCTION_ENGINE *elem);
+
 
 
 /*

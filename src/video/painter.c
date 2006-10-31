@@ -180,11 +180,18 @@ computeRawEngine(RAW_ENGINE *toadd)
 	
 	buf->current = toadd;
 	buf->next = NULL;
-	
-	if (debug_instruction_buffer)
-		Debug_Val(0, "Push --> %d\n", toadd->layer);
 
-	/* TODO TODO TODO TODO
+
+	/* this is the special case for a TDRAW_SDESTROY element 
+	 * every one of those elements will be put into the 
+	 * layer 0.
+	 */
+	if (buf->current->type == TDRAW_SDESTROY)
+	{
+		buf->current->layer = 0;
+	}
+
+	/* 
 	 * special case so volatile types always are put in the 
 	 * beginning of the queue. Both to make the process
 	 * faster and to make the volatiles have precedence
@@ -199,8 +206,11 @@ computeRawEngine(RAW_ENGINE *toadd)
 		 * types.
 		 */
 
-		buf->current->layer = 0;
+		buf->current->layer = 1;
 	}
+
+	if (debug_instruction_buffer)
+		Debug_Val(0, "Push --> layer %d type %d\n", toadd->layer, toadd->type);
 	
 	if (last_element != NULL)
 	{
@@ -357,11 +367,11 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 		buf = Neuro_GiveCurEBuf(Raw);
 	}
 	
-	/* we reserve the 0 spot for our need 
+	/* we reserve the first 5 spots for our need 
 	 * we might reserve more than just one
 	 * if the need comes out.
 	 */
-	buf->layer = layer + 1;
+	buf->layer = layer + 5;
 	buf->type = type;
 	memcpy(&buf->src, &tIsrc, sizeof(Rectan));
 
@@ -376,7 +386,8 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	 */
 	Neuro_RedrawScreen();
 
-	Graphics_SetAllToRedraw();
+	if (buf->type == TDRAW_STATIC || buf->type == TDRAW_DYNAMIC)
+		Graphics_SetAllToRedraw();
 
 	return computeRawEngine((RAW_ENGINE*)buf);
 }

@@ -86,8 +86,13 @@ get_Previous_Object_To_Object(INSTRUCTION_ENGINE *indep)
 	return NULL;
 }
 
+/* del_mask : 0 is don't clean any buffers (big memory leak) 
+ * 1 is clean only the raw engine
+ * 2 is clean only the queue(instruction) engine
+ * 3 is clean both
+ */
 static void
-clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
+Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 {
 	Rectan buf;
 	INSTRUCTION_ENGINE *last = NULL;
@@ -205,9 +210,11 @@ clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
 		/* Debug_Val(0, "before queue total %d\n", 
 				Neuro_GiveEBufCount(_Queue) + 1);*/
 
-		Neuro_SCleanEBuf(Graphics_GetRawBuffer(), cur->current);
+		if (del_mask == 1 || del_mask == 3)
+			Neuro_SCleanEBuf(Graphics_GetRawBuffer(), cur->current);
 		/* Debug_Val(0, "-- element address 0x%x destroyed\n", cur); */
-		Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), cur);
+		if (del_mask == 2 || del_mask == 3)
+			Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), cur);
 
 		/* Debug_Val(0, "after queue total %d\n", 
 				Neuro_GiveEBufCount(_Queue) + 1); */
@@ -231,13 +238,47 @@ clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
 	/* Graphics_DebugQueueIntegrityCheck(); */
 }
 
+static void
+clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section)
+{
+	Core_clean_object(cur, dont_redraw_section, 3);
+}
+
 /*-------------------- Global Functions ----------------------------*/
+
+/* take note that we don't do any checks for valid pointers and such 
+ * this function is supposed to be a backbone to an interface function
+ * which itself does the parity checks.
+ */
+void
+Graphics_DestroyElement(INSTRUCTION_ENGINE *elem)
+{
+	RAW_ENGINE *tmp;
+	Rectan dst;
+
+	/* we destroy only the queue buffer because we want to make 
+	 * the emplacement of the element into a more comfortable 
+	 * place for the algorithm to avoid glitches.
+	 */
+
+	tmp = elem->current;
+	
+	/* we clean only the queue element and keep the raw engine buffer */
+	Core_clean_object(elem, 1, 2);
+
+	dst.x = tmp->dx;
+	dst.y = tmp->dy;
+
+	/* we repush the element to delete in the buffer */
+	Graphics_AddDrawingInstruction(tmp->layer, TDRAW_SDESTROY, &tmp->src, &dst, tmp->surface_ptr);
+}
 
 void
 Graphics_CoreDrawAll()
 {
 	Rectan isrc, idst;
 	INSTRUCTION_ENGINE *cur, *last = NULL;
+	u32 safety = 1000; /* safety decrementor to avoid death loop */
 		
 	if (Neuro_EBufIsEmpty(Graphics_GetQueueBuffer()))
 		return;	
@@ -247,6 +288,14 @@ Graphics_CoreDrawAll()
 	/* start the real drawing */
 	while (cur)
 	{	
+
+		if (safety <= 0)
+		{
+			Error_Print("To avoid a death loop, had to bail out of the instruction loop after 1000 loops");
+			break; /* safety break */
+		}
+		else
+			safety--;
 
 		if (check_integrity_on_draw)
 		{
@@ -259,7 +308,8 @@ Graphics_CoreDrawAll()
 		idst.x = cur->current->dx;
 		idst.y = cur->current->dy;
 
-		/* Debug_Val(0, "cur type %d\n", cur->current->type); */
+		if (debug_instruction_buffer)
+			Debug_Val(0, "%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer);
 		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
@@ -337,6 +387,11 @@ Graphics_CoreDrawAll()
 				cur = cur->next;
 
 				clean_object(tmp, 0);
+
+				/* we restart the loop completely since we need to draw
+				 * the volatile types first before drawing the rest..
+				 */
+				/* cur = Graphics_GetFirstElem(); */
 				
 				if (cur)
 					continue;
@@ -464,6 +519,9 @@ Graphics_SetAllToRedraw()
 
 		cur = cur->next;
 	}
+
+	if (debug_instruction_buffer)
+		Debug_Print("Just Set all the instructions to be redrawn");
 }
 
 /* Graphics_CoreCleanAll might have cleaned objects
