@@ -134,8 +134,8 @@ BoundFixChecker(Rectan *indep, Rectan *isrc, Rectan *idst)
 			 * The only thing to do is to change the isrc(Rectan)'s 
 			 * values.
 			 */
-			Neuro_VerticalBoundFix(indep, isrc, idst);
-			Neuro_HorizontalBoundFix(indep, isrc, idst);
+			Neuro_VerticalBoundCrop(indep, isrc, idst);
+			Neuro_HorizontalBoundCrop(indep, isrc, idst);
 			/* Info_Print("Fixed the coordinates/size of the drawing instruction."); */
 		}
 		break;

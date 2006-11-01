@@ -795,7 +795,7 @@ Neuro_BoundsCheck(Rectan *indep, Rectan *depen)
  * returned 2. No check is done, so watch out, only with case 2 please.
  */
 void
-Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
+Neuro_VerticalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst)
 {
 	/* 2 methods : 1 is using statements and the other is mathematical */
 
@@ -836,7 +836,7 @@ Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
  * This function only fixes the horizontal way of the image.
  */
 void
-Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst)
+Neuro_HorizontalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst)
 {
 	/* 2 methods : 1 is using statements and the other is mathematical */
 	

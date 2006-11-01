@@ -36,6 +36,7 @@
 #include <zlib.h>
 #endif /* USE_ZLIB */
 
+#include <neuro/graphics.h>
 #include <neuro/extlib.h>
 #include <neuro/other.h>
 

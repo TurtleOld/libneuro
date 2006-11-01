@@ -636,8 +636,8 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				idst.w = 0;
 				idst.h = 0;
 
-				Neuro_VerticalBoundFix(&indep_body, &isrc, &idst);
-				Neuro_HorizontalBoundFix(&indep_body, &isrc, &idst);
+				Neuro_VerticalBoundCrop(&indep_body, &isrc, &idst);
+				Neuro_HorizontalBoundCrop(&indep_body, &isrc, &idst);
 
 				Neuro_PushVolatileDraw(cur->current->layer, 
 						&isrc, &idst, cur->current->surface_ptr);

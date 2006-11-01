@@ -91,9 +91,9 @@ extern u8 Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen);
  */
 extern u8 Neuro_BoundsCheck(Rectan *indep, Rectan *depen);
 
-extern void Neuro_VerticalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst);
+extern void Neuro_VerticalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
-extern void Neuro_HorizontalBoundFix(Rectan *indep, Rectan *isrc, Rectan *idst);
+extern void Neuro_HorizontalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
 /* generate characters (source is chgen.c in src/misc TODO might need to have the Neuro_ prefix */
 extern void Uchar(int amount, unsigned char **buf);
