@@ -386,8 +386,8 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	 */
 	Neuro_RedrawScreen();
 
-	if (buf->type == TDRAW_STATIC || buf->type == TDRAW_DYNAMIC)
-		Graphics_SetAllToRedraw();
+	/* if (buf->type == TDRAW_STATIC || buf->type == TDRAW_DYNAMIC)
+		Graphics_SetAllToRedraw(); */
 
 	return computeRawEngine((RAW_ENGINE*)buf);
 }
