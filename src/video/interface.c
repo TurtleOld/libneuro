@@ -24,7 +24,7 @@
  */
 
 /*-------------------- Extern Headers Including --------------------*/
-
+#include <string.h> /* memcpy */
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <graphics.h>
@@ -58,7 +58,7 @@ Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
 }
 
 int
-Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurface)
+Neuro_FetchDraw(v_elem *eng, Rectan *psrc, u16 *px, u16 *py, v_object **osurface)
 {
 	if (!eng)
 		return 1;
@@ -70,13 +70,13 @@ Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurf
 		return 1;
 
 	if (psrc)
-		*psrc = &eng->current->src;
+		memcpy(psrc, &eng->current->src, sizeof(Rectan));
 
 	if (px)
-		*px = &eng->current->dx;
+		*px = eng->current->dx;
 
 	if (py)
-		*py = &eng->current->dy;
+		*py = eng->current->dy;
 
 	if (osurface)
 	{
@@ -85,6 +85,65 @@ Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurf
 		*osurface = eng->current->surface_ptr;
 	}
 	
+	return 0;
+}
+
+int
+Neuro_SetImgPos(v_elem *eng, u16 px, u16 py)
+{
+	Rectan dst;
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (Graphics_GetSafeDrawOp() == 0)
+		return 1;
+
+	if (!px || !py)
+		return 1;
+
+
+	
+	dst.x = eng->current->dx; 
+	dst.y = eng->current->dy;
+	dst.w = eng->current->src.w;
+	dst.h = eng->current->src.h;
+
+	Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
+
+	eng->current->dx = px;
+	eng->current->dy = py;	
+	
+	return 0;
+}
+
+int
+Neuro_SetImgSrcPos(v_elem *eng, Rectan *psrc)
+{
+	Rectan dst;
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (Graphics_GetSafeDrawOp() == 0)
+		return 1;
+
+	if (!psrc)
+		return 1;
+
+	dst.x = eng->current->dx;
+	dst.y = eng->current->dy;
+	dst.w = eng->current->src.w;
+	dst.h = eng->current->src.h;
+
+	Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
+
+	memcpy(&eng->current->src, psrc, sizeof(Rectan));
+
 	return 0;
 }
 
@@ -165,7 +224,7 @@ Neuro_FlushDraw(v_elem *eng)
 
 	if (eng->current->type == TDRAW_SDRAWN)
 	{
-		eng->current->type = TDRAW_SREDRAW;
+		eng->current->type = TDRAW_STATIC;
 
 		/* flag the algorithm to tell it something changed 
 		 * and an action needs to be taken.

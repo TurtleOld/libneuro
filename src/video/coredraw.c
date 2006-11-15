@@ -347,7 +347,6 @@ Graphics_CoreDrawAll()
 			{
 				/* nothing needed for this type */
 				/* Debug_Val(0, "already drawn\n"); */
-				/* Graphics_RedrawSection(cur); */
 			}
 			break;
 
@@ -359,16 +358,18 @@ Graphics_CoreDrawAll()
 				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
 						&idst);
 
-				/* then we redraw the stuff that could have been 
-				 * there and actually need to be visible(and are above
-				 * our element, ie layers).
-				 */
-				Graphics_RedrawSection(cur);
-
 				/* we cleanly redrawn the static element so we
 				 * set the element's flag to drawn
 				 */
 				cur->current->type = TDRAW_SDRAWN;
+
+				/* then we redraw the stuff that could have been 
+				 * there and actually need to be visible(and are above
+				 * our element, ie layers).
+				 *
+				 * broken for some reason
+				 */
+				/* Graphics_RedrawSection(cur); */
 
 				/* Debug_Val(0, "Redrawn a static element\n"); */
 			}

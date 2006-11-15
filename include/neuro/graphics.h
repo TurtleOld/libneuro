@@ -121,17 +121,26 @@ extern void Neuro_PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_obje
  */
 extern v_elem *Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface);
 
-/* this function is used to fetch the pointer of the source rectangle, 
- * destination (x and y) and the pointer to the surface so those can
- * be directly changed by the external application.
- * only osurface is output only, the rest returns the actual variable
- * address so the data can changed/read directly.
+/* outputs all the core informations about an image element
+ * in the buffer. 
+ *
+ * psrc the rectangle position of the source image.
+ * px the X axis position of the image on the screen.
+ * py the Y axis position of the image on the screen.
+ * osurface outputs the pointer of the image.
  *
  * returns 0 if all is ok and 1 on error
  */
-extern int Neuro_FetchDraw(v_elem *eng, Rectan **psrc, u16 **px, u16 **py, v_object **osurface);
+extern int Neuro_FetchDraw(v_elem *eng, Rectan *psrc, u16 *px, u16 *py, v_object **osurface);
 
-/* this function's sole purpose is the input a new surface for the
+/* TODO */
+extern int Neuro_SetImgPos(v_elem *eng, u16 px, u16 py);
+
+/* TODO */
+extern int Neuro_SetImgSrcPos(v_elem *eng, Rectan *psrc);
+
+
+/* this function's sole purpose is the input of a new surface for the
  * element. 
  */
 extern int Neuro_SetDraw(v_elem *eng, v_object *isurface);
