@@ -393,6 +393,13 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 }
 
 INSTRUCTION_ENGINE *
+Graphics_PushRaw(RAW_ENGINE *raw)
+{
+	return computeRawEngine((RAW_ENGINE*)raw);
+}
+
+
+INSTRUCTION_ENGINE *
 Graphics_GetFirstElem()
 {
 	return first_element;

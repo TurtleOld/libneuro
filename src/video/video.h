@@ -78,9 +78,6 @@ typedef struct debug_status
 	u32 duplicates; 
 }debug_status;
 
-
-extern INSTRUCTION_ENGINE *Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
-
 extern u8 Graphics_DrawIsPresent(v_elem *elem);
 
 extern int Graphics_RedrawSection(INSTRUCTION_ENGINE *indep);
@@ -110,6 +107,10 @@ extern void Graphics_SetFirstElem(INSTRUCTION_ENGINE *elem);
 
 extern INSTRUCTION_ENGINE *Graphics_GetLastElem();
 extern void Graphics_SetLastElem(INSTRUCTION_ENGINE *elem);
+
+extern INSTRUCTION_ENGINE *Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, void *isurface);
+
+extern INSTRUCTION_ENGINE *Graphics_PushRaw(RAW_ENGINE *raw);
 
 
 /* inside coredraw.c */

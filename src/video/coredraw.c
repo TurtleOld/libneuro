@@ -269,8 +269,10 @@ Graphics_DestroyElement(INSTRUCTION_ENGINE *elem)
 	dst.x = tmp->dx;
 	dst.y = tmp->dy;
 
-	/* we repush the element to delete in the buffer */
-	Graphics_AddDrawingInstruction(tmp->layer, TDRAW_SDESTROY, &tmp->src, &dst, tmp->surface_ptr);
+	tmp->type = TDRAW_SDESTROY;
+
+	/* we put the raw buffer back into the queue */
+	Graphics_PushRaw(tmp);
 }
 
 void
@@ -392,7 +394,7 @@ Graphics_CoreDrawAll()
 				/* we restart the loop completely since we need to draw
 				 * the volatile types first before drawing the rest..
 				 */
-				/* cur = Graphics_GetFirstElem(); */
+				cur = Graphics_GetFirstElem();
 				
 				if (cur)
 					continue;
