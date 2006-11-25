@@ -275,14 +275,111 @@ extern void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj
  */
 extern void Neuro_CleanEBuf(EBUF **eng);
 
-/* clean a single element 
- * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
- * Neuro_CleanEBuf(3)
+/** Neuro_SCleanEBuf
+ * @sdescri
+ * cleans/frees one element.
+ *
+ * @description
+ * This function's purpose is to clean elements in a similar 
+ * manner as Neuro_CleanEBuf(3) but it only 
+ * cleans one element. Take note that the callback
+ * which can be set using the function Neuro_SetcallbEBuf(3) is also called with this function.
+ *
+ * @param[in]
+ * an EBUF element.
+ *
+ * @param[in]
+ * the pointer to an element contained in the EBUF buffer which needs to be cleaned.
+ * 
+ * @examples
+ *
+ * typedef struct ST \n
+ * { \n
+ * 	char *someString; \n
+ * }ST; \n \n \n
+ *
+ * static EBUF *myeng; \n \n 
+ *
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng); \n \n
+ *
+ * ... \n \n
+ *
+ * ST *buf; \n \n
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ *
+ * buf = Neuro_GetCurEBuf(myeng); \n \n
+ *
+ * buf->someString = "hello"; \n \n
+ *
+ * -- lets say we no longer need the variable -- \n
+ * -- we can clean it using this function -- \n
+ * Neuro_SCleanEBuf(myeng, buf); \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng); \n \n
+ *
+ * @related
+ * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), Neuro_CleanEBuf(3), Neuro_GiveEBuf(3), Neuro_GiveCurEBuf(3)
  *
  */
 extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
 
-/* give the count of elements in the array 
+/** Neuro_GiveEBufCount
+ *
+ * @sdescri
+ * give the count of elements in the array 
+ *
+ * @description
+ * This function returns the number of elements contained
+ * in the core buffer. Each elements in the buffer are ordered
+ * in the order they were "pushed" into the buffer thus this
+ * value can be used to loop the buffer for all the elements
+ * one after the other. NOTE This function returns 0 when theres only
+ * one element and it can't return negative values so it cannot 
+ * be used to know if the buffer is empty or not! Use the function
+ * Neuro_EBufIsEmpty(3) to check if its empty or not.
+ *
+ * @param[in]
+ * an EBUF element.
+ *
+ * @returnval
+ * the amount of elements in the EBUF element.
+ *
+ * @examples
+ *
+ * -- in this example, I ommited the initial creation of the buffer, -- \n
+ * -- the final cleaning of the buffer, -- \n
+ * -- the cleaning callback function, -- \n
+ * -- the allocation of the buffer and -- \n
+ * -- the struct ST and its typedef. -- \n
+ * -- SEE the man page for the function Neuro_AllocEBuf(3) for those -- \n
+ * -- and SEE the man page for Neuro_SetcallbEBuf(3) for the callback -- \n \n
+ *
+ * ST *buf; \n
+ * unsigned int total = 0; \n \n
+ *
+ * -- we check if the buffer is empty -- \n
+ * if (Neuro_EBufIsEmpty(myeng)) \n
+ * 	return; \n \n
+ *
+ * -- we get the total number of elements in myeng -- \n
+ * -- and also increment it by one because we will -- \n
+ * -- loop the elements from finish to start -- \n
+ * total = Neuro_GiveEBufCount(myeng) + 1; \n \n
+ *
+ * while (total-- > 0) \n
+ * { \n
+ * 	buf = Neuro_GiveEBuf(myeng, total); \n \n
+ *
+ * 	... \n \n
+ *
+ * } \n
+ *
+ * @related
  * Neuro_AllocEBuf(3), Neuro_GiveEBuf(3),
  * Neuro_GiveCurEBuf(3), Neuro_EBufIsEmpty(3)
  */
