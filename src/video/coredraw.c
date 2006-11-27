@@ -325,10 +325,13 @@ Graphics_CoreDrawAll()
 
 				*/
 
-				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
-						&idst);			
+
+				/* Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
+						&idst);*/
 				
 				cur->current->type = TDRAW_SDRAWN;
+
+				Graphics_RedrawSection(cur);
 
 				/* Debug_Val(0, "drawn static\n"); */
 
@@ -554,11 +557,11 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 	while (cur)
 	{
 		
-		if (cur == indep)
+		/*if (cur == indep)
 		{
 			cur = cur->next;
 			continue;
-		}
+		}*/
 		
 		if (!cur->current)
 		{
@@ -705,7 +708,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
 						&hack, cur->current->surface_ptr);
 
-				/* Debug_Val(0, "we have a case 3 situation!\n"); */
+				/*Debug_Val(0, "we have a case 3 situation!\n");*/
 
 				if (debug_track_fonts)
 				{
@@ -812,5 +815,37 @@ Graphics_CoreCleanDoneDynamics()
 		
 		cur = cur->next;
 	}
+}
+
+void
+Graphics_FreeVObject(v_object *source)
+{
+	INSTRUCTION_ENGINE *cur, *tmp;
+
+	/* this function was made to avoid the painter's algorithm
+	 * to have an element contain an image surface that was
+	 * freed before it was processed resulting in a segmentation
+	 * fault.
+	 */
+
+	cur = Graphics_GetFirstElem();
+
+	while (cur)
+	{
+		tmp = cur->next;
+
+		if (cur->current->surface_ptr == source)
+		{
+			/*if (cur->current->type == TDRAW_SDRAWN)
+				Neuro_DestroyDraw(cur);
+			else*/
+				Core_clean_object(cur, 0, 3);
+		}
+
+		cur = tmp;
+	}
+
+
+	Lib_FreeVobject(source);
 }
 

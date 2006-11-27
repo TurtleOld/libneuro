@@ -45,6 +45,8 @@
 #include <graphics.h>
 #include <ebuf.h>
 
+#include "../video/video.h" /* for Graphics_FreeVObject() */
+
 u8
 Chk_bound(Rectan *rec, i16 x, i16 y, i16 w, i16 h)
 {
@@ -875,7 +877,7 @@ Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *d
 void
 Neuro_FreeVObject(v_object *source)
 {
-	Lib_FreeVobject(source);
+	Graphics_FreeVObject(source);
 }
 
 void

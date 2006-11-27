@@ -74,8 +74,6 @@
 
 /*-------------------- Static Variables ----------------------------*/
 
-static v_object *background; /* the background image */
-
 static INSTRUCTION_ENGINE *first_element;
 static INSTRUCTION_ENGINE *last_element;
 
@@ -86,7 +84,7 @@ static EBUF *Queue;
 static Rectan screenSize;
 
 /* a rectangle meant to test the bound fix algorithm */
-static Rectan test_BoundFix;
+/* static Rectan test_BoundFix; */
 
 /*-------------------- Static Prototypes ---------------------------*/
 
@@ -387,7 +385,7 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	Neuro_RedrawScreen();
 
 	/* if (buf->type == TDRAW_STATIC || buf->type == TDRAW_DYNAMIC)
-		Graphics_SetAllToRedraw(); */
+		Graphics_SetAllToRedraw();*/
 
 	return computeRawEngine((RAW_ENGINE*)buf);
 }

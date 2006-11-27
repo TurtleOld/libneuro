@@ -78,9 +78,8 @@ typedef struct debug_status
 	u32 duplicates; 
 }debug_status;
 
+/* inside graphics.c */
 extern u8 Graphics_DrawIsPresent(v_elem *elem);
-
-extern int Graphics_RedrawSection(INSTRUCTION_ENGINE *indep);
 
 extern u8  Graphics_GetSafeDrawOp();
 
@@ -114,26 +113,31 @@ extern INSTRUCTION_ENGINE *Graphics_PushRaw(RAW_ENGINE *raw);
 
 
 /* inside coredraw.c */
-extern void Graphics_CoreDrawAll(); /* old draw_objects */
+extern int Graphics_RedrawSection(INSTRUCTION_ENGINE *indep);
 
-extern int Graphics_RedrawSection(); /* old redraw_erased_for_object */
+extern void Graphics_CoreDrawAll(); /* new for draw_objects */
+
+extern int Graphics_RedrawSection(); /* new for redraw_erased_for_object */
 
 extern void Graphics_CoreCleanAll();
 
-extern void Graphics_CoreCleanDoneDynamics(); /* old clean_drawn_objects */
+extern void Graphics_CoreCleanDoneDynamics(); /* new for clean_drawn_objects */
 
 extern void Graphics_SetAllToRedraw();
 
-/* inside debug.c */
-extern void Graphics_DebugPrintQueue(); /* old print_queue */
-
-extern void Graphics_DebugBufferQueue(EBUF *src); /* old buffer_queue */
-
-extern void Graphics_DebugPrintMissing(EBUF *src); /* old print_missing */
-
-extern void Graphics_DebugQueueIntegrityCheck(); /* old Queue_Integrity_Check */
-
 extern void Graphics_DestroyElement(INSTRUCTION_ENGINE *elem);
+
+extern void Graphics_FreeVObject(v_object *source);
+
+
+/* inside debug.c */
+extern void Graphics_DebugPrintQueue(); /* new for print_queue */
+
+extern void Graphics_DebugBufferQueue(EBUF *src); /* new for buffer_queue */
+
+extern void Graphics_DebugPrintMissing(EBUF *src); /* new for print_missing */
+
+extern void Graphics_DebugQueueIntegrityCheck(); /* new for Queue_Integrity_Check */
 
 
 
