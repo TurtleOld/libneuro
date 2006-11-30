@@ -326,12 +326,12 @@ Graphics_CoreDrawAll()
 				*/
 
 
-				/* Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
-						&idst);*/
+				Lib_BlitObject(cur->current->surface_ptr, &isrc, Neuro_GetScreenBuffer(), 
+						&idst);
 				
 				cur->current->type = TDRAW_SDRAWN;
 
-				Graphics_RedrawSection(cur);
+				/* Graphics_RedrawSection(cur); */
 
 				/* Debug_Val(0, "drawn static\n"); */
 
@@ -374,7 +374,7 @@ Graphics_CoreDrawAll()
 				 *
 				 * broken for some reason
 				 */
-				/* Graphics_RedrawSection(cur); */
+				Graphics_RedrawSection(cur);
 
 				/* Debug_Val(0, "Redrawn a static element\n"); */
 			}
@@ -557,11 +557,11 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 	while (cur)
 	{
 		
-		/*if (cur == indep)
+		if (cur == indep)
 		{
 			cur = cur->next;
 			continue;
-		}*/
+		}
 		
 		if (!cur->current)
 		{
