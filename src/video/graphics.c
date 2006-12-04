@@ -321,7 +321,8 @@ Graphics_Poll()
 
 			if (tmp)
 			{
-				if (tmp->current->type == TDRAW_VOLATILE)
+				if (tmp->current->type == TDRAW_VOLATILE 
+						|| tmp->current->type == TDRAW_SDESTROY)
 					draw_this_cycle = 1;
 			}
 		}
