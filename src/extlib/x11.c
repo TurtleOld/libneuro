@@ -57,8 +57,8 @@ typedef struct V_OBJECT
 	XGCValues wValue;
 	
 	XImage *raw_data;
-	Pixmap data;
-	Pixmap shapemask;
+	Pixmap data; /*The set of pixels for the image*/
+	Pixmap shapemask; /*The bitmask for transparency*/
 	XpmAttributes attrib;
 	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
 	to flush the pixels with the actual image on the server*/
@@ -507,7 +507,132 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 void
 Lib_SetColorKey(v_object *vobj, u32 key)
 {
-	color_key = key;
+	i32 width;
+	i32 height;
+	u32 x;
+	u32 y;
+	V_OBJECT *buf;
+	XImage *mask_data;
+	
+	buf = (V_OBJECT*)vobj;
+
+	if (!buf)
+		return;
+
+	/* old hack to apply a new transparency color key to 
+	 * the source bitmap.c
+	 * Will soon become obsolete.
+	 */
+	/* color_key = key; */
+
+	Neuro_GiveImageSize(vobj, &width, &height);
+
+	if (buf->shapemask)
+	{
+		/* we fetch the pixel data of the existing mask */
+		mask_data = XGetImage(dmain->display, buf->shapemask, 0, 0, width, height, AllPlanes, ZPixmap);	
+	}
+	else
+	{
+		/* we create a new mask pixel data for the image */
+		mask_data = CreateMask(vobj, width, height);
+	}
+
+	if (!mask_data)
+	{
+		Error_Print("the variable mask_data is empty");
+		return;
+	}
+
+	/* consistency check */
+	if (mask_data->width != width)
+	{
+		Error_Print("mask_data has a different width than the image!");
+		Debug_Val(0, "mask_data width %d image width %d\n", mask_data->width, width);
+
+		XDestroyImage(mask_data);
+
+		return;
+	}
+
+	if (mask_data->height != height)
+	{
+		Error_Print("mask_data has a different height than the image!");
+		Debug_Val(0, "mask_data height %d image height %d\n", mask_data->height, height);
+
+		XDestroyImage(mask_data);
+
+		return;
+	}
+
+	/* we populate the mask with transparency info */
+	
+	/*
+	for(y = height; y > 0; y--)
+	{
+		for(x = width; x > 0; x--)
+		{
+			if(Lib_GetPixel(vobj, x, y) == key)
+			{
+				XPutPixel(mask_data, x, y, 0);
+			}
+			else
+			{
+				XPutPixel(mask_data, x, y, 1);
+			}
+		}
+	}
+	*/
+
+	y = height;
+	while (y-- > 0)
+	{
+		x = width;
+		while (x-- > 0)
+		{
+			if(Lib_GetPixel(vobj, x, y) == key)
+			{
+				XPutPixel(mask_data, x, y, 0);
+			}
+			else
+			{
+				XPutPixel(mask_data, x, y, 1);
+			}
+		}
+	}
+	
+	
+	if(!buf->shapemask)
+	{
+		CreatePixmap(mask_data, *buf->cwin, &buf->shapemask);
+	}
+	else
+	{ /*If the mask already exists*/
+		GC gc = NULL;
+		XGCValues values;
+		int _err = 0;
+
+		/* in case we have a XYBitmap */
+		values.foreground = 1;
+		values.background = 0;
+
+		gc = XCreateGC(dmain->display, buf->shapemask, GCForeground | GCBackground, &values);
+	
+		_err = XPutImage(dmain->display, buf->shapemask, gc, mask_data, 0, 0, 
+			 0, 0, mask_data->width, mask_data->height);
+
+	
+		if (_err != 0)
+		{
+			Debug_Val(0, "error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+		}
+
+		if (gc)
+			XFreeGC(dmain->display, gc);
+	}
+
+	if (mask_data)
+		XDestroyImage(mask_data);
 }
 
 void
@@ -1262,6 +1387,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			}
 		}	
 
+		Lib_UnlockVObject(output);
 
 		if (!space_char)
 		{
@@ -1303,7 +1429,6 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 		*x = *x + face->glyph->metrics.horiAdvance / 64;
 		/* *y = *y + face->glyph->metrics.vertAdvance / 64; */
 
-		Lib_UnlockVObject(output);
 	}
 
 	return output;
