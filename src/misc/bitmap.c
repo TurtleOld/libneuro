@@ -45,6 +45,8 @@ typedef FILE nFILE;
 #include <ebuf.h>
 #include <other.h>
 
+#include <graphics.h> /* Neuro_PutPixel */
+
 
 typedef struct BITMAP_HEADER
 {
@@ -382,6 +384,272 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 	found = 0;
 
 }
+
+/* input the bits per pixel of the image
+ * input a 1 byte of data to process 
+ */
+static void
+process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF *bcolors, i32 x, i32 y, int *aux, char **buf)
+{
+	
+	/* we will call functions depending on the bpp of the image */
+	switch (bmap->infoheader.bits)
+	{
+		case 1:
+		{
+			/* will do a loop to get each 8 pixels from the data */
+			
+			/* this is pretty much for little endian 
+			 * the minimum data size we can have for a certain width is
+			 * 32 bits (4 bytes increments). Those 32 bits will be able 
+			 * to hold up to 32 pixels. In case the width is higher than 
+			 * 32 pixels, it will put 32 bits until the whole width
+			 * can be fulfilled.
+			 */
+			/* we will need to have the width value because we will need
+			 * to know how many bits we have to read from 32 bits (4 bytes). 
+			 */
+			/* aux will keep how many 32 bits still need to be done in a 
+			 * certain width 
+			 */
+			u8 temp;
+			/* double calc = 0; */
+			
+			/* u8 r, g, b; */
+			
+			const u8 values[8] = {
+				0x80,
+				0x40,
+				0x20,
+				0x10,
+				0x08,
+				0x04,
+				0x02,
+				0x01
+			};
+			u32 i = 0;
+			u32 max = 0;
+			
+			if (*buf == NULL)
+			{
+				*buf = calloc(1, sizeof(char));
+				**buf = 0;
+				*aux = 0;
+			}
+
+			/* set up aux for remaining pixels */
+			if (*aux == 0)
+				*aux = bmap->infoheader.width;
+
+			/* set up the number of pixels we need to process in this cycle */
+			if (*aux > 8)
+			{
+				max = 8;
+				*aux = *aux - 8;
+			}
+			else
+			{
+				max = *aux;
+				*aux = 0;
+			}
+			
+			temp = *data;
+
+			while (i < max)
+			{
+				BITMAP_COLOR *cbuf = NULL;
+
+				if (IsLittleEndian())
+					temp = *data & values[i];
+				else
+					temp = *data & values[7 - i];
+				
+
+				if (temp)
+					temp = 1;	
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+
+				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+
+				i++;
+			}
+		}
+		break;
+
+		case 4:
+		{
+			/* will do a loop to get each 2 pixels from the data */
+			u8 temp;
+			/* double calc = 0; */
+			
+			/* u8 r, g, b; */
+			
+			const u8 values[2] = {
+				0xF0,
+				0x0F,
+			};
+			u32 i = 0;
+			u32 max = 0;
+			
+			if (*buf == NULL)
+			{
+				*buf = calloc(1, sizeof(char));
+				**buf = 0;
+				*aux = 0;
+			}
+
+			/* set up aux for remaining pixels */
+			if (*aux == 0)
+				*aux = bmap->infoheader.width;
+
+			/* set up the number of pixels we need to process in this cycle */
+			if (*aux > 2)
+			{
+				max = 2;
+				*aux = *aux - 2;
+			}
+			else
+			{
+				max = *aux;
+				*aux = 0;
+			}
+			
+			temp = *data;
+
+			while (i < max)
+			{
+				BITMAP_COLOR *cbuf = NULL;
+				
+				if (IsLittleEndian())
+				{
+					temp = *data & values[i];
+					
+					if (temp > values[1])
+						temp >>= 4;	
+				}
+				else
+				{
+					temp = *data & values[1 - i];
+				
+					if (temp > values[0])
+						temp <<= 4;		
+				}
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+
+				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				
+				i++;
+			}
+
+		}
+		break;
+
+		case 8:
+		{
+			/* will get the single pixel from the data */
+			u8 temp;
+			/* double calc = 0; */
+			
+			/* u8 r, g, b; */
+			
+			u32 i = 0;
+			u32 max = 0;
+			
+			if (*buf == NULL)
+			{
+				*buf = calloc(1, sizeof(char));
+				**buf = 0;
+				*aux = 0;
+			}
+
+			/* set up aux for remaining pixels */
+			if (*aux == 0)
+				*aux = bmap->infoheader.width;
+
+			/* set up the number of pixels we need to process in this cycle */
+			if (*aux > 1)
+			{
+				max = 1;
+				*aux = *aux - 1;
+			}
+			else
+			{
+				max = *aux;
+				*aux = 0;
+			}
+			
+			temp = *data;
+
+			while (i < max)
+			{
+				BITMAP_COLOR *cbuf = NULL;
+				temp = *data;
+				
+
+				cbuf = Neuro_GiveEBuf(bcolors, temp);
+				
+				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+
+				
+				i++;
+			}
+
+		}
+		break;
+
+		case 16:
+		{
+			/* we do not support 16 bit because I think they  
+			 * use 24 bit for those. we'll see through use.
+			 * if not, I really think this depth is pointless...
+			 */
+		}
+		break;
+
+		case 24:
+		{
+			/* will need to gather the data for 2 other bytes to get a
+			 * single pixel. We will use the auxiliary variable to keep
+			 * track of where we are at in the gathering.
+			 */
+
+			if (!*buf)
+			{
+				*buf = calloc(3, sizeof(u8));
+				*aux = 0;
+			}
+	
+			(*buf)[*aux] = *data;
+			*aux = *aux + 1;
+			if (*aux >= 3)
+			{
+				*aux = 0;
+
+				Neuro_PutPixel(image, x, y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
+
+			}
+		}
+		break;
+
+		case 32:
+		{
+			/* we do not support 32 bit because it is Very uncommon if it 
+			 * actually exist. Pretty much the same as 16 bpp.
+			 */
+		}
+		break;
+
+		default:
+		{
+			/* an error occured */
+		}
+		break;
+
+	}
+}
+
 
 /* input the bits per pixel of the image
  * input a 1 byte of data to process 
@@ -825,6 +1093,184 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	free(bufe);
 }
 
+static v_object *
+processFD_BMP(nFILE *f_bitmap)
+{
+	/* major (buffers) */
+	EBUF *bmap_colors = NULL; /* the colors */
+	u8 *buf = NULL; /* the buffer that will contain the content of the file */
+	
+	/* minor (mostly pointers and temporary variables) */
+	register i32 i = 0, t = 0; /* incremental variable */
+	
+	u32 psize = 0; /* the full size of the pixels data */
+	u8 *palette = NULL; /* the pointer to the palette if theres one */
+	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
+	int aux_var = 0; /* auxiliary variable that can be used by external functions */
+	char *aux_buf = NULL; /* same as aux_var but a buffer */
+	double msize = 0;
+	double calc = 0;
+	double tmp = 0;
+	u32 wmult = 0;
+	double pixellen = 0;
+	u32 increm = 0;
+	u8 DATA;
+	v_object *output; /* the image into which we will load the bitmap */
+	
+	if (f_bitmap == NULL)
+		return NULL;
+	
+	bmap = parse_bitmap_header(f_bitmap);
+	
+	/* TODO TODO XXX check here if the bitmap is valid or not
+	 * first check for the BM word
+	 * then we check for the size of the file in header and size
+	 * we got when reading the file
+	 */
+	{
+		
+	}
+
+	/* if it is valid, we create the buffers */
+	Neuro_CreateEBuf(&bmap_colors);
+	Neuro_SetcallbEBuf(bmap_colors, &clean_bmap_color);
+	
+	
+	/* print_bitmap_infos(bmap); */
+	
+	/* process the bitmap(load it in memory) */
+	i = 0;
+	psize = bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
+	psize = psize - (bmap->infoheader.ncolors * 4);
+	/* printf("data size %d\n", psize); */
+
+	if (bmap->infoheader.ncolors)
+	{
+		process_palette(f_bitmap, bmap, bmap_colors);
+	}
+
+	/* we create the v_object 
+	 *
+	 * will need to put better values for the masks to support SDL.
+	 */
+	output = Neuro_CreateVObject(0, bmap->infoheader.width, bmap->infoheader.height, bmap->infoheader.bits, 0, 0, 0, 0);
+
+	if (output == NULL)
+		return NULL;
+
+	/* semi static values to skip bytes that form 32 bit chunks in the data */
+
+	pixellen = (8 / (double)bmap->infoheader.bits);
+	msize = pixellen * 4;
+
+	/* we calculate the number of bits there is per rows 
+	 * this is mainly so we can know how much "alignment"
+	 * bytes there is (which need to be skipped)
+	 */
+	{
+		wmult = (u32)bmap->infoheader.bits / 8;
+
+		if (wmult == 0)
+			wmult++;
+
+		wmult = wmult * bmap->infoheader.width;
+	}
+
+	increm = (u32)pixellen;
+
+	if (increm == 0)
+		increm++;
+
+	t = (u32)(bmap->infoheader.width / msize);
+	tmp = msize * t;
+	tmp = (double)bmap->infoheader.width - tmp;
+	tmp = tmp - 0.000001; /* to avoid bugs */
+
+	t = 0;
+#if USE_ZLIB
+	gzseek(f_bitmap, bmap->header.offset, SEEK_SET);
+#else /* NOT USE_ZLIB */
+	fseek(f_bitmap, bmap->header.offset, SEEK_SET);
+#endif /* NOT USE_ZLIB */
+
+	Lib_LockVObject(output);
+
+	while (i < psize)
+	{			
+		if (tmp > 0)
+		{
+			/* skip bytes that are there for filling purpose 
+			 * int the bitmap. (the data is purposely filled
+			 * with 0 bits so the data is 32bits aligned)
+			 */
+			if (t >= wmult)
+			{
+				calc = tmp / pixellen;
+				t = (u32)calc;
+				if (t < calc)
+				{
+					t++;
+				}
+				t = (4 - t);
+				i += t;
+
+#if USE_ZLIB
+				gzseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
+#else /* NOT USE_ZLIB */
+				fseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
+#endif /* NOT USE_ZLIB */
+				
+				/*
+				printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
+						t,
+						wmult, 
+						bmap->infoheader.width, 
+						tmp, 
+						pixellen, calc);
+				*/
+				
+				t = 0;
+			}
+			
+			t += increm;
+
+			if (i >= psize)
+				break;
+		}
+
+		
+		fpdata8(f_bitmap, &DATA);
+
+		process_bitmap2(bmap, output, palette, &DATA, 
+				bmap_colors, i, t, &aux_var, &aux_buf);
+
+		/* printf("i %d psize %d\n", i, psize); */
+		/* Debug_Val(0, "current coord : %d,%d\n", i, t); */
+		i++;
+	}
+
+	Lib_UnlockVObject(output);
+	
+	if (bmap)
+		free(bmap);
+	if (buf)
+		free(buf);
+	if (aux_buf)
+		free(aux_buf);
+	
+	Neuro_CleanEBuf(&bmap_colors);
+
+#if USE_ZLIB
+	if (f_bitmap)
+		gzclose(f_bitmap);
+#else /* NOT USE_ZLIB */
+	if (f_bitmap)
+		fclose(f_bitmap);
+#endif /* NOT USE_ZLIB */
+
+	return output;
+}
+
 static void
 processFD_BMP2XPM(nFILE *f_bitmap, EBUF **output_pixmap)
 {
@@ -1036,5 +1482,19 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 #endif /* NOT USE_ZLIB */
 	
 	processFD_BMP2XPM(f_bitmap, output_pixmap);
+}
+
+v_object *
+readBitmapFile(const char *bitmap)
+{
+	nFILE *f_bitmap;
+
+#if USE_ZLIB
+	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
+#else /* NOT USE_ZLIB */
+	f_bitmap = fopen(bitmap, "r");
+#endif /* NOT USE_ZLIB */
+	
+	return processFD_BMP(f_bitmap);
 }
 

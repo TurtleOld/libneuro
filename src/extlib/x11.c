@@ -789,6 +789,10 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 void
 Lib_LoadBMP(const char *path, v_object **img)
 {
+
+	*img = readBitmapFile(path);
+
+#if temp
 	EBUF *temp;
 	V_OBJECT *tmp;
 	char **buffer;
@@ -867,6 +871,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);
 	
 	Neuro_CleanEBuf(&temp);
+#endif /* temp */
 	
 	return; /* int needed */
 }
@@ -965,7 +970,10 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 	tmp2->raw_data = XCreateImage(dmain->display, 
 			XDefaultVisual(dmain->display, dmain->screen), 
 			DefaultDepth(dmain->display, dmain->screen), 
-			ZPixmap, 0, NULL, width, height, depth, 0);
+			ZPixmap, 0, NULL, width, height, DefaultDepth(dmain->display, dmain->screen), 0);
+
+	if (tmp2->raw_data == NULL)
+		return NULL;
 
 	tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
 

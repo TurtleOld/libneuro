@@ -7,7 +7,8 @@ lib_sources = 	\
 		coredraw.c \
 		graphics.c \
 		debug.c \
-		interface.c 
+		interface.c  \
+		pixels.c
 
 libvideo_la_SOURCES = $(lib_sources)
 
