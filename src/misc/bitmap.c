@@ -389,7 +389,7 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
  * input a 1 byte of data to process 
  */
 static void
-process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF *bcolors, i32 x, i32 y, int *aux, char **buf)
+process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF *bcolors, u32 *x, u32 *y, int *aux, char **buf)
 {
 	
 	/* we will call functions depending on the bpp of the image */
@@ -470,9 +470,16 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
+				*x = *x + 1;
 				i++;
+			}
+
+			if (*x > bmap->infoheader.width - 1)
+			{
+				*x = 0;
+				*y = *y + 1;
 			}
 		}
 		break;
@@ -538,9 +545,16 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
-				
+				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+		
+				*x = *x + 1;
 				i++;
+			}
+
+			if (*x > bmap->infoheader.width - 1)
+			{
+				*x = 0;
+				*y = *y + 1;
 			}
 
 		}
@@ -590,10 +604,16 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 				
-				Neuro_PutPixel(image, x, y + i, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
-				
+				*x = *x + 1;
 				i++;
+			}
+
+			if (*x > bmap->infoheader.width - 1)
+			{
+				*x = 0;
+				*y = *y + 1;
 			}
 
 		}
@@ -623,12 +643,20 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 	
 			(*buf)[*aux] = *data;
 			*aux = *aux + 1;
+
 			if (*aux >= 3)
 			{
 				*aux = 0;
 
-				Neuro_PutPixel(image, x, y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
+				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
 
+				*x = *x + 1;
+			}
+
+			if (*x > bmap->infoheader.width - 1)
+			{
+				*x = 0;
+				*y = *y + 1;
 			}
 		}
 		break;
@@ -1101,7 +1129,8 @@ processFD_BMP(nFILE *f_bitmap)
 	u8 *buf = NULL; /* the buffer that will contain the content of the file */
 	
 	/* minor (mostly pointers and temporary variables) */
-	register i32 i = 0, t = 0; /* incremental variable */
+	register i32 i = 0; /* incremental variable */
+	u32 skip_i = 0, x = 0, y = 0;
 	
 	u32 psize = 0; /* the full size of the pixels data */
 	u8 *palette = NULL; /* the pointer to the palette if theres one */
@@ -1163,7 +1192,7 @@ processFD_BMP(nFILE *f_bitmap)
 	pixellen = (8 / (double)bmap->infoheader.bits);
 	msize = pixellen * 4;
 
-	/* we calculate the number of bits there is per rows 
+	/* we calculate the number of bytes there is per rows 
 	 * this is mainly so we can know how much "alignment"
 	 * bytes there is (which need to be skipped)
 	 */
@@ -1181,12 +1210,12 @@ processFD_BMP(nFILE *f_bitmap)
 	if (increm == 0)
 		increm++;
 
-	t = (u32)(bmap->infoheader.width / msize);
-	tmp = msize * t;
+	x = (u32)(bmap->infoheader.width / msize);
+	tmp = msize * x;
 	tmp = (double)bmap->infoheader.width - tmp;
 	tmp = tmp - 0.000001; /* to avoid bugs */
 
-	t = 0;
+	x = 0;
 #if USE_ZLIB
 	gzseek(f_bitmap, bmap->header.offset, SEEK_SET);
 #else /* NOT USE_ZLIB */
@@ -1195,24 +1224,26 @@ processFD_BMP(nFILE *f_bitmap)
 
 	Lib_LockVObject(output);
 
+	/* Debug_Val(0, "Image bits depth %d  tmp %f\n", bmap->infoheader.bits, tmp); */
+
 	while (i < psize)
 	{			
 		if (tmp > 0)
 		{
-			/* skip bytes that are there for filling purpose 
-			 * int the bitmap. (the data is purposely filled
+			/* skip bytes that are inside the bitmap for 
+			 * filling purpose. (the data is purposely filled
 			 * with 0 bits so the data is 32bits aligned)
 			 */
-			if (t >= wmult)
+			if (skip_i >= wmult)
 			{
 				calc = tmp / pixellen;
-				t = (u32)calc;
-				if (t < calc)
+				skip_i = (u32)calc;
+				if (skip_i < calc)
 				{
-					t++;
+					skip_i++;
 				}
-				t = (4 - t);
-				i += t;
+				skip_i = (4 - skip_i);
+				i += skip_i;
 
 #if USE_ZLIB
 				gzseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
@@ -1222,17 +1253,17 @@ processFD_BMP(nFILE *f_bitmap)
 				
 				/*
 				printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
-						t,
+						skip_i,
 						wmult, 
 						bmap->infoheader.width, 
 						tmp, 
 						pixellen, calc);
 				*/
 				
-				t = 0;
+				skip_i = 0;
 			}
 			
-			t += increm;
+			skip_i += increm;
 
 			if (i >= psize)
 				break;
@@ -1242,10 +1273,37 @@ processFD_BMP(nFILE *f_bitmap)
 		fpdata8(f_bitmap, &DATA);
 
 		process_bitmap2(bmap, output, palette, &DATA, 
-				bmap_colors, i, t, &aux_var, &aux_buf);
+				bmap_colors, &x, &y, &aux_var, &aux_buf);
+		
+
+		/* process_bitmap2(bmap, output, palette, &DATA, 
+				bmap_colors, x, y, &aux_var, &aux_buf); */
+
 
 		/* printf("i %d psize %d\n", i, psize); */
-		/* Debug_Val(0, "current coord : %d,%d\n", i, t); */
+		/* Debug_Val(0, "current coord : %d,%d   %d\n", x, y, wmult); */
+		/*
+		if (tmp <= 0)
+		{
+			static u8 t = 2;
+
+			if (t == 0 || x > bmap->infoheader.width - 1)
+			{
+				if (x < bmap->infoheader.width - 1)
+					x++;
+				else
+				{
+					x = 0;
+					y++;
+				}
+
+				t = 2;
+			}
+			else
+				t--;
+		}
+		*/
+
 		i++;
 	}
 
