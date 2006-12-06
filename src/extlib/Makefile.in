@@ -197,9 +197,19 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 EXTRA_DIST = alpha.inc
 noinst_LTLIBRARIES = libextlib.la
+
+#lib_LTLIBRARIES = libneuro_video_none.drv.la libneuro_video_x11.drv.la libneuro_video_sdl.drv.la
 AM_CFLAGS = @NEUROFLAGS@
 @USE_SDL_FALSE@@USE_X11_FALSE@lib_sources = none.c
 @USE_SDL_FALSE@@USE_X11_TRUE@lib_sources = x11.c
+
+#libneuro_video_none_drv_la_SOURCES = none.c
+#libneuro_video_x11_drv_la_SOURCES = x11.c
+#libneuro_video_sdl_drv_la_SOURCES = sdl.c
+#
+#libneuro_video_none_drv_la_LDFLAGS = @NONE_LDFLAGS@
+#libneuro_video_x11_drv_la_LDFLAGS = @X11_LDFLAGS@
+#libneuro_video_sdl_drv_la_LDFLAGS = @SDL_LDFLAGS@
 @USE_SDL_TRUE@lib_sources = sdl.c
 libextlib_la_SOURCES = $(lib_sources) 
 all: all-am

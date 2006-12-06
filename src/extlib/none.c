@@ -65,7 +65,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 }
 
 void
-Lib_SetAlpha(v_object *vobj, u32 alpha)
+Lib_SetAlpha(v_object *vobj, u8 alpha)
 {
 	
 }

@@ -36,9 +36,11 @@
 #include <zlib.h>
 #endif /* USE_ZLIB */
 
-#include <neuro/graphics.h>
-#include <neuro/extlib.h>
-#include <neuro/other.h>
+#define NATIVE_BMP 1
+
+#include <graphics.h>
+#include <extlib.h>
+#include <other.h>
 
 /* freetype includes */
 #include <ft2build.h>
@@ -150,6 +152,13 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 #endif /* __BYTE_ORDER == __PDP_ENDIAN */
 		
 		/*temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);*/
+
+		Debug_Val(0, "MASKS 0x%x 0x%x 0x%x 0x%x\n", 
+				temp1->format->Rmask,
+				temp1->format->Gmask,
+				temp1->format->Bmask,
+				temp1->format->Amask);
+
 		temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask);
 
 		if (temp2 == NULL)
@@ -270,7 +279,16 @@ stdio_close(SDL_RWops *context)
 
 void
 Lib_LoadBMP(const char *path, v_object **img)
-{	
+{
+#if NATIVE_BMP
+	t_tick chrono;
+
+
+	chrono = Neuro_GetTickCount();
+	*img = readBitmapFile(path);
+
+	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
+#else /* NOT NATIVE_BMP */
 #if USE_ZLIB
 	gzFile fp;
 	SDL_RWops *ops;
@@ -303,6 +321,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 #else /* NOT USE_ZLIB */
 	*img = SDL_LoadBMP(path);
 #endif /* NOT USE_ZLIB */
+#endif /* NOT NATIVE_BMP */
 }
 
 void
@@ -957,7 +976,7 @@ Lib_UnlockVObject(v_object *vobj)
 u32
 Lib_GetDefaultDepth()
 {
-	return 16; /* TEMPORARY please make get the real value from somewhere!!! TODO TODO */
+	return options.bpp;
 }
 
 

@@ -914,8 +914,13 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 void
 Lib_LoadBMP(const char *path, v_object **img)
 {
+	t_tick chrono;
 
+
+	chrono = Neuro_GetTickCount();
 	*img = readBitmapFile(path);
+
+	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
 
 #if temp
 	EBUF *temp;
@@ -924,7 +929,6 @@ Lib_LoadBMP(const char *path, v_object **img)
 	char **initbuf;
 	/* int i = 0; */
 	int _err = 0;
-	t_tick chrono;
 
 	/* Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT)); */
 	if (Neuro_EBufIsEmpty(vobjs))

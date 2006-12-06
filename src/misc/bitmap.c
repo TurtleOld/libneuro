@@ -470,7 +470,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
 				*x = *x + 1;
 				i++;
@@ -545,7 +545,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 		
 				*x = *x + 1;
 				i++;
@@ -604,7 +604,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 				
-				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
 				*x = *x + 1;
 				i++;
@@ -648,7 +648,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 			{
 				*aux = 0;
 
-				Neuro_PutPixel(image, *x, bmap->infoheader.height - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
+				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
 
 				*x = *x + 1;
 			}
@@ -1182,10 +1182,84 @@ processFD_BMP(nFILE *f_bitmap)
 	 *
 	 * will need to put better values for the masks to support SDL.
 	 */
-	output = Neuro_CreateVObject(0, bmap->infoheader.width, bmap->infoheader.height, bmap->infoheader.bits, 0, 0, 0, 0);
+	{
+		u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;
 
-	if (output == NULL)
-		return NULL;
+		if (IsLittleEndian())
+		{
+			switch (Lib_GetDefaultDepth())
+			{
+				case 16:
+				{
+					rmask = 0x0000f800;
+					gmask = 0x000007e0;
+					bmask = 0x0000001f;
+					amask = 0x00000000;
+				}
+				break;
+
+				case 24:
+				{
+					rmask = 0x00ff0000;
+					gmask = 0x0000ff00;
+					bmask = 0x000000ff;
+					amask = 0x00000000;
+				}
+				break;
+
+
+				default:
+				break;
+			}
+		}
+		else
+		{
+			switch (Lib_GetDefaultDepth())
+			{
+				case 16:
+				{
+					rmask = 0x0000001f;
+					gmask = 0x000007e0;
+					bmask = 0x0000f800;
+					amask = 0x00000000;
+				}
+				break;
+				
+				case 24:
+				{
+					rmask = 0x0000ff00;
+					gmask = 0x00ff0000;
+					bmask = 0xff000000;
+					amask = 0x00000000;
+				}
+				break;
+
+				default:
+				break;
+			}
+		}
+/*
+		if (IsLittleEndian())
+		{
+			rmask = 0x0000f800;
+			gmask = 0x000007e0;
+			bmask = 0x0000001f;
+			amask = 0x00000000;	
+		}
+		else
+		{
+			rmask = 0x0000001f;
+			gmask = 0x000007e0;
+			bmask = 0x0000f800;
+			amask = 0x00000000;
+		}
+*/
+
+		output = Neuro_CreateVObject(0, bmap->infoheader.width, bmap->infoheader.height, bmap->infoheader.bits, rmask, gmask, bmask, amask);
+
+		if (output == NULL)
+			return NULL;
+	}
 
 	/* semi static values to skip bytes that form 32 bit chunks in the data */
 

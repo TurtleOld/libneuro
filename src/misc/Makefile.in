@@ -40,7 +40,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@USE_X11_TRUE@am__append_1 = bitmap.c
 subdir = src/misc
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -51,9 +50,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libmisc_la_LIBADD =
-am__libmisc_la_SOURCES_DIST = other.c chgen.c arg.c bitmap.c
-@USE_X11_TRUE@am__objects_1 = bitmap.lo
-am_libmisc_la_OBJECTS = other.lo chgen.lo arg.lo $(am__objects_1)
+am_libmisc_la_OBJECTS = other.lo chgen.lo arg.lo bitmap.lo
 libmisc_la_OBJECTS = $(am_libmisc_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -67,7 +64,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libmisc_la_SOURCES)
-DIST_SOURCES = $(am__libmisc_la_SOURCES_DIST)
+DIST_SOURCES = $(libmisc_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -196,7 +193,12 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libmisc.la
 AM_CFLAGS = @NEUROFLAGS@
-libmisc_la_SOURCES = other.c chgen.c arg.c $(am__append_1)
+libmisc_la_SOURCES = \
+		other.c \
+		chgen.c \
+		arg.c \
+		bitmap.c
+
 all: all-am
 
 .SUFFIXES:
@@ -450,6 +452,10 @@ uninstall-am: uninstall-info-am
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-info-am
 
+
+#if USE_X11
+#libmisc_la_SOURCES += bitmap.c
+#endif
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
