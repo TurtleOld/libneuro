@@ -29,9 +29,10 @@
 
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <extlib.h> /* Lib_PutPixel and Lib_GetPixel */
 
 /*-------------------- Main Module Header --------------------------*/
-#include "pixels.h"
+#include "video.h"
 
 
 /*--------------------      Other       ----------------------------*/
@@ -83,8 +84,6 @@ cleanPixels()
 			
 			buf.w = 1;
 			buf.h = 1;
-			
-			Lib_BlitObject(background, &buf, sclScreen, &buf);
 		}
 	}
 	Neuro_CleanEBuf(&_Pixel);
