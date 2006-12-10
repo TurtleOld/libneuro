@@ -45,6 +45,10 @@
  */
 #define MEMORY_ALLOC_OVERH 10
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* 
  * the Engine Buffer object. A pointer variable 
  * of this type is required. 
@@ -448,5 +452,9 @@ extern void Neuro_ResetEBuf(EBUF *eng);
  * Neuro_GiveEBufCount(3)
  */
 extern u8 Neuro_EBufIsEmpty(EBUF *eng);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* not __EBUF_H */

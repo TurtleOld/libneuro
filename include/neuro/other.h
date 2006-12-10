@@ -30,6 +30,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern char **Neuro_SepChr(const unsigned char chr, char *source, int *items);
 
 /* the EBUF data uses this struct */
@@ -221,5 +225,8 @@ extern void Lib_LockVObject(v_object *vobj);
  */
 extern void Lib_UnlockVObject(v_object *vobj);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __OTHER_H */

@@ -52,6 +52,10 @@
 /*! The Total screen height (can be changed before compile time to set the new size) */
 #define SCREEN_Y 600
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct INSTRUCTION_ENGINE INSTRUCTION_ENGINE;
 
 typedef INSTRUCTION_ENGINE v_elem;
@@ -209,6 +213,8 @@ extern void Graphics_Poll(void);
 /*! Cleaning of the Graphics Engine */
 extern void Graphics_Clean(void);
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __GRAPHICS_H */

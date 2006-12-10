@@ -27,6 +27,10 @@
 
 #include "neuro_engine.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*! TODO */
 extern void Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)());
 
@@ -62,5 +66,10 @@ extern void Neuro_GetMousePos(int *x, int *y);
 extern void Events_Poll(void);
 extern int Events_Init(void);
 extern void Events_Clean(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* __EVENTS_H */

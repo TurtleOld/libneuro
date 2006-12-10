@@ -26,8 +26,16 @@
 
 #include "neuro_engine.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern int Neuro_Poll();
 extern int Neuro_Init();
 extern void Neuro_Quit();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __MODULE_H */

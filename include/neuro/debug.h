@@ -26,6 +26,10 @@
 
 #include "neuro_engine.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*! This function shouldn't be used directly because
  * Macros were made to fill automatically the arguments
  * like the file name, function name, line number.
@@ -80,6 +84,9 @@ extern void Neuro_SetDebugLevel(u8 level);
 			0;})
 */
 extern int IsLittleEndian();
-	
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* __DEBUG_H */
