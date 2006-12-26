@@ -50,7 +50,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libmisc_la_LIBADD =
-am_libmisc_la_OBJECTS = other.lo chgen.lo arg.lo bitmap.lo
+am_libmisc_la_OBJECTS = other.lo arg.lo bitmap.lo
 libmisc_la_OBJECTS = $(am_libmisc_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -195,7 +195,6 @@ noinst_LTLIBRARIES = libmisc.la
 AM_CFLAGS = @NEUROFLAGS@
 libmisc_la_SOURCES = \
 		other.c \
-		chgen.c \
 		arg.c \
 		bitmap.c
 
@@ -252,7 +251,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arg.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bitmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chgen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/other.Plo@am__quote@
 
 .c.o:
@@ -452,6 +450,8 @@ uninstall-am: uninstall-info-am
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-info-am
 
+
+#chgen.c
 
 #if USE_X11
 #libmisc_la_SOURCES += bitmap.c

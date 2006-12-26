@@ -173,7 +173,7 @@ extern v_object * Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 dept
  * supports) with this function. 
  * returns NULL on error or a pointer to a font_object.
  */
-extern font_object *Neuro_LoadFontFile(char *fonts_file_path);
+extern font_object *Neuro_LoadFontFile(const char *fonts_file_path);
 
 /* this function is to clean a font file 
  * loaded using the function Neuro_LoadFontFile()

@@ -1611,7 +1611,7 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 }
 
 font_object *
-Lib_LoadFontFile(char *fonts_file_path)
+Lib_LoadFontFile(const char *fonts_file_path)
 {
 	FT_Face face;
 	int _err = 0;

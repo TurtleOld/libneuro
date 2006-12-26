@@ -9,11 +9,11 @@ AC_INIT(README)
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
 #
 NEURO_MAJOR_VERSION=0
-NEURO_MINOR_VERSION=46
-NEURO_MICRO_VERSION=0
-NEURO_INTERFACE_AGE=1
-NEURO_REVISION=0
-NEURO_BINARY_AGE=0
+NEURO_MINOR_VERSION=49
+NEURO_MICRO_VERSION=5
+NEURO_INTERFACE_AGE=2
+NEURO_REVISION=2
+NEURO_BINARY_AGE=2
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
 AC_SUBST(NEURO_MAJOR_VERSION)
@@ -161,8 +161,7 @@ if test $SELECTED_LOWLIB = sdl; then
 		
 	fi
 
-	AC_CHECK_LIB(SDL_ttf, TTF_RenderUNICODE_Solid, ,
-		     [AC_MSG_ERROR(You don't have libSDL_ttf you can get it from http://libsdl.org)])
+	freetype_enable=yes
 
 	cp include/extlib.h include/neuro
 	cat include/extlib_sdl.h >> include/neuro/extlib.h

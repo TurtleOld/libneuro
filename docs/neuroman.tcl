@@ -76,7 +76,10 @@
 #
 #
 #
-#
+# @name		-- the name the man page file name will be, necessary for all except
+#		   the functions which automatically defaults to the function name.
+#		   If this variable is present for a function prototype then it will
+#		   override the function name with this name.
 # @sdescri	-- this is the small description, the summary that should be about 1
 # 		   sentence.
 # @description	-- this is the exhaustive description, it can be of any length you want.
@@ -98,7 +101,7 @@
 
 # -- constants --
 # put the version here
-set version "1.0.0b"
+set version "2.0.2b"
 
 # -- global variables --
 
@@ -113,9 +116,10 @@ proc showHelp { } {
 	echo "The documentation on how to format the comments before"
 	echo "the functions is inside this script."
 	echo "   -c file	input the configuration file"
-	echo "   -i		saves each functions in FILES into their own man page"
-	echo "   -v		output the version of neuroman"
-	echo "   -h		output this help message"
+	echo "   -i,--individual	saves each functions from FILES into their own man"
+	echo "			pages instead of outputing to standard output."
+	echo "   -v,--version		output the version of neuroman"
+	echo "   -h,--help		output this help message"
 	echo
 	echo "report bugs to neuroman-bugs@neuroponic.com"
 }
@@ -140,13 +144,13 @@ proc handleArgs { } {
 
 		#we check and handle the arguments
 		foreach elem $argv {
-			if {$elem == "-h"} {
+			if {$elem == "-h" || $elem == "--help"} {
 				showHelp
 				return 0
-			} elseif {$elem == "-v"} {
+			} elseif {$elem == "-v" || $elem == "--version"} {
 				showVersion
 				return 0
-			} elseif {$elem == "-i"} {
+			} elseif {$elem == "-i" || $elem == "--individual"} {
 				set individual 1
 			} elseif {$elem == "-c"} {
 				set got_config 1
@@ -155,7 +159,12 @@ proc handleArgs { } {
 				set config $elem
 				set use_config 1
 			} else {
-				set files [linsert $files 1 "$elem"]
+				if {[string index $elem 0] == "-"} {
+					echo "Invalid argument $elem"
+					echo "use --help to see the list of valid arguments."
+				} else {
+					set files [linsert $files 1 "$elem"]
+				}
 			}
 		}	
 
@@ -242,7 +251,12 @@ proc arrangeFunction {function} {
 
 	}
 
-	#echo $function
+	#puts $function
+
+	# we get rid of the beginning extern if any
+	if {[lindex $function 0] == "extern"} {
+		set function [lrange $function 1 end]
+	}
 
 	return $function
 }
@@ -264,7 +278,8 @@ proc pushData {storage toadd extra} {
 	}
 }
 
-proc parseComment {comment sdescri ldescri options returnval example errors related} {
+proc parseComment {comment name sdescri ldescri options returnval example errors related} {
+	upvar $name cname
 	upvar $sdescri small_d
 	upvar $ldescri long_d
 	upvar $options opt
@@ -283,7 +298,13 @@ proc parseComment {comment sdescri ldescri options returnval example errors rela
 
 		#set word [string trim $word \"*\"]
 
-		if {$word == "@sdescri"} {
+		if {$word == "@name"} {
+			pushData $ctype $buffer extra
+
+			set ctype cname
+	
+			set buffer ""
+		} elseif {$word == "@sdescri"} {
 			pushData $ctype $buffer extra
 
 			set ctype small_d
@@ -347,14 +368,6 @@ proc parseComment {comment sdescri ldescri options returnval example errors rela
 
 	pushData $ctype $buffer extra
 
-}
-
-proc parseFunctionProto {function} {
-	upvar $function func
-	set output ""
-
-	
-	
 }
 
 proc GetStringWord { str current} {
@@ -456,8 +469,10 @@ proc replace_Stars_By_Space {str} {
 	#echo "string changed(finished product) : $tochange"
 }
 
-proc genMan {comment function config} {
+proc genMan_Unique {comment} {
 	global individual
+	global config
+	set name ""
 	set msmall_description ""
 	set mdescription ""
 	set moptions ""
@@ -465,58 +480,178 @@ proc genMan {comment function config} {
 	set mexamples ""
 	set merrors ""
 	set mseealso ""
+	set config_i [parseConfig $config]
+
 
 	# by default we output to stdout (default screen)
 	set fp stdout
 
-	# debug test
-	#set moptions {{2} {test}}
-
-	#echo $comment
-	#echo $function
-
-	# arranges the function data so its easy to handle
-	set function [arrangeFunction $function]
+	# we get rid of the /* character in the string
+	set comment [string trim $comment "/*"]
 
 	# populate our variables
-	parseComment $comment msmall_description mdescription moptions mreturnv mexamples merrors mseealso
+	parseComment $comment name msmall_description mdescription moptions mreturnv mexamples merrors mseealso
 
-	#echo $function
 
-	#echo "config $config config"
+	if {$name == ""} {
+		puts "Error : missing a @name element from a comment"
+		return 
+	}
+
+	# we get rid of any stars in the name string
+	set name [string trim $name "*"]
+	set name [string trim $name " * "]
+	set name [string trim $name "* "]
+	set name [string trim $name " *"]
 
 	if {$individual == 1} {
-		set fp [open "[string trim [lindex $function 1] \"*\"].[lindex $config 0]" w]
+		set fp [open "[string trim $name \"*\"].[lindex $config_i 0]" w]
+		#set fp [open "$name.[lindex $config 0]" w]
 	}
-		
+
+	replace_Stars_By_Void name
 	
-	
-	
-	puts $fp ".TH [lindex $function 1] [lindex $config 0] \"[lindex $config 1]\" \"[lindex $config 2]\" \"[lindex $config 3]\""
+	puts $fp ".TH $name [lindex $config_i 0] \"[lindex $config_i 1]\" \"[lindex $config_i 2]\" \"[lindex $config_i 3]\""
 	puts $fp ".SH NAME"
 
 	if {[llength $msmall_description] > 0} {
 		replace_Stars_By_Void msmall_description
 		puts $fp ".TP"
-		puts $fp "[string trim [lindex $function 1] \"*\"]"
+		puts $fp "[string trim $name \"*\"]"
 		puts $fp "\- $msmall_description"
 	} else {
-		puts $fp "[string trim [lindex $function 1] \"*\"]"
+		puts $fp "[string trim $name \"*\"]"
+	}	
+
+	if {[llength $mdescription] > 0} {
+		puts $fp ".SH DESCRIPTION"
+		#replace_Stars_By_Void mdescription
+		replace_Stars_By_Space mdescription
+		
+		puts $fp [subst "$mdescription"]
+	}	
+
+	if {[llength $mreturnv] > 0 && [lindex $function 0] != ""} {
+
+		replace_Stars_By_Void mreturnv
+		puts $fp ".SH RETURN VALUES"
+		puts $fp "$mreturnv"
+	}
+
+	if {[string length $mexamples] > 0} {
+		puts $fp ".SH EXAMPLE(S)"
+
+		replace_Stars_By_Space mexamples
+
+		#puts $fp [subst -nocommands -nobackslashes -novariables $mexamples]
+		puts $fp [subst $mexamples]
+	}
+	
+	if {[llength $merrors] > 0} {
+
+		replace_Stars_By_Void merrors
+
+		puts $fp ".SH ERRORS"
+		puts $fp "$merrors"
+	}
+
+	if {[llength $mseealso] > 0} {
+		puts $fp ".SH SEE ALSO"
+		replace_Stars_By_Void mseealso
+		puts $fp "$mseealso"
+	}	
+	
+	
+	if {$individual == 1} {
+		close $fp
+	}
+
+
+}
+
+proc genMan {comment function} {
+	global individual
+	global config
+	set name ""
+	set msmall_description ""
+	set mdescription ""
+	set moptions ""
+	set mreturnv ""
+	set mexamples ""
+	set merrors ""
+	set mseealso ""
+	set config_i [parseConfig $config]
+
+	# we get rid of any { or } characters
+	set function [eval "concat $function"]
+
+	# by default we output to stdout (default screen)
+	set fp stdout
+
+	# arranges the function data so its easy to handle
+	set function [arrangeFunction $function]
+
+	# we get rid of the /* character in the string
+	set comment [string trim $comment "/*"]
+
+	# populate our variables
+	parseComment $comment name msmall_description mdescription moptions mreturnv mexamples merrors mseealso
+
+
+	if {$name == ""} {
+		if {[lindex $function 1] == ""} {
+			# an error
+			return 
+		}
+		set name [lindex $function 1]
+
+	}
+
+	# we get rid of any stars in the name string
+	set name [string trim $name "*"]
+	set name [string trim $name " * "]
+	set name [string trim $name "* "]
+	set name [string trim $name " *"]
+
+	if {$individual == 1} {
+		set fp [open "[string trim $name \"*\"].[lindex $config_i 0]" w]
+		#set fp [open "$name.[lindex $config 0]" w]
+	}
+
+	replace_Stars_By_Void name
+	
+	puts $fp ".TH $name [lindex $config_i 0] \"[lindex $config_i 1]\" \"[lindex $config_i 2]\" \"[lindex $config_i 3]\""
+	puts $fp ".SH NAME"
+
+	if {[llength $msmall_description] > 0} {
+		replace_Stars_By_Space msmall_description
+		puts $fp ".TP"
+		puts $fp "[string trim $name \"*\"]"
+		puts $fp "\- [subst $msmall_description]"
+	} else {
+		puts $fp "[string trim $name \"*\"]"
 	}
 
 
 	#echo $function
-	puts $fp ".SH SYNOPSIS"
-	puts $fp "[lindex $function 0] [lindex $function 1]([lrange $function 2 [llength $function]])"
-	if {[llength $mdescription] > 0} {
+	if {[lindex $function 0] != ""} {
+		puts $fp ".SH SYNOPSIS"
+		puts $fp "[lindex $function 0] $name\([lrange $function 2 [llength $function]]\)"
+	}
+
+	if {[string length $mdescription] > 0} {
 		puts $fp ".SH DESCRIPTION"
-		replace_Stars_By_Void mdescription
-		puts $fp "$mdescription"
+		#replace_Stars_By_Void mdescription
+
+		replace_Stars_By_Space mdescription
+
+
+		puts $fp [subst $mdescription]
 	}
 
 	# The arguments... beats me why I initially called that
 	# options...
-	if {[llength $moptions] > 0} {
+	if {[llength $moptions] > 0 && [lindex $function 0] != ""} {
 		set ototal [llength $moptions]
 		set i 1
 		set cfunc 3
@@ -598,7 +733,9 @@ proc genMan {comment function config} {
 		}
 	}
 
-	if {[llength $mreturnv] > 0} {
+	if {[llength $mreturnv] > 0 && [lindex $function 0] != ""} {
+
+		replace_Stars_By_Void mreturnv
 		puts $fp ".SH RETURN VALUES"
 		puts $fp "$mreturnv"
 	}
@@ -613,6 +750,9 @@ proc genMan {comment function config} {
 	}
 	
 	if {[llength $merrors] > 0} {
+
+		replace_Stars_By_Void merrors
+
 		puts $fp ".SH ERRORS"
 		puts $fp "$merrors"
 	}
@@ -633,229 +773,499 @@ proc genMan {comment function config} {
 
 }
 
-proc parseFile {file config} {
-	# buffers the valid comment
-	set cbuffer ""
-	# buffers the function
-	set fbuffer ""
-	set cbegin "/**"
-	set cend "*/"
-	set fbegin "extern "
-	set fend ";"
-	
-	# current state 0 is nothing
-	# 1 is we might have a comment that began
-	# 2 we have a comment that is undergoing
-	# 3 we have a comment, looking for a function
-	# 4 is we might have a function that began
-	# 5 we have a function that is undergoing
-	# 6 we have a comment and function
-	set state 0
-	set blen 0
 
-	# we continue until eof
+# "/**" gather  -> "**/" stop gather
+# OR "*/" stop gather and look for anything except "/**"
+# after a "/**" "*/" combination (next line)
+# look for "extern" gather2   -> ";"  stop gather2 dump in function ...
+
+# the part action can include :
+#	none : none yet (put that when nothing is needed anymore)
+#	gather : starts buffering inside the buffer part. And starts matching in the
+#		 end_string_list list.
+#	childonly : we got a match in the end_string_list so we process only in it
+#	process_data : tells the algo that the current branch got a complete set of
+#			matching patterns so it can now be processed. If this action
+#			is choosen, the extra part is used to know which function to
+#			call with what arguments.
+#	gather_line : exactly like gather but it doesn't match anything, it stops after
+#			a line change. It uses the extra part for the function to call.
+#			it also uses the current_action element to the current line number.
+#
+# the end_string part is a list with a list of strings that can be matched.
+# and the next element is the child elements exactly like the MATCH list.
+#
+# buffer is the current buffer which is filled only when the begin_string is
+# matched. Filling it only ends when a match is found inside end_string_list
+#
+# begin_string_list action buffer current_action extra end_string_list
+
+# take note that the general order is important for correct dependencies
+# the more dependencies a match has, the more it is to the end.
+proc MATCH_format {} {
+
+	set MATCH_Handled_Test "{\"houba\" gather_line \"\" none \"genMan_Test\" {} }"
+
+	set MATCH_Handled_Comment_End_Unique "{\"**/\" process_data \"\" none \"genMan_Unique\" {} }"
+
+	set MATCH_Function_Prototype_End "{\";\" process_data \"\" none \"genMan\" {}}"
+
+	set MATCH_Function_Prototype "{\"extern\" gather \"\" none \"\" {\
+			$MATCH_Function_Prototype_End} }"
+
+	set MATCH_Handled_Comment_End "{\"*/\" childonly \"\" none \"\" {\
+			$MATCH_Function_Prototype} }"
+
+
+	set MATCH_Handled_Comment_Start "{\"/**\" gather \"\" none \"\" {\
+			$MATCH_Handled_Comment_End_Unique \
+			$MATCH_Handled_Comment_End} }"
+
+
+	set MATCH_list "$MATCH_Handled_Comment_Start $MATCH_Handled_Test"
+
+	#set i 0
+	#foreach parent $MATCH_list {
+	#	MATCH_process "/**" MATCH_list "" $parent $i
+
+		#puts "$parent"
+
+	#	incr i
+	#}
+
+	#MATCH_process "/**" MATCH_list
+	#MATCH_process "hello" MATCH_list
+	#MATCH_process "*/" MATCH_list
+	#MATCH_process "extern" MATCH_list
+	#MATCH_process ";" MATCH_list
+
+	#puts "---> $MATCH_list"
+
+	#MATCH_resetProcess MATCH_list 0 0
+
+	return $MATCH_list
+}
+
+proc MATCH_process {stringtm thelist} {
+	upvar $thelist tlist
+	set i 0
+	set depth 0
+	set num 0
+
+	#puts "$tlist\n"
+	#puts "fetched whole \"[Fetch_Cascade_Whole $tlist 5 {0} 0 1]\""
+	#puts "fetched data \"[Fetch_Cascade_Data $tlist 5 0 {0 1} 1]\""
+	
+	#puts "\nChanging data"
+	#set tlist [Set_Cascade_Data $tlist 5 3 "childonly" {0 1 0 0} 3]
+	#puts "fetched modified data \"[Fetch_Cascade_Data $tlist 5 3 {0 1 0 0} 3]\""
+
+	#puts "STRING -> $stringtm"
+
+	MATCH_loopProcess $stringtm tlist 0 0
+}
+
+proc MATCH_resetProcess {thelist num depth} {
+	upvar $thelist tlist
+
+	#puts "will process num $num depth $depth"
+	
+	while {1 != 2} {
+		set cData [Fetch_Cascade_Whole $tlist 5 $num $depth 1]
+
+		#puts $cData
+
+		if {$cData == -1 || $cData == ""} {
+			break;
+		}
+
+		foreach elem $cData {
+			set child_num 0
+
+			# we reset the buffer elemenet
+			set tlist [Set_Cascade_Data $tlist 5 2 "" $num $depth]
+			
+			# we reset the current_action element
+			set tlist [Set_Cascade_Data $tlist 5 3 "none" $num $depth]
+
+
+			
+			set child_num $num
+
+			lappend child_num 0
+
+
+			#puts "child num : $child_num  -- depth [expr $depth + 1]"
+				
+			MATCH_resetProcess tlist $child_num [expr $depth + 1]
+
+			lset num $depth [expr [lindex $num $depth] + 1]
+		}
+	}
+}
+
+proc MATCH_loopProcess {stringtm thelist num depth} {
+	upvar $thelist tlist
+
+	#puts "will process num $num depth $depth string $stringtm"
+	
+	while {1 != 2} {
+		set cData [Fetch_Cascade_Whole $tlist 5 $num $depth 1]
+
+		#puts $cData
+
+		if {$cData == -1 || $cData == ""} {
+			break;
+		}
+
+		foreach elem $cData {
+			set child_num 0
+
+			#puts [Fetch_Cascade_Data $tlist 5 0 $num $depth]
+			set _err [MATCH_subprocess $stringtm tlist $num $depth]
+
+			if {$_err == 0} {
+				# we call a subsequent child
+
+				#lset num $depth [expr [lindex $num $depth] + 1]
+			
+				set child_num $num
+
+				lappend child_num 0
+
+
+				#puts "child num : $child_num  -- depth [expr $depth + 1]"
+				
+				if {[MATCH_loopProcess $stringtm tlist $child_num [expr $depth + 1]] == 1} {
+					return 1
+				}
+
+				#puts "finished child run"
+				
+				# we don't need to run on the next nodes
+				return 0
+			} elseif {$_err == 2} {
+				return 1
+			} else {
+				lset num $depth [expr [lindex $num $depth] + 1]
+			}
+		}
+
+		break
+	}
+}
+
+# this function calls itself
+# if the current node needs to call subsequent childs, it will return 0
+# if not, it will return 1
+proc MATCH_subprocess {stringtm thelist num depth} {
+	upvar $thelist tlist
+	set node [Fetch_Cascade_Whole $tlist 5 $num $depth]
+
+	#puts "node [lindex $node 0]  string $stringtm"
+	
+	switch [lindex $node 3] {
+		none {
+			foreach string_match [lindex $node 0] {
+				#puts -nonewline "trying to see if $stringtm is $string_match "
+				
+				if {[ParseString $string_match $stringtm] == 1} {
+					set output $tlist
+
+					#puts " <- MATCH \n"
+
+					switch [lindex $node 1] {
+
+						none {
+							return 1
+						}
+
+						gather {
+							set tlist [Set_Cascade_Data $tlist 5 3 "gather" $num $depth]
+
+						}
+
+						childonly {
+							set tlist [Set_Cascade_Data $tlist 5 3 "childonly" $num $depth]
+							
+							set tlist [Set_Cascade_Data $tlist 5 3 "childonly" [lrange $num 0 [expr $depth - 1]] [expr $depth - 1]]
+
+							return 2
+						}
+
+						process_data {
+							set i 0
+							set buf ""
+							# this is the "last" command set for a list of matches, thats why we reset the list
+							# need to call the extra element with the necessary arguments
+
+							while {$i < $depth} {
+								
+								if {[Fetch_Cascade_Data $tlist 5 1 [lrange $num 0 $i] $i] == "gather"} {
+									lappend buf [Fetch_Cascade_Data $tlist 5 2 [lrange $num 0 $i] $i]
+								}
+
+								incr i
+							}
+							#puts $tlist
+							#puts $buf
+
+							eval "[lindex $node 4] $buf"
+							
+							#puts "we reset the process"
+							
+							MATCH_resetProcess tlist 0 0
+						
+							return 2
+						}
+
+						gather_line {
+							# don't know yet how to handle this one
+
+							return 1
+						}
+
+
+					}
+
+					#puts "initial gathering action [lindex $node 0] -> $stringtm"
+
+					set buf [lindex $node 2]
+
+					lappend buf $stringtm
+
+					set tlist [Set_Cascade_Data $tlist 5 2 $buf $num $depth]
+
+					# we only need one match
+					return 2
+				} else {
+					#puts "\n"
+				}
+			}
+
+			return 1
+		}
+
+		gather {
+			#puts "gathering action [lindex $node 0] -> $stringtm"
+
+			set buf [lindex $node 2]
+
+			lappend buf $stringtm
+
+			set tlist [Set_Cascade_Data $tlist 5 2 $buf $num $depth]
+
+
+			return 0
+		}
+
+		childonly {
+			#puts "child only state [lindex $node 0]"
+
+			return 0
+		}
+
+		process_data {
+			puts "process data state? this is an error buddy!"
+		}
+
+		gather_line {
+			puts "gather line state? this is an error buddy!"
+		}
+	}
+
+	return 1
+}
+
+# sets a single data in a list/sublist corresponding to depth
+# and number pattern
+proc Set_Cascade_Data {alist sublist_num elem data num_in depth} {
+	set i 0
+	set num $num_in
+	set child ""
+
+	set i [expr $depth + 1]
+
+	while {$i > 0} {
+		set i [expr $i - 1]
+
+		set current [Fetch_Cascade_Whole $alist $sublist_num $num $i]
+		set whole [Fetch_Cascade_Whole $alist $sublist_num $num $i 1]
+
+		if {$i == $depth} {
+			lset current $elem $data
+		} elseif {$child != ""} {
+			#puts "$sublist_num --> $current -- $child"
+			set current [lreplace $current $sublist_num $sublist_num $child]
+		}
+
+		lset whole [lindex $num_in $i] $current
+
+
+		#puts "$i -- $current"
+		#puts "$whole"
+
+		set child $whole
+
+		#set tempo [lreplace [Fetch_Cascade_Whole $alist $sublist_num $num $i 1] [lindex $num 0] [lindex $num 0] $current]
+		#puts "$whole TEST --_-_->>  [lindex $whole [lindex $num_in $i]]"
+
+		set num [lrange $num 0 end-1]
+		#puts "DEBUG -- $num"
+	}
+	return $whole
+}
+
+# in a cascading list/sublist variable, output a full list corresponding
+# to a certain depth and a number pattern.
+proc Fetch_Cascade_Whole {alist sublist_num num_in depth {relative 0}} {
+	set i 0
+	set num ""
+
+	# we first reverse the num variable
+	set i [llength $num_in]
+
+	foreach item $num_in {
+		set num [linsert $num 0 $item]
+	}
+
+	set i 0
+
+	#puts "Whole output : number -- [lindex $num $depth]"
+
+	foreach item $alist {
+		#puts "THERES #[llength $alist] elements total! ?$relative?"
+		#puts "$i - [lindex $num $depth]"
+
+		if {$i == [lindex $num $depth]} {
+			
+			#puts "PROCESSING -- $item"
+			
+			
+			if {$depth == 0} {
+				if {$relative == 0} {
+					return $item
+				} else {
+					return $alist
+				}
+			} else {
+				return [Fetch_Cascade_Whole [lindex $item $sublist_num] $sublist_num $num_in [expr $depth - 1] $relative]
+			}
+		}
+
+		incr i
+	}
+
+	return -1
+}
+
+# in a cascading list/sublist variable, output a single element
+# corresponding to a certain depth and a number pattern.
+proc Fetch_Cascade_Data {alist sublist_num elem num_in depth} {
+
+
+	set output [Fetch_Cascade_Whole $alist $sublist_num $num_in $depth]
+
+	if {$output != -1} {
+		if {$elem >= 0 && $elem < [llength $output]} {
+			return [lindex $output $elem]
+		}
+	}
+
+	return -1
+}
+
+proc parseFile {file config} {
+	# gather 1 is used to gather the comment
+	# data
+	set gather1 ""
+	# gather 2 is used to gather principally
+	# function prototypes and in the future,
+	# more.
+	set gather2 ""
+	# contains the current line number for use
+	# by the code to know when a line changed
+	set current_line 0 
+	#global MATCH_list
+
+	#puts [subst $MATCH_list]
+
+	set matchform [MATCH_format]
+
+
+	# we loop line by line, string by string and character by character
+
+	# we continue until eof to loop line by line
 	while {[eof $file] == 0} {
 		set line [gets $file]
 		set a 0
 		
-		# count the number of characters in the string/list
+		# count the number of characters in the line
 		set line_len [string length $line]
 
-		while {$a < $line_len} {
-			
+		# loop string by string in the current line
+		while {$a < $line_len} {		
 			set str [GetStringWord $line a]
 
-			set i 0
+			MATCH_process $str matchform
+		}
 
-			# undergoing add variable
-			set ug_add 0
-
-			set len [string length $str]
-
-			while {$i < $len} {
-				set char [string index $str $i]
-
-				switch $state {
-					0 {
-						if { $char == [string index $cbegin $blen]} {
-							# we have a starting comment type
-							#set cbuffer [string index $line $i]
-							set state 1
-							incr blen
-
-							set ug_add 1
-
-						} 
-					}
-
-					1 {	
-						if {$char == [string index $cbegin $blen] && $ug_add == 1} {
-							#echo "$blen"
-							incr blen
-
-							if {$blen == [string length $cbegin]} {
-								set state 2
-								#echo "start an handle comment chunk"
-
-								# we will remove the /** from the string
-								if {$len > $blen} {
-									set str [string range $str [string length $cbegin] $len]
-
-								}
-
-							}
-						} else {
-							set cbuffer ""
-							set blen 0
-							set state 0
-						}
-					}
-					
-					2 {
-						set t 0
-						set tlen 0
-
-						if {$ug_add == 1} {
-							break
-						}
-						
-						while {$t < $len} {
-							set tchar [string index $str $t]
-
-							if {$tchar == [string index $cend $tlen]} {
-								incr tlen
-
-								if {$tlen == [string length $cend]} {
-									#echo "end an handle comment chunk"
-									set blen 0
-									set state 3
-								}
-							}
-
-							incr t
-						}
-
-						if {$state == 3} {
-							# debug output
-
-							# add the string to the buffer
-							if {[string length $cend] < $len } {
-								set cbuffer [linsert $cbuffer [llength $cbuffer] [string range $str 0 [expr "$len - [string length $cend] - 1"]]]
-							}
-
-							#echo $cbuffer
-
-							#foreach st [lindex $cbuffer] {
-							#	echo $st
-							#}
-						} else {
-							# add the string to the buffer
-							#echo "adding $str"
-							set cbuffer [linsert $cbuffer [llength $cbuffer] $str]
-
-							set ug_add 1
-						}
-					}
-
-					3 {
-						if {$char == [string index $fbegin $blen]} {
-							# we have a starting function type
-							#set fbuffer [string index $line $i]
-							set state 4
-							incr blen
-
-							set ug_add 1
-						}
-					}
-
-					4 {	
-						#echo "len [string length $fbegin] $blen $char"
-
-						if {$char == [string index $fbegin $blen] && $ug_add == 1} {
-							#echo "$blen"
-							incr blen
-
-							set ug_add 1
-							
-							if {$blen == [string length $fbegin] } {
-								set state 5
-								#echo "start an handle function chunk"
-							}
-						} elseif {[string index $fbegin $blen] == " "  && $ug_add == 0} {
-							# hack to recognise a space
-							set state 5
-							#echo "start an handle function chunk"
-						} else {
-							set fbuffer ""
-							set blen 0
-							set state 3
-						}
-					}
-
-					5 {
-						set t 0
-						set tlen 0
-
-						if {$ug_add == 1} {
-							break
-						}
-						
-						while {$t < $len} {
-							set tchar [string index $str $t]
-
-							if {$tchar == [string index $fend $tlen]} {
-								incr tlen
-
-								if {$tlen == [string length $fend]} {
-									#echo "end an handle function chunk"
-									set blen 0
-									set state 6
-								}
-							}
-
-							incr t
-						}
-
-						if {$state == 6} {
-							# debug output
-
-							# add the string to the buffer
-							if {[string length $fend] < $len } {
-
-
-								set fbuffer [linsert $fbuffer [llength $fbuffer] [string trimright $str $fend]]
-							}
-
-							#echo $fbuffer
-
-							#foreach st [lindex $fbuffer] {
-							#	echo $st
-							#}
-						} else {	
-							set ug_add 1
-							set fbuffer [linsert $fbuffer [llength $fbuffer] $str]
-						}	
-
-					}
-
-					6 {
-
-						genMan $cbuffer $fbuffer $config
-						#echo "we have a comment type and a function type"
-
-						set cbuffer ""
-						set fbuffer ""
-						set blen 0
-						set state 0
-					}
-				}
-
-				#echo $state
-				
-				incr i
-			}
-		}		
+		# we increment the current number of lines
+		incr current_line
 	}
+}
+
+# returns 0 if theres no matching strings
+# and 1 if there is
+proc ParseString {string_indep string_depen} {
+	# current matching characters
+	set match 0
+	set i 0
+	set len [string length $string_depen]
+
+	#puts "Checking String \"$string_indep\" over \"$string_depen\""
+
+	# loop character by character in the current string
+	while {$i < $len} {
+		set char [string index $string_depen $i]
+		set indep [string index $string_indep $match]
+
+		#puts "depen $char indep $indep"
+
+		if {$char == $indep} {
+			incr match
+		} else {
+			
+			# special case where we check the former character with this one to see
+			# if it matches... if it matches, it means we might have a redundant
+			# character which was primarily matched.
+			#
+			# example : our indep string is */ and our input string is **/
+			# without this code, the first * is matched then it checks the
+			# second * over with / but it won't match and it restarts the check.
+			# |  |
+			# */ **/  1
+			#  |  |
+			# */ **/  0  (so the algo restarts)
+			# |    |
+			# */ **/  0  (see, this is a bit false because it was
+			# reset and thus the string wasn't matched.)
+			#
+			if {$match > 0 && $char == [string index $string_indep [expr $match - 1]]} {
+				set match 1
+			} else {
+				set match 0
+			}
+		}
+
+		if {$match == [string length $string_indep]} {
+			return 1
+		}
+		
+		incr i
+	}
+
+	return 0
 }
 
 proc parseConfig {file} {

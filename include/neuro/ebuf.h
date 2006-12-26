@@ -25,16 +25,65 @@
 #include "neuro_engine.h"
 #include <stdlib.h> /* for the size_t type */
 
-/*  
- *  The EBUF module. Stands for Engine Buffer, it is named this
- *  way because it is an abstraction of the memory allocation, 
- *  reallocation method. It is very useful because it cuts 
- *  needed code for those by alot(and also cuts on very frequent errors).
- *  This module can be used for example on an array of names.
- *  It will provide the programmer with an easy way to make
- *  such an array to grow dynamically. This module also has a
- *  way to remove array frames from the array.
- */
+/**
+ * @name
+ * Neuro_EBuf
+ *
+ * @description
+ * The EBUF module. Stands for Engine Buffer, it's use is to
+ * abstract memory allocation and reallocation. It provides 
+ * a secure and easy way to dynamically add, remove and modify
+ * entries from a dynamic array. \n \n \n
+ *
+ *
+ * INTRODUCTION : \n \n
+ * In this text, I will present you with the way the module has
+ * to be used (which functions to call and in what order) briefly,
+ * without going into details about how to use a function exactly.
+ * This is merely a backbone to individual function man pages for
+ * this module. \n \n \n
+ *
+ *
+ * BEGINNING : \n \n
+ * To make use of even the slightest of this module, the first 
+ * required thing to do is to create a pointer variable to an EBUF
+ * type element. \n \n
+ * This special structure's content is hidden to external
+ * applications and it is used to contain internal data 
+ * and informations about an instance. Take note that this module
+ * can support a virtually infinite amount of independant 
+ * instances. \n \n \n
+ *
+ *
+ * INITIALISING AND FREEING : \n \n
+ * Now that you have your instance pointer, you need to initialise 
+ * it by using the Neuro_CreateEBuf(3) function. Among other, 
+ * it allocates and sets (to 0) internal variables. \n
+ * When no longer needed, every instances should be freed by using
+ * the function Neuro_CleanEBuf(3). \n 
+ * In addition to the normal freeing, you can also set a callback
+ * function by calling the function Neuro_SetcallbEBuf(3) which can
+ * be used to "manually" free inter data allocations. (see the
+ * function's man page for much more detailed informations). \n
+ * The function Neuro_SetcallbEBuf(3) is normally called right after
+ * calling the function Neuro_CreateEBuf(3). \n \n \n
+ *
+ * ALLOCATING NEW DATA : \n \n
+ * by now, we have initalised and possibly set a callback to the
+ * instance, but we are still missing an important step :
+ * creating a structure template which the instance EBUF will 
+ * contain. A basic structure template was used in the example in
+ * the man page for the function Neuro_AllocEBuf(3) which is 
+ * exactly the function we need to use to allocate a new element.
+ *
+ * (allocate a new element? didn't we just allocated one with
+ * Neuro_CreateEBuf(3)?  -- Yes! but the use of EBUF is to easily
+ * create dynamic arrays of structures. Hence the use of the term
+ * element to call a single array that we will allocate.)
+ *
+ *
+ *
+ **/
 
 /* 
  * This macro is to set the number of extra instances 

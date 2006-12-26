@@ -158,7 +158,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 }
 
 font_object *
-Lib_LoadFontFile(char *fonts_file_path)
+Lib_LoadFontFile(const char *fonts_file_path)
 {
 	return NULL;
 }

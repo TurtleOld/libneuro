@@ -26,8 +26,14 @@
 #include <math.h>
 #include <string.h>
 
+#define old 0
+
+#if old
+
 /* this is the only way I found so theres no warning with this function */
-extern FILE *fmemopen(void *_s, size_t size, __const char *modes) __THROW;
+extern FILE *fmemopen(void *_s, size_t size, __const char *modes);
+
+#endif /* old */
 
 #if USE_ZLIB
 /* this is used to open the bitmaps, 
@@ -245,6 +251,7 @@ print_bitmap_infos(BITMAP_HDATA *bmap)
 		bmap->infoheader.importantcolours);
 }
 
+
 static void
 process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
@@ -290,6 +297,7 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		fgetc(input);
 #endif /* NOT USE_ZLIB */
 		
+#if old
 		if (i == 0)
 		{
 			buf->symbol = calloc(2, sizeof(unsigned char));
@@ -302,11 +310,13 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 			/* generate a character based on the current color count */
 			Uchar(i, &buf->symbol);
 		}
+#endif /* old */
 		
 		i++;
 	}
 }
 
+#if old
 static void
 process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 {
@@ -384,6 +394,7 @@ process_RGB(EBUF *bcolors, EBUF *bpixels, u8 ir, u8 ig, u8 ib)
 	found = 0;
 
 }
+#endif /* old */
 
 /* input the bits per pixel of the image
  * input a 1 byte of data to process 
@@ -679,6 +690,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 }
 
 
+#if old
 /* input the bits per pixel of the image
  * input a 1 byte of data to process 
  */
@@ -954,7 +966,9 @@ process_bitmap(BITMAP_HDATA *bmap, u8 *palette, u8 *data, EBUF *bcolors, EBUF *b
 
 	}
 }
+#endif /* old */
 
+#if old
 static void
 outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **output_pixmap)
 {
@@ -1120,6 +1134,7 @@ outputDataToPixmap(BITMAP_HDATA *bmap, EBUF *bcolors, EBUF *bpixels, EBUF **outp
 	free(control2);
 	free(bufe);
 }
+#endif /* old */
 
 static v_object *
 processFD_BMP(nFILE *f_bitmap)
@@ -1403,6 +1418,7 @@ processFD_BMP(nFILE *f_bitmap)
 	return output;
 }
 
+#if old
 static void
 processFD_BMP2XPM(nFILE *f_bitmap, EBUF **output_pixmap)
 {
@@ -1574,7 +1590,7 @@ processFD_BMP2XPM(nFILE *f_bitmap, EBUF **output_pixmap)
 		fclose(f_bitmap);
 #endif /* NOT USE_ZLIB */
 }
-
+#endif /* old */
 
 
 
@@ -1595,16 +1611,21 @@ setBitmapColorKey(u32 key)
 void
 readBitmapBufferToPixmap(char *data, EBUF **output_pixmap)
 {
+
+#if old
 	FILE *f_bitmap;
 
 	f_bitmap = fmemopen((void*)data, 512, "r");
 
 	processFD_BMP2XPM((nFILE*)f_bitmap, output_pixmap);
+
+#endif old
 }
 
 void
 readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 {
+#if old
 	nFILE *f_bitmap;
 
 #if USE_ZLIB
@@ -1614,6 +1635,7 @@ readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
 #endif /* NOT USE_ZLIB */
 	
 	processFD_BMP2XPM(f_bitmap, output_pixmap);
+#endif /* old */
 }
 
 v_object *

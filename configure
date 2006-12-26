@@ -1513,11 +1513,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
 #
 NEURO_MAJOR_VERSION=0
-NEURO_MINOR_VERSION=46
-NEURO_MICRO_VERSION=0
-NEURO_INTERFACE_AGE=1
-NEURO_REVISION=0
-NEURO_BINARY_AGE=0
+NEURO_MINOR_VERSION=49
+NEURO_MICRO_VERSION=5
+NEURO_INTERFACE_AGE=2
+NEURO_REVISION=2
+NEURO_BINARY_AGE=2
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
 
@@ -21289,84 +21289,7 @@ fi
 
 	fi
 
-
-echo "$as_me:$LINENO: checking for TTF_RenderUNICODE_Solid in -lSDL_ttf" >&5
-echo $ECHO_N "checking for TTF_RenderUNICODE_Solid in -lSDL_ttf... $ECHO_C" >&6
-if test "${ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lSDL_ttf  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-/* Override any gcc2 internal prototype to avoid an error.  */
-#ifdef __cplusplus
-extern "C"
-#endif
-/* We use char because int might match the return type of a gcc2
-   builtin and then its argument prototype would still apply.  */
-char TTF_RenderUNICODE_Solid ();
-int
-main ()
-{
-TTF_RenderUNICODE_Solid ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid=no
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid" >&5
-echo "${ECHO_T}$ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid" >&6
-if test $ac_cv_lib_SDL_ttf_TTF_RenderUNICODE_Solid = yes; then
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_LIBSDL_TTF 1
-_ACEOF
-
-  LIBS="-lSDL_ttf $LIBS"
-
-else
-  { { echo "$as_me:$LINENO: error: You don't have libSDL_ttf you can get it from http://libsdl.org" >&5
-echo "$as_me: error: You don't have libSDL_ttf you can get it from http://libsdl.org" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
+	freetype_enable=yes
 
 	cp include/extlib.h include/neuro
 	cat include/extlib_sdl.h >> include/neuro/extlib.h

@@ -912,7 +912,7 @@ Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 
 }
 
 font_object *
-Neuro_LoadFontFile(char *fonts_file_path)
+Neuro_LoadFontFile(const char *fonts_file_path)
 {
 	return Lib_LoadFontFile(fonts_file_path);
 }

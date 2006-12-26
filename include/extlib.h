@@ -900,7 +900,7 @@ extern u8 Lib_GetMouseState(i32 *x, i32 *y);
  * supports) with this function. 
  * returns NULL on error or a pointer to a font_object.
  */
-extern font_object *Lib_LoadFontFile(char *fonts_file_path);
+extern font_object *Lib_LoadFontFile(const char *fonts_file_path);
 
 /* this function is to clean a font file loaded 
  * using Lib_LoadFontFile

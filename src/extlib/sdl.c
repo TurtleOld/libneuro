@@ -981,7 +981,7 @@ Lib_GetDefaultDepth()
 
 
 font_object *
-Lib_LoadFontFile(char *fonts_file_path)
+Lib_LoadFontFile(const char *fonts_file_path)
 {
 	FT_Face face;
 	int _err = 0;
