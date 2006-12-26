@@ -50,6 +50,7 @@ typedef FILE nFILE;
 
 #include <ebuf.h>
 #include <other.h>
+#include <extlib.h> /* Lib_GetDefaultDepth() */
 
 #include <graphics.h> /* Neuro_PutPixel */
 
@@ -1619,7 +1620,7 @@ readBitmapBufferToPixmap(char *data, EBUF **output_pixmap)
 
 	processFD_BMP2XPM((nFILE*)f_bitmap, output_pixmap);
 
-#endif old
+#endif /* old */
 }
 
 void
