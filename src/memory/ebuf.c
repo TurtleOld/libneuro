@@ -135,7 +135,9 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	void ***buf;
 	u32 *total;
 	u32 *mem;
-	
+
+	if (!eng)
+		return;
 	
 	buf = &eng->buffer;
 	total = &eng->total;
