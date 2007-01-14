@@ -45,6 +45,11 @@ typedef struct KEYBEVENT
 				 */
 }KEYBEVENT;
 
+typedef struct Mouse_Callback
+{
+	void (*callback)(int x, int y);
+}Mouse_Callback;
+
 /* define the structure to hold our mouse button header. 
  * This header will be used for a EBUF buffer.
  */
@@ -52,6 +57,9 @@ typedef struct MOUSEEVENT
 {
 	u32 button;		/* the actual button */
 	u8 lastState; 		/* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
+	EBUF *ClickEventCbk; /* contains Mouse_Callback elements */
+	EBUF *ReleaseEventCbk; /* contains Mouse_Callback elements */
+
 	void (*callbackClick)(int x, int y); 	/* callback to call when clicked */
 	void (*callbackRelease)(int x, int y); 	/* callback to call when released */
 }MOUSEEVENT;
@@ -74,6 +82,20 @@ static EBUF *_mlist;
  */
 static int mouse_x, mouse_y;
 
+
+static void 
+clean_mouse_list(void *src)
+{
+	MOUSEEVENT *tmp;
+
+	tmp = (MOUSEEVENT*)src;
+
+	if (tmp)
+	{
+		Neuro_CleanEBuf(&tmp->ClickEventCbk);
+		Neuro_CleanEBuf(&tmp->ReleaseEventCbk);
+	}
+}
 
 /* 
  * this function checks every elements in the _klist buffer, 
@@ -174,8 +196,9 @@ handle_mouse()
 {
 	u8 button;
 	int x, y;
-	u32 total;
+	u32 total, total2;
 	MOUSEEVENT *tmp;
+	Mouse_Callback *cbk_buf; /* callback buffer */
 	
 	/* check to see if the buffer _mlist is empty and leave if it is */
 	if (Neuro_EBufIsEmpty(_mlist))
@@ -216,15 +239,20 @@ handle_mouse()
 					 */
 					tmp->lastState = 1;
 
-					/* check if the callback exist */
-					if (tmp->callbackClick)
-					{
-						/* we call the click callback and pass it 
-						 * the current mouse coordinates.
-						 */
-						(tmp->callbackClick)(x, y);
+					if (Neuro_EBufIsEmpty(tmp->ClickEventCbk))
 						return;
+
+					total2 = Neuro_GiveEBufCount(tmp->ClickEventCbk) + 1;
+
+					while (total2-- > 0)
+					{
+						cbk_buf = Neuro_GiveEBuf(tmp->ClickEventCbk, total2);
+
+						if (cbk_buf->callback)
+							(cbk_buf->callback)(x, y);
 					}
+
+					return;
 				}
 			}
 		}
@@ -234,17 +262,21 @@ handle_mouse()
 			{
 				/* we reset the state back to nothing */
 				tmp->lastState = 0;
-				
-				/* check if the callback exist */
-				if (tmp->callbackRelease)
-				{
-					/* we call the button release callback and 
-					 * pass it the current mouse coordinates.
-					 */
-					(tmp->callbackRelease)(x, y);
+			
+				if (Neuro_EBufIsEmpty(tmp->ReleaseEventCbk))
 					return;
+
+				total2 = Neuro_GiveEBufCount(tmp->ReleaseEventCbk) + 1;
+
+				while (total2-- > 0)
+				{
+					cbk_buf = Neuro_GiveEBuf(tmp->ReleaseEventCbk, total2);
+
+					if (cbk_buf->callback)
+						(cbk_buf->callback)(x, y);
 				}
-					
+
+				return;
 			}
 		}	
 	}
@@ -255,13 +287,35 @@ handle_mouse()
  * MOUSEEVENT header.
  */
 static void
-mouseListChange(u32 button, void (*callback)(), MOUSEEVENT *ptr, u8 click_release)
+mouseListChange(u32 button, void (*callback)(int x, int y), MOUSEEVENT *ptr, u8 click_release)
 {
+	Mouse_Callback *tmp;
+	EBUF *current;
+	
+	
 	ptr->button = button;
+
 	if (click_release)
-		ptr->callbackRelease = callback;
+	{
+		if (Neuro_EBufIsEmpty(ptr->ReleaseEventCbk))
+			Neuro_CreateEBuf(&ptr->ReleaseEventCbk);
+
+		current = ptr->ReleaseEventCbk;
+	}
 	else
-		ptr->callbackClick = callback;
+	{
+		if (Neuro_EBufIsEmpty(ptr->ClickEventCbk))
+			Neuro_CreateEBuf(&ptr->ClickEventCbk);
+
+		current = ptr->ClickEventCbk;
+	}
+
+	Neuro_AllocEBuf(current, sizeof(Mouse_Callback*), sizeof(Mouse_Callback));
+
+
+	tmp = Neuro_GiveCurEBuf(current);
+	
+	tmp->callback = callback;
 }
 
 static void
@@ -455,6 +509,8 @@ Events_Init()
 {
 	Neuro_CreateEBuf(&_klist);
 	Neuro_CreateEBuf(&_mlist);
+
+	Neuro_SetcallbEBuf(_mlist, clean_mouse_list);
 
 	if (!_klist || !_mlist)
 		return 1;

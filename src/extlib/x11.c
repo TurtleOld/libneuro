@@ -192,6 +192,25 @@ keycode_value(char num, u8 *anchor)
 	return -1;
 }
 
+/* our own abstraction of the function XPutImage to support 
+ * the shared memory version transparently
+ */
+static int ab_XPutImage(Display *display, Drawable d, GC gc, XImage *image,
+		int src_x, int src_y, int dest_x, int dest_y, unsigned int width,
+		unsigned int height)
+{
+	return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
+}
+
+/* our own abstraction of the function XGetImage to support 
+ * the shared memory version transparently
+ */
+static XImage *ab_XGetImage(Display *display, Drawable d, int x, int y, unsigned int width,
+		unsigned int height, unsigned long plane_mask, int format)
+{
+	return XGetImage(display, d, x, y, width, height, plane_mask, format);
+}
+
 static void 
 sync_pixels(V_OBJECT *src)
 {
@@ -200,18 +219,11 @@ sync_pixels(V_OBJECT *src)
 	if (src->pixel_data_changed == 1)
 	{
 		Neuro_GiveImageSize(src, &w, &h);
-		/*
-		h = src->raw_data->height;
-		w = src->raw_data->width;
-		*/
-#if old
-		XPutImage(dmain->display, *src->cwin, dmain->GC, src->raw_data, 
-				0, 0, 0, 0, w, h);
-#endif /* old */
+
 		if (src->raw_data)
 			XDestroyImage(src->raw_data);
 		/* Debug_Val(0, "cwin %d size %dx%d\n", *src->cwin, w, h); */
-		src->raw_data = XGetImage(dmain->display, *src->cwin, 
+		src->raw_data = ab_XGetImage(dmain->display, *src->cwin, 
 			0, 0, w, h, 
 			AllPlanes, ZPixmap);
 		src->pixel_data_changed = 0;
@@ -241,7 +253,7 @@ CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
 
 	gc = XCreateGC(dmain->display, *pix, GCForeground | GCBackground, &values);
 	
-	_err = XPutImage(dmain->display, *pix, gc, image, 0, 0, 
+	_err = ab_XPutImage(dmain->display, *pix, gc, image, 0, 0, 
 		 0, 0, image->width, image->height);
 	
 	
@@ -303,7 +315,7 @@ Lib_SyncPixels(v_object *src)
 	if (tmp->raw_data)
 		XDestroyImage(tmp->raw_data);	
 
-	tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+	tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
 		0, 0, w, h, 
 		AllPlanes, ZPixmap);
 }
@@ -381,48 +393,10 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	if (screen_buf)
 	{
 		V_OBJECT *tmp2;
-		
-		Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
-		
-		tmp2 = Neuro_GiveCurEBuf(vobjs);
-		
-#if buffer_old_method
-		/* Debug_Print("Beacon 3"); */
-		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, swidth, sheight, 
-				DefaultDepth(tmp->display, tmp->screen));
 
-		/* Debug_Print("Beacon 4"); */
-		tmp2->cwin = &tmp2->data;
-		
-		tmp2->raw_data = XGetImage(tmp->display, *tmp2->cwin, 0, 0, swidth, sheight, DefaultDepth(tmp->display, tmp->screen), ZPixmap);
-		/* XInitImage(tmp2->raw_data); */
-		/* Debug_Print("Beacon 5"); */
-#else /* NOT buffer_old_method */
-		
-		/* Debug_Print("Beacon 3"); */
-		tmp2->raw_data = XCreateImage(tmp->display, 
-				XDefaultVisual(tmp->display, tmp->screen), 
-				DefaultDepth(tmp->display, tmp->screen), 
-				ZPixmap, 0, NULL, swidth, sheight, 32, 0);
+		tmp2 = (V_OBJECT*)Lib_CreateVObject(0, swidth, sheight, 0, 0, 0, 0, 0);
 
-		/* Debug_Print("Beacon 4"); */
 
-		tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * sheight);
-
-		tmp2->data = XCreatePixmap(tmp->display, *tmp->cwin, swidth, sheight, 
-				DefaultDepth(tmp->display, tmp->screen));
-
-		/* Debug_Print("Beacon 5"); */
-		
-		XPutImage(tmp->display, tmp2->data, tmp->GC, tmp2->raw_data, 0, 0, 
-				0, 0, swidth, sheight);
-		
-		tmp2->cwin = &tmp2->data;
-
-		/* Debug_Print("Beacon 6"); */
-#endif /* NOT buffer_old_method */
-		
-		
 		scldmain = tmp2;
 		*screen_buf = tmp2;
 	}
@@ -530,7 +504,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	if (buf->shapemask)
 	{
 		/* we fetch the pixel data of the existing mask */
-		mask_data = XGetImage(dmain->display, buf->shapemask, 0, 0, width, height, AllPlanes, ZPixmap);	
+		mask_data = ab_XGetImage(dmain->display, buf->shapemask, 0, 0, width, height, AllPlanes, ZPixmap);	
 	}
 	else
 	{
@@ -566,23 +540,6 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	}
 
 	/* we populate the mask with transparency info */
-	
-	/*
-	for(y = height; y > 0; y--)
-	{
-		for(x = width; x > 0; x--)
-		{
-			if(Lib_GetPixel(vobj, x, y) == key)
-			{
-				XPutPixel(mask_data, x, y, 0);
-			}
-			else
-			{
-				XPutPixel(mask_data, x, y, 1);
-			}
-		}
-	}
-	*/
 
 	y = height;
 	while (y-- > 0)
@@ -618,7 +575,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 
 		gc = XCreateGC(dmain->display, buf->shapemask, GCForeground | GCBackground, &values);
 	
-		_err = XPutImage(dmain->display, buf->shapemask, gc, mask_data, 0, 0, 
+		_err = ab_XPutImage(dmain->display, buf->shapemask, gc, mask_data, 0, 0, 
 			 0, 0, mask_data->width, mask_data->height);
 
 	
@@ -988,7 +945,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 		
 		Neuro_GiveImageSize(tmp, &w, &h);
 		
-		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+		tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
 			0, 0, w, h, 
 			AllPlanes, ZPixmap);
 		
@@ -1070,7 +1027,7 @@ Lib_LoadBMPBuffer(void *data, v_object **img)
 		
 		Neuro_GiveImageSize(tmp, &w, &h);
 		
-		tmp->raw_data = XGetImage(dmain->display, *tmp->cwin, 
+		tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
 			0, 0, w, h, 
 			AllPlanes, ZPixmap);
 		
@@ -1110,7 +1067,7 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 			DefaultDepth(dmain->display, dmain->screen));
 
 		
-	XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
+	ab_XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
 			0, 0, width, height);
 	
 	tmp2->alpha = 255;
