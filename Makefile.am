@@ -14,4 +14,5 @@ include_HEADERS= \
 		 include/neuro/graphics.h \
 		 include/neuro/neuro_main.h \
 		 include/neuro/other.h \
-		 include/neuro/typedef.h
+		 include/neuro/typedef.h \
+		 include/neuro/extlib.h
