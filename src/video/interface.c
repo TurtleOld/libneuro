@@ -88,10 +88,10 @@ Neuro_FetchDraw(v_elem *eng, Rectan *psrc, u16 *px, u16 *py, v_object **osurface
 	return 0;
 }
 
+
 int
 Neuro_SetImgPos(v_elem *eng, u16 px, u16 py)
 {
-	Rectan dst;
 	if (!eng)
 		return 1;
 
@@ -104,15 +104,6 @@ Neuro_SetImgPos(v_elem *eng, u16 px, u16 py)
 	if (!px || !py)
 		return 1;
 
-
-	
-	dst.x = eng->current->dx; 
-	dst.y = eng->current->dy;
-	dst.w = eng->current->src.w;
-	dst.h = eng->current->src.h;
-
-	Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
-
 	eng->current->dx = px;
 	eng->current->dy = py;	
 	
@@ -120,9 +111,25 @@ Neuro_SetImgPos(v_elem *eng, u16 px, u16 py)
 }
 
 int
+Neuro_SetImgLayer(v_elem *eng, u32 layer)
+{
+	if (!eng)
+		return 1;
+
+	if (!eng->current)
+		return 1;
+
+	if (Graphics_GetSafeDrawOp() == 0)
+		return 1;
+
+	eng->current->layer = layer;
+	
+	return 0;
+}
+
+int
 Neuro_SetImgSrcPos(v_elem *eng, Rectan *psrc)
 {
-	Rectan dst;
 	if (!eng)
 		return 1;
 
@@ -134,13 +141,6 @@ Neuro_SetImgSrcPos(v_elem *eng, Rectan *psrc)
 
 	if (!psrc)
 		return 1;
-
-	dst.x = eng->current->dx;
-	dst.y = eng->current->dy;
-	dst.w = eng->current->src.w;
-	dst.h = eng->current->src.h;
-
-	Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
 
 	memcpy(&eng->current->src, psrc, sizeof(Rectan));
 
@@ -224,6 +224,17 @@ Neuro_FlushDraw(v_elem *eng)
 
 	if (eng->current->type == TDRAW_SDRAWN)
 	{
+		Rectan dst;
+
+		dst.x = eng->current->dx;
+		dst.y = eng->current->dy;
+		dst.w = eng->current->src.w;
+		dst.h = eng->current->src.h;
+
+		Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
+
+
+
 		eng->current->type = TDRAW_STATIC;
 
 		/* flag the algorithm to tell it something changed 

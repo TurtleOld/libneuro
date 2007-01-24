@@ -156,6 +156,10 @@ extern int Neuro_SetDraw(v_elem *eng, v_object *isurface);
  */
 extern int Neuro_CleanDraw(v_elem *eng);
 
+/* set the layer of a drawn element. */
+extern int Neuro_SetImgLayer(v_elem *eng, u32 layer);
+
+
 /* tags the element to be redrawn by the engine, without this functions, 
  * changes made with the Neuro_FetchDraw function would not be applied to
  * the element.
