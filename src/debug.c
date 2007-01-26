@@ -24,9 +24,10 @@
  */
 
 /*-------------------- Extern Headers Including --------------------*/
-#include <stdio.h>
-#include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h> /* printf vfprintf */
+#include <stdarg.h> /* va_start va_end */
+#include <string.h> /* strcmp */
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <ebuf.h>
@@ -36,6 +37,11 @@
 
 
 /*--------------------      Other       ----------------------------*/
+
+typedef struct DEBUG_CHANNEL
+{
+	char *channel; /* should only contain unallocated strings */
+}DEBUG_CHANNEL;
 
 /*-------------------- Global Variables ----------------------------*/
 
@@ -68,6 +74,38 @@ Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 
 	/* fprintf(stderr, "%s\n", control); */
 	
 	/* free(msg); */
+}
+
+void
+Debug_Channel(const char *channel, char *type, char *filename, 
+		char *funcName, u32 lineNum, u8 output_detailed, char *control, ...)
+{
+	va_list args;
+	DEBUG_CHANNEL *buf;
+	u32 total = 0;
+
+	if (Neuro_EBufIsEmpty(debug_l))
+		return;
+
+	total = Neuro_GiveEBufCount(debug_l) + 1;
+
+	while (total-- > 0)
+	{
+
+		buf = Neuro_GiveEBuf(debug_l, total);
+
+		if (!strcmp(channel, buf->channel))
+		{
+			if (output_detailed == 1)
+				fprintf(stderr, "%s : (%s) %s:%s:%d -- ", type, channel, filename, funcName, lineNum);
+
+			va_start(args, control);
+			vfprintf(stderr, control, args);
+			va_end(args);
+
+			fprintf(stderr, "\n"); /* we do a line feed */
+		}
+	}
 }
 
 /* */
@@ -106,6 +144,21 @@ IsLittleEndian()
 		return 1;
 	else
 		return 0;
+}
+
+void
+Debug_VerboseChannel(const char *channel)
+{
+	DEBUG_CHANNEL *buf;
+
+	if (!channel)
+		return;
+
+	Neuro_AllocEBuf(debug_l, sizeof(DEBUG_CHANNEL*), sizeof(DEBUG_CHANNEL));
+
+	buf = Neuro_GiveCurEBuf(debug_l);
+
+	buf->channel = channel;
 }
 
 /*-------------------- Constructor Destructor ----------------------*/

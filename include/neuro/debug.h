@@ -36,6 +36,12 @@ extern "C" {
  */
 extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum);
 
+extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
+
+extern void Debug_VerboseChannel(const char *channel);
+
+
+
 /*! Prints predefined
  * messages and also makes for a very
  * easy to call function with only one 
@@ -44,6 +50,18 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 #define Debug_Print(x) Neuro_DebugPrint("Debug Message", x, __FILE__, __FUNCTION__, __LINE__)
 #define Error_Print(x) Neuro_DebugPrint("Error Message", x, __FILE__, __FUNCTION__, __LINE__)
 #define Info_Print(x) Neuro_DebugPrint("Information Message", x, __FILE__, __FUNCTION__, __LINE__)
+
+
+#define NEURO_ERROR(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Error", \
+		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+
+#define NEURO_WARN(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Warn", \
+		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+
+#define NEURO_TRACE(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Trace", \
+		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+
+#define NEURO_MODULE_CHANNEL(x) static char *NEURO_CURRENT_CHANNEL=x
 
 /**
  * @sdescri flexible formatted text output function with levels
@@ -85,8 +103,12 @@ extern void Neuro_SetDebugLevel(u8 level);
 */
 extern int IsLittleEndian();
 
+extern int Debug_Init();
+extern void Debug_Clean();
+
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __DEBUG_H */
+#endif /* NOT __DEBUG_H */

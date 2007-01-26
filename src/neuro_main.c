@@ -30,6 +30,7 @@
 #include <graphics.h>
 #include <events.h>
 #include <extlib.h>
+#include <debug.h>
 
 /*-------------------- Main Module Header --------------------------*/
 #include <neuro_main.h>
@@ -71,6 +72,10 @@ Neuro_Init()
 {
 	int _err = 0;
 	
+	_err = Debug_Init();
+	if (_err)
+		return _err;
+
 	_err = Graphics_Init();
 	if (_err)
 	{
@@ -98,4 +103,5 @@ Neuro_Quit()
 	Lib_FontsExit();
 	Events_Clean();
 	Graphics_Clean();
+	Debug_Clean();
 }
