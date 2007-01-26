@@ -20,32 +20,39 @@
  */
 
 /* debug.c
- * Module : Dbg_
+ * Module : Debug
  */
 
-/*--- Extern Headers Including ---*/
+/*-------------------- Extern Headers Including --------------------*/
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-/*--- Local Headers Including ---*/
 
-/*--- Main Module Header ---*/
+/*-------------------- Local Headers Including ---------------------*/
+#include <ebuf.h>
+
+/*-------------------- Main Module Header --------------------------*/
 #include "debug.h"
 
-/*--- Global Variables ---*/
 
-/*--- Static Variables ---*/
+/*--------------------      Other       ----------------------------*/
+
+/*-------------------- Global Variables ----------------------------*/
+
+/*-------------------- Static Variables ----------------------------*/
+
 static u8 debug_level = 0;
 
-/*--- Static Prototypes ---*/
+static EBUF *debug_l;
 
-/*--- Static Functions ---*/
+/*-------------------- Static Prototypes ---------------------------*/
 
-/*--- Global Functions ---*/
 
-/*void
-Neuro_DebugPrint(char *filename, char *funcName, u32 lineNum, const char *control, ...)
-*/
+
+/*-------------------- Static Functions ----------------------------*/
+
+/*-------------------- Global Functions ----------------------------*/
+
 void
 Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum)
 {
@@ -101,7 +108,17 @@ IsLittleEndian()
 		return 0;
 }
 
-/*--- Poll ---*/
+/*-------------------- Constructor Destructor ----------------------*/
 
-/*--- Constructor Destructor ---*/
+int
+Debug_Init()
+{
+	Neuro_CreateEBuf(&debug_l);
+	return 0;
+}
 
+void
+Debug_Clean()
+{
+	Neuro_CleanEBuf(&debug_l);
+}
