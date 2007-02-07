@@ -193,6 +193,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+EXTRA_DIST = video.h pool.h
 noinst_LTLIBRARIES = libvideo.la
 lib_sources = \
 		painter.c \

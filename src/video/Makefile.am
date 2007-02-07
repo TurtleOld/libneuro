@@ -1,5 +1,7 @@
 #!/bin/bash
 
+EXTRA_DIST = video.h pool.h
+
 noinst_LTLIBRARIES = libvideo.la
 
 lib_sources = 	\

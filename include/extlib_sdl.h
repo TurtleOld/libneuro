@@ -22,7 +22,41 @@
 #undef XK_Page_Up
 #undef XK_Page_Down
 
+/* numeric keypad */
+#undef XK_KP_0
+#undef XK_KP_1
+#undef XK_KP_2
+#undef XK_KP_3
+#undef XK_KP_4
+#undef XK_KP_5
+#undef XK_KP_6
+#undef XK_KP_7
+#undef XK_KP_8
+#undef XK_KP_9
+#undef XK_KP_Decimal
+#undef XK_KP_Divide
+#undef XK_KP_Multiply
+#undef XK_KP_Subtract
+#undef XK_KP_Add
+#undef XK_KP_Enter
+#undef XK_KP_Equal
+
+/* numlock elements */
+#undef XK_KP_Insert
+#undef XK_KP_End
+#undef XK_KP_Down
+#undef XK_KP_Page_Down
+#undef XK_KP_Left
+#undef XK_KP_Begin
+#undef XK_KP_Right
+#undef XK_KP_Home
+#undef XK_KP_Up
+#undef XK_KP_Page_Up
+#undef XK_KP_Delete
+
 #endif /* XK_BackSpace */
+
+
 
 #define XK_BackSpace		0x0008	/* back space, back char */
 #define XK_Tab			0x0009
@@ -46,5 +80,39 @@
 #define XK_Page_Down		0x0119
 /*#define XK_End			0x0157*/	/* EOL */
 /*#define XK_Begin		0x0158*/	/* BOL */
+
+/* numeric keypad */
+#define XK_KP_0			256
+#define XK_KP_1			257
+#define XK_KP_2			258
+#define XK_KP_3			259
+#define XK_KP_4			260
+#define XK_KP_5			261
+#define XK_KP_6			262
+#define XK_KP_7			263
+#define XK_KP_8			264
+#define XK_KP_9			265
+#define XK_KP_Decimal		266
+#define XK_KP_Divide		267
+#define XK_KP_Multiply		268
+#define XK_KP_Subtract		269
+#define XK_KP_Add		270
+#define XK_KP_Enter		271
+#define XK_KP_Equal		272
+
+/* numlock elements */
+/*
+#define XK_KP_Insert
+#define XK_KP_End
+#define XK_KP_Down
+#define XK_KP_Page_Down
+#define XK_KP_Left
+#define XK_KP_Begin
+#define XK_KP_Right
+#define XK_KP_Home
+#define XK_KP_Up
+#define XK_KP_Page_Up
+#define XK_KP_Delete
+*/
 
 #endif /* NOT __EXTLIB_SDL_H */
