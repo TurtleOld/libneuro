@@ -1,97 +1,11 @@
 Things to do in the neuro library.
 
-
-graphics engine : 
-	- fix the dynamic redraw of the tiles below the dynamic object, it does not seem to work
-	  perfectly; it redraw a very small portion of the dynamic object instead of the tile below 
-	  on the edges, barely noticeable.
-	- also noticed bad redraws in isoe when the robot goes off screen; tiles around seems to
-	  blink black very fast, barely noticeable. Confirmed this is a bug with type 0 or 3
-	  bounds case. Quick fix done, need to test it.
-	- implement a way to change a certain color into an image to support things like
-	  font colors. Would need to be implemented low in the drawing process. - won't do it
-	- implement a fast independant alpha module, something called after the actual low level
-	  draw.  - done
-	
-
-network engine/module : 
-	code it.
-
-listimg module :
-	move it to neuro.
-
-sprite module :
-	move it to neuro.
-
-** bitmap loader module (X11) :
-	- find a way to convert it so it creates an XImage directly (or indirectly by providing
-	  its ressources so the X11 abstraction layer can take care of creating an XImage out
-	  of those). Currently, the bitmap only saves to the pixmap format and then we push this
-	  image to the pixmap standard lib in X11 which makes it all Very slow. 
-	  This is an important change that will need to be worked on very soon because programs
-	  depending on neuro will need to dynamically load images anytime to avoid using too
-	  much memory.
-	- Core bitmap should be made independant and remove the char *symbol of the color struct.
-	- 24 BPP could be made faster if we had a map of the colors already inputed; Instead
-	  of looping everytime the color buffer to see if a color was already added, we would
-	  simply do a certain & with the color binary map to see if it was already added or no.
-	  This method would use too much memory, need to find a way to implement this resonably.
-
-
-*** core graphics :
-	- Make an abstraction of the images themselves, only the screen would be in common
-	  with the library in use (Would place neuro in direct competition with SDL).
-	  Perhaps keep being semi independant(to, for example, keep using the ultra performant
-	  X11 blitter) and only use our own blitter for special things like alpha rendering.
-
-* add a function to Load bitmaps from memory :
-	- Initially to support Unicode Truetype fonts but would probably be very useful for
-	  other things too. DONE in SDL... TODO in X11(need to add new functions to bitmap module)
-	  - done (untested)
-
-* video -- graphics module : 
-	- Change the Dynamic type so it stays drawn until the external program explicitly tells it
-	  to clean it. (Eventually, this will completely remplace the static dynamic method and
-	  only this method will be used for both cases). - done
-
-* extlib -- Add abstract Fonts (Unicode) support :
-	- To make SDL have fonts, we will use SDL_ttf and for X11, we will use the freetype2
-	  library(and X11 bitmap for them). - done (with issues)
-
 extlib -- change the Lib_ prefix (low priority):
 	- Change the Lib_ prefix of the extlib module to something less common so apps that use
 	  Neuro won't have conflits if they themselves use the prefix Lib_.
 
-extlib | other -- indirect extlib access :
-	- External applications should not at all call the functions directly from the extlib
-	  module. We need to have redundant functions that will serve as an interim between
-	  extlib and the extern application. I suggest NEURO.h get its include of extlib.h
-	  removed so external programs will have a warning if they use the extlib functions.
-	   - done (didn't remove extlib.h from NEURO.h yet)
-
-graphics engine -- drawing push functions to return address :
-	- In order for external applications to be able to destroy or modify drawing entries,
-	  the graphics engine's drawing push functions will now return the address of the 
-	  elements it adds and new functions will be made to either modify those elements
-	  or destroy them. - done (actually, this is a duplicate)
-
 * extlib sdl -- default depth currently static 16 :
 	- make this so it is settable and not just a static 16.
-
-extlib sdl -- code the fonts :
-	- code the fonts, I think we will use our own freetype function instead of
-	  SDL_ttf after all.
-
-graphics engine -- cleaning of same layers priority :
-	- We need to bring up a priority inside items with the same layers so that instructions
-	  to clean are actually PUT in the beginning of tasks to do and the rest after;
-	  So precedence would always put the cleaning tasks in the front line. This would avoid
-	  tasks to draw (especially text) never be done before it is cleaned... This might
-	  be a bug however because the redraw function is supposed to handle that...
-	    - I think this ain't needed anymore
-
-graphics engine -- change draw_this_cycle flag behavior :
-	- Change this flag's behavior so it handles volatile images the correct way.
 
 extlib -- memory leak with the fonts :
 	- I noticed we have a memory leak concerning our interfacing with the
@@ -101,7 +15,20 @@ graphics engine : coredraw -- review and heavily test Graphics_RedrawSection :
 	- I noticed this function is really the weak point of the painter's algorithm
 	  and thus needs heavy testing and consolidation.
 
-extlib X11 -- Lib_SetColorKey :
-	- I want this function to create a bitmask to the input image it recieves.
-	  Currently, it just sets a flag so libxpm makes the correct pixel type
-	  transparent with a bitmask, but we'll get rid of libxpm very soon.
+***goals for 1.0 :
+	- make the extlib drivers their own shared 
+	  objects that neuro could dynamically load
+	  during runtime. A configuration file would
+	  be used to set which one of the drivers to
+	  load.
+	- code openGL drivers for neuro, those drivers
+	  would probably have more extensible set of
+	  functions which could be used by the applications.
+	  So I guess it would be a different branch than
+	  the 2d extlib ones.
+
+extlib X11 -- implement gfx shared memory :
+	- in order to get far faster performances with
+	  pretty much any graphical operations, the
+	  addition of MIT shared memory for every images
+	  will be used.
