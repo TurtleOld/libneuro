@@ -188,7 +188,7 @@ extern void Neuro_CreateEBuf(EBUF **eng);
  * ... \n \n
  *
  * Neuro_CreateEBuf(&myeng); \n \n
- * Neuro_SetcallbEBuf(myeng, &callbackclean); \n \n
+ * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
  *
  * ... \n \n
  *
