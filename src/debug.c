@@ -147,7 +147,7 @@ IsLittleEndian()
 }
 
 void
-Debug_VerboseChannel(const char *channel)
+Debug_VerboseChannel(char *channel)
 {
 	DEBUG_CHANNEL *buf;
 

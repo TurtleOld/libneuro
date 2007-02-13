@@ -38,7 +38,7 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 
 extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
-extern void Debug_VerboseChannel(const char *channel);
+extern void Debug_VerboseChannel(char *channel);
 
 
 

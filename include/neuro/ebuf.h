@@ -489,7 +489,8 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 /** Neuro_GiveEBuf()
  *
  * @sdescri
- * give the element corresponding to the number [elem]
+ * gives the element corresponding to the number input in
+ * elem.
  *
  * @description
  * This function is the default way of getting the 
@@ -507,6 +508,7 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  * a void pointer that points to the data.
  *
  * @examples
+ * TODO
  *
  *
  *
