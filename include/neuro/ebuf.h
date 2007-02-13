@@ -30,49 +30,72 @@
  * Neuro_EBuf
  *
  * @description
- * The EBUF module. Stands for Engine Buffer, it's use is to
- * abstract memory allocation and reallocation. It provides 
- * a secure and easy way to dynamically add, remove and modify
- * entries from a dynamic array. \n \n \n
+ * IN SHORT : \n \n
+ * The EBUF module. Stands for Engine Buffer. 
+ * Its primary use is to make the allocation and 
+ * reallocation of structures quick and easy;
+ * It provides secure and easy ways to 
+ * dynamically add, remove and modify entries 
+ * from a buffer. 
+ * \n \n \n
  *
  *
  * INTRODUCTION : \n \n
- * In this text, I will present you with the way the module has
+ * This manual presents the way the module has
  * to be used (which functions to call and in what order) briefly,
- * without going into details about how to use a function exactly.
- * This is merely a backbone to individual function man pages for
- * this module. \n \n \n
+ * without however, going into too much details. The goal is to 
+ * give a general insight as to which functions are needed to 
+ * attain a result. \n \n \n
  *
  *
  * BEGINNING : \n \n
  * To make use of even the slightest of this module, the first 
- * required thing to do is to create a pointer variable to an EBUF
- * type element. \n \n
- * This special structure's content is hidden to external
- * applications and it is used to contain internal data 
- * and informations about an instance. Take note that this module
- * can support a virtually infinite amount of independant 
- * instances. \n \n \n
+ * requirement is to create a pointer to an EBUF type. \n \n
+ *
+ * here's an example : EBUF *abuffer; \n \n
+ *
+ * You cannot use a direct variable like : EBUF abuffer  --
+ * for parity reasons(safegard of the data integrity),
+ * the content of the structure is to remain hidden
+ * from external programs. \n 
+ *
+ * The EBuf module is completely reentrant, meaning it does 
+ * not contain global data in the module, making it
+ * thread safe. \n \n \n
  *
  *
  * INITIALISING AND FREEING : \n \n
- * Now that you have your instance pointer, you need to initialise 
- * it by using the Neuro_CreateEBuf(3) function. Among other, 
- * it allocates and sets (to 0) internal variables. \n
- * When no longer needed, every instances should be freed by using
- * the function Neuro_CleanEBuf(3). \n 
- * In addition to the normal freeing, you can also set a callback
- * function by calling the function Neuro_SetcallbEBuf(3) which can
- * be used to "manually" free inter data allocations. (see the
- * function's man page for much more detailed informations). \n
- * The function Neuro_SetcallbEBuf(3) is normally called right after
- * calling the function Neuro_CreateEBuf(3). \n \n \n
+ * Now that the EBUF pointer is created, the next step is to 
+ * initialize it by using Neuro_CreateEBuf(3). Among other, 
+ * it allocated enough memory for its own internal data and 
+ * then resets them to default initial values. \n
+ *
+ * When no longer needed, the pointer should be freed by using
+ * Neuro_CleanEBuf(3). It frees the EBUF's internal buffer 
+ * completely. In the case that the use of the EBUF pointer
+ * is needed after it is freed, the call of Neuro_CreateEBuf(3)
+ * is required again. In the case that just one element 
+ * in the buffer needs to be freed, the use of
+ * Neuro_SCleanEBuf(3) is required. \n 
+ *
+ * In addition to normal freeing, you can also set a callback
+ * right after the initialization using Neuro_SetcallbEBuf(3). 
+ * The callback will be called for every elements that the 
+ * EBUF contains right before they are freed (by either calling 
+ * Neuro_CleanEBuf(3) or Neuro_SCleanEBuf(3)), permitting 
+ * the manual freeing of allocated pointers inside the structure. 
+ * Among other, this permits EBUF pointers to contain other
+ * EBUF pointers and/or manually allocated pointers and the
+ * hability to free them cleanly.\n \n \n
  *
  * ALLOCATING NEW DATA : \n \n
+ * 
  * by now, we have initalised and possibly set a callback to the
  * instance, but we are still missing an important step :
  * creating a structure template which the instance EBUF will 
- * contain. A basic structure template was used in the example in
+ * contain. Theres only two ways to allocate : Neuro_AllocEBuf(3)
+ * and Neuro_MultiAllocEBuf(3)
+ * A basic structure template was used in the example in
  * the man page for the function Neuro_AllocEBuf(3) which is 
  * exactly the function we need to use to allocate a new element.
  *
@@ -81,7 +104,13 @@
  * create dynamic arrays of structures. Hence the use of the term
  * element to call a single array that we will allocate.)
  *
- *
+ * READ AND WRITE : \n \n
+ * reading from an ebuf element is quite easy, it works kind of
+ * the same as when you call malloc(). After calling Neuro_AllocEBuf(3)
+ * or Neuro_MultiAllocEBuf(3), you can use either Neuro_GiveEBuf(3) 
+ * or Neuro_GiveCurEBuf(3). Those two functions return a void pointer
+ * which you simply put into the correct variable. You can then read
+ * or write from the structure directly.
  *
  **/
 
@@ -156,7 +185,7 @@ extern void Neuro_CreateEBuf(EBUF **eng);
  *
  *
  * @param[in]
- * an EBUF element.
+ * an EBUF pointer.
  *
  * @param[in]
  * a callback which itself contain an argument to a void pointer.
@@ -230,7 +259,7 @@ extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
  * it is not really recommended unless you know what you are doing.
  *
  * @param[in]
- * an EBUF element.
+ * an EBUF pointer.
  *
  * @param[in]
  * the size of the pointer form of the structure (usually sizeof can be used to find it).
@@ -279,7 +308,7 @@ extern void Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj);
  * function won't work if theres already allocated slots in the EBUF.
  *
  * @param[in]
- * an EBUF element.
+ * an EBUF pointer.
  *
  * @param[in]
  * the amount of slots to allocate.
@@ -339,7 +368,7 @@ extern void Neuro_CleanEBuf(EBUF **eng);
  * which can be set using the function Neuro_SetcallbEBuf(3) is also called with this function.
  *
  * @param[in]
- * an EBUF element.
+ * an EBUF pointer.
  *
  * @param[in]
  * the pointer to an element contained in the EBUF buffer which needs to be cleaned.
@@ -397,7 +426,7 @@ extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
  * Neuro_EBufIsEmpty(3) to check if its empty or not.
  *
  * @param[in]
- * an EBUF element.
+ * an EBUF pointer.
  *
  * @returnval
  * the amount of elements in the EBUF element.
@@ -457,7 +486,32 @@ extern void *Neuro_GiveCurEBuf(EBUF *eng);
  */
 extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 
-/* give the element corresponding to the number [elem] 
+/** Neuro_GiveEBuf()
+ *
+ * @sdescri
+ * give the element corresponding to the number [elem]
+ *
+ * @description
+ * This function is the default way of getting the 
+ * pointer of an allocated element. The pointer can 
+ * be used to access the data and read/write to it.
+ *
+ * @param[in] 
+ * an EBUF pointer.
+ *
+ * @param[in]
+ * this argument corresponds to the element number
+ * that you want to fetch from the buffer.
+ *
+ * @returnval
+ * a void pointer that points to the data.
+ *
+ * @examples
+ *
+ *
+ *
+ *
+ * @related
  * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3), 
  * Neuro_GiveEBufCount(3)
  */

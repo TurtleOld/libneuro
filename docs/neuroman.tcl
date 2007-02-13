@@ -101,7 +101,7 @@
 
 # -- constants --
 # put the version here
-set version "2.0.2b"
+set version "2.0.7b"
 
 # -- global variables --
 
@@ -525,7 +525,9 @@ proc genMan_Unique {comment} {
 
 	if {[llength $mdescription] > 0} {
 		puts $fp ".SH DESCRIPTION"
+		
 		#replace_Stars_By_Void mdescription
+		
 		replace_Stars_By_Space mdescription
 		
 		puts $fp [subst "$mdescription"]
