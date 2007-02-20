@@ -15,6 +15,14 @@ graphics engine : coredraw -- review and heavily test Graphics_RedrawSection :
 	- I noticed this function is really the weak point of the painter's algorithm
 	  and thus needs heavy testing and consolidation.
 
+bitmap loading : 
+	- The bitmap loader blocks the process until it finished loading a bitmap.
+	  The establishment of a new non blocking sequencially loading (by using
+	  a poll function) to gradually load a bitmap should be made.
+	  The bitmap would then be able to load an infinite amount of bitmaps at
+	  the same time since every bitmaps would each have a bitmap context that
+	  will keep everything necessary to load the bitmap.
+
 ***goals for 1.0 :
 	- make the extlib drivers their own shared 
 	  objects that neuro could dynamically load

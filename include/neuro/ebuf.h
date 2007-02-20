@@ -97,12 +97,8 @@
  * and Neuro_MultiAllocEBuf(3)
  * A basic structure template was used in the example in
  * the man page for the function Neuro_AllocEBuf(3) which is 
- * exactly the function we need to use to allocate a new element.
- *
- * (allocate a new element? didn't we just allocated one with
- * Neuro_CreateEBuf(3)?  -- Yes! but the use of EBUF is to easily
- * create dynamic arrays of structures. Hence the use of the term
- * element to call a single array that we will allocate.)
+ * exactly the function we need to use to allocate a new element. 
+ * \n \n \n
  *
  * READ AND WRITE : \n \n
  * reading from an ebuf element is quite easy, it works kind of
