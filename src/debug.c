@@ -94,7 +94,7 @@ Debug_Channel(const char *channel, char *type, char *filename,
 
 		buf = Neuro_GiveEBuf(debug_l, total);
 
-		if (!strcmp(channel, buf->channel))
+		if (!strcmp(channel, buf->channel) || !strcmp(type, buf->channel))
 		{
 			if (output_detailed == 1)
 				fprintf(stderr, "%s : (%s) %s:%s:%d -- ", type, channel, filename, funcName, lineNum);
