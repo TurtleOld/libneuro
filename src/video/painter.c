@@ -366,7 +366,7 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	}
 	
 	/* we reserve the first 5 spots for our need 
-	 * we might reserve more than just one
+	 * we might reserve more than 5
 	 * if the need comes out.
 	 */
 	buf->layer = layer + 5;

@@ -280,7 +280,7 @@ Graphics_CoreDrawAll()
 {
 	Rectan isrc, idst;
 	INSTRUCTION_ENGINE *cur, *last = NULL;
-	u32 safety = 1000; /* safety decrementor to avoid death loop */
+	u32 safety = 10000; /* safety decrementor to avoid death loop */
 		
 	if (Neuro_EBufIsEmpty(Graphics_GetQueueBuffer()))
 		return;	

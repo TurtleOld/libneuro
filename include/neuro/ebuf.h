@@ -89,7 +89,6 @@
  * hability to free them cleanly.\n \n \n
  *
  * ALLOCATING NEW DATA : \n \n
- * 
  * by now, we have initalised and possibly set a callback to the
  * instance, but we are still missing an important step :
  * creating a structure template which the instance EBUF will 
@@ -106,8 +105,68 @@
  * or Neuro_MultiAllocEBuf(3), you can use either Neuro_GiveEBuf(3) 
  * or Neuro_GiveCurEBuf(3). Those two functions return a void pointer
  * which you simply put into the correct variable. You can then read
- * or write from the structure directly.
+ * or write from the structure directly. \n \n \n
+ * 
+ * MOVING DATA : \n \n
+ * on certain occasions, you might want to change the order by which
+ * the data in the EBUF buffer is organised. This is needed when you
+ * want to sort the elements. For this effect, we actually need to use
+ * the function Neuro_SetEBuf(3) to copy a certain element to a 
+ * precise address on the buffer. This can't be used directly, we 
+ * actually need to get the address of the element we want to change.
+ * To get the address of a certain element, we need to use the function
+ * Neuro_GiveEBufAddr(3). \n
+ * Here's how we do it : \n \n
  *
+ * -- in this code example, we will transfer the last element into -- \n
+ * -- a certain position in the buffer and transfer that certain -- \n
+ * -- position into the last place. -- \n \n
+ *
+ * -- ST is a structure we use throughout the EBUF man pages -- \n
+ * -- if you have no idea whats it for, check a few man paged -- \n
+ * -- on EBUF, especially the Neuro_SetcallbEBuf(3) one. -- \n
+ * -- we assume this pointer already points to an EBUF element -- \n
+ * ST *element; \n
+ * u32 elem_value; \n \n
+ *
+ * ... \n \n
+ * 
+ * -- we need the array number of the element to call the next -- \n
+ * -- functions -- \n
+ * if (Neuro_GiveEBufElem(myeng, element, &elem_value)) \n
+ * 	return; -- an error occured so we bail out -- \n
+ *
+ * -- we then copy the last element into that certain's element address -- \n
+ * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, elem_value), Neuro_GiveCurEBuf(myeng)); \n \n
+ *
+ * -- now that we copied the address of the last element into -- \n
+ * -- our certain element. we need to copy our certain element into -- \n
+ * -- the last position. -- \n \n
+ *
+ * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, Neuro_GiveEBufCount(myeng)), element); \n \n
+ *
+ * And thats it folks! Now, next time we loop the buffer, the order will have
+ * a certain element at the end and the last element in what ever position our
+ * certain element was.
+ * \n \n \n
+ *
+ * PLEASE NOTE : you CAN'T use the returned value of the function 
+ * Neuro_GiveEBufCount(3) to FIGURE if the EBUF is empty (ie it 
+ * doesn't contain any elements or isn't allocated by Neuro_CreateEBuf(3)).
+ * FOR THIS, you have to use the function Neuro_EBufIsEmpty(3) which returns
+ * 1 if the buffer can NOT be used and 0 if it CAN. Any use of an EBUF
+ * which returns 1 when you call Neuro_EBufIsEmpty(3) can create VERY
+ * unwanted results and VERY likely cause a segmentation fault.
+ *
+ * @related
+ * Neuro_CreateEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3),
+ * Neuro_CleanEBuf(3), Neuro_SCleanEBuf(3),
+ * Neuro_GiveEBufCount(3), Neuro_GiveEBufElem(3),
+ * Neuro_GiveCurEBuf(3), Neuro_GiveEBufAddr(3),
+ * Neuro_GiveEBuf(3), Neuro_GiveEBufCore(3),
+ * Neuro_SetEBuf(3), Neuro_CopyEBuf(3),
+ * Neuro_ResetEBuf(3), Neuro_EBufIsEmpty(3)
  **/
 
 /* 
@@ -463,22 +522,173 @@ extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
  */
 extern u32 Neuro_GiveEBufCount(EBUF *eng);
 
-/* give the array number of the element [object] 
- * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
- * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
- * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+/** Neuro_GiveEBufElem
+ * @sdecri
+ * output the array number of the element object 
+ *
+ * @description
+ * This function is used to get the array number
+ * of a structure pointer which is inside
+ * the buffer eng. If the element is not 
+ * contained inside the buffer, this will
+ * return 1 and 0 on success. Make sure to
+ * put either a real integer or an allocated
+ * one's address for the *elem argument.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @param[in]
+ * a void pointer of an element 
+ * of which the array number will be put
+ * in the output integer.
+ *
+ * @param[out]
+ * the array number of the element in the
+ * void pointer.
+ *
+ * @returnval
+ * either 0 or 1. 1 on error (when the pointer object is not
+ * found in the buffer eng or when the buffer eng is NULL).
+ * 0 on no error.
+ *
+ * @examples
+ * \n
+ * typedef struct ST \n
+ * { \n
+ * 	char *someString; \n
+ * }ST; \n \n \n
+ *
+ * -- we create a struct element -- \n
+ * -- called an_element into which -- \n
+ * -- we will put the address of an ebuf allocated element -- \n
+ * -- this method can be used to track certain key elements inside the buffer. -- \n
+ *
+ * static ST *an_element; \n \n
+ *
+ * static EBUF *myeng; \n \n
+ *
+ * static void \n
+ * callbackclean(void *src) \n
+ * { \n
+ * 	ST *temp; \n \n
+ *
+ * 	temp = (ST*)src; \n \n
+ *
+ * 	if (temp) \n
+ * 	{ \n
+ * 		if (temp->someString) \n
+ * 			free(temp->someString); \n
+ * 	} \n
+ * } \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
+ *
+ * ... \n \n
+ *
+ * ST *foo; \n \n
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ *
+ * foo = Neuro_GiveCurEBuf(myeng); \n \n
+ *
+ *
+ * foo->someString = (char*)malloc(50); \n \n
+ *
+ * -- we set our variable to the address that the pointer foo points to -- \n
+ * -- this makes it behave the exact same as if it was actually -- \n
+ * -- the pointer foo... we can then access the data from it -- \n
+ *  -- for any purpose and fast. -- \n
+ * an_element = foo; \n \n
+ * 
+ * ... \n \n
+ *
+ * -- in a certain function, we use the content of the pointer an_element -- \n
+ * -- but for certain cases we also need to get its array number. -- \n
+ * -- This only works if this particular pointer was allocated in an EBUF. -- \n \n
+ *
+ * u32 elem_value = 0; \n \n
+ *
+ * if (Neuro_GiveEBufElem(myeng, an_element, &elem_value)) \n
+ * { \n
+ * 	printf("an error happened, the element (an_element) wasn't found in the buffer (myeng)\n"); \n
+ * 	return; \n
+ * } \n \n
+ *
+ * -- now, if there wasn't any errors, the variable an_element -- \n
+ * -- contains the array number for the pointer an_element. -- \n
+ * -- this number can be used with the function Neuro_GiveEBuf(3) or Neuro_GiveEBufAddr(3). \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng);
+ *
+ * 
+ *
+ * @related
+ * Neuro_GiveEBufAddr(3), Neuro_GiveEBuf
  */
 extern int Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem);
 
-/* gives the last element of the buffer 
- * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3)
+/** Neuro_GiveCurEBuf
+ * @sdescri
+ * outputs the last element of the buffer.
+ *
+ * @description
+ * before this function, we had to get the number of
+ * elements from the buffer using Neuro_GiveEBufCount(3)
+ * and then call Neuro_GiveEBuf(3) to get the element.
+ * Now, this function can be used to have the exact same
+ * result but in just one call.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @returnval
+ * the pointer of the element. It returns NULL on error.
+ *
+ * @examples
+ * -- see the man page for Neuro_GiveEBuf(3) for how this -- \n
+ * -- function can be used. Also, almost all the functions -- \n
+ * -- use this function in their examples so just check how --\n
+ * -- they use it... usually, this function is called right -- \n
+ * -- after you allocate the buffer using Neuro_AllocEBuf(3), -- \n
+ * -- because we need to get the pointer so we can populate it. -- \n
+ *
+ * @related
+ * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3),
+ * Neuro_GiveEBuf(3)
  */
 extern void *Neuro_GiveCurEBuf(EBUF *eng);
 
-/* give the real address of the element of the number [elem] 
- * Neuro_SCleanEBuf(3) Neuro_GiveEBufElem(3)
- * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
- * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+/** Neuro_GiveEBufAddr
+ * 
+ * @sdescri
+ * gives the real address of the element of the array number elem.
+ *
+ * @description
+ * this function is essential in the event that you want
+ * to change the order into which the EBUF buffer is.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @param[in]
+ * the array number of the element you want the pointer address.
+ *
+ * @returnval
+ * the pointer to a pointer which contains the address of the
+ * element's pointer.
+ *
+ * @examples
+ * see the Neuro_EBuf(3) man page on section MOVING DATA for
+ * an example on how to use this function. 
+ * 
+ * @related
+ * Neuro_GiveEBufElem(3), Neuro_SetEBuf(3),
  */
 extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
 
@@ -501,12 +711,70 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  * that you want to fetch from the buffer.
  *
  * @returnval
- * a void pointer that points to the data.
+ * the pointer to the element from the EBUF. As a void pointer
+ * so it is possible to "morph" it into any other pointer type.
  *
  * @examples
- * TODO
+ * \n
+ * typedef struct ST \n
+ * { \n
+ * 	char *someString; \n
+ * }ST; \n \n \n
+ *
+ * static EBUF *myeng; \n \n
+ *
+ * static void \n
+ * callbackclean(void *src) \n
+ * { \n
+ * 	ST *temp; \n \n
+ *
+ * 	temp = (ST*)src; \n \n
+ *
+ * 	if (temp) \n
+ * 	{ \n
+ * 		if (temp->someString) \n
+ * 			free(temp->someString); \n
+ * 	} \n
+ * } \n \n
+ *
+ * ... \n \n
+ *
+ * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
+ *
+ * ... \n \n
+ *
+ * ST *foo; \n \n
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ *
+ * foo = Neuro_GiveCurEBuf(myeng); \n \n
  *
  *
+ * foo->someString = (char*)malloc(50); \n \n
+ *
+ * 
+ * ... \n \n
+ * -- this code outputs to the default output channel -- \n
+ * -- the content of every elements of the buffer -- \n
+ * u32 total = 0;
+ * ST *temp = NULL;
+ *
+ * if (Neuro_EBufIsEmpty(myeng))
+ * 	return;
+ *
+ * total = Neuro_GiveEBufCount(myeng) + 1;
+ *
+ * while (total-- > 0)
+ * {
+ * 	temp = Neuro_GiveEBuf(myeng, total);
+ *
+ * 	printf("some value : %s\n", temp->someString);
+ * }
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng); \n
  *
  *
  * @related
@@ -515,7 +783,32 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  */
 extern void *Neuro_GiveEBuf(EBUF *eng, u32 elem);
 
-/* give the core buffer of the EBuf element 
+/** Neuro_GiveEBufCore
+ * @sdescri
+ * give the core buffer of the EBuf element 
+ *
+ * @description
+ * this function should never be used, it returns
+ * the actual pointer of the CORE of an EBUF element.
+ * The need of this function is very close to Nill
+ * and it is strongly advised to avoid the use of this
+ * function at all cost.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @returnval
+ * the CORE of the EBUF's main (and only) buffer.
+ *
+ * @example
+ * this function was initially made for bitmap loading
+ * in neuro extlib, it permitted to input simple string
+ * elements and then the ability to give this core 
+ * to the pixmap library so it would load the bitmap
+ * from it. This use was considered a BIG HACK. The neuro
+ * bitmap loading code stopped using this function quite
+ * a long time ago so it is unused anywhere.
+ *
  * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
  * Neuro_GiveEBufAddr(3), Neuro_SetEBuf(3),
  * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
@@ -523,33 +816,113 @@ extern void *Neuro_GiveEBuf(EBUF *eng, u32 elem);
 extern void **Neuro_GiveEBufCore(EBUF *eng);
 
 
-/* copy the content of an element to another 
- * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
- * Neuro_GiveEBufCore(3), Neuro_GiveEBufCore(3),
- * Neuro_CopyEBuf(3), Neuro_ResetEBuf(3)
+/** Neuro_SetEBuf
  *
+ * @sdescri
+ * copy the actual content to another position in the
+ * buffer.
+ *
+ * @description
+ * this function is a key element for the task of sorting
+ * elements among the other elements in the buffer.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @param[in]
+ * the actual address of the pointer of an element from the EBUF.
+ * This informations can ONLY be given by the function
+ * Neuro_GiveEBufAddr(3).
+ *
+ * @param[in]
+ * the pointer of the element to copy to the address to.
+ *
+ * @examples
+ * see the Neuro_EBuf(3) man page on section MOVING DATA for
+ * an example on how to use this function. *
+ *
+ *
+ * Neuro_GiveEBufAddr(3), Neuro_GiveEBufElem(3)
  */
 extern void Neuro_SetEBuf(EBUF *eng, void **to, void *from);
 
-/* copy the content of an EBUF variable to another EBUF variable
- * Note : this is very fast because it is only address copy.
- * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
- * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
- * Neuro_SetEBuf(3), Neuro_ResetEBuf(3)
+/** Neuro_CopyEBuf
+ * @sdecri
+ * copy the content of an EBUF variable to another EBUF variable.
+ *
+ * @description
+ * nothing unusual with this function, it simply cleanly copies the
+ * content of an already created EBUF element to another one
+ * that wasn't created yet. If copy an EBUF to another that
+ * already contains data, you'll create a big memory leak.
+ * Note : this function is very fast because it is only copies addresses.
+ * Note2 : Also note that only one of the two needs to be cleaned;
+ * they both contain the same addresses.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @param[in]
+ * an EBUF pointer which gets copied into the EBUF to.
+ *
+ * @examples
+ * static EBUF *myeng; \n \n
+ *
+ * ... \n \n
+ * 
+ * Neuro_CreateEBuf(&myeng); \n \n
+ *
+ * ... \n \n
+ *
+ * EBUF *clone;
+ *
+ * Neuro_CopyEBuf(clone, myeng);
+ *
+ * ... \n \n
+ *
+ * Neuro_CleanEBuf(&myeng);
+ *
+ *
+ * @related
+ * Neuro_ResetEBuf(3)
  */
 extern void Neuro_CopyEBuf(EBUF *to, EBUF *from);
 
-/* resets the EBUF variable WITHOUT FREEING IT -- Warning this 
+/** Neuro_ResetEBuf
+ * @sdescri
+ * resets the EBUF variable WITHOUT FREEING IT -- Warning this 
  * is a mem leak if you didn't copy the content to another one 
- * Neuro_SCleanEBuf(3) Neuro_GiveEBufAddr(3)
- * Neuro_GiveEBufCore(3), Neuro_SetEBuf(3),
- * Neuro_CopyEBuf(3), Neuro_CopyEBuf(3)
+ *
+ * @description
+ * use the function Neuro_CopyEBuf(3) to backup the addresses for 
+ * the cleaning process prior to using this function please.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @related
+ * Neuro_CopyEBuf(3)
  */
 extern void Neuro_ResetEBuf(EBUF *eng);
 
-/* this is a simple boolean returning function that returns
+/* Neuro_EBufIsEmpty
+ * @sdecri
+ * this is a simple boolean returning function that returns
  * 1 if [eng] is empty and 0 if it holds stuff. 
  *
+ * @description
+ * this function is the only way to know if an EBUF is empty
+ * or not, you CAN'T use the function Neuro_GiveEBufCount(3)
+ * to figure that.
+ *
+ * @param[in]
+ * an EBUF pointer.
+ *
+ * @returnval
+ * 1 if the EBUF is empty and should not be used and 0 if it
+ * was created and populated.
+ *
+ * @related
  * Neuro_GiveEBufCount(3)
  */
 extern u8 Neuro_EBufIsEmpty(EBUF *eng);
