@@ -1,6 +1,6 @@
 #!/bin/bash
 
-EXTRA_DIST = neuroman.tcl make_man.sh man.conf
+EXTRA_DIST = neuroman.tcl make_man.sh
 
 manuals = *.3
 

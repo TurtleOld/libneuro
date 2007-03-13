@@ -19,14 +19,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* bitmap process module */
+/* bitmap.c
+ * Module : Bitmap
+ *
+ * bitmap process module
+ */
 
+/*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
-
-#define old 0
 
 #if USE_ZLIB
 /* this is used to open the bitmaps, 
@@ -41,12 +44,18 @@ typedef gzFile nFILE;
 typedef FILE nFILE;
 #endif /* USE_ZLIB */
 
+/*-------------------- Local Headers Including ---------------------*/
 #include <ebuf.h>
 #include <other.h>
 #include <extlib.h> /* Lib_GetDefaultDepth() */
 
 #include <graphics.h> /* Neuro_PutPixel */
 
+/*-------------------- Main Module Header --------------------------*/
+#include "bitmap.h"
+
+
+/*--------------------      Other       ----------------------------*/
 
 typedef struct BITMAP_HEADER
 {
@@ -86,17 +95,47 @@ typedef struct BITMAP_MAP
 	BITMAP_COLOR *color;
 }BITMAP_MAP;
 
-static u32 color_key = 0; /* this is the pixel we will make it so it is transparent */
+struct BMP_CTX
+{
+	nFILE *f_bitmap;
 
-/* static function prototypes */
+	/* major (buffers) */
+	EBUF *bmap_colors; /* the colors */
+	u8 *buf; /* the buffer that will contain the content of the file */
+	
+	/* minor (mostly pointers and temporary variables) */
+	i32 i; /* incremental variable */
+	u32 skip_i, x, y;
+	
+	u32 psize; /* the full size of the pixels data */
+	u8 *palette; /* the pointer to the palette if theres one */
+	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
+	int aux_var; /* auxiliary variable that can be used by external functions */
+	char *aux_buf; /* same as aux_var but a buffer */
+	double msize;
+	double calc;
+	double tmp;
+	u32 wmult;
+	double pixellen;
+	u32 increm;
+	u8 DATA;
+	v_object *output; /* the image into which we will load the bitmap */
+};
+
+
+/*-------------------- Global Variables ----------------------------*/
+
+/*-------------------- Static Variables ----------------------------*/
+
+/*-------------------- Static Prototypes ---------------------------*/
+
 static void print_bitmap_infos(BITMAP_HDATA *bmap) __attribute__((unused));
 static int fpdata8(nFILE *input, u8 *output) __attribute__((unused));
 static int fpdata16(nFILE *input, u16 *output) __attribute__((unused));
 static int fpdata32(nFILE *input, u32 *output) __attribute__((unused));
 
 
-
-/* static functions */
+/*-------------------- Static Functions ----------------------------*/
 
 static void 
 clean_bmap_color(void *eng)
@@ -586,6 +625,247 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 	}
 }
 
+static i8
+processGradual_BMP(BMP_CTX *ctx, u32 loops)
+{
+	if (ctx == NULL)
+		return -1;
+
+	if (ctx->f_bitmap == NULL)
+		return -1;
+
+	if (ctx->i == 0)
+	{	
+		ctx->bmap = parse_bitmap_header(ctx->f_bitmap);
+		
+		/* TODO TODO XXX check here if the bitmap is valid or not
+		 * first check for the BM word
+		 * then we check for the size of the file in header and size
+		 * we got when reading the file
+		 */
+		{
+			
+		}
+
+		/* if it is valid, we create the buffers */
+		Neuro_CreateEBuf(&ctx->bmap_colors);
+		Neuro_SetcallbEBuf(ctx->bmap_colors, &clean_bmap_color);
+		
+		
+		/* print_bitmap_infos(bmap); */
+		
+		/* process the bitmap(load it in memory) */
+		ctx->i = 0;
+		ctx->psize = ctx->bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
+		ctx->psize = ctx->psize - (ctx->bmap->infoheader.ncolors * 4);
+		/* printf("data size %d\n", psize); */
+
+		if (ctx->bmap->infoheader.ncolors)
+		{
+			process_palette(ctx->f_bitmap, ctx->bmap, ctx->bmap_colors);
+		}
+
+		/* we create the v_object 
+		 *
+		 * will need to put better values for the masks to support SDL.
+		 */
+		{
+			u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;
+
+			if (IsLittleEndian())
+			{
+				switch (Lib_GetDefaultDepth())
+				{
+					case 16:
+					{
+						rmask = 0x0000f800;
+						gmask = 0x000007e0;
+						bmask = 0x0000001f;
+						amask = 0x00000000;
+					}
+					break;
+
+					case 24:
+					{
+						rmask = 0x00ff0000;
+						gmask = 0x0000ff00;
+						bmask = 0x000000ff;
+						amask = 0x00000000;
+					}
+					break;
+
+
+					default:
+					break;
+				}
+			}
+			else
+			{
+				switch (Lib_GetDefaultDepth())
+				{
+					case 16:
+					{
+						rmask = 0x0000001f;
+						gmask = 0x000007e0;
+						bmask = 0x0000f800;
+						amask = 0x00000000;
+					}
+					break;
+					
+					case 24:
+					{
+						rmask = 0x0000ff00;
+						gmask = 0x00ff0000;
+						bmask = 0xff000000;
+						amask = 0x00000000;
+					}
+					break;
+
+					default:
+					break;
+				}
+			}
+
+			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);
+
+			if (ctx->output == NULL)
+				return -1;
+		}
+
+		/* semi static values to skip bytes that form 32 bit chunks in the data */
+
+		ctx->pixellen = (8 / (double)ctx->bmap->infoheader.bits);
+		ctx->msize = ctx->pixellen * 4;
+
+		/* we calculate the number of bytes there is per rows 
+		 * this is mainly so we can know how much "alignment"
+		 * bytes there is (which need to be skipped)
+		 */
+		{
+			ctx->wmult = (u32)ctx->bmap->infoheader.bits / 8;
+
+			if (ctx->wmult == 0)
+				ctx->wmult++;
+
+			ctx->wmult = ctx->wmult * ctx->bmap->infoheader.width;
+		}
+
+		ctx->increm = (u32)ctx->pixellen;
+
+		if (ctx->increm == 0)
+			ctx->increm++;
+
+		ctx->x = (u32)(ctx->bmap->infoheader.width / ctx->msize);
+		ctx->tmp = ctx->msize * ctx->x;
+		ctx->tmp = (double)ctx->bmap->infoheader.width - ctx->tmp;
+		ctx->tmp = ctx->tmp - 0.000001; /* to avoid bugs */
+
+		ctx->x = 0;
+#if USE_ZLIB
+		gzseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
+#else /* NOT USE_ZLIB */
+		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
+#endif /* NOT USE_ZLIB */
+
+	} /* if i == 0 */
+	else /* if i != 0 */
+	{
+		i32 initial = ctx->i;
+
+		Lib_LockVObject(ctx->output);
+
+
+		
+		/* while (ctx->i < ctx->psize) */
+		while (ctx->i < (initial + loops))
+		{			
+			if (ctx->tmp > 0)
+			{
+				/* skip bytes that are inside the bitmap for 
+				 * filling purpose. (the data is purposely filled
+				 * with 0 bits so the data is 32bits aligned)
+				 */
+				if (ctx->skip_i >= ctx->wmult)
+				{
+					ctx->calc = ctx->tmp / ctx->pixellen;
+					ctx->skip_i = (u32)ctx->calc;
+					if (ctx->skip_i < ctx->calc)
+					{
+						ctx->skip_i++;
+					}
+					ctx->skip_i = (4 - ctx->skip_i);
+					ctx->i += ctx->skip_i;
+
+#if USE_ZLIB
+					gzseek(ctx->f_bitmap, ctx->bmap->header.offset + ctx->i, SEEK_SET);
+#else /* NOT USE_ZLIB */
+					fseek(ctx->f_bitmap, ctx->bmap->header.offset + ctx->i, SEEK_SET);
+#endif /* NOT USE_ZLIB */
+					
+					/*
+					printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
+							skip_i,
+							wmult, 
+							bmap->infoheader.width, 
+							tmp, 
+							pixellen, calc);
+					*/
+					
+					ctx->skip_i = 0;
+				}
+				
+				ctx->skip_i += ctx->increm;
+
+				if (ctx->i >= ctx->psize)
+					break;
+			}
+
+			
+			fpdata8(ctx->f_bitmap, &ctx->DATA);
+
+			process_bitmap2(ctx->bmap, ctx->output, ctx->palette, &ctx->DATA, 
+					ctx->bmap_colors, &ctx->x, &ctx->y, &ctx->aux_var, &ctx->aux_buf);
+
+			ctx->i++;
+		}
+
+		Lib_UnlockVObject(ctx->output);
+
+
+
+		if (ctx->i >= ctx->psize)
+		{ /* this bitmap finished being loaded, we free everything */
+
+			/* to prevent further calls to be processed */
+			ctx->i = -1;
+
+			if (ctx->bmap)
+				free(ctx->bmap);
+			if (ctx->buf)
+				free(ctx->buf);
+			if (ctx->aux_buf)
+				free(ctx->aux_buf);
+			
+			Neuro_CleanEBuf(&ctx->bmap_colors);
+
+#if USE_ZLIB
+			if (ctx->f_bitmap)
+				gzclose(ctx->f_bitmap);
+#else /* NOT USE_ZLIB */
+			if (ctx->f_bitmap)
+				fclose(ctx->f_bitmap);
+#endif /* NOT USE_ZLIB */
+
+			return 100;
+		}
+
+		return (u8)(((u32)(ctx->psize * 100) / (u32)(ctx->i * 100)) / 100);
+	}
+
+	/* this never happens unless the image was already loaded */
+	return -1;
+}
+
 static v_object *
 processFD_BMP(nFILE *f_bitmap)
 {
@@ -868,29 +1148,7 @@ processFD_BMP(nFILE *f_bitmap)
 	return output;
 }
 
-/* Global functions */
-
-void
-cleanPixmapEbuf(EBUF **pixmap)
-{
-	Neuro_CleanEBuf(pixmap);
-}
-
-void
-setBitmapColorKey(u32 key)
-{
-	color_key = key;
-}
-
-void
-readBitmapBufferToPixmap(char *data, EBUF **output_pixmap)
-{
-}
-
-void
-readBitmapFileToPixmap(const char *bitmap, EBUF **output_pixmap)
-{
-}
+/*-------------------- Global Functions ----------------------------*/
 
 v_object *
 readBitmapFile(const char *bitmap)
@@ -906,3 +1164,25 @@ readBitmapFile(const char *bitmap)
 	return processFD_BMP(f_bitmap);
 }
 
+/*-------------------- Poll ----------------------------------------*/
+
+/* returns a percentage of progress */
+u8
+Bitmap_Poll(BMP_CTX *ctx)
+{
+	return processGradual_BMP(ctx, 1);
+}
+
+/*-------------------- Constructor Destructor ----------------------*/
+
+BMP_CTX *
+Bitmap_CreateCTX(const char *path)
+{
+	return NULL;
+}
+
+v_object *
+Bitmap_DestroyCTX(BMP_CTX *ctx)
+{
+	return NULL;
+}

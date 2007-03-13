@@ -10,9 +10,9 @@ AC_INIT(README)
 #
 NEURO_MAJOR_VERSION=0
 NEURO_MINOR_VERSION=49
-NEURO_MICRO_VERSION=5
+NEURO_MICRO_VERSION=21
 NEURO_INTERFACE_AGE=2
-NEURO_REVISION=2
+NEURO_REVISION=12
 NEURO_BINARY_AGE=2
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
@@ -162,9 +162,6 @@ if test $SELECTED_LOWLIB = sdl; then
 	fi
 
 	freetype_enable=yes
-
-	cp include/extlib.h include/neuro
-	cat include/extlib_sdl.h >> include/neuro/extlib.h
 fi
 dnl ----------------
 dnl Zlib check
@@ -193,8 +190,6 @@ if test $SELECTED_LOWLIB = X11; then
 		     [AC_MSG_ERROR(You don't have libXpm)])
 
 	freetype_enable=yes
-	
-	cp include/extlib.h include/neuro
 fi
 
 dnl ----------------
@@ -235,6 +230,8 @@ echo
 # enumerate the Makefiles to be created
 AC_CONFIG_FILES([
 Makefile
+include/Makefile
+include/neuro/Makefile
 src/Makefile
 src/memory/Makefile
 src/video/Makefile
@@ -243,13 +240,6 @@ src/extlib/Makefile
 src/misc/Makefile
 docs/Makefile
 ])
-#add those above when they are started
-#src/gui/Makefile
-#src/script/Makefile
-#src/sound/Makefile
-#src/sound/music/Makefile
-
-
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 

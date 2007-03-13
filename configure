@@ -1514,9 +1514,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 #
 NEURO_MAJOR_VERSION=0
 NEURO_MINOR_VERSION=49
-NEURO_MICRO_VERSION=5
+NEURO_MICRO_VERSION=21
 NEURO_INTERFACE_AGE=2
-NEURO_REVISION=2
+NEURO_REVISION=12
 NEURO_BINARY_AGE=2
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
@@ -21290,9 +21290,6 @@ fi
 	fi
 
 	freetype_enable=yes
-
-	cp include/extlib.h include/neuro
-	cat include/extlib_sdl.h >> include/neuro/extlib.h
 fi
 echo "$as_me:$LINENO: checking for gzgetc in -lz" >&5
 echo $ECHO_N "checking for gzgetc in -lz... $ECHO_C" >&6
@@ -22923,8 +22920,6 @@ fi
 
 
 	freetype_enable=yes
-
-	cp include/extlib.h include/neuro
 fi
 
 
@@ -23100,14 +23095,7 @@ includedir=$includedir/neuro
 echo
 
 # enumerate the Makefiles to be created
-                                                                                ac_config_files="$ac_config_files Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile docs/Makefile"
-
-#add those above when they are started
-#src/gui/Makefile
-#src/script/Makefile
-#src/sound/Makefile
-#src/sound/music/Makefile
-
+                                                                                                    ac_config_files="$ac_config_files Makefile include/Makefile include/neuro/Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile docs/Makefile"
 
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
@@ -23716,6 +23704,8 @@ do
   case "$ac_config_target" in
   # Handling of arguments.
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
+  "include/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/Makefile" ;;
+  "include/neuro/Makefile" ) CONFIG_FILES="$CONFIG_FILES include/neuro/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/memory/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/memory/Makefile" ;;
   "src/video/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/video/Makefile" ;;

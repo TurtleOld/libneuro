@@ -33,6 +33,9 @@
 #include <other.h>
 #include <graphics.h>
 
+/* the bitmap header file */
+#include "../misc/bitmap.h"
+
 /* freetype includes */
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -878,86 +881,6 @@ Lib_LoadBMP(const char *path, v_object **img)
 	*img = readBitmapFile(path);
 
 	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
-
-#if temp
-	EBUF *temp;
-	V_OBJECT *tmp;
-	char **buffer;
-	char **initbuf;
-	/* int i = 0; */
-	int _err = 0;
-
-	/* Debug_Val(0, "V_OBJECT size %d\n", sizeof(V_OBJECT)); */
-	if (Neuro_EBufIsEmpty(vobjs))
-	{
-		*img = NULL;
-		return;
-	}
-	
-	chrono = Neuro_GetTickCount();
-
-	
-	setBitmapColorKey(color_key);
-	readBitmapFileToPixmap(path, &temp);
-	
-	Debug_Val(0, "Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
-	
-	if (!temp)
-	{
-		Debug_Val(0, "Error loading the file %s, it might not exist or its not a bitmap\n", path);
-		return;
-	}
-
-	
-	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
-
-	tmp = Neuro_GiveCurEBuf(vobjs);
-
-	/* Debug_Val(0, "created elem 0x%x\n", tmp); */
-
-	buffer = (char**)Neuro_GiveEBufCore(temp);	
-	
-	initbuf = buffer;
-	
-	chrono = Neuro_GetTickCount();
-	/*_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-			&tmp->data, &tmp->shapemask, &tmp->attrib);*/
-	
-	_err = XpmCreatePixmapFromData(dmain->display, *dmain->cwin, initbuf, 
-		&tmp->data, &tmp->shapemask, NULL);
-
-	Debug_Val(0, "Converting pixmap to Ximage %d\n", Neuro_GetTickCount() - chrono);
-	
-	tmp->cwin = &tmp->data;
-	/* tmp->cwin = &tmp->shapemask; */
-
-	/* by default the image is fully opaque */
-	tmp->alpha = 255;
-
-	tmp->display = NULL;
-	
-	if (_err == 0)
-	{
-		i32 h, w;
-
-		*img = tmp;
-
-		
-		Neuro_GiveImageSize(tmp, &w, &h);
-		
-		tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
-			0, 0, w, h, 
-			AllPlanes, ZPixmap);
-		
-		Debug_Val(0, "Successfully loaded the file %s\n", path);
-
-		/* Debug_Val(0, "At Address %d alpha %d\n", *tmp->cwin, tmp->alpha); */
-	}
-	else
-		Debug_Val(0, "Error loading the file %s with error %d\n", path, _err);
-	
-	Neuro_CleanEBuf(&temp);
-#endif /* temp */
 	
 	return; /* int needed */
 }
@@ -965,6 +888,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 void
 Lib_LoadBMPBuffer(void *data, v_object **img)
 {
+#if temp
 	EBUF *temp;
 	V_OBJECT *tmp;
 	char **buffer;
@@ -1041,6 +965,7 @@ Lib_LoadBMPBuffer(void *data, v_object **img)
 	Neuro_CleanEBuf(&temp);
 	
 	return; /* int needed */
+#endif /* temp */
 }
 
 v_object *

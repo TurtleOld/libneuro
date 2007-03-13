@@ -101,7 +101,7 @@
 
 # -- constants --
 # put the version here
-set version "2.0.7b"
+set version "2.1.3"
 
 # -- global variables --
 
@@ -368,6 +368,16 @@ proc parseComment {comment name sdescri ldescri options returnval example errors
 
 	pushData $ctype $buffer extra
 
+	# we clean the small buffers of any * characters
+	# from the comment syntax
+	Clean_String cname
+	Clean_String small_d
+	Clean_String long_d
+	Clean_String opt
+	Clean_String retv
+	Clean_String exmp
+	Clean_String err
+	Clean_String rela
 }
 
 proc GetStringWord { str current} {
@@ -396,77 +406,34 @@ proc GetStringWord { str current} {
 	return $outword
 }
 
-proc replace_Stars_By_Void {str} {
+proc Clean_String {str} {
 	upvar $str tochange
-	set i 0
-	
-	#echo "string to change : $tochange"
+	set new_string ""
+	set temp ""
 
-	foreach word $tochange {
-		#echo $word	
+	# \\052 == '*'
+	# \\\\175 == '\}' and \c\}
 
-		if {$word == "*"} {
-			lset tochange $i [format "\b"]
-			#echo "matched $word"
-		} elseif {[llength $word] > 1 } {
-			#echo "calling itself"
-			replace_Stars_By_Void word
-			lset tochange $i $word
-		}
+	regsub -all " \\052( |\n|$)" $tochange {} new_string
 
-		incr i
-	}
-	#echo "string changed(finished product) : $tochange"
-}
+	set temp $new_string
+	# we get rid of any * right before a '\}'
+	regsub -all " \\052(\})" $temp "\}" new_string
 
-proc replace_Stars_By_Space {str} {
-	upvar $str tochange
-	set i 0
-	set a 0
-	
-	#echo "string to change : \"$tochange\""
+	set temp $new_string
 
-	set len [string length $tochange]
+	# we get rid of the very annoying space that gets
+	# added at the very beginning for every paragraphs.
+	# we replace by the full string and add a \b character
+	# at the end to get rid of the space.
+	regsub -all "\(\\\\n \)*\\\\n " $temp "&\b" new_string
 
-	#while {$a < $len} {
-	#	set word [GetStringWord $tochange a]
+	set temp $new_string
+	# we also get rid of any trailing spaces
+	regsub -all -line "^ " $temp "" new_string
 
-	#	echo "Replace_Stars_By_Space -> $word \[$a\]"
-	#	if {$word == "*"} {
-	#		set tochange [string replace $tochange $a $a ""]
-	#		#echo "matched $word"
-	#	}
-	#}
 
-	while {$i < $len} {
-		set a $i
-		set i [string first "*" $tochange $i]
-
-		if {$i != $a && $i != -1} {
-			set before [string index $tochange [expr $i - 1]]
-			set after [string index $tochange [expr $i + 1]]
-
-			#echo "BEFORE \"$before\" char \"[string index $tochange $i]\"  AFTER \"$after\" \[$i\]"
-
-			if {$before == ""} {
-				set before " "
-			}
-
-			if {$after == ""} {
-				set after " "
-			}
-
-			if {$before == " " && $after == " "} {
-				set tochange [string replace $tochange $i $i "\b"] 
-			} else {
-				incr i
-			}
-		} else {
-			break
-		}
-	}
-
-	#echo "string changed(finished product) : $tochange"
+	set tochange $new_string
 }
 
 proc genMan_Unique {comment} {
@@ -492,30 +459,24 @@ proc genMan_Unique {comment} {
 	# populate our variables
 	parseComment $comment name msmall_description mdescription moptions mreturnv mexamples merrors mseealso
 
-
 	if {$name == ""} {
 		puts "Error : missing a @name element from a comment"
 		return 
 	}
 
-	# we get rid of any stars in the name string
-	set name [string trim $name "*"]
-	set name [string trim $name " * "]
-	set name [string trim $name "* "]
-	set name [string trim $name " *"]
-
 	if {$individual == 1} {
+		# we get rid of any ending spaces
+		regsub "\( \)*$" $name "" name
+		# we trim the function's name of any leading * in case 
+		# it returns a pointer -- example : char *somefunction()
 		set fp [open "[string trim $name \"*\"].[lindex $config_i 0]" w]
 		#set fp [open "$name.[lindex $config 0]" w]
 	}
-
-	replace_Stars_By_Void name
 	
 	puts $fp ".TH $name [lindex $config_i 0] \"[lindex $config_i 1]\" \"[lindex $config_i 2]\" \"[lindex $config_i 3]\""
 	puts $fp ".SH NAME"
 
 	if {[llength $msmall_description] > 0} {
-		replace_Stars_By_Void msmall_description
 		puts $fp ".TP"
 		puts $fp "[string trim $name \"*\"]"
 		puts $fp "\- $msmall_description"
@@ -525,17 +486,10 @@ proc genMan_Unique {comment} {
 
 	if {[llength $mdescription] > 0} {
 		puts $fp ".SH DESCRIPTION"
-		
-		#replace_Stars_By_Void mdescription
-		
-		replace_Stars_By_Space mdescription
-		
 		puts $fp [subst "$mdescription"]
 	}	
 
 	if {[llength $mreturnv] > 0 && [lindex $function 0] != ""} {
-
-		replace_Stars_By_Void mreturnv
 		puts $fp ".SH RETURN VALUES"
 		puts $fp "$mreturnv"
 	}
@@ -543,23 +497,16 @@ proc genMan_Unique {comment} {
 	if {[string length $mexamples] > 0} {
 		puts $fp ".SH EXAMPLE(S)"
 
-		replace_Stars_By_Space mexamples
-
-		#puts $fp [subst -nocommands -nobackslashes -novariables $mexamples]
 		puts $fp [subst $mexamples]
 	}
 	
 	if {[llength $merrors] > 0} {
-
-		replace_Stars_By_Void merrors
-
 		puts $fp ".SH ERRORS"
 		puts $fp "$merrors"
 	}
 
 	if {[llength $mseealso] > 0} {
 		puts $fp ".SH SEE ALSO"
-		replace_Stars_By_Void mseealso
 		puts $fp "$mseealso"
 	}	
 	
@@ -599,7 +546,6 @@ proc genMan {comment function} {
 	# populate our variables
 	parseComment $comment name msmall_description mdescription moptions mreturnv mexamples merrors mseealso
 
-
 	if {$name == ""} {
 		if {[lindex $function 1] == ""} {
 			# an error
@@ -609,24 +555,16 @@ proc genMan {comment function} {
 
 	}
 
-	# we get rid of any stars in the name string
-	set name [string trim $name "*"]
-	set name [string trim $name " * "]
-	set name [string trim $name "* "]
-	set name [string trim $name " *"]
-
 	if {$individual == 1} {
-		set fp [open "[string trim $name \"*\"].[lindex $config_i 0]" w]
-		#set fp [open "$name.[lindex $config 0]" w]
+		# we trim the function's name of any leading * in case 
+		# it returns a pointer -- example : char *somefunction()
+		set fp [open "[string trimleft $name \"*\"].[lindex $config_i 0]" w]
 	}
-
-	replace_Stars_By_Void name
 	
 	puts $fp ".TH $name [lindex $config_i 0] \"[lindex $config_i 1]\" \"[lindex $config_i 2]\" \"[lindex $config_i 3]\""
 	puts $fp ".SH NAME"
 
 	if {[llength $msmall_description] > 0} {
-		replace_Stars_By_Space msmall_description
 		puts $fp ".TP"
 		puts $fp "[string trim $name \"*\"]"
 		puts $fp "\- [subst $msmall_description]"
@@ -638,16 +576,11 @@ proc genMan {comment function} {
 	#echo $function
 	if {[lindex $function 0] != ""} {
 		puts $fp ".SH SYNOPSIS"
-		puts $fp "[lindex $function 0] $name\([lrange $function 2 [llength $function]]\)"
+		puts $fp "[lindex $function 0] $name\([lrange $function 2 [expr [llength $function] - 2]]\)"
 	}
 
 	if {[string length $mdescription] > 0} {
 		puts $fp ".SH DESCRIPTION"
-		#replace_Stars_By_Void mdescription
-
-		replace_Stars_By_Space mdescription
-
-
 		puts $fp [subst $mdescription]
 	}
 
@@ -657,10 +590,6 @@ proc genMan {comment function} {
 		set ototal [llength $moptions]
 		set i 1
 		set cfunc 3
-
-		replace_Stars_By_Void moptions
-
-		#echo "$moptions"
 
 		puts $fp ".SH ARGUMENTS"
 
@@ -736,32 +665,22 @@ proc genMan {comment function} {
 	}
 
 	if {[llength $mreturnv] > 0 && [lindex $function 0] != ""} {
-
-		replace_Stars_By_Void mreturnv
 		puts $fp ".SH RETURN VALUES"
 		puts $fp "$mreturnv"
 	}
 
 	if {[string length $mexamples] > 0} {
 		puts $fp ".SH EXAMPLE(S)"
-
-		replace_Stars_By_Space mexamples
-
-		#puts $fp [subst -nocommands -nobackslashes -novariables $mexamples]
 		puts $fp [subst $mexamples]
 	}
 	
 	if {[llength $merrors] > 0} {
-
-		replace_Stars_By_Void merrors
-
 		puts $fp ".SH ERRORS"
 		puts $fp "$merrors"
 	}
 
 	if {[llength $mseealso] > 0} {
 		puts $fp ".SH SEE ALSO"
-		replace_Stars_By_Void mseealso
 		puts $fp "$mseealso"
 	}
 

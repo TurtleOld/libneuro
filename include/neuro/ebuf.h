@@ -31,28 +31,32 @@
  *
  * @description
  * IN SHORT : \n \n
- * The EBUF module. Stands for Engine Buffer. 
- * Its primary use is to make the allocation and 
- * reallocation of structures quick and easy;
- * It provides secure and easy ways to 
- * dynamically add, remove and modify entries 
+ *
+ * \\fIEBuf\\fR stands for Engine Buffer. 
+ * Its primary use is to make structures  
+ * \\fIallocation\\fR and \\fIreallocation\\fR quick 
+ * and easy; It provides \\fIsecure\\fR and easy ways to 
+ * dynamically \\fIadd\\fR, \\fIremove\\fR and \\fImodify\\fR entries 
  * from a buffer. 
  * \n \n \n
  *
  *
  * INTRODUCTION : \n \n
- * This manual presents the way the module has
- * to be used (which functions to call and in what order) briefly,
- * without however, going into too much details. The goal is to 
- * give a general insight as to which functions are needed to 
- * attain a result. \n \n \n
+ *
+ * This \\fImanual\\fR presents the way the module has
+ * to be used (which \\fIfunctions\\fR to call and in what order) 
+ * \\fIbriefly\\fR,
+ * without going into too much details. The goal of this \\fImanual\\fR
+ * is to give a general insight as to which functions are 
+ * needed to attain a result. \n \n \n
  *
  *
  * BEGINNING : \n \n
- * To make use of even the slightest of this module, the first 
- * requirement is to create a pointer to an EBUF type. \n \n
  *
- * here's an example : EBUF *abuffer; \n \n
+ * To make use of even the slightest of this module, the first 
+ * requirement is to create a \\fIpointer\\fR to an EBUF type. \n \n
+ *
+ * \\fIhere's an example\\fR : EBUF *abuffer; \n \n
  *
  * You cannot use a direct variable like : EBUF abuffer  --
  * for parity reasons(safegard of the data integrity),
@@ -65,6 +69,7 @@
  *
  *
  * INITIALISING AND FREEING : \n \n
+ *
  * Now that the EBUF pointer is created, the next step is to 
  * initialize it by using Neuro_CreateEBuf(3). Among other, 
  * it allocated enough memory for its own internal data and 
@@ -89,6 +94,7 @@
  * hability to free them cleanly.\n \n \n
  *
  * ALLOCATING NEW DATA : \n \n
+ *
  * by now, we have initalised and possibly set a callback to the
  * instance, but we are still missing an important step :
  * creating a structure template which the instance EBUF will 
@@ -108,6 +114,7 @@
  * or write from the structure directly. \n \n \n
  * 
  * MOVING DATA : \n \n
+ *
  * on certain occasions, you might want to change the order by which
  * the data in the EBUF buffer is organised. This is needed when you
  * want to sort the elements. For this effect, we actually need to use
@@ -614,7 +621,7 @@ extern u32 Neuro_GiveEBufCount(EBUF *eng);
  *
  * if (Neuro_GiveEBufElem(myeng, an_element, &elem_value)) \n
  * { \n
- * 	printf("an error happened, the element (an_element) wasn't found in the buffer (myeng)\n"); \n
+ * 	printf("an error happened, the element (an_element) wasn't found in the buffer (myeng)\\\\n"); \n
  * 	return; \n
  * } \n \n
  *
@@ -721,6 +728,7 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  * 	char *someString; \n
  * }ST; \n \n \n
  *
+ *
  * static EBUF *myeng; \n \n
  *
  * static void \n
@@ -750,32 +758,30 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  *
  * foo = Neuro_GiveCurEBuf(myeng); \n \n
  *
- *
  * foo->someString = (char*)malloc(50); \n \n
  *
- * 
  * ... \n \n
+ *
  * -- this code outputs to the default output channel -- \n
  * -- the content of every elements of the buffer -- \n
- * u32 total = 0;
- * ST *temp = NULL;
+ * u32 total = 0; \n
+ * ST *temp = NULL; \n \n
  *
- * if (Neuro_EBufIsEmpty(myeng))
- * 	return;
+ * if (Neuro_EBufIsEmpty(myeng)) \n
+ * 	return; \n \n
  *
- * total = Neuro_GiveEBufCount(myeng) + 1;
+ * total = Neuro_GiveEBufCount(myeng) + 1; \n \n
  *
- * while (total-- > 0)
- * {
- * 	temp = Neuro_GiveEBuf(myeng, total);
- *
- * 	printf("some value : %s\n", temp->someString);
- * }
+ * while (total-- > 0) \n
+ * { \n
+ * 	temp = Neuro_GiveEBuf(myeng, total); \n \n
+ * 
+ * 	printf("some value : %s\\\\n", temp->someString); \n
+ * } \n \n
  *
  * ... \n \n
  *
  * Neuro_CleanEBuf(&myeng); \n
- *
  *
  * @related
  * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3), 

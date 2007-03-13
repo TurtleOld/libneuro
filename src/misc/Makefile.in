@@ -196,7 +196,7 @@ AM_CFLAGS = @NEUROFLAGS@
 libmisc_la_SOURCES = \
 		other.c \
 		arg.c \
-		bitmap.c
+		bitmap.c bitmap.h
 
 all: all-am
 

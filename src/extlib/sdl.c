@@ -327,6 +327,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 void
 Lib_LoadBMPBuffer(void *data, v_object **img)
 {
+#if temp
 	SDL_RWops *ops;
 
 	if (data == NULL)
@@ -350,6 +351,7 @@ Lib_LoadBMPBuffer(void *data, v_object **img)
 	{
 		Debug_Val(0, "Unable to load buffer image SDL says : %s\n", SDL_GetError());
 	}
+#endif /* temp */
 }
 
 static u8 
