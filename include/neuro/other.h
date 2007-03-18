@@ -27,6 +27,7 @@
 
 #include "neuro_engine.h"
 #include "ebuf.h"
+#include "bitmap.h"
 
 #include <stdlib.h>
 
@@ -224,6 +225,11 @@ extern void Lib_LockVObject(v_object *vobj);
  * the pixels buffer.
  */
 extern void Lib_UnlockVObject(v_object *vobj);
+
+/* temporary macros to call the functions from bitmap.h */
+#define Neuro_CreateBMPCTX Bitmap_CreateCTX
+#define Neuro_DestroyBMPCTX Bitmap_DestroyCTX
+#define Neuro_GradualLoadBMP Bitmap_Poll
 
 #ifdef __cplusplus
 }

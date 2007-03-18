@@ -33,9 +33,6 @@
 #include <other.h>
 #include <graphics.h>
 
-/* the bitmap header file */
-#include "../misc/bitmap.h"
-
 /* freetype includes */
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -73,8 +70,6 @@ static EBUF *vobjs;
 
 static V_OBJECT *dmain;
 static V_OBJECT *scldmain; /* buffer (double) */
-
-static u32 color_key = 0; /* a variable to set the transparent color when loading bitmaps */
 
 #if temp
 static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/

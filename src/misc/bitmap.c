@@ -52,10 +52,12 @@ typedef FILE nFILE;
 #include <graphics.h> /* Neuro_PutPixel */
 
 /*-------------------- Main Module Header --------------------------*/
-#include "bitmap.h"
+#include <bitmap.h>
 
 
 /*--------------------      Other       ----------------------------*/
+
+NEURO_MODULE_CHANNEL("bitmap");
 
 typedef struct BITMAP_HEADER
 {
@@ -629,10 +631,16 @@ static i8
 processGradual_BMP(BMP_CTX *ctx, u32 loops)
 {
 	if (ctx == NULL)
+	{
+		NEURO_WARN("argument ctx is NULL", NULL);
 		return -1;
+	}
 
 	if (ctx->f_bitmap == NULL)
+	{
+		NEURO_WARN("bitmap file descriptor is NULL", NULL);
 		return -1;
+	}
 
 	if (ctx->i == 0)
 	{	
@@ -729,7 +737,10 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);
 
 			if (ctx->output == NULL)
+			{
+				NEURO_WARN("Created output v_object is NULL", NULL);
 				return -1;
+			}
 		}
 
 		/* semi static values to skip bytes that form 32 bit chunks in the data */
@@ -768,7 +779,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 #endif /* NOT USE_ZLIB */
 
 	} /* if i == 0 */
-	else /* if i != 0 */
+	/* else */ /* if i != 0 */
 	{
 		i32 initial = ctx->i;
 
@@ -859,10 +870,15 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			return 100;
 		}
 
-		return (u8)(((u32)(ctx->psize * 100) / (u32)(ctx->i * 100)) / 100);
+		/*Debug_Val(0, "((%d * 100) / %d) == %d\n",
+				ctx->i, ctx->psize,
+				(i8)((u32)((ctx->i * 100) / ctx->psize)));*/
+
+		return (i8)((u32)(ctx->i * 100) / ctx->psize);
 	}
 
 	/* this never happens unless the image was already loaded */
+	NEURO_TRACE("Useless call of the function #%d", ctx->i);
 	return -1;
 }
 
@@ -1167,10 +1183,10 @@ readBitmapFile(const char *bitmap)
 /*-------------------- Poll ----------------------------------------*/
 
 /* returns a percentage of progress */
-u8
+i8
 Bitmap_Poll(BMP_CTX *ctx)
 {
-	return processGradual_BMP(ctx, 1);
+	return processGradual_BMP(ctx, 512);
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -1178,11 +1194,35 @@ Bitmap_Poll(BMP_CTX *ctx)
 BMP_CTX *
 Bitmap_CreateCTX(const char *path)
 {
-	return NULL;
+	BMP_CTX *output;
+
+	output = calloc(1, sizeof(BMP_CTX));
+
+	if (output == NULL)
+		return NULL;
+
+	output->f_bitmap = gzopen(path, "r");
+
+	if (output->f_bitmap == NULL)
+	{
+		free(output);
+		return NULL;
+	}
+
+	return output;
 }
 
 v_object *
 Bitmap_DestroyCTX(BMP_CTX *ctx)
 {
-	return NULL;
+	v_object *output = NULL;
+
+	if (ctx == NULL)
+		return NULL;
+
+	output = ctx->output;
+
+	free(ctx);
+
+	return output;
 }

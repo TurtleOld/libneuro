@@ -911,7 +911,7 @@ extern void Neuro_CopyEBuf(EBUF *to, EBUF *from);
  */
 extern void Neuro_ResetEBuf(EBUF *eng);
 
-/* Neuro_EBufIsEmpty
+/** Neuro_EBufIsEmpty
  * @sdecri
  * this is a simple boolean returning function that returns
  * 1 if [eng] is empty and 0 if it holds stuff. 
