@@ -7,7 +7,7 @@ AM_CFLAGS= @NEUROFLAGS@
 libmisc_la_SOURCES = 	\
 		other.c \
 		arg.c \
-		bitmap.c bitmap.h
+		bitmap.c
 
 #chgen.c
 
