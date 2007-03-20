@@ -185,9 +185,6 @@ if test $SELECTED_LOWLIB = X11; then
 		     [AC_MSG_ERROR(You don't have libX11)])
 #	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
 #	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
-	AC_CHECK_LIB(Xpm, XpmCreatePixmapFromData,
-		     [LIBS="$LIBS -lXpm"],
-		     [AC_MSG_ERROR(You don't have libXpm)])
 
 	freetype_enable=yes
 fi
