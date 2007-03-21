@@ -22837,7 +22837,7 @@ if test $ac_cv_lib_X11_XCreateGC = yes; then
   cat >>confdefs.h <<\_ACEOF
 #define USE_X11 1
 _ACEOF
- LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+ LIBS="$LIBS -lX11 $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
 else
   { { echo "$as_me:$LINENO: error: You don't have libX11" >&5
 echo "$as_me: error: You don't have libX11" >&2;}
