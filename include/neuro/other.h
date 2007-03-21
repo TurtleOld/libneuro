@@ -210,21 +210,21 @@ extern v_object *Neuro_RenderUnicode(font_object *ttf, u32 size, u32 character,
  * can only use this __before__ you init Neuro! or
  * else it won't work.
  */
-extern void Lib_SetScreenSize(u32 width, u32 height);
+extern void Neuro_SetScreenSize(i32 width, i32 height);
 
 /* puts the size of the screen in current use in the input variables */
-extern void Lib_GetScreenSize(u32 *width, u32 *height);
+extern void Neuro_GetScreenSize(i32 *width, i32 *height);
 
 /* for pixel manipulations (input/output) this locks the lock on
  * the pixels buffer. So nothing can be done in the background on
  * them.
  */
-extern void Lib_LockVObject(v_object *vobj);
+extern void Neuro_LockVObject(v_object *vobj);
 
 /* for pixel manipulations (input/output) this unlocks the lock on
  * the pixels buffer.
  */
-extern void Lib_UnlockVObject(v_object *vobj);
+extern void Neuro_UnlockVObject(v_object *vobj);
 
 /* temporary macros to call the functions from bitmap.h */
 #define Neuro_CreateBMPCTX Bitmap_CreateCTX

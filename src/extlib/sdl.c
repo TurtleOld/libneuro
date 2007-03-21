@@ -73,7 +73,7 @@
 
 typedef struct options_list
 {
-	u32 Xsize, Ysize; /* screen size */
+	i32 Xsize, Ysize; /* screen size */
 	u8 bpp; /* bytes per pixel */
 	u32 Primary_screen_flags; /* flags for the primary screen */
 	u32 Secondary_screen_flags; /* flags for the secondary (buffer) screen */
@@ -91,14 +91,14 @@ static u8 mouse_wheel = 0; /* mouse wheel variable */
 static FT_Library font_lib;
 
 void
-Lib_SetScreenSize(u32 width, u32 height)
+Lib_SetScreenSize(i32 width, i32 height)
 {
 	options.Xsize = width;
 	options.Ysize = height;
 }
 
 void
-Lib_GetScreenSize(u32 *width, u32 *height)
+Lib_GetScreenSize(i32 *width, i32 *height)
 {
 	*width = options.Xsize;
 	*height = options.Ysize;

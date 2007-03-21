@@ -78,13 +78,13 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 }
 
 void
-Lib_SetScreenSize(u32 width, u32 height)
+Lib_SetScreenSize(i32 width, i32 height)
 {
 
 }
 
 void
-Lib_GetScreenSize(u32 *width, u32 *height)
+Lib_GetScreenSize(i32 *width, i32 *height)
 {
 	
 }

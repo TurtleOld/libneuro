@@ -75,7 +75,7 @@ static V_OBJECT *scldmain; /* buffer (double) */
 static Pixmap pixel; /*a 1x1 pixel buffer fo pixels Input Output*/
 #endif /* temp */
 
-static u32 swidth = 800, sheight = 600; /* externally settable screen size */
+static i32 swidth = 800, sheight = 600; /* externally settable screen size */
 
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
@@ -319,14 +319,14 @@ Lib_SyncPixels(v_object *src)
 }
 
 void
-Lib_SetScreenSize(u32 width, u32 height)
+Lib_SetScreenSize(i32 width, i32 height)
 {
 	swidth = width;
 	sheight = height;
 }
 
 void
-Lib_GetScreenSize(u32 *width, u32 *height)
+Lib_GetScreenSize(i32 *width, i32 *height)
 {
 	*width = swidth;
 	*height = sheight;

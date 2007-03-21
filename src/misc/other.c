@@ -930,13 +930,13 @@ Neuro_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u
 }
 
 void
-Neuro_SetScreenSize(u32 width, u32 height)
+Neuro_SetScreenSize(i32 width, i32 height)
 {
 	Lib_SetScreenSize(width, height);
 }
 
 void
-Neuro_GetScreenSize(u32 *width, u32 *height)
+Neuro_GetScreenSize(i32 *width, i32 *height)
 {
 	Lib_GetScreenSize(width, height);
 }
