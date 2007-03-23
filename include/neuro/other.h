@@ -35,6 +35,8 @@
 extern "C" {
 #endif
 
+/*--- string manipulation ---*/
+
 extern char **Neuro_SepChr(const unsigned char chr, char *source, int *items);
 
 /* the EBUF data uses this struct */
@@ -44,6 +46,10 @@ typedef struct SepChr_Data
 }SepChr_Data;
 
 extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
+
+/*--- end string manipulation ---*/
+
+/*--- RGB ---*/
 
 /* convert color of default screen depth to 24 bit 
  * and gives each color separately in R G and B
@@ -66,21 +72,24 @@ extern u32 Neuro_MapRGB(u8 R, u8 G, u8 B);
  * returns a u32 that contains a 24bit color system. 
  */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
+/*--- end RGB ---*/
+
+/*--- util ---*/
 
 /* an interface to easily give the size of an image object 
  * width and height require the address of u32 to put the data on.
  */
 extern void Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height);
 
-extern u32 Neuro_RawGetPixel(v_object *srf, int x, int y);
-
-extern void Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel);
-
 extern void Neuro_Sleep(u32 t);
 
 extern u32 Neuro_GetTickCount();
 
 extern void Neuro_PrintFPS();
+
+/*--- end util ---*/
+
+/*--- crop ---*/
 
 /* use Neuro_BoundsCheck instead */
 extern u8 Neuro_DumbBoundsCheck(Rectan *indep, Rectan *depen);
@@ -100,6 +109,10 @@ extern void Neuro_VerticalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
 extern void Neuro_HorizontalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
+/*--- end crop ---*/
+
+/*--- obsolete ---*/
+
 /* generate characters (source is chgen.c in src/misc TODO might need to have the Neuro_ prefix */
 extern void Uchar(int amount, unsigned char **buf);
 
@@ -112,6 +125,8 @@ extern v_object *readBitmapFile(const char *bitmap);
  * pretty much useless, use Neuro_CleanEBuf() instead
  */
 extern void cleanPixmapEbuf(EBUF **pixmap);
+
+/*--- end Obsolete ---*/
 
 /* -------- Argument System ---------- */
 
@@ -137,6 +152,12 @@ extern int Neuro_ArgProcess();
 
 /* ---------- End of the Argument System ---------- */
 
+
+/*--- extlib Neuro_ interface ---*/
+
+extern u32 Neuro_RawGetPixel(v_object *srf, int x, int y);
+
+extern void Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel);
 
 /* blit one surface to another one with this function */
 extern void Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst);
@@ -214,6 +235,7 @@ extern void Neuro_SetScreenSize(i32 width, i32 height);
 
 /* puts the size of the screen in current use in the input variables */
 extern void Neuro_GetScreenSize(i32 *width, i32 *height);
+#define Neuro_GiveScreenSize Neuro_GetScreenSize
 
 /* for pixel manipulations (input/output) this locks the lock on
  * the pixels buffer. So nothing can be done in the background on
@@ -225,6 +247,10 @@ extern void Neuro_LockVObject(v_object *vobj);
  * the pixels buffer.
  */
 extern void Neuro_UnlockVObject(v_object *vobj);
+
+/*--- end extlib Neuro_ interface ---*/
+
+/* don't touch this :) */
 
 /* temporary macros to call the functions from bitmap.h */
 #define Neuro_CreateBMPCTX Bitmap_CreateCTX

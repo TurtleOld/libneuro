@@ -38,6 +38,8 @@
 
 /*--------------------      Other       ----------------------------*/
 
+NEURO_MODULE_CHANNEL("debug");
+
 typedef struct DEBUG_CHANNEL
 {
 	char *channel; /* should only contain unallocated strings */
@@ -154,11 +156,21 @@ Debug_VerboseChannel(char *channel)
 	if (!channel)
 		return;
 
+	if (Neuro_EBufIsEmpty(debug_l))
+	{
+		Neuro_CleanEBuf(&debug_l);
+		Neuro_CreateEBuf(&debug_l);
+	}
+
 	Neuro_AllocEBuf(debug_l, sizeof(DEBUG_CHANNEL*), sizeof(DEBUG_CHANNEL));
 
 	buf = Neuro_GiveCurEBuf(debug_l);
 
-	buf->channel = channel;
+
+	if (buf)
+		buf->channel = channel;
+	else
+		NEURO_ERROR("Out of Memory", NULL);
 }
 
 /*-------------------- Constructor Destructor ----------------------*/

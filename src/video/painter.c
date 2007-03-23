@@ -438,7 +438,7 @@ Graphics_GetQueueBuffer()
 int
 Graphics_PainterInit()
 {
-	u32 screenwidth, screenheight;
+	i32 screenwidth, screenheight;
 	
 	Neuro_CreateEBuf(&Raw);
 	Neuro_CreateEBuf(&Queue);

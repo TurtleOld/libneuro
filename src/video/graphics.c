@@ -153,13 +153,6 @@ Neuro_SetFpsLimit(u32 fpsLimit)
 	fps_limit = fpsLimit;
 }
 
-/* we need to move that to the interface function */
-void
-Neuro_GiveScreenSize(u32 *width, u32 *height)
-{
-	Lib_GetScreenSize(width, height);
-}
-
 void
 Neuro_RedrawScreen()
 {
@@ -359,11 +352,8 @@ int
 Graphics_Init()
 {
 	int _err_ = 0;
-	u32 screenwidth, screenheight;
 
 	ltime = time(NULL);
-
-	Lib_GetScreenSize(&screenwidth, &screenheight);
 	
 	if (screen_buffer)
 	{
@@ -391,6 +381,10 @@ Graphics_Init()
 
 	if (second_screen_buffer)
 	{
+		i32 screenwidth, screenheight;
+
+		Lib_GetScreenSize(&screenwidth, &screenheight);
+
 		sclScreen2 = Lib_CreateVObject(0, screenwidth, screenheight, 
 				Lib_GetDefaultDepth(), 0, 0, 0, 0);
 

@@ -198,9 +198,6 @@ extern void Neuro_RedrawScreen();
 /*! give the current fps */
 extern void Neuro_GiveFPS(t_tick *output);
 
-/* the u32 pointers will be given the current screen size in pixels */
-extern void Neuro_GiveScreenSize(u32 *width, u32 *height);
-
 /* draw a pixel on the screen */
 extern void Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel);
 

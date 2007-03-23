@@ -112,7 +112,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	SDL_Surface *temp1 = NULL, *temp2 = NULL;
 	
 	_err_ = SDL_Init(SDL_INIT_VIDEO);
-	
+
 	if (_err_)
 	{
 		Error_Print("SDL_Init failure");
