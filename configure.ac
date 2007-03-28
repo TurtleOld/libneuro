@@ -35,6 +35,7 @@ AC_SUBST(LT_AGE)
 
 #AC_INIT(Neuro, $NEURO_VERSION)
 AC_CONFIG_SRCDIR([src/neuro_main.c])
+AC_CONFIG_HEADERS([include/neuro/config.h])
 
 # init automake
 AM_INIT_AUTOMAKE(neuro, $NEURO_VERSION)
@@ -47,12 +48,16 @@ AC_MSG_RESULT($host)
 #dnl ----- set some variables ------
 
 # check for programs
-AC_PROG_CXX
+
+# ANSI C compiler check
 AC_PROG_CC
+
+# C preprocessor check
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
+AC_PROG_RANLIB
 
 # check for cygwin stuff
 AC_LIBTOOL_WIN32_DLL
@@ -64,7 +69,7 @@ AM_PROG_LIBTOOL
 # set the flags
 CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" 
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
-NEUROLIBFLAGS="--enable-realtime-pseudo-reloc"
+NEUROLDFLAGS="-export-symbols \$(top_srcdir)/include/libneuro.sym"
 SDLFLAGS="`sdl-config --libs`" 
 
 dnl ------ Configure Arguments ------
@@ -109,7 +114,9 @@ case $targ in
 	;;
 
 	unix)
+		AC_FUNC_MALLOC
 		AC_FUNC_REALLOC
+		AC_FUNC_VPRINTF
 		AC_CHECK_HEADERS([unistd.h], , [AC_MSG_ERROR([the required header unistd is missing.])])
 		AC_CHECK_FUNCS([gettimeofday], , [AC_MSG_ERROR([a required function is missing.])])
 	;;
@@ -120,6 +127,7 @@ dnl --------- Checks -------------
 dnl ----------------
 dnl check for header files.
 dnl ----------------
+AC_PATH_X
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h], , [AC_MSG_ERROR([a required header is missing.])])
 
@@ -146,7 +154,7 @@ AM_CONDITIONAL(USE_SDL, test x$SELECTED_LOWLIB = xsdl)
 if test $SELECTED_LOWLIB = sdl; then
 	if test $targ = unix; then
 		AC_CHECK_LIB(SDL, SDL_Init, 
-		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS $SDLFLAGS"
+		     [AC_DEFINE(USE_SDL, 1, ["SDL main flag"]) LIBS="$LIBS $SDLFLAGS"
 		      NEUROFLAGS="$NEUROFLAGS `sdl-config --cflags`"], 
 		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
 ])
@@ -154,7 +162,7 @@ if test $SELECTED_LOWLIB = sdl; then
 		
 	else
 		AC_CHECK_LIB(SDL, SDL_Init, 
-		     [AC_DEFINE(USE_SDL, 1) LIBS="$LIBS -lSDL"], 
+		     [AC_DEFINE(USE_SDL, 1, ["SDL main flag"]) LIBS="$LIBS -lSDL"], 
 		     [AC_MSG_ERROR(You don't have libSDL you can get it from http://www.libsdl.org)
 ])
 
@@ -167,7 +175,7 @@ dnl ----------------
 dnl Zlib check
 dnl ----------------
 AC_CHECK_LIB(z, gzgetc, 
-	     [AC_DEFINE(USE_ZLIB, 1) LIBS="$LIBS -lz"], 
+	     [AC_DEFINE(USE_ZLIB, 1, ["ZLIB main flag"]) LIBS="$LIBS -lz"], 
 	     [AC_MSG_ERROR(You don't have the Z library)])
 
 
@@ -181,7 +189,7 @@ if test $SELECTED_LOWLIB = X11; then
 	LDFLAGS="$CFLAGS $X_LIBS"
 	CFLAGS="$CFLAGS $X_CFLAGS"
 	AC_CHECK_LIB(X11, XCreateGC, 
-		     [AC_DEFINE(USE_X11, 1) LIBS="$LIBS -lX11 $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"], 
+		     [AC_DEFINE(USE_X11, 1, ["X11 main flag"]) LIBS="$LIBS -lX11 $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"], 
 		     [AC_MSG_ERROR(You don't have libX11)])
 #	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
 #	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
@@ -217,7 +225,7 @@ else
 fi
 
 AC_SUBST(NEUROFLAGS)
-AC_SUBST(NEUROLIBFLAGS)
+AC_SUBST(NEUROLDFLAGS)
 
 # set the installation path for the headers
 includedir=$includedir/neuro
