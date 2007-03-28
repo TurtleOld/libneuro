@@ -126,14 +126,14 @@ Neuro_GetTickCount()
 	if (IsLittleEndian())
 		return (GetTickCount() / 10) & 0x7fffffff;
 	else
-		return (GetTickCount() / 10) & 0xfffffff7;
+		return (GetTickCount() / 10) & 0xfffffffe;
 #else /* NOT WIN32 */
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 	if (IsLittleEndian())
 		return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0x7fffffff;
 	else
-		return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0xfffffff7;
+		return (tv.tv_sec * 100 + tv.tv_usec / 10000) & 0xfffffffe;
 #endif /* NOT WIN32 */
 	
 }
