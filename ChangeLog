@@ -1,4 +1,9 @@
 2007-03-28	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/debug.c: created a new but temporary clone
+	of the function Debug_Channel which is only meant
+	to be a replacement until the real Debug_Channel
+	function is made to support an interface function.
+
 	* src/misc/bitmap.c: moved the inclusion of bitmap.h
 	to the beginning of the include list instead of at the
 	end so the flags from config.h were well used to include 

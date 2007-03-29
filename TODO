@@ -1,5 +1,21 @@
 Things to do in the neuro library.
 
+debug -- The whole debug.c file needs to change:
+	 - The module needs to be put into src/misc
+	   in the first place and every Debug_ functions
+	   need to be interfaced to Neuro_ functions.
+
+debug -- need more "intelligent" processing(low priority):
+	 - The Neuro_DebugVerbose function needs to input
+	   more high level strings. We need the function to
+	   input strings that need to be processed for special
+	   characters which will change the behavior of the
+	   output system. I want this to be exactly like the
+	   debugging system in wine; a system using +<channel>
+	   commas to separate and -<channel> we also need 
+	   something like : warn+<channel>,error-<channel>,
+	   etc.
+
 bitmap -- Add checks to approve bitmap files:
 	 - In order to make the bitmap loader more robust,
 	   it is imperative to implement a set of checks to
