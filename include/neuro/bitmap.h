@@ -3,7 +3,7 @@
 #ifndef __BITMAP_H
 #define __BITMAP_H
 
-#include <neuro_engine.h>
+#include "neuro_engine.h"
 
 typedef struct BMP_CTX BMP_CTX;
 

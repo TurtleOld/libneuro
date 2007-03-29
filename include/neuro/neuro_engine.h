@@ -24,7 +24,7 @@
 #ifndef __ENGINE_H
 #define __ENGINE_H
 
-#include <config.h>
+#include "config.h"
 
 #include "typedef.h"
 
