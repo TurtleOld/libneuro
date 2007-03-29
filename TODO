@@ -1,8 +1,27 @@
 Things to do in the neuro library.
 
+general -- document the API (high priority):
+	 - All the external functions of the API should be 
+	   documented in a format that neuroman.tcl should
+	   be able to parse.
+	 - EBuf  [done needs to be revised]
+	 - Video [not done]
+	 - Events [not done]
+	 - misc (including the extlib interface) [not done]
+
+extlib -- (extlib.h) rename the XK_ key names:
+	 - inside the file extlib.h, all the XK_ macros needs to
+	   be renamed to our own which is NK_ (neuro key) to
+	   completely detach from X11's key macros and thus
+	   avoid any conflicts with it. This is a "serious" 
+	   cut of any backward compatibility so all the programs
+	   using libneuro will need to be changed.
+	
+
 extlib -- change the Lib_ prefix (low priority):
-	- Change the Lib_ prefix of the extlib module to something less common so apps that use
-	  Neuro won't have conflits if they themselves use the prefix Lib_.
+	- Change the Lib_ prefix of the extlib module to something less 
+	  common so apps that use Neuro won't have conflits if 
+	  they themselves use the prefix Lib_.
 
 * extlib sdl -- default depth currently static 16 :
 	- make this so it is settable and not just a static 16.
