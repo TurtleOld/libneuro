@@ -1,5 +1,11 @@
 Things to do in the neuro library.
 
+bitmap -- Add checks to approve bitmap files:
+	 - In order to make the bitmap loader more robust,
+	   it is imperative to implement a set of checks to
+	   see if the input file to be loaded by the bitmap
+	   loader are really bitmaps.
+
 general -- document the API (high priority):
 	 - All the external functions of the API should be 
 	   documented in a format that neuroman.tcl should

@@ -3,6 +3,8 @@
 #ifndef __BITMAP_H
 #define __BITMAP_H
 
+#include <neuro_engine.h>
+
 typedef struct BMP_CTX BMP_CTX;
 
 extern i8 Bitmap_Poll(BMP_CTX *ctx);

@@ -25,6 +25,9 @@
  * bitmap process module
  */
 
+/*-------------------- Main Module Header --------------------------*/
+#include <bitmap.h>
+
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
 #include <stdio.h>
@@ -50,10 +53,6 @@ typedef FILE nFILE;
 #include <extlib.h> /* Lib_GetDefaultDepth() */
 
 #include <graphics.h> /* Neuro_PutPixel */
-
-/*-------------------- Main Module Header --------------------------*/
-#include <bitmap.h>
-
 
 /*--------------------      Other       ----------------------------*/
 
@@ -1200,8 +1199,11 @@ Bitmap_CreateCTX(const char *path)
 
 	if (output == NULL)
 		return NULL;
-
-	output->f_bitmap = gzopen(path, "r");
+#if USE_ZLIB
+	output = gzopen(path, "r"); /* can also be used for non compressed files */
+#else /* NOT USE_ZLIB */
+	output = fopen(path, "r");
+#endif /* NOT USE_ZLIB */
 
 	if (output->f_bitmap == NULL)
 	{

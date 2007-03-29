@@ -24,6 +24,8 @@
 #ifndef __ENGINE_H
 #define __ENGINE_H
 
+#include <config.h>
+
 #include "typedef.h"
 
 /* #include <error.h> */

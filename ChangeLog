@@ -1,17 +1,24 @@
 2007-03-28	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/misc/bitmap.c: moved the inclusion of bitmap.h
+	to the beginning of the include list instead of at the
+	end so the flags from config.h were well used to include 
+	zlib.h.
+
+	* include/neuro/neuro_engine.h: added #include 
+	<config.h> to include the defines from the 
+	configure script into the project.
+	
 	* configure.ac: removed checks for c++ in the script.
 	Made the project use autoheader so the compilation
 	process takes less arguments. Started to implement
 	the symbols libtool call so libneuro would only
 	export specific functions.
 
-2007-03-28	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/Makefile.am: cleaned the script and started to
 	implement a libtool symbol export file so libneuro 
 	would be able to only export functions that we 
 	choose.
 
-2007-03-28	Nicholas Niro	<nik_89@neuroponic.com>
 	* ChangeLog: redesigned to suit the GNU coding standard.
 	Please note that the file does not contain all the entries
 	that it should for past work. Future work will all be logged

@@ -40,7 +40,7 @@ extern void Debug_Channel(const char *channel, char *type, char *filename, char 
 
 extern void Debug_VerboseChannel(char *channel);
 
-
+extern void Neuro_DebugChannel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
 /*! Prints predefined
  * messages and also makes for a very
@@ -51,14 +51,23 @@ extern void Debug_VerboseChannel(char *channel);
 #define Error_Print(x) Neuro_DebugPrint("Error Message", x, __FILE__, __FUNCTION__, __LINE__)
 #define Info_Print(x) Neuro_DebugPrint("Information Message", x, __FILE__, __FUNCTION__, __LINE__)
 
+/* attempt to make developpers be warned when they used 
+ * NEURO_ERROR, _WARN or _TRACE without first calling
+ * NEURO_MODULE_CHANNEL()
+ */
+/*#if ! NEURO_CURRENT_CHANNEL
+#error "To Make use of libneuro's debugging channels,\
+you need to set a string to NEURO_MODULE_CHANNEL("<your string>")\
+to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
+#endif*/ /* NOT NEURO_CURRENT_CHANNEL */
 
-#define NEURO_ERROR(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Error", \
+#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Error", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_WARN(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Warn", \
+#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Warn", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_TRACE(x, y) Debug_Channel(NEURO_CURRENT_CHANNEL, "Trace", \
+#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Trace", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
 #define NEURO_MODULE_CHANNEL(x) static char *NEURO_CURRENT_CHANNEL=x

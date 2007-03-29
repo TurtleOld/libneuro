@@ -173,6 +173,38 @@ Debug_VerboseChannel(char *channel)
 		NEURO_ERROR("Out of Memory", NULL);
 }
 
+void
+Neuro_DebugChannel(const char *channel, char *type, char *filename, 
+		char *funcName, u32 lineNum, u8 output_detailed, char *control, ...)
+{
+	va_list args;
+	DEBUG_CHANNEL *buf;
+	u32 total = 0;
+
+	if (Neuro_EBufIsEmpty(debug_l))
+		return;
+
+	total = Neuro_GiveEBufCount(debug_l) + 1;
+
+	while (total-- > 0)
+	{
+
+		buf = Neuro_GiveEBuf(debug_l, total);
+
+		if (!strcmp(channel, buf->channel) || !strcmp(type, buf->channel))
+		{
+			if (output_detailed == 1)
+				fprintf(stderr, "%s : (%s) %s:%s:%d -- ", type, channel, filename, funcName, lineNum);
+
+			va_start(args, control);
+			vfprintf(stderr, control, args);
+			va_end(args);
+
+			fprintf(stderr, "\n"); /* we do a line feed */
+		}
+	}}
+
+
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
