@@ -1,5 +1,11 @@
 Things to do in the neuro library.
 
+graphics -- Neuro_SetImgPos is broken:
+	 - The function should make the image be redrawn
+	   but it should do so using the painter's algorithm
+	   instead of drawing the image on the top of the stack
+	   as it is doing currently.
+
 debug -- The whole debug.c file needs to change:
 	 - The module needs to be put into src/misc
 	   in the first place and every Debug_ functions

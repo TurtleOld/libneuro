@@ -491,12 +491,6 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	if (!buf)
 		return;
 
-	/* old hack to apply a new transparency color key to 
-	 * the source bitmap.c
-	 * Will soon become obsolete.
-	 */
-	/* color_key = key; */
-
 	Neuro_GiveImageSize(vobj, &width, &height);
 
 	if (buf->shapemask)
