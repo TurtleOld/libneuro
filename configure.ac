@@ -175,7 +175,7 @@ dnl ----------------
 dnl Zlib check
 dnl ----------------
 AC_CHECK_LIB(z, gzgetc, 
-	     [AC_DEFINE(USE_ZLIB, 1, ["ZLIB main flag"]) LIBS="$LIBS -lz"], 
+	     [AC_DEFINE(USE_ZLIB, 1, ["ZLIB main flag"])], 
 	     [AC_MSG_ERROR(You don't have the Z library)])
 
 

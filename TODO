@@ -1,5 +1,42 @@
 Things to do in the neuro library.
 
+extlib (SDL) -- There seems to be a memory leak:
+	 - When running the "simple" example
+	   project with valgrind, I get memory
+	   leaks with SDL. This could be SDL
+	   though because I couldn't trace the
+	   leaks. About 27KB leaked.
+
+extlib -- the fonts have a memory leak:
+	 - The code to load the fonts need
+	   to be checked for memory leaks
+	   because valgrind currently says
+	   theres about 27k of constant mem
+	   leak, no matter how much fonts you
+	   create. It could be a leak in freetype
+	   itself. 
+
+	   * Just checked and the values
+	   are different and they are the exact
+	   same on another project not at all
+	   using the fonts...
+
+graphics -- Neuro_FlushDraw has an alien bug:
+	 - When this function is called after
+	   a certain context variable changes
+	   its position or such, the algorithm
+	   does a strange behavior : an out of
+	   place rectangle (black color) of not
+	   the exact size of the image to redraw
+	   sticks on the buffer(ie it doesn't redraw
+	   this part of the screen properly). Small
+	   tests shows that this bug happens only
+	   when the image position gets put to the
+	   left of its last position. The alien black
+	   rectangle has the same coordinate as the
+	   image but it is shorter by about 15 pixels
+	   and longer by about 20 pixels.
+
 graphics -- Neuro_SetImgPos is broken:
 	 - The function should make the image be redrawn
 	   but it should do so using the painter's algorithm
