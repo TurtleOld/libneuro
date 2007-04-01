@@ -88,13 +88,13 @@ with_gcc=yes
 EGREP="grep -E"
 
 # The linker used to build libraries.
-LD="/home/nik_89/extra/mingw/cross-tools/i386-mingw32msvc/bin/ld"
+LD="/usr/misc/torrents/mingw/cross-tools/i386-mingw32msvc/bin/ld"
 
 # Whether we need hard or soft links.
 LN_S="ln -s"
 
 # A BSD-compatible nm program.
-NM="/home/nik_89/extra/mingw/cross-tools/bin/i386-mingw32msvc-nm -B"
+NM="/usr/misc/torrents/mingw/cross-tools/bin/i386-mingw32msvc-nm -B"
 
 # A symbol stripping program
 STRIP="i386-mingw32msvc-strip"
@@ -325,7 +325,7 @@ variables_saved_for_relink="PATH  LD_RUN_PATH GCC_EXEC_PREFIX COMPILER_PATH LIBR
 link_all_deplibs=unknown
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=" /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/lib/gcc/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../"
+sys_lib_search_path_spec=" /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/lib/gcc/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../"
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec="/lib /usr/lib"
@@ -6798,13 +6798,13 @@ with_gcc=yes
 EGREP="grep -E"
 
 # The linker used to build libraries.
-LD="/home/nik_89/extra/mingw/cross-tools/i386-mingw32msvc/bin/ld"
+LD="/usr/misc/torrents/mingw/cross-tools/i386-mingw32msvc/bin/ld"
 
 # Whether we need hard or soft links.
 LN_S="ln -s"
 
 # A BSD-compatible nm program.
-NM="/home/nik_89/extra/mingw/cross-tools/bin/i386-mingw32msvc-nm -B"
+NM="/usr/misc/torrents/mingw/cross-tools/bin/i386-mingw32msvc-nm -B"
 
 # A symbol stripping program
 STRIP="i386-mingw32msvc-strip"
@@ -6939,11 +6939,11 @@ striplib="i386-mingw32msvc-strip --strip-unneeded"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects="/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/dllcrt2.o /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/crtbegin.o"
+predep_objects="/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/dllcrt2.o /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/crtbegin.o"
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects="/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/crtend.o"
+postdep_objects="/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/crtend.o"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -6955,7 +6955,7 @@ postdeps="-lstdc++ -lmingw32 -lgcc -lmoldname -lmingwex -lmsvcrt -luser32 -lkern
 
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path="-L/home/nik_89/cross/lib -L/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3 -L/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib -L/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib -L/home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../.."
+compiler_lib_search_path="-L/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3 -L/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib -L/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib -L/usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../.."
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method="file_magic file format pei*-i386(.*architecture: i386)?"
@@ -7035,7 +7035,7 @@ variables_saved_for_relink="PATH PATH LD_RUN_PATH GCC_EXEC_PREFIX COMPILER_PATH 
 link_all_deplibs=unknown
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=" /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/lib/gcc/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../i386-mingw32msvc/3.2.3/ /home/nik_89/extra/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../"
+sys_lib_search_path_spec=" /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/ /usr/lib/gcc/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/i386-mingw32msvc/3.2.3/ /usr/local/cross-tools/lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../../i386-mingw32msvc/lib/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../i386-mingw32msvc/3.2.3/ /usr/misc/torrents/mingw/cross-tools/bin/../lib/gcc-lib/i386-mingw32msvc/3.2.3/../../../"
 
 # Run-time system search path for libraries
 sys_lib_dlsearch_path_spec="/lib /usr/lib"

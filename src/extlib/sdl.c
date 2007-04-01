@@ -188,95 +188,6 @@ Lib_SyncPixels(v_object *src)
 	
 }
 
-static int 
-stdio_seek(SDL_RWops *context, int offset, int whence)
-{
-
-	return gzseek(context->hidden.stdio.fp, offset, whence);
-	/*
-	if ( gzseek(context->hidden.stdio.fp, offset, whence) == 0 ) 
-	{
-		return(gztell(context->hidden.stdio.fp));
-	} 
-	else 
-	{
-		SDL_Error(SDL_EFSEEK);
-		return(-1);
-	}
-	*/
-}
-
-static int 
-stdio_read(SDL_RWops *context, void *ptr, int size, int maxnum)
-{
-	size_t nread = 0;
-
-	/* nread = fread(ptr, size, maxnum, context->hidden.stdio.fp);  */
-
-	if (size == 1)
-		nread = gzread(context->hidden.stdio.fp, ptr, maxnum);
-
-	if (size == 2)
-	{
-		char *buf = NULL;
-		
-		buf = ptr;
-		
-		nread = gzread(context->hidden.stdio.fp, &buf[0], maxnum);
-		nread += gzread(context->hidden.stdio.fp, &buf[1], maxnum);
-	}
-
-	if (size == 4)
-	{
-		char *buf = NULL;
-		
-		buf = ptr;
-
-		nread = gzread(context->hidden.stdio.fp, &buf[0], maxnum);
-		nread += gzread(context->hidden.stdio.fp, &buf[1], maxnum);
-		nread += gzread(context->hidden.stdio.fp, &buf[2], maxnum);
-		nread += gzread(context->hidden.stdio.fp, &buf[3], maxnum);
-	}
-
-	/*Debug_Val(0, "asked for size %d maxnum %d -- read %d\n",
-			size, maxnum, nread);*/
-
-	if ( nread == 0) {
-		SDL_Error(SDL_EFREAD);
-	}
-	return(nread);
-}
-
-/* this won't be needed, we don't actually want to write
- * bitmaps.
- */
-static int 
-stdio_write(SDL_RWops *context, const void *ptr, int size, int num)
-{
-	size_t nwrote;
-
-	nwrote = fwrite(ptr, size, num, context->hidden.stdio.fp);
-	if ( nwrote == 0 && ferror(context->hidden.stdio.fp) ) {
-		SDL_Error(SDL_EFWRITE);
-	}
-	return(nwrote);
-}
-
-static int 
-stdio_close(SDL_RWops *context)
-{
-	if ( context ) {
-		if ( context->hidden.stdio.autoclose ) {
-			/* WARNING:  Check the return value here! */
-			/* fclose(context->hidden.stdio.fp); */
-			gzclose(context->hidden.stdio.fp);
-		}
-		free(context);
-	}
-	return(0);
-}
-
-
 void
 Lib_LoadBMP(const char *path, v_object **img)
 {
@@ -289,69 +200,15 @@ Lib_LoadBMP(const char *path, v_object **img)
 
 	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
 #else /* NOT NATIVE_BMP */
-#if USE_ZLIB
-	gzFile fp;
-	SDL_RWops *ops;
 
-	fp = gzopen(path, "rb");
-	if (fp == NULL)
-		return;
-
-	ops = SDL_AllocRW();
-	if (ops == NULL)
-		return;
-
-	ops->seek = stdio_seek;
-	ops->read = stdio_read;
-	ops->write = stdio_write;
-	ops->close = stdio_close;
-	ops->hidden.stdio.fp = fp;
-	ops->hidden.stdio.autoclose = 1;
-
-	*img = SDL_LoadBMP_RW(ops, 1);
-
-	if (*img == NULL)
-	{
-		Debug_Val(0, "Unable to load image \"%s\" SDL says : %s\n", path, SDL_GetError());
-	}
-
-	/*if (ops)
-		free(ops);*/
-
-#else /* NOT USE_ZLIB */
 	*img = SDL_LoadBMP(path);
-#endif /* NOT USE_ZLIB */
+
 #endif /* NOT NATIVE_BMP */
 }
 
 void
 Lib_LoadBMPBuffer(void *data, v_object **img)
 {
-#if temp
-	SDL_RWops *ops;
-
-	if (data == NULL)
-		return;
-	
-	ops = SDL_AllocRW();
-	if (ops == NULL)
-		return;
-
-	ops->seek = stdio_seek;
-	ops->read = stdio_read;
-	ops->write = stdio_write;
-	ops->close = stdio_close;
-	/*ops->hidden.stdio.fp = fp;
-	ops->hidden.stdio.autoclose = 1;*/
-	ops->hidden.unknown.data1 = data;
-
-	*img = SDL_LoadBMP_RW(ops, 1);
-
-	if (*img == NULL)
-	{
-		Debug_Val(0, "Unable to load buffer image SDL says : %s\n", SDL_GetError());
-	}
-#endif /* temp */
 }
 
 static u8 
