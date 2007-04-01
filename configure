@@ -19644,7 +19644,7 @@ echo $ECHO_N "checking if we need -no-undefined... $ECHO_C" >&6
 case $host in
 	*-*-cygwin | *-*-mingw* | *-*-pw32*)
 		NEUROFLAGS="$NEUROFLAGS -DWIN32"
-		NEUROLIBFLAGS="$NEUROLIBFLAGS -no-undefined"
+		NEUROLDFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
 		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"

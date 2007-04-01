@@ -92,7 +92,7 @@ AC_MSG_CHECKING([if we need -no-undefined])
 case $host in
 	*-*-cygwin | *-*-mingw* | *-*-pw32*)
 		NEUROFLAGS="$NEUROFLAGS -DWIN32"
-		NEUROLIBFLAGS="$NEUROLIBFLAGS -no-undefined"
+		NEUROLDFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
 		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
