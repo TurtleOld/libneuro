@@ -1,5 +1,16 @@
 Things to do in the neuro library.
 
+extlib (SDL) on w32 -- bug with the bitmap loader:
+	 - When the algorithm tries to load compressed
+	   bitmaps(not all though), theres a bug that 
+	   makes it do a death loop and/or a 
+	   segmentation fault... When theres a death 
+	   loop, it eventually ends up in a 
+	   segmentation fault. I suspect that
+	   the SDL.dll API differs from the linux object
+	   and either the PutPixel function or a lack of
+	   step for bitmaps is the cause of it.
+
 extlib (SDL) -- There seems to be a memory leak:
 	 - When running the "simple" example
 	   project with valgrind, I get memory
