@@ -231,9 +231,6 @@ Neuro_FlushDraw(v_elem *eng)
 		dst.w = eng->current->src.w;
 		dst.h = eng->current->src.h;
 
-		Lib_FillRect(Neuro_GetScreenBuffer(), &dst, 0);
-
-
 
 		eng->current->type = TDRAW_STATIC;
 

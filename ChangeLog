@@ -1,4 +1,11 @@
 2007-03-28	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/video/interface.c (Neuro_FlushDraw): removed
+	a line that that filled a rectangle in black without
+	redrawing the content below the location. This was
+	a bug in the TODO list. I suspect this line was part
+	of the old method to clean the old location of an image
+	when it was redrawn at a different location.
+
 	* src/debug.c: created a new but temporary clone
 	of the function Debug_Channel which is only meant
 	to be a replacement until the real Debug_Channel
