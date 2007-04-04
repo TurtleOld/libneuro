@@ -1532,12 +1532,6 @@ Lib_VideoExit()
 
 /*----------------- Input Events -----------------*/
 
-u8 *
-Lib_GetKeyState(i32 *numkeys)
-{
-	return NULL;
-}
-
 u8
 Lib_CheckKeyStatus(u32 key)
 {

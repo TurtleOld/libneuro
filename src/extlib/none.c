@@ -189,12 +189,6 @@ Lib_VideoExit()
 
 /*----------------- Input Events -----------------*/
 
-u8 *
-Lib_GetKeyState(i32 *numkeys)
-{
-	return NULL;
-}
-
 u8
 Lib_GetMouseState(i32 *x, i32 *y)
 {

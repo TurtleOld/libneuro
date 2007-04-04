@@ -67,7 +67,7 @@
  * SDL_FreeSurface	-> Lib_FreeVobject
  * 
  *  -- Events.c --
- * SDL_GetKeyState	-> Lib_GetKeyState
+ * SDL_GetKeyState	-> Lib_CheckKeyStatus
  * SDL_GetMouseState	-> Lib_GetMouseState
 */
 
@@ -914,12 +914,6 @@ Lib_VideoExit()
 
 
 /*----------------- Input Events -----------------*/
-
-u8 *
-Lib_GetKeyState(i32 *numkeys)
-{
-	return SDL_GetKeyState(numkeys);
-}
 
 u8
 Lib_CheckKeyStatus(u32 key)
