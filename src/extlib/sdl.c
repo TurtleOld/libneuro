@@ -90,6 +90,68 @@ static u8 mouse_wheel = 0; /* mouse wheel variable */
 
 static FT_Library font_lib;
 
+#define KeySymTranslation_AMOUNT 35
+
+static u32 KeySymsTranslateTable[KeySymTranslation_AMOUNT][2] = {
+	{XK_BackSpace, 0x0008},
+	{XK_Tab, 0x0009},
+	{XK_Linefeed, 0x000A},
+	{XK_Clear, 0x000C},
+	{XK_Return, 0x000D},
+	{XK_Pause, 0x0013},
+	{XK_Scroll_Lock, 0x0014},
+	{XK_Sys_Req, 0x0015},
+	{XK_Escape, 0x001B},
+	{XK_Delete, 0x007E},
+	{XK_Up, 0x0111},
+	{XK_Down,0x0112},
+	{XK_Right, 0x0113},
+	{XK_Left, 0x0114},
+	{XK_Home, 0x0116},
+	{XK_Page_Up, 0x0118},
+	{XK_Page_Down, 0x0119},
+	{XK_KP_0, 256},
+	{XK_KP_1, 257},
+	{XK_KP_2, 258},
+	{XK_KP_3, 259},
+	{XK_KP_4, 260},
+	{XK_KP_5, 261},
+	{XK_KP_6, 262},
+	{XK_KP_7, 263},
+	{XK_KP_8, 264},
+	{XK_KP_9, 265},
+	{XK_KP_Decimal, 266},
+	{XK_KP_Divide, 267},
+	{XK_KP_Multiply, 268},
+	{XK_KP_Subtract, 269},
+	{XK_KP_Add, 270},
+	{XK_KP_Enter, 271},
+	{XK_KP_Equal, 272}
+};
+
+/* translates the keysym to the one the driver uses */
+static u32
+TranslateKey(u32 keysym)
+{
+	u32 output = 0;
+	u32 i = KeySymTranslation_AMOUNT + 1;
+
+	output = keysym;
+
+	while (i-- > 0)
+	{
+		if (KeySymsTranslateTable[i][0] == keysym)
+			return KeySymsTranslateTable[i][1];
+	}
+
+	return output;
+}
+
+
+
+
+
+
 void
 Lib_SetScreenSize(i32 width, i32 height)
 {
@@ -922,7 +984,7 @@ Lib_CheckKeyStatus(u32 key)
 
 	keyd = SDL_GetKeyState(NULL);
 	
-	if (keyd[key])
+	if (keyd[TranslateKey(key)])
 		return 1;
 	
 	return 0;
