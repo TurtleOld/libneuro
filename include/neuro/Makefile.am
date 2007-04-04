@@ -1,7 +1,8 @@
+noinst_HEADERS = \
+		 config.h.in
+
 
 include_HEADERS = \
-		  config.h \
-		  config.h.in \
 		  NEURO.h \
 		  debug.h \
 		  ebuf.h \

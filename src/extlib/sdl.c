@@ -574,7 +574,7 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 	{
 		if ( fmt->palette == NULL ) 
 		{
-			if (IsLittleEndian)
+			if (IsLittleEndian())
 			{
 				return (r >> fmt->Rloss) << fmt->Rshift | (g >> fmt->Gloss) << fmt->Gshift | (b >> fmt->Bloss) << fmt->Bshift | fmt->Amask;
 			}

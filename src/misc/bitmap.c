@@ -25,8 +25,8 @@
  * bitmap process module
  */
 
-/*-------------------- Main Module Header --------------------------*/
-#include <bitmap.h>
+/* the package's main config file */
+#include <config.h>
 
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
@@ -34,7 +34,7 @@
 #include <math.h>
 #include <string.h>
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 /* this is used to open the bitmaps, 
  * the beauty of this is it works 
  * for compressed and uncompressed
@@ -53,6 +53,9 @@ typedef FILE nFILE;
 #include <extlib.h> /* Lib_GetDefaultDepth() */
 
 #include <graphics.h> /* Neuro_PutPixel */
+
+/*-------------------- Main Module Header --------------------------*/
+#include <bitmap.h>
 
 /*--------------------      Other       ----------------------------*/
 
@@ -158,7 +161,7 @@ fpdata8(nFILE *input, u8 *output)
 {
 	if (input == NULL || output == NULL)
 		return 1;
-#if USE_ZLIB
+#if USE_ZLIB 1
 	*output = gzgetc(input);
 #else /* NOT USE_ZLIB */
 	*output = fgetc(input);
@@ -180,7 +183,7 @@ fpdata16(nFILE *input, u16 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 	feed[0] = gzgetc(input);
 	feed[1] = gzgetc(input);
 #else /* NOT USE_ZLIB */
@@ -209,7 +212,7 @@ fpdata32(nFILE *input, u32 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 	feed[0] = gzgetc(input);
 	feed[1] = gzgetc(input);
 	feed[2] = gzgetc(input);
@@ -308,7 +311,7 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		fpdata8(input, &buf->r);
 		fpdata8(input, &buf->a);
 		*/
-#if USE_ZLIB
+#if USE_ZLIB 1
 		buf->b = gzgetc(input);
 		buf->g = gzgetc(input);
 		buf->r = gzgetc(input);
@@ -771,7 +774,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		ctx->tmp = ctx->tmp - 0.000001; /* to avoid bugs */
 
 		ctx->x = 0;
-#if USE_ZLIB
+#if USE_ZLIB 1
 		gzseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #else /* NOT USE_ZLIB */
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
@@ -806,7 +809,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 					ctx->skip_i = (4 - ctx->skip_i);
 					ctx->i += ctx->skip_i;
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 					gzseek(ctx->f_bitmap, ctx->bmap->header.offset + ctx->i, SEEK_SET);
 #else /* NOT USE_ZLIB */
 					fseek(ctx->f_bitmap, ctx->bmap->header.offset + ctx->i, SEEK_SET);
@@ -858,7 +861,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			
 			Neuro_CleanEBuf(&ctx->bmap_colors);
 
-#if USE_ZLIB
+#if USE_ZLIB 1 
 			if (ctx->f_bitmap)
 				gzclose(ctx->f_bitmap);
 #else /* NOT USE_ZLIB */
@@ -1050,7 +1053,7 @@ processFD_BMP(nFILE *f_bitmap)
 	tmp = tmp - 0.000001; /* to avoid bugs */
 
 	x = 0;
-#if USE_ZLIB
+#if USE_ZLIB 1
 	gzseek(f_bitmap, bmap->header.offset, SEEK_SET);
 #else /* NOT USE_ZLIB */
 	fseek(f_bitmap, bmap->header.offset, SEEK_SET);
@@ -1079,7 +1082,7 @@ processFD_BMP(nFILE *f_bitmap)
 				skip_i = (4 - skip_i);
 				i += skip_i;
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 				gzseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
 #else /* NOT USE_ZLIB */
 				fseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
@@ -1152,7 +1155,7 @@ processFD_BMP(nFILE *f_bitmap)
 	
 	Neuro_CleanEBuf(&bmap_colors);
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 	if (f_bitmap)
 		gzclose(f_bitmap);
 #else /* NOT USE_ZLIB */
@@ -1170,7 +1173,7 @@ readBitmapFile(const char *bitmap)
 {
 	nFILE *f_bitmap;
 
-#if USE_ZLIB
+#if USE_ZLIB 1
 	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
 #else /* NOT USE_ZLIB */
 	f_bitmap = fopen(bitmap, "r");
@@ -1199,7 +1202,7 @@ Bitmap_CreateCTX(const char *path)
 
 	if (output == NULL)
 		return NULL;
-#if USE_ZLIB
+#if USE_ZLIB 1
 	output = gzopen(path, "r"); /* can also be used for non compressed files */
 #else /* NOT USE_ZLIB */
 	output = fopen(path, "r");
