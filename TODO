@@ -1,5 +1,17 @@
 Things to do in the neuro library.
 
+misc -- move Color conversion functions:
+	 - The color conversion functions should be moved
+	   to their own source file (Neuro_RGB**).
+
+extlib (SDL) -- Needs a buffer to hold the v_objects:
+	 - I just noticed that the SDL doesn't have a
+	   v_object cleaned like the X11 driver, we
+	   need to implement one as soon as possible
+	   to avoid a maximum amount of memory leaks.
+	   This should be pretty easy, just need to
+	   use the same method as in the X11 driver.
+
 extlib (SDL) on w32 -- bug with the bitmap loader:
 	 - When the algorithm tries to load compressed
 	   bitmaps(not all though), theres a bug that 

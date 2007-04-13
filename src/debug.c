@@ -211,6 +211,9 @@ int
 Debug_Init()
 {
 	Neuro_CreateEBuf(&debug_l);
+
+	Debug_VerboseChannel("Error");
+	Debug_VerboseChannel("Warn");
 	return 0;
 }
 
