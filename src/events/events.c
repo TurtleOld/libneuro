@@ -400,13 +400,13 @@ Neuro_AddReleasedKeyEvent(u32 keysym, void (*callback)())
 }
 
 void
-Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)())
+Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym))
 {
 	addKeyPressEvent(keysym, callback, 1);
 }
 
 void
-Neuro_AddReleasedMultiKeyEvent(u32 keysym, void (*callback)())
+Neuro_AddReleasedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym))
 {
 	addKeyReleaseEvent(keysym, callback, 1);
 }
