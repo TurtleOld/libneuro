@@ -684,8 +684,17 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 
 			if (IsLittleEndian())
 			{
-				switch (Lib_GetDefaultDepth())
+				switch (ctx->bmap->infoheader.bits)
 				{
+					case 8:
+					{
+						rmask = 0x000000C0;
+						gmask = 0x0000003C;
+						bmask = 0x00000003;
+						amask = 0x00000000;
+					}
+					break;
+
 					case 16:
 					{
 						rmask = 0x0000f800;
@@ -711,8 +720,17 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			}
 			else
 			{
-				switch (Lib_GetDefaultDepth())
+				switch (ctx->bmap->infoheader.bits)
 				{
+					case 8:
+					{
+						rmask = 0x00000003;
+						gmask = 0x0000003C;
+						bmask = 0x000000C0;
+						amask = 0x00000000;
+					}
+					break;
+
 					case 16:
 					{
 						rmask = 0x0000001f;
