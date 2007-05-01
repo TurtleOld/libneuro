@@ -91,7 +91,6 @@ typedef struct BITMAP_HDATA
 typedef struct BITMAP_COLOR
 {
 	u8 r, g, b /*, a*/ ; /* red green blue */
-	u8 *symbol; /* unique symbol associated with this color */
 }BITMAP_COLOR;
 
 typedef struct BITMAP_MAP
@@ -147,9 +146,6 @@ clean_bmap_color(void *eng)
 	BITMAP_COLOR *buf;
 
 	buf = (BITMAP_COLOR*)eng;
-
-	if (buf->symbol)
-		free(buf->symbol);
 }
 
 
@@ -179,10 +175,11 @@ fpdata16(nFILE *input, u16 *output)
 {
 	u8 feed[2];
 	u16 *buf;
+	u16 temp = 0;
 	
 	if (input == NULL || output == NULL)
 		return 1;
-
+#if temp
 #if USE_ZLIB 1
 	feed[0] = gzgetc(input);
 	feed[1] = gzgetc(input);
@@ -194,6 +191,14 @@ fpdata16(nFILE *input, u16 *output)
 	buf = (u16*)&feed;
 	
 	*output = *buf;
+
+#endif /* temp */
+
+	temp = gzgetc(input);
+	temp <<= 8;
+	temp += gzgetc(input);
+
+	*output = temp;
 
 	return 0;
 }
@@ -269,7 +274,8 @@ parse_bitmap_header(nFILE *input)
 static void
 print_bitmap_infos(BITMAP_HDATA *bmap)
 {	
-	printf("[%c%c] header data :\nsize %d\noffset %d\ninfoheader data :\nsize %d\nwidth %d\nheight %d\nplanes %d\nbits %d\ncompression %d\nimagesize %d\nxres %d\nyres %d\nncolors %d\nimportantcolors %d\n", 
+	printf("(0x%x)[%c%c] header data :\nsize %d\noffset %d\ninfoheader data :\nsize %d\nwidth %d\nheight %d\nplanes %d\nbits %d\ncompression %d\nimagesize %d\nxres %d\nyres %d\nncolors %d\nimportantcolors %d\n", 
+		bmap->header.type,
 		bmap->header.type & 0x00FF,
 		(bmap->header.type & 0xFF00) >> 8,
 		bmap->header.size,
@@ -654,7 +660,15 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		 * we got when reading the file
 		 */
 		{
+			print_bitmap_infos(ctx->bmap);
 			
+			if (ctx->bmap->header.type != 0x424d)
+			{
+				NEURO_WARN("Invalid bitmap file", NULL);
+				return -1;
+			}
+
+
 		}
 
 		/* if it is valid, we create the buffers */
@@ -670,10 +684,17 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		ctx->psize = ctx->psize - (ctx->bmap->infoheader.ncolors * 4);
 		/* printf("data size %d\n", psize); */
 
-		if (ctx->bmap->infoheader.ncolors)
+		printf("ncolors : %d\n", ctx->bmap->infoheader.ncolors);
+
+		return -1;
+
+		if (ctx->bmap->infoheader.ncolors > 0)
 		{
 			process_palette(ctx->f_bitmap, ctx->bmap, ctx->bmap_colors);
 		}
+
+		printf("herein\n");
+		return -1;
 
 		/* we create the v_object 
 		 *
@@ -902,302 +923,39 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 	return -1;
 }
 
-static v_object *
-processFD_BMP(nFILE *f_bitmap)
-{
-	/* major (buffers) */
-	EBUF *bmap_colors = NULL; /* the colors */
-	u8 *buf = NULL; /* the buffer that will contain the content of the file */
-	
-	/* minor (mostly pointers and temporary variables) */
-	register i32 i = 0; /* incremental variable */
-	u32 skip_i = 0, x = 0, y = 0;
-	
-	u32 psize = 0; /* the full size of the pixels data */
-	u8 *palette = NULL; /* the pointer to the palette if theres one */
-	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
-	int aux_var = 0; /* auxiliary variable that can be used by external functions */
-	char *aux_buf = NULL; /* same as aux_var but a buffer */
-	double msize = 0;
-	double calc = 0;
-	double tmp = 0;
-	u32 wmult = 0;
-	double pixellen = 0;
-	u32 increm = 0;
-	u8 DATA;
-	v_object *output; /* the image into which we will load the bitmap */
-	
-	if (f_bitmap == NULL)
-		return NULL;
-	
-	bmap = parse_bitmap_header(f_bitmap);
-	
-	/* TODO TODO XXX check here if the bitmap is valid or not
-	 * first check for the BM word
-	 * then we check for the size of the file in header and size
-	 * we got when reading the file
-	 */
-	{
-		
-	}
-
-	/* if it is valid, we create the buffers */
-	Neuro_CreateEBuf(&bmap_colors);
-	Neuro_SetcallbEBuf(bmap_colors, &clean_bmap_color);
-	
-	
-	/* print_bitmap_infos(bmap); */
-	
-	/* process the bitmap(load it in memory) */
-	i = 0;
-	psize = bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
-	psize = psize - (bmap->infoheader.ncolors * 4);
-	/* printf("data size %d\n", psize); */
-
-	if (bmap->infoheader.ncolors)
-	{
-		process_palette(f_bitmap, bmap, bmap_colors);
-	}
-
-	/* we create the v_object 
-	 *
-	 * will need to put better values for the masks to support SDL.
-	 */
-	{
-		u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;
-
-		if (IsLittleEndian())
-		{
-			switch (Lib_GetDefaultDepth())
-			{
-				case 16:
-				{
-					rmask = 0x0000f800;
-					gmask = 0x000007e0;
-					bmask = 0x0000001f;
-					amask = 0x00000000;
-				}
-				break;
-
-				case 24:
-				{
-					rmask = 0x00ff0000;
-					gmask = 0x0000ff00;
-					bmask = 0x000000ff;
-					amask = 0x00000000;
-				}
-				break;
-
-
-				default:
-				break;
-			}
-		}
-		else
-		{
-			switch (Lib_GetDefaultDepth())
-			{
-				case 16:
-				{
-					rmask = 0x0000001f;
-					gmask = 0x000007e0;
-					bmask = 0x0000f800;
-					amask = 0x00000000;
-				}
-				break;
-				
-				case 24:
-				{
-					rmask = 0x0000ff00;
-					gmask = 0x00ff0000;
-					bmask = 0xff000000;
-					amask = 0x00000000;
-				}
-				break;
-
-				default:
-				break;
-			}
-		}
-/*
-		if (IsLittleEndian())
-		{
-			rmask = 0x0000f800;
-			gmask = 0x000007e0;
-			bmask = 0x0000001f;
-			amask = 0x00000000;	
-		}
-		else
-		{
-			rmask = 0x0000001f;
-			gmask = 0x000007e0;
-			bmask = 0x0000f800;
-			amask = 0x00000000;
-		}
-*/
-
-		output = Neuro_CreateVObject(0, bmap->infoheader.width, bmap->infoheader.height, bmap->infoheader.bits, rmask, gmask, bmask, amask);
-
-		if (output == NULL)
-			return NULL;
-	}
-
-	/* semi static values to skip bytes that form 32 bit chunks in the data */
-
-	pixellen = (8 / (double)bmap->infoheader.bits);
-	msize = pixellen * 4;
-
-	/* we calculate the number of bytes there is per rows 
-	 * this is mainly so we can know how much "alignment"
-	 * bytes there is (which need to be skipped)
-	 */
-	{
-		wmult = (u32)bmap->infoheader.bits / 8;
-
-		if (wmult == 0)
-			wmult++;
-
-		wmult = wmult * bmap->infoheader.width;
-	}
-
-	increm = (u32)pixellen;
-
-	if (increm == 0)
-		increm++;
-
-	x = (u32)(bmap->infoheader.width / msize);
-	tmp = msize * x;
-	tmp = (double)bmap->infoheader.width - tmp;
-	tmp = tmp - 0.000001; /* to avoid bugs */
-
-	x = 0;
-#if USE_ZLIB 1
-	gzseek(f_bitmap, bmap->header.offset, SEEK_SET);
-#else /* NOT USE_ZLIB */
-	fseek(f_bitmap, bmap->header.offset, SEEK_SET);
-#endif /* NOT USE_ZLIB */
-
-	Lib_LockVObject(output);
-
-	/* Debug_Val(0, "Image bits depth %d  tmp %f\n", bmap->infoheader.bits, tmp); */
-
-	while (i < psize)
-	{			
-		if (tmp > 0)
-		{
-			/* skip bytes that are inside the bitmap for 
-			 * filling purpose. (the data is purposely filled
-			 * with 0 bits so the data is 32bits aligned)
-			 */
-			if (skip_i >= wmult)
-			{
-				calc = tmp / pixellen;
-				skip_i = (u32)calc;
-				if (skip_i < calc)
-				{
-					skip_i++;
-				}
-				skip_i = (4 - skip_i);
-				i += skip_i;
-
-#if USE_ZLIB 1
-				gzseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
-#else /* NOT USE_ZLIB */
-				fseek(f_bitmap, bmap->header.offset + i, SEEK_SET);
-#endif /* NOT USE_ZLIB */
-				
-				/*
-				printf("skipping %d bytes  wmult %d width %d tmp %f plen %f calc %f\n", 
-						skip_i,
-						wmult, 
-						bmap->infoheader.width, 
-						tmp, 
-						pixellen, calc);
-				*/
-				
-				skip_i = 0;
-			}
-			
-			skip_i += increm;
-
-			if (i >= psize)
-				break;
-		}
-
-		
-		fpdata8(f_bitmap, &DATA);
-
-		process_bitmap2(bmap, output, palette, &DATA, 
-				bmap_colors, &x, &y, &aux_var, &aux_buf);
-		
-
-		/* process_bitmap2(bmap, output, palette, &DATA, 
-				bmap_colors, x, y, &aux_var, &aux_buf); */
-
-
-		/* printf("i %d psize %d\n", i, psize); */
-		/* Debug_Val(0, "current coord : %d,%d   %d\n", x, y, wmult); */
-		/*
-		if (tmp <= 0)
-		{
-			static u8 t = 2;
-
-			if (t == 0 || x > bmap->infoheader.width - 1)
-			{
-				if (x < bmap->infoheader.width - 1)
-					x++;
-				else
-				{
-					x = 0;
-					y++;
-				}
-
-				t = 2;
-			}
-			else
-				t--;
-		}
-		*/
-
-		i++;
-	}
-
-	Lib_UnlockVObject(output);
-	
-	if (bmap)
-		free(bmap);
-	if (buf)
-		free(buf);
-	if (aux_buf)
-		free(aux_buf);
-	
-	Neuro_CleanEBuf(&bmap_colors);
-
-#if USE_ZLIB 1
-	if (f_bitmap)
-		gzclose(f_bitmap);
-#else /* NOT USE_ZLIB */
-	if (f_bitmap)
-		fclose(f_bitmap);
-#endif /* NOT USE_ZLIB */
-
-	return output;
-}
-
 /*-------------------- Global Functions ----------------------------*/
 
 v_object *
 readBitmapFile(const char *bitmap)
 {
-	nFILE *f_bitmap;
+	BMP_CTX *ctx = NULL;
+	int _err = 0;
 
-#if USE_ZLIB 1
-	f_bitmap = gzopen(bitmap, "r"); /* can also be used for non compressed files */
-#else /* NOT USE_ZLIB */
-	f_bitmap = fopen(bitmap, "r");
-#endif /* NOT USE_ZLIB */
+	ctx = Bitmap_CreateCTX(bitmap);
+
+	if (ctx == NULL)
+	{
+		NEURO_WARN("Context creation failed", NULL);
+		return NULL;
+	}
 	
-	return processFD_BMP(f_bitmap);
+	while (1 != 2)
+	{
+		_err = Bitmap_Poll(ctx);
+
+		if (_err == 100)
+			break;
+
+		if (_err < 0)
+		{
+			NEURO_WARN("Poll failed...", NULL);
+			return NULL;
+		}
+
+		printf("loading progress : %d\n", _err);
+	}
+
+	return Bitmap_DestroyCTX(ctx);
 }
 
 /*-------------------- Poll ----------------------------------------*/
