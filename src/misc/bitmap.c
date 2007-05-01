@@ -175,11 +175,10 @@ fpdata16(nFILE *input, u16 *output)
 {
 	u8 feed[2];
 	u16 *buf;
-	u16 temp = 0;
 	
 	if (input == NULL || output == NULL)
 		return 1;
-#if temp
+
 #if USE_ZLIB 1
 	feed[0] = gzgetc(input);
 	feed[1] = gzgetc(input);
@@ -191,14 +190,6 @@ fpdata16(nFILE *input, u16 *output)
 	buf = (u16*)&feed;
 	
 	*output = *buf;
-
-#endif /* temp */
-
-	temp = gzgetc(input);
-	temp <<= 8;
-	temp += gzgetc(input);
-
-	*output = temp;
 
 	return 0;
 }
@@ -660,9 +651,9 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		 * we got when reading the file
 		 */
 		{
-			print_bitmap_infos(ctx->bmap);
+			/* print_bitmap_infos(ctx->bmap); */
 			
-			if (ctx->bmap->header.type != 0x424d)
+			if (ctx->bmap->header.type != 0x4d42)
 			{
 				NEURO_WARN("Invalid bitmap file", NULL);
 				return -1;
@@ -684,17 +675,10 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		ctx->psize = ctx->psize - (ctx->bmap->infoheader.ncolors * 4);
 		/* printf("data size %d\n", psize); */
 
-		printf("ncolors : %d\n", ctx->bmap->infoheader.ncolors);
-
-		return -1;
-
 		if (ctx->bmap->infoheader.ncolors > 0)
 		{
 			process_palette(ctx->f_bitmap, ctx->bmap, ctx->bmap_colors);
 		}
-
-		printf("herein\n");
-		return -1;
 
 		/* we create the v_object 
 		 *
@@ -952,7 +936,7 @@ readBitmapFile(const char *bitmap)
 			return NULL;
 		}
 
-		printf("loading progress : %d\n", _err);
+		/* printf("loading progress : %d\n", _err); */
 	}
 
 	return Bitmap_DestroyCTX(ctx);
@@ -964,7 +948,7 @@ readBitmapFile(const char *bitmap)
 i8
 Bitmap_Poll(BMP_CTX *ctx)
 {
-	return processGradual_BMP(ctx, 512);
+	return processGradual_BMP(ctx, 1024);
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -979,9 +963,9 @@ Bitmap_CreateCTX(const char *path)
 	if (output == NULL)
 		return NULL;
 #if USE_ZLIB 1
-	output = gzopen(path, "r"); /* can also be used for non compressed files */
+	output->f_bitmap = gzopen(path, "r"); /* can also be used for non compressed files */
 #else /* NOT USE_ZLIB */
-	output = fopen(path, "r");
+	output->f_bitmap = fopen(path, "r");
 #endif /* NOT USE_ZLIB */
 
 	if (output->f_bitmap == NULL)
