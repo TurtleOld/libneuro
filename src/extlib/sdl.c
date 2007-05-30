@@ -90,7 +90,7 @@ static u8 mouse_wheel = 0; /* mouse wheel variable */
 
 static FT_Library font_lib;
 
-#define KeySymTranslation_AMOUNT 35
+#define KeySymTranslation_AMOUNT 61
 
 static u32 KeySymsTranslateTable[KeySymTranslation_AMOUNT][2] = {
 	{NKB_BackSpace, 0x0008},
@@ -126,7 +126,34 @@ static u32 KeySymsTranslateTable[KeySymTranslation_AMOUNT][2] = {
 	{NKB_KP_Subtract, 269},
 	{NKB_KP_Add, 270},
 	{NKB_KP_Enter, 271},
-	{NKB_KP_Equal, 272}
+	{NKB_KP_Equal, 272},
+	{NKB_F1, 282},
+	{NKB_F2, 283},
+	{NKB_F3, 284},
+	{NKB_F4, 285},
+	{NKB_F5, 286},
+	{NKB_F6, 287},
+	{NKB_F7, 288},
+	{NKB_F8, 289},
+	{NKB_F9, 290},
+	{NKB_F10, 291},
+	{NKB_F11, 292},
+	{NKB_F12, 293},
+	{NKB_F13, 294},
+	{NKB_F14, 295},
+	{NKB_F15, 296},
+	{NKB_Shift_L, 304},
+	{NKB_Shift_R, 303},
+	{NKB_Control_L, 306},
+	{NKB_Control_R, 305},
+	{NKB_Caps_Lock, 301},
+	{NKB_Shift_Lock, 302},
+	{NKB_Meta_L, 310},
+	{NKB_Meta_R, 309},
+	{NKB_Alt_L, 308},
+	{NKB_Alt_R, 313}, /* the real right alt didn't work (307) */
+	{NKB_Super_L, 311},
+	{NKB_Super_R, 312},
 };
 
 /* translates the keysym to the one the driver uses */
@@ -677,7 +704,7 @@ v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
 {
-	return (v_object*)SDL_CreateRGBSurface(flags, width, height, depth, Rmask, Gmask, Bmask, Amask);
+	return (v_object*)SDL_CreateRGBSurface(SDL_SWSURFACE | flags, width, height, Lib_GetDefaultDepth(), Rmask, Gmask, Bmask, Amask);
 }
 
 void

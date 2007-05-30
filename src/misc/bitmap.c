@@ -596,6 +596,12 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 			{
 				*aux = 0;
 
+				if (bmap->infoheader.height == *y)
+				{
+					NEURO_ERROR("attempted to draw an invalid location", NULL);
+					return;
+				}
+
 				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
 
 				*x = *x + 1;
@@ -686,7 +692,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		 */
 		{
 			u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;
-
+#if temp
 			if (IsLittleEndian())
 			{
 				switch (ctx->bmap->infoheader.bits)
@@ -758,6 +764,24 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 					break;
 				}
 			}
+#endif /* temp */
+
+
+			if (IsLittleEndian())
+			{
+				rmask = 0x0000f800;
+				gmask = 0x000007e0;
+				bmask = 0x0000001f;
+				amask = 0x00000000;
+			}
+			else
+			{
+				rmask = 0x0000001f;
+				gmask = 0x000007e0;
+				bmask = 0x0000f800;
+				amask = 0x00000000;
+			}
+
 
 			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);
 

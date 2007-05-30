@@ -1,3 +1,25 @@
+2007-05-30	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/events/events.c (addKeyEvent): 
+	removed keyboard limitation from only one callback 
+	per keys to an infinite amount.
+
+2007-05-29	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/extlib/sdl.c (u32 KeySymsTranslateTable): 
+	added more elements to the keymap translation 
+	table to support more keyboard keys. 
+	Theres more work to come with this constant 
+	to support all the keys.
+
+2007-05-20	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/extlib/sdl.c (Lib_CreateVobject): made created
+	vobject be created of the same resolution as the 
+	screen as a default (16 bpp default). This is an
+	attempt to hack SDL's palette when we load bitmaps.
+
+	* src/misc/bitmap.c (processGradual_BMP): Changed the
+	masks that will be passed to Lib_CreateVobject()
+	so it only do 16 bpp masks.
+
 2007-04-03	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/video/interface.c (Neuro_FlushDraw): removed
 	a line that that filled a rectangle in black without

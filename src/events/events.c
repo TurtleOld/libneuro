@@ -337,6 +337,7 @@ addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), u
 		/* here we search to see if the keysym was already added so we can 
 		 * update it directly instead of dumbly make a new one.
 		 */
+		/*
 		while (total-- > 0)
 		{
 			tmp = Neuro_GiveEBuf(_klist, total);
@@ -346,6 +347,7 @@ addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), u
 			
 			tmp = NULL;
 		}
+		*/
 
 		if (tmp == NULL)
 		{
