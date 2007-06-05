@@ -41,6 +41,8 @@
 #define buffer_old_method 0
 #define USE_ALPHA 1
 
+NEURO_MODULE_CHANNEL("x11_driver");
+
 /* hardcoded generated alpha results */
 #include "alpha.inc"
 
@@ -364,7 +366,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
 	
 		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
-			200, 200, swidth, sheight, 1, DefaultDepth(tmp->display, tmp->screen),
+			200, 200, swidth, sheight, 1, CopyFromParent,
 			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
 			
 		tmp->cwin = &tmp->win;
@@ -392,8 +394,14 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	{
 		V_OBJECT *tmp2;
 
-		tmp2 = (V_OBJECT*)Lib_CreateVObject(0, swidth, sheight, 0, 0, 0, 0, 0);
+		tmp2 = (V_OBJECT*)Lib_CreateVObject(0, swidth, sheight, 
+				DefaultDepth(dmain->display, dmain->screen), 0, 0, 0, 0);
 
+		if (tmp2 == NULL)
+		{
+			NEURO_ERROR("loading the default surface failed", NULL);
+			return 1;
+		}
 
 		scldmain = tmp2;
 		*screen_buf = tmp2;
@@ -966,14 +974,23 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
 		
 	tmp2 = Neuro_GiveCurEBuf(vobjs);
-		
+	
+	/* Debug_Val(0, "width %d height %d asked depth %d  default_depth %d\n", 
+			width, height, depth,
+			DefaultDepth(dmain->display, dmain->screen));*/
+
 	tmp2->raw_data = XCreateImage(dmain->display, 
 			XDefaultVisual(dmain->display, dmain->screen), 
 			DefaultDepth(dmain->display, dmain->screen), 
 			ZPixmap, 0, NULL, width, height, DefaultDepth(dmain->display, dmain->screen), 0);
 
 	if (tmp2->raw_data == NULL)
+	{
+		NEURO_ERROR("XCreateImage -- input height %d", height);
+
+
 		return NULL;
+	}
 
 	tmp2->raw_data->data = calloc(1, tmp2->raw_data->bytes_per_line * height);
 
@@ -1122,7 +1139,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 		{
 			/* allocate the surface */
 			output = Lib_CreateVObject(0, face->glyph->bitmap.width, 
-					face->glyph->bitmap.rows, 16, 0, 0, 0, 0);
+					face->glyph->bitmap.rows, DefaultDepth(dmain->display, dmain->screen), 0, 0, 0, 0);
 		}
 		
 		bitmap = (FT_BitmapGlyph)face->glyph;

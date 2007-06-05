@@ -1,3 +1,9 @@
+2007-06-03	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/extlib/x11.c (Lib_RenderUnicode):
+	changed the static argument value 16 (bpp) that
+	was used to create the v_object for the character
+	to a call to get the current default depth in use.
+
 2007-05-30	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/events/events.c (addKeyEvent): 
 	removed keyboard limitation from only one callback 

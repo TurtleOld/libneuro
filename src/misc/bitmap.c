@@ -632,6 +632,11 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 	}
 }
 
+/* ctx being the bitmap loading context
+ * and loops being how many times the
+ * external function wants this function
+ * to load bytes from the image file. 
+ */
 static i8
 processGradual_BMP(BMP_CTX *ctx, u32 loops)
 {
@@ -648,13 +653,21 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 	}
 
 	if (ctx->i == 0)
-	{	
+	{
+
+		/* When the variable ctx->i equals 0, we
+		 * initialise the buffers and prepare all the
+		 * variables that will be used to load the
+		 * image.
+		 *
+		 * this part of the code should only be ran
+		 * once for each bitmaps.
+		 */
+
 		ctx->bmap = parse_bitmap_header(ctx->f_bitmap);
 		
-		/* TODO TODO XXX check here if the bitmap is valid or not
-		 * first check for the BM word
-		 * then we check for the size of the file in header and size
-		 * we got when reading the file
+		/* we do consistency checks of the image to
+		 * see if it is really a bitmap.
 		 */
 		{
 			/* print_bitmap_infos(ctx->bmap); */
@@ -675,18 +688,26 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		
 		/* print_bitmap_infos(bmap); */
 		
-		/* process the bitmap(load it in memory) */
+		/* we set the variable psize to the size that
+		 * the image data is minus the actual header size.
+		 *
+		 * it will be used to see when the function finished
+		 * loading the data.
+		 */
 		ctx->i = 0;
 		ctx->psize = ctx->bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
 		ctx->psize = ctx->psize - (ctx->bmap->infoheader.ncolors * 4);
+		
 		/* printf("data size %d\n", psize); */
 
+		/* we load the palette, if any */
 		if (ctx->bmap->infoheader.ncolors > 0)
 		{
 			process_palette(ctx->f_bitmap, ctx->bmap, ctx->bmap_colors);
 		}
 
-		/* we create the v_object 
+		/* we create the v_object which is the libneuro
+		 * representation of the image.
 		 *
 		 * will need to put better values for the masks to support SDL.
 		 */
@@ -782,7 +803,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 				amask = 0x00000000;
 			}
 
-
+			/* Debug_Val(0, "image creation -- depth %d\n", ctx->bmap->infoheader.bits); */
 			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);
 
 			if (ctx->output == NULL)
@@ -827,8 +848,12 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #endif /* NOT USE_ZLIB */
 
-	} /* if i == 0 */
-	/* else */ /* if i != 0 */
+	}
+	
+
+	/* this part of the function takes
+	 * care of the actual loading of the
+	 * bitmap file. */
 	{
 		i32 initial = ctx->i;
 
@@ -880,9 +905,12 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 					break;
 			}
 
-			
+			/* we fetch 8 bits from the file stream */
 			fpdata8(ctx->f_bitmap, &ctx->DATA);
 
+			/* we push the 8 bits along with various other 
+			 * variables to the bits processor.
+			 */
 			process_bitmap2(ctx->bmap, ctx->output, ctx->palette, &ctx->DATA, 
 					ctx->bmap_colors, &ctx->x, &ctx->y, &ctx->aux_var, &ctx->aux_buf);
 
@@ -916,6 +944,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 				fclose(ctx->f_bitmap);
 #endif /* NOT USE_ZLIB */
 
+			/* we return 100% done */
 			return 100;
 		}
 
@@ -923,11 +952,14 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 				ctx->i, ctx->psize,
 				(i8)((u32)((ctx->i * 100) / ctx->psize)));*/
 
+		/* we return the percentage of the file that
+		 * is currently loaded. 
+		 */
 		return (i8)((u32)(ctx->i * 100) / ctx->psize);
 	}
 
 	/* this never happens unless the image was already loaded */
-	NEURO_TRACE("Useless call of the function #%d", ctx->i);
+	NEURO_WARN("Useless call of the function #%d", ctx->i);
 	return -1;
 }
 
