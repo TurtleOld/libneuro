@@ -90,7 +90,7 @@ static u8 mouse_wheel = 0; /* mouse wheel variable */
 
 static FT_Library font_lib;
 
-#define KeySymTranslation_AMOUNT 61
+#define KeySymTranslation_AMOUNT 65
 
 static u32 KeySymsTranslateTable[KeySymTranslation_AMOUNT][2] = {
 	{NKB_BackSpace, 0x0008},
@@ -102,14 +102,16 @@ static u32 KeySymsTranslateTable[KeySymTranslation_AMOUNT][2] = {
 	{NKB_Scroll_Lock, 0x0014},
 	{NKB_Sys_Req, 0x0015},
 	{NKB_Escape, 0x001B},
-	{NKB_Delete, 0x007E},
-	{NKB_Up, 0x0111},
-	{NKB_Down,0x0112},
-	{NKB_Right, 0x0113},
-	{NKB_Left, 0x0114},
+	{NKB_Delete, 127},
 	{NKB_Home, 0x0116},
+	{NKB_Left, 0x0114},
+	{NKB_Up, 0x0111},
+	{NKB_Right, 0x0113},
+	{NKB_Down,0x0112},
 	{NKB_Page_Up, 0x0118},
 	{NKB_Page_Down, 0x0119},
+	{NKB_End, 279},
+	{NKB_Insert, 277},
 	{NKB_KP_0, 256},
 	{NKB_KP_1, 257},
 	{NKB_KP_2, 258},
