@@ -145,6 +145,10 @@ extern int Neuro_ArgInit(int argc, char **argv);
 
 extern void Neuro_ArgClean();
 
+/* string contains normally two strings separated by a comma. 
+ * an example : "h,help"   this will handle the -h and --help
+ * arguments.
+ */
 extern void Neuro_ArgOption(char *string, int options, void (*action)(char *data));
 
 /* return 2 on error, 1 on normal exit requested and 0 on execution continue */

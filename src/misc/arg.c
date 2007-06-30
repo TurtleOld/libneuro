@@ -420,7 +420,15 @@ Neuro_ArgProcess()
 	SepChr_Data *sep;
 	EBUF *sepchr;
 	int _err = 0;
-	
+
+	if (Neuro_EBufIsEmpty(loptions))
+	{
+		/* theres no options, this is a bad way to use this
+		 * module :) 
+		 */
+		return 0;
+	}
+
 	ototal = Neuro_GiveEBufCount(loptions) + 1;
 	
 	/* in case there is no arguments inputed 
