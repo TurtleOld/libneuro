@@ -1,3 +1,9 @@
+2007-07-05	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/memory/ebuf.c (Neuro_AllocEBuf):
+	Added a check to see if the buffer inside an
+	ebuf element is not NULL. Also implemented
+	the new debug channel into the module.
+
 2007-06-03	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/extlib/x11.c (Lib_RenderUnicode):
 	changed the static argument value 16 (bpp) that

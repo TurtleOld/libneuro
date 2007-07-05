@@ -53,6 +53,13 @@ debug -- The whole debug.c file needs to change:
 	   in the first place and every Debug_ functions
 	   need to be interfaced to Neuro_ functions.
 
+debug -- The implementation needs a namespace method:
+	 - In order to avoid module name conflicts,
+	   we will need to implement some kind of namespace
+	   that projects will set in a similar matter as
+	   NEURO_MODULE_CHANNEL but rather globally to the
+	   whole project this time instead of just per module.
+
 debug -- need more "intelligent" processing(low priority):
 	 - The Neuro_DebugVerbose function needs to input
 	   more high level strings. We need the function to
@@ -68,7 +75,10 @@ bitmap -- Add checks to approve bitmap files:
 	 - In order to make the bitmap loader more robust,
 	   it is imperative to implement a set of checks to
 	   see if the input file to be loaded by the bitmap
-	   loader are really bitmaps.
+	   loader are really bitmaps. a minimal version was
+	   done to check the magic word. We also need to put
+	   a check to see if the data size are correct according
+	   to a value in the header(something like data size).
 
 general -- document the API (high priority):
 	 - All the external functions of the API should be 
@@ -79,15 +89,6 @@ general -- document the API (high priority):
 	 - Events [not done]
 	 - misc (including the extlib interface) [not done]
 
-extlib -- (extlib.h) rename the XK_ key names:
-	 - inside the file extlib.h, all the XK_ macros needs to
-	   be renamed to our own which is NK_ (neuro key) to
-	   completely detach from X11's key macros and thus
-	   avoid any conflicts with it. This is a "serious" 
-	   cut of any backward compatibility so all the programs
-	   using libneuro will need to be changed.
-	
-
 extlib -- change the Lib_ prefix (low priority):
 	- Change the Lib_ prefix of the extlib module to something less 
 	  common so apps that use Neuro won't have conflits if 
@@ -96,21 +97,24 @@ extlib -- change the Lib_ prefix (low priority):
 * extlib sdl -- default depth currently static 16 :
 	- make this so it is settable and not just a static 16.
 
-extlib -- memory leak with the fonts :
-	- I noticed we have a memory leak concerning our interfacing with the
-	  library freetype2, we need to fix it asap.
-
 graphics engine : coredraw -- review and heavily test Graphics_RedrawSection :
 	- I noticed this function is really the weak point of the painter's algorithm
 	  and thus needs heavy testing and consolidation.
 
-bitmap loading : 
-	- The bitmap loader blocks the process until it finished loading a bitmap.
-	  The establishment of a new non blocking sequencially loading (by using
-	  a poll function) to gradually load a bitmap should be made.
-	  The bitmap would then be able to load an infinite amount of bitmaps at
-	  the same time since every bitmaps would each have a bitmap context that
-	  will keep everything necessary to load the bitmap.
+**goals for 0.50 :
+	- Finish a full documentation of the library.
+	- Make the project GPL v3 compatible and perhaps
+	  completely make it GPL v3.
+
+**goals for 0.60 :
+	- Fix the bugs in the bitmap loading algorithm.
+	- Code the new debugging method.
+	- fix up the keyboard events in the SDL driver.
+	- Clean up the source file in the misc directory.
+	  All the functions inside other.c need to be placed
+	  in meaningful source files.
+	- Go through all the modules and implement the new
+	  debugging method to them.
 
 ***goals for 1.0 :
 	- make the extlib drivers their own shared 

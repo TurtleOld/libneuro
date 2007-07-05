@@ -37,6 +37,8 @@
 
 /*--------------------      Other       ----------------------------*/
 
+NEURO_MODULE_CHANNEL("ebuf");
+
 /* take note that the typedef is in the ebuf.h header!!
  *
  * this is the core EBUF header. It is  
@@ -148,6 +150,11 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	Debug_Val(0, "before mem %d\n", mem);
 	*/
 
+	if (!buf)
+	{
+		NEURO_ERROR("Tried to allocate in a NULL buffer", NULL);
+		return;
+	}
 	
 	/* we will allocate or reallocate the ** 
 	 * which is what points to the * elements
