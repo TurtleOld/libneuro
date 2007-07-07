@@ -32,6 +32,7 @@
 #include <ebuf.h>
 #include <other.h>
 #include <graphics.h>
+#include <errno.h> /* errno */
 
 /* freetype includes */
 #include <ft2build.h>
@@ -982,11 +983,11 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 	tmp2->raw_data = XCreateImage(dmain->display, 
 			XDefaultVisual(dmain->display, dmain->screen), 
 			DefaultDepth(dmain->display, dmain->screen), 
-			ZPixmap, 0, NULL, width, height, DefaultDepth(dmain->display, dmain->screen), 0);
+			ZPixmap, 0, NULL, width, height, 16, 0);
 
 	if (tmp2->raw_data == NULL)
 	{
-		NEURO_ERROR("XCreateImage -- input height %d", height);
+		NEURO_ERROR("XCreateImage -- input height %d", errno);
 
 
 		return NULL;

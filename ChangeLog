@@ -19,6 +19,13 @@
 	now creates a v_object with 0 masks to make use
 	of the new defaulting code in the drivers.
 
+	* src/extlib/x11.c (Lib_CreateVObject):
+	changed an argument to XCreateImage to a static 16 value
+	-- it used to put the default depth but when the default
+	depth was 24, the function wouln't work, it takes only
+	8, 16 or 32. This fixed an annoying bug in the 24 bpp
+	depth.
+
 2007-07-05	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/memory/ebuf.c (Neuro_AllocEBuf):
 	Added a check to see if the buffer inside an
