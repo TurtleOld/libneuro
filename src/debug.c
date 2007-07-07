@@ -181,6 +181,17 @@ Neuro_DebugChannel(const char *channel, char *type, char *filename,
 	DEBUG_CHANNEL *buf;
 	u32 total = 0;
 
+	/* we allow the call of this function even 
+	 * if the init wasn't priorly called.
+	 */
+	if (!debug_l)
+	{
+		Neuro_CreateEBuf(&debug_l);
+
+		Debug_VerboseChannel("Error");
+		Debug_VerboseChannel("Warn");
+	}
+
 	if (Neuro_EBufIsEmpty(debug_l))
 		return;
 

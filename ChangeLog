@@ -1,3 +1,9 @@
+2007-07-07	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/debug.c (Neuro_DebugChannel):
+	Added support even if the Init function wasn't
+	called to allow external programs to use the
+	debugging without having to use the X11 display.
+
 2007-07-05	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/memory/ebuf.c (Neuro_AllocEBuf):
 	Added a check to see if the buffer inside an
