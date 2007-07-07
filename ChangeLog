@@ -4,6 +4,21 @@
 	called to allow external programs to use the
 	debugging without having to use the X11 display.
 
+	* src/extlib/sdl.c (Lib_CreateVObject):
+	Made it so the function use default values in
+	case 0 values were input for the masks and the depth.
+
+	* src/extlib/sdl.c:
+	Created a new static function that can be used to
+	get default masks for the various pixel depths.
+
+	* src/extlib/sdl.c (Lib_VideoInit):
+	Made the function use the new default mask function.
+
+	* src/misc/bitmap.c (process_Gradual_BMP):
+	now creates a v_object with 0 masks to make use
+	of the new defaulting code in the drivers.
+
 2007-07-05	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/memory/ebuf.c (Neuro_AllocEBuf):
 	Added a check to see if the buffer inside an

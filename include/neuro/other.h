@@ -191,7 +191,12 @@ extern void Neuro_SetAlpha(v_object *vobj, u8 alpha);
  */
 extern void Neuro_SyncPixels(v_object *src);
 
-/* create visual surfaces with this function */
+/* create visual surfaces with this function 
+ *
+ * depth, Rmask, Gmask, Bmask, Amask  
+ * leave those arguments to 0 and it will
+ * use the default values for them.
+ */
 extern v_object * Neuro_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask, u32 Bmask, u32 Amask);
 
 

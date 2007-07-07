@@ -89,11 +89,6 @@ general -- document the API (high priority):
 	 - Events [not done]
 	 - misc (including the extlib interface) [not done]
 
-extlib -- change the Lib_ prefix (low priority):
-	- Change the Lib_ prefix of the extlib module to something less 
-	  common so apps that use Neuro won't have conflits if 
-	  they themselves use the prefix Lib_.
-
 * extlib sdl -- default depth currently static 16 :
 	- make this so it is settable and not just a static 16.
 

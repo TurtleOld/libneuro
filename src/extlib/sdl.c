@@ -71,6 +71,8 @@
  * SDL_GetMouseState	-> Lib_GetMouseState
 */
 
+NEURO_MODULE_CHANNEL("sdl_driver");
+
 typedef struct options_list
 {
 	i32 Xsize, Ysize; /* screen size */
@@ -176,7 +178,87 @@ TranslateKey(u32 keysym)
 	return output;
 }
 
+static void
+get_default_mask(u32 *rmask, u32 *gmask, u32 *bmask, u32 *amask)
+{
+	if (!rmask || !gmask || !bmask || !amask)
+	{
+		NEURO_ERROR("wrong mask pointer inputed", NULL);
+		return;
+	}
 
+	if (IsLittleEndian())
+	{
+		switch (Lib_GetDefaultDepth())
+		{
+			case 8:
+			{
+				*rmask = 0x000000C0;
+				*gmask = 0x0000003C;
+				*bmask = 0x00000003;
+				*amask = 0x00000000;
+			}
+			break;
+
+			case 16:
+			{
+				*rmask = 0x0000f800;
+				*gmask = 0x000007e0;
+				*bmask = 0x0000001f;
+				*amask = 0x00000000;
+			}
+			break;
+
+			case 24:
+			{
+				*rmask = 0x00ff0000;
+				*gmask = 0x0000ff00;
+				*bmask = 0x000000ff;
+				*amask = 0x00000000;
+			}
+			break;
+
+
+			default:
+			break;
+		}
+	}
+	else
+	{
+		switch (Lib_GetDefaultDepth())
+		{
+			case 8:
+			{
+				*rmask = 0x00000003;
+				*gmask = 0x0000003C;
+				*bmask = 0x000000C0;
+				*amask = 0x00000000;
+			}
+			break;
+
+			case 16:
+			{
+				*rmask = 0x0000001f;
+				*gmask = 0x000007e0;
+				*bmask = 0x0000f800;
+				*amask = 0x00000000;
+			}
+			break;
+			
+			case 24:
+			{
+				*rmask = 0x0000ff00;
+				*gmask = 0x00ff0000;
+				*bmask = 0xff000000;
+				*amask = 0x00000000;
+			}
+			break;
+
+			default:
+			break;
+		}
+	}
+}
 
 
 
@@ -221,36 +303,18 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	{
 		u32 Rmask, Gmask, Bmask, Amask;
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-		Rmask = 0x000000ff;
-		Gmask = 0x0000ff00;
-		Bmask = 0x00ff0000;
-		Amask = 0xff000000;
-#endif /* __BYTE_ORDER == __LITTLE_ENDIAN */
-
-#if __BYTE_ORDER == __BIG_ENDIAN
-		Rmask = 0xff000000;
-		Gmask = 0x00ff0000;
-		Bmask = 0x0000ff00;
-		Amask = 0x000000ff;
-#endif /* __BYTE_ORDER == __BIG_ENDIAN */
-
-#if __BYTE_ORDER == __PDP_ENDIAN
-		Rmask = 0x00ff0000;
-		Gmask = 0xff000000;
-		Bmask = 0x000000ff;
-		Amask = 0x0000ff00;
-#endif /* __BYTE_ORDER == __PDP_ENDIAN */
+		get_default_mask(&Rmask, &Gmask, &Bmask, &Amask);
 		
-		/*temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);*/
+		temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);
 
-		Debug_Val(0, "MASKS 0x%x 0x%x 0x%x 0x%x\n", 
+		Debug_Val(0, "MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
+				Rmask, Gmask, Bmask, Amask,
 				temp1->format->Rmask,
 				temp1->format->Gmask,
 				temp1->format->Bmask,
 				temp1->format->Amask);
 
-		temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask);
+		/* temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask); */
 
 		if (temp2 == NULL)
 		{
@@ -706,6 +770,19 @@ v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
 {
+	u32 xRmask, xGmask, xBmask, xAmask;
+
+	get_default_mask(&xRmask, &xGmask, &xBmask, &xAmask);
+
+	if (!Rmask)
+		Rmask = xRmask;
+	if (!Gmask)
+		Gmask = xGmask;
+	if (!Bmask)
+		Bmask = xBmask;
+	if (!Amask)
+		Amask = xAmask;
+
 	return (v_object*)SDL_CreateRGBSurface(SDL_SWSURFACE | flags, width, height, Lib_GetDefaultDepth(), Rmask, Gmask, Bmask, Amask);
 }
 

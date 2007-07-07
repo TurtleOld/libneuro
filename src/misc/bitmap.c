@@ -712,82 +712,9 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		 * will need to put better values for the masks to support SDL.
 		 */
 		{
-			u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;
-#if temp
-			if (IsLittleEndian())
-			{
-				switch (ctx->bmap->infoheader.bits)
-				{
-					case 8:
-					{
-						rmask = 0x000000C0;
-						gmask = 0x0000003C;
-						bmask = 0x00000003;
-						amask = 0x00000000;
-					}
-					break;
+			/*u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;*/
 
-					case 16:
-					{
-						rmask = 0x0000f800;
-						gmask = 0x000007e0;
-						bmask = 0x0000001f;
-						amask = 0x00000000;
-					}
-					break;
-
-					case 24:
-					{
-						rmask = 0x00ff0000;
-						gmask = 0x0000ff00;
-						bmask = 0x000000ff;
-						amask = 0x00000000;
-					}
-					break;
-
-
-					default:
-					break;
-				}
-			}
-			else
-			{
-				switch (ctx->bmap->infoheader.bits)
-				{
-					case 8:
-					{
-						rmask = 0x00000003;
-						gmask = 0x0000003C;
-						bmask = 0x000000C0;
-						amask = 0x00000000;
-					}
-					break;
-
-					case 16:
-					{
-						rmask = 0x0000001f;
-						gmask = 0x000007e0;
-						bmask = 0x0000f800;
-						amask = 0x00000000;
-					}
-					break;
-					
-					case 24:
-					{
-						rmask = 0x0000ff00;
-						gmask = 0x00ff0000;
-						bmask = 0xff000000;
-						amask = 0x00000000;
-					}
-					break;
-
-					default:
-					break;
-				}
-			}
-#endif /* temp */
-
-
+			/*
 			if (IsLittleEndian())
 			{
 				rmask = 0x0000f800;
@@ -802,9 +729,14 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 				bmask = 0x0000f800;
 				amask = 0x00000000;
 			}
+			*/
+
+
 
 			/* Debug_Val(0, "image creation -- depth %d\n", ctx->bmap->infoheader.bits); */
-			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);
+			/*ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);*/
+			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, 0, 0, 0, 0);
+
 
 			if (ctx->output == NULL)
 			{
