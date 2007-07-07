@@ -179,13 +179,21 @@ fpdata16(nFILE *input, u16 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
+	if (IsLittleEndian())
+	{
 #if USE_ZLIB 1
-	feed[0] = gzgetc(input);
-	feed[1] = gzgetc(input);
+		feed[0] = gzgetc(input);
+		feed[1] = gzgetc(input);
 #else /* NOT USE_ZLIB */
-	feed[0] = fgetc(input);
-	feed[1] = fgetc(input);
+		feed[0] = fgetc(input);
+		feed[1] = fgetc(input);
 #endif /* NOT USE_ZLIB */
+	}
+	else
+	{
+		feed[1] = gzgetc(input);
+		feed[0] = gzgetc(input);
+	}
 
 	buf = (u16*)&feed;
 	
@@ -208,17 +216,27 @@ fpdata32(nFILE *input, u32 *output)
 	if (input == NULL || output == NULL)
 		return 1;
 
+	if (IsLittleEndian())
+	{
 #if USE_ZLIB 1
-	feed[0] = gzgetc(input);
-	feed[1] = gzgetc(input);
-	feed[2] = gzgetc(input);
-	feed[3] = gzgetc(input);
+		feed[0] = gzgetc(input);
+		feed[1] = gzgetc(input);
+		feed[2] = gzgetc(input);
+		feed[3] = gzgetc(input);
 #else /* NOT USE_ZLIB */
-	feed[0] = fgetc(input);
-	feed[1] = fgetc(input);
-	feed[2] = fgetc(input);
-	feed[3] = fgetc(input);
+		feed[0] = fgetc(input);
+		feed[1] = fgetc(input);
+		feed[2] = fgetc(input);
+		feed[3] = fgetc(input);
 #endif /* NOT USE_ZLIB */
+	}
+	else
+	{
+		feed[3] = gzgetc(input);
+		feed[2] = gzgetc(input);
+		feed[1] = gzgetc(input);
+		feed[0] = gzgetc(input);
+	}
 
 	buf = (u32*)&feed;
 	
@@ -674,11 +692,9 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			
 			if (ctx->bmap->header.type != 0x4d42)
 			{
-				NEURO_WARN("Invalid bitmap file", NULL);
+				NEURO_WARN("Invalid bitmap file magic %d", ctx->bmap->header.type);
 				return -1;
 			}
-
-
 		}
 
 		/* if it is valid, we create the buffers */
