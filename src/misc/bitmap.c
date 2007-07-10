@@ -355,7 +355,7 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
  * input a 1 byte of data to process 
  */
 static void
-process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF *bcolors, u32 *x, u32 *y, int *aux, char **buf)
+process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF *bcolors, u32 *x, u32 *y, int *aux, char **buf)
 {
 	
 	/* we will call functions depending on the bpp of the image */
@@ -425,10 +425,7 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 			{
 				BITMAP_COLOR *cbuf = NULL;
 
-				if (IsLittleEndian())
-					temp = *data & values[i];
-				else
-					temp = *data & values[7 - i];
+				temp = *data & values[i];
 				
 
 				if (temp)
@@ -436,7 +433,10 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				if (IsLittleEndian())
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				else
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->b, cbuf->g, cbuf->r));
 
 				*x = *x + 1;
 				i++;
@@ -494,24 +494,25 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 			{
 				BITMAP_COLOR *cbuf = NULL;
 				
+				temp = *data & values[i];
 				if (IsLittleEndian())
-				{
-					temp = *data & values[i];
-					
+				{	
 					if (temp > values[1])
 						temp >>= 4;	
 				}
 				else
 				{
-					temp = *data & values[1 - i];
-				
-					if (temp > values[0])
+					if (temp > values[1])
 						temp <<= 4;		
 				}
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				if (IsLittleEndian())
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				else
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->b, cbuf->g, cbuf->r));
+
 		
 				*x = *x + 1;
 				i++;
@@ -569,8 +570,11 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 				
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
-				
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+			
+				if (IsLittleEndian())
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
+				else
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB(cbuf->b, cbuf->g, cbuf->r));
 
 				*x = *x + 1;
 				i++;
@@ -620,7 +624,10 @@ process_bitmap2(BITMAP_HDATA *bmap, v_object *image, u8 *palette, u8 *data, EBUF
 					return;
 				}
 
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
+				if (IsLittleEndian())
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
+				else
+					Neuro_PutPixel(image, *x, (bmap->infoheader.height - 1) - *y, Neuro_MapRGB((*buf)[0], (*buf)[1], (*buf)[2]));
 
 				*x = *x + 1;
 			}
@@ -724,30 +731,8 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 
 		/* we create the v_object which is the libneuro
 		 * representation of the image.
-		 *
-		 * will need to put better values for the masks to support SDL.
 		 */
 		{
-			/*u32 rmask = 0, gmask = 0, bmask = 0, amask = 0;*/
-
-			/*
-			if (IsLittleEndian())
-			{
-				rmask = 0x0000f800;
-				gmask = 0x000007e0;
-				bmask = 0x0000001f;
-				amask = 0x00000000;
-			}
-			else
-			{
-				rmask = 0x0000001f;
-				gmask = 0x000007e0;
-				bmask = 0x0000f800;
-				amask = 0x00000000;
-			}
-			*/
-
-
 
 			/* Debug_Val(0, "image creation -- depth %d\n", ctx->bmap->infoheader.bits); */
 			/*ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, ctx->bmap->infoheader.height, ctx->bmap->infoheader.bits, rmask, gmask, bmask, amask);*/
@@ -859,7 +844,7 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			/* we push the 8 bits along with various other 
 			 * variables to the bits processor.
 			 */
-			process_bitmap2(ctx->bmap, ctx->output, ctx->palette, &ctx->DATA, 
+			process_bitmap(ctx->bmap, ctx->output, ctx->palette, &ctx->DATA, 
 					ctx->bmap_colors, &ctx->x, &ctx->y, &ctx->aux_var, &ctx->aux_buf);
 
 			ctx->i++;

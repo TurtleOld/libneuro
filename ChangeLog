@@ -1,3 +1,10 @@
+2007-07-09	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/misc/bitmap.c (bitmap_process2):
+	Renamed to bitmap_process.
+	
+	* src/misc/bitmap.c (bitmap_process):
+	Did fixes to the big endian compatibility code.
+
 2007-07-07	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/debug.c (Neuro_DebugChannel):
 	Added support even if the Init function wasn't
