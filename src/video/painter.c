@@ -59,6 +59,7 @@
 #include <string.h> /* memcpy */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 #include <extlib.h> /* we only use Lib_GetScreenSize */
 #include <ebuf.h> /* we use all the "normal" allocation function from this */
 #include <other.h> /* we call all the bounding check functions from it

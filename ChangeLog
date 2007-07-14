@@ -1,3 +1,13 @@
+2007-07-14	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/extlib/x11.c :
+	Removed dependency on X11/xpm.h so I had to
+	use in struct functions for XPutPixel XGetPixel
+	and XDestroyImage.
+
+	* src/extlib/x11.c :
+	Changed the low level XPutPixel() of the mask
+	to the higher level Lib_PutPixel().
+
 2007-07-09	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/misc/bitmap.c (bitmap_process2):
 	Renamed to bitmap_process.

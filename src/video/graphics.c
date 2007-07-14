@@ -30,6 +30,7 @@
 #include <time.h> /* to calculate the frames per second (fps) */
  
 /*--- Local Headers Including ---*/
+#include <global.h>
 #include <extlib.h> /* we need to init the video and clean it... also use the blitter */
 #include <ebuf.h> /* no longer needed */
 

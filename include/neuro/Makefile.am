@@ -1,5 +1,6 @@
 noinst_HEADERS = \
-		 config.h.in
+		 config.h.in \
+		 global.h
 
 
 include_HEADERS = \

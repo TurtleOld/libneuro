@@ -29,6 +29,7 @@
 
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 
 /*-------------------- Main Module Header --------------------------*/
 #include "pool.h"

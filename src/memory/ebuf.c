@@ -31,6 +31,7 @@
 #include <stdlib.h>
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 
 /*-------------------- Main Module Header --------------------------*/
 #include <ebuf.h>

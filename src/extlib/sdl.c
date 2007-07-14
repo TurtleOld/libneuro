@@ -38,6 +38,7 @@
 
 #define NATIVE_BMP 1
 
+#include <global.h>
 #include <graphics.h>
 #include <extlib.h>
 #include <other.h>

@@ -48,6 +48,7 @@ typedef FILE nFILE;
 #endif /* USE_ZLIB */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 #include <ebuf.h>
 #include <other.h>
 #include <extlib.h> /* Lib_GetDefaultDepth() */

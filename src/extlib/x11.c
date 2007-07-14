@@ -23,10 +23,10 @@
  * X11 driver(abstraction layer) source.
  */
 
+#include <global.h>
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>
-#include <X11/xpm.h>
 
 #include <extlib.h>
 #include <ebuf.h>
@@ -62,7 +62,6 @@ typedef struct V_OBJECT
 	XImage *raw_data;
 	Pixmap data; /*The set of pixels for the image*/
 	Pixmap shapemask; /*The bitmask for transparency*/
-	XpmAttributes attrib;
 	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
 	to flush the pixels with the actual image on the server*/
 
@@ -119,7 +118,7 @@ clean_Vobjects(void *src)
 	if (buf->raw_data)
 	{
 		/* Debug_Val(10, "destroying XImage raw data\n"); */
-		XDestroyImage(buf->raw_data);
+		(buf->raw_data->f.destroy_image)(buf->raw_data);
 	}
 	
 	if (buf->GC)
@@ -222,7 +221,7 @@ sync_pixels(V_OBJECT *src)
 		Neuro_GiveImageSize(src, &w, &h);
 
 		if (src->raw_data)
-			XDestroyImage(src->raw_data);
+			(src->raw_data->f.destroy_image)(src->raw_data);
 		/* Debug_Val(0, "cwin %d size %dx%d\n", *src->cwin, w, h); */
 		src->raw_data = ab_XGetImage(dmain->display, *src->cwin, 
 			0, 0, w, h, 
@@ -314,7 +313,7 @@ Lib_SyncPixels(v_object *src)
 	
 	Neuro_GiveImageSize(tmp, &w, &h);
 	if (tmp->raw_data)
-		XDestroyImage(tmp->raw_data);	
+		(tmp->raw_data->f.destroy_image)(tmp->raw_data);	
 
 	tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
 		0, 0, w, h, 
@@ -525,7 +524,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		Error_Print("mask_data has a different width than the image!");
 		Debug_Val(0, "mask_data width %d image width %d\n", mask_data->width, width);
 
-		XDestroyImage(mask_data);
+		(mask_data->f.destroy_image)(mask_data);
 
 		return;
 	}
@@ -535,7 +534,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		Error_Print("mask_data has a different height than the image!");
 		Debug_Val(0, "mask_data height %d image height %d\n", mask_data->height, height);
 
-		XDestroyImage(mask_data);
+		(mask_data->f.destroy_image)(mask_data);
 
 		return;
 	}
@@ -550,11 +549,11 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		{
 			if(Lib_GetPixel(vobj, x, y) == key)
 			{
-				XPutPixel(mask_data, x, y, 0);
+				(mask_data->f.put_pixel)(mask_data, x, y, 0);
 			}
 			else
 			{
-				XPutPixel(mask_data, x, y, 1);
+				(mask_data->f.put_pixel)(mask_data, x, y, 1);
 			}
 		}
 	}
@@ -590,7 +589,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	}
 
 	if (mask_data)
-		XDestroyImage(mask_data);
+		(mask_data->f.destroy_image)(mask_data);
 }
 
 void
@@ -643,7 +642,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 		return 1;
 	}
 	
-	return XGetPixel(tmp->raw_data, x, y);
+	return (tmp->raw_data->f.get_pixel)(tmp->raw_data, x, y);
 }
 
 /* TODO optimization is HIGHLY needed... 
@@ -1256,7 +1255,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 						Lib_PutPixel(output, tx, ty, color);
 						
 						if (mask_data)
-							XPutPixel(mask_data, tx, ty, 1);
+							Lib_PutPixel(mask_data, tx, ty, 1);
 					}
 					else
 					{
@@ -1267,7 +1266,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 						Lib_PutPixel(output, tx, ty, bg_color); 
 
 						if (mask_data)
-							XPutPixel(mask_data, tx, ty, 0);
+							Lib_PutPixel(mask_data, tx, ty, 0);
 					}
 
 					if (pixel >= face->glyph->bitmap.width - 1)
@@ -1316,7 +1315,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 				/* we no longer need the mask_data variable, it got copied 
 				 * to the good place so we destroy it.
 				 */
-				XDestroyImage(mask_data);
+				(mask_data->f.destroy_image)(mask_data);
 			}
 #endif /* font_mask XXX */
 

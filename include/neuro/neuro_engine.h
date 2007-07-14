@@ -28,4 +28,4 @@
 
 #include "debug.h"
 
-#endif /* __ENGINE_H */
+#endif /* NOT __ENGINE_H */

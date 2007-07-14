@@ -30,6 +30,18 @@
 extern "C" {
 #endif
 
+enum DEBUG_CLASS
+{
+	DBG_Start,
+
+	DBG_All,
+	DBG_Warn,
+	DBG_Error,
+	DBG_Trace,
+
+	DBG_End
+};
+
 /*! This function shouldn't be used directly because
  * Macros were made to fill automatically the arguments
  * like the file name, function name, line number.
@@ -38,9 +50,12 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 
 extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
-extern void Debug_VerboseChannel(char *channel);
+/* don't call this function directly, use Neuro_SetFilter(3) */
+extern void Neuro_CoreSetFilter(char *project_name, char *channel);
 
-extern void Neuro_DebugChannel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
+#define Neuro_SetFilter(x) Neuro_CoreSetFilter(NEURO_PROJECT_NAMESPACE,  x)
+
+extern void Neuro_DebugChannel(const char *project_name, const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
 /*! Prints predefined
  * messages and also makes for a very
@@ -61,14 +76,16 @@ you need to set a string to NEURO_MODULE_CHANNEL("<your string>")\
 to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
 #endif*/ /* NOT NEURO_CURRENT_CHANNEL */
 
-#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Error", \
+#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Error", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Warn", \
+#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Warn", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_CURRENT_CHANNEL, "Trace", \
+#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Trace", \
 		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+
+#define NEURO_PROJECT_NAME(x) char *NEURO_PROJECT_NAMESPACE=x
 
 #define NEURO_MODULE_CHANNEL(x) static char *NEURO_CURRENT_CHANNEL=x
 

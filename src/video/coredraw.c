@@ -26,6 +26,7 @@
 #include <string.h> /* memcpy */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 #include <extlib.h> /* we mainly use the blitting function and screen updating functions */
 #include <ebuf.h> /* we mainly use the single item cleaning function Neuro_SCleanEBuf */
 

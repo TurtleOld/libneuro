@@ -185,7 +185,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 noinst_HEADERS = \
-		 config.h.in
+		 config.h.in \
+		 global.h
 
 include_HEADERS = \
 		  NEURO.h \

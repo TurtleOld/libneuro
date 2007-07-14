@@ -21,6 +21,7 @@ Neuro_CleanKeyboard
 Neuro_CleanMouse
 Neuro_CleanPixels
 Neuro_CopyEBuf
+Neuro_CoreSetFilter
 Neuro_CreateEBuf
 Neuro_CreateVObject
 Neuro_DebugChannel
@@ -86,6 +87,7 @@ Neuro_SetImgLayer
 Neuro_SetImgPos
 Neuro_SetImgSrcPos
 Neuro_SetScreenSize
+Neuro_SetFilter
 Neuro_SetcallbEBuf
 Neuro_Sleep
 Neuro_SyncPixels

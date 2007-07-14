@@ -32,6 +32,7 @@
 #include <debug.h> /* we use the function Debug_Val */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 
 /*-------------------- Main Module Header --------------------------*/
 #include "video.h"

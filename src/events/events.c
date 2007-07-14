@@ -27,6 +27,7 @@
  * set which keyboard events will go with which functions.
  */
 
+#include <global.h>
 #include <extlib.h>
 #include <events.h>
 #include <ebuf.h> /* EBUF memory functions */

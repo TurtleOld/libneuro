@@ -23,6 +23,7 @@
 
 #include <other.h>
 
+#include <global.h>
 #include <ebuf.h>
 #include <debug.h>
 

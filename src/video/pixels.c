@@ -29,6 +29,7 @@
 
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 #include <extlib.h> /* Lib_PutPixel and Lib_GetPixel */
 
 /*-------------------- Main Module Header --------------------------*/

@@ -27,6 +27,7 @@
 #include <string.h> /* memcpy */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 #include <graphics.h>
 #include <extlib.h>
 

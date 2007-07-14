@@ -26,6 +26,7 @@
  * Especially when you want to have more than 1 data per nodes
  */
 
+#include <global.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

@@ -24,6 +24,7 @@
  * extern library(this is used for debugging).
  */
 
+#include <global.h>
 #include <extlib.h>
 #include <stdlib.h>
 
