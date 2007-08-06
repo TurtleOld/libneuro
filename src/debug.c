@@ -233,6 +233,23 @@ Neuro_DebugChannel(const char *project_name, const char *channel, char *type, ch
 	DEBUG_CHANNEL *buf;
 	u32 total = 0;
 
+	return;
+
+	if (!project_name || !channel || !type || !filename || !funcName || !control)
+	{
+		char *output = NULL;
+
+		if (funcName)
+			output = funcName;
+
+		if (output)
+			NEURO_ERROR("Invalid argument used -- caller name \"%s\"", output);
+		else
+			NEURO_ERROR("Invalid argument used -- unknown caller", NULL);
+
+		return;
+	}
+
 	/* we allow the call of this function even 
 	 * if the init wasn't priorly called.
 	 */
@@ -259,7 +276,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, char *type, ch
 		if (!strcmp(channel, buf->channel) || !strcmp(type, buf->channel))
 		{
 			if (output_detailed == 1)
-				fprintf(stderr, "%s : \"%s\" (%s) %s:%s:%d -- ", type, project_name, channel, filename, funcName, lineNum);
+				fprintf(stderr, "%s : (%s:%s) %s:%s:%d -- ", type, project_name, channel, filename, funcName, lineNum);
 
 			va_start(args, control);
 			vfprintf(stderr, control, args);

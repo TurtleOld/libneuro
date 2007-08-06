@@ -8,6 +8,6 @@
 
 #include "config.h"
 
-#define NEURO_PROJECT_NAMESPACE PACKAGE
+#define NEURO_PROJECT_NAMESPACE "libneuro"
 
 #endif /* NOT __GLOBAL_H */

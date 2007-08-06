@@ -1,3 +1,43 @@
+2007-08-06	Nicholas Niro	<nik_89@neuroponic.com>
+	* include/neuro/debug.h :
+	Fixed the standard debugging macros, they had
+	a line feed error that did unexpected effects.
+
+	* include/neuro/global.h :
+	This new file is strictly for internal use of
+	the library, it is not installed. It contains
+	the new project namespace name for the project
+	used for the debugging system.
+
+	* src/debug.c (Neuro_DebugChannel):
+	Disabled the function temporarily and added initial
+	code before the real functionalities are
+	implemented.
+
+	* src/extlib/sdl.c (Lib_GetPixel):
+	Commented the surface locking calls in order to
+	attempt to make getting pixels quicker to do.
+	NOTE: End coders are expected to themselves do the
+	necessary lockings before fidding with pixels.
+
+	* src/extlib/x11.c (Lib_GetPutPixel):
+	The data is no longer tagged for refresh everytime
+	a new pixel is changed, end coders are expected
+	to lock and unlock to refresh the surfaces
+	accordingly.
+
+	* src/misc/bitmap.c : 
+	Implemented a new dynamic loading bytes fragmentor
+	that loads 30% of the full bitmap size at every cycles
+	instead of an old fixed 1024 bytes like before.
+	This effectively is supposed to optimize loading speed
+	for bigger images.
+
+	* src/misc/bitmap.c (processGradual_BMP):
+	Surface locking were previously done at every cycles
+	but now, to optimize dynamic loading, locking and
+	unlocking only happen one time.
+
 2007-07-14	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/extlib/x11.c :
 	Removed dependency on X11/xpm.h so I had to

@@ -809,7 +809,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 	u32 err;
 	
 	
-	Lib_LockVObject(srf);
+	/* Lib_LockVObject(srf); */
 	
 	Lib_GetVObjectData(srf, NULL, NULL, NULL, &pitch, &pixels, NULL, &bpp,
 			NULL, NULL, NULL, NULL);
@@ -856,7 +856,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 		}
 	}
 
-	Lib_UnlockVObject(srf);
+	/* Lib_UnlockVObject(srf); */
 
 	return err;
 

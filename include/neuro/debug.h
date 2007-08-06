@@ -76,14 +76,17 @@ you need to set a string to NEURO_MODULE_CHANNEL("<your string>")\
 to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
 #endif*/ /* NOT NEURO_CURRENT_CHANNEL */
 
-#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Error", \
-		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+		NEURO_CURRENT_CHANNEL, \
+	       	"Error", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Warn", \
-		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+		NEURO_CURRENT_CHANNEL, \
+		"Warn", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
-#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, NEURO_CURRENT_CHANNEL, "Trace", \
-		__FILE__, __FUNCTION__, __LINE__, 1, x, y)
+#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+		NEURO_CURRENT_CHANNEL, \
+	       	"Trace", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
 #define NEURO_PROJECT_NAME(x) char *NEURO_PROJECT_NAMESPACE=x
 

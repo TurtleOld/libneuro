@@ -124,6 +124,7 @@ struct BMP_CTX
 	u32 increm;
 	u8 DATA;
 	v_object *output; /* the image into which we will load the bitmap */
+	u32 cut_size; /* amount of bytes to load per cycles */
 };
 
 
@@ -782,6 +783,15 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #endif /* NOT USE_ZLIB */
 
+		NEURO_WARN("Bitmap size %d", ctx->psize);
+		Debug_Val(0, "Bitmap size %d\n", ctx->psize);
+
+		ctx->cut_size = ctx->psize / 30;
+
+		loops = ctx->cut_size;
+
+		/* we lock the surface */
+		Lib_LockVObject(ctx->output);
 	}
 	
 
@@ -790,14 +800,13 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 	 * bitmap file. */
 	{
 		i32 initial = ctx->i;
-
-		Lib_LockVObject(ctx->output);
-
-
 		
 		/* while (ctx->i < ctx->psize) */
 		while (ctx->i < (initial + loops))
-		{			
+		{
+			if (ctx->i > ctx->psize)
+				break;
+
 			if (ctx->tmp > 0)
 			{
 				/* skip bytes that are inside the bitmap for 
@@ -845,15 +854,13 @@ processGradual_BMP(BMP_CTX *ctx, u32 loops)
 			/* we push the 8 bits along with various other 
 			 * variables to the bits processor.
 			 */
+			
 			process_bitmap(ctx->bmap, ctx->output, ctx->palette, &ctx->DATA, 
 					ctx->bmap_colors, &ctx->x, &ctx->y, &ctx->aux_var, &ctx->aux_buf);
+			
 
 			ctx->i++;
 		}
-
-		Lib_UnlockVObject(ctx->output);
-
-
 
 		if (ctx->i >= ctx->psize)
 		{ /* this bitmap finished being loaded, we free everything */
@@ -938,7 +945,7 @@ readBitmapFile(const char *bitmap)
 i8
 Bitmap_Poll(BMP_CTX *ctx)
 {
-	return processGradual_BMP(ctx, 1024);
+	return processGradual_BMP(ctx, ctx->cut_size);
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -974,6 +981,9 @@ Bitmap_DestroyCTX(BMP_CTX *ctx)
 
 	if (ctx == NULL)
 		return NULL;
+
+	/* loading the image is done so we unlock */
+	Lib_UnlockVObject(ctx->output);
 
 	output = ctx->output;
 

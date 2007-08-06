@@ -619,7 +619,7 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	XSetForeground(dmain->display, dmain->GC, pixel);
 	XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y);
 	
-	tmp->pixel_data_changed = 1;
+	/* tmp->pixel_data_changed = 1; */
 }
 
 u32 
