@@ -67,7 +67,7 @@ AM_PROG_LIBTOOL
 
 
 # set the flags
-CFLAGS="$CFLAGS -ansi -Wall -pedantic -I\$(top_srcdir)/src" 
+CFLAGS="$CFLAGS -std=iso9899:1990 -Wall -pedantic -I\$(top_srcdir)/src" 
 NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLDFLAGS="-export-symbols \$(top_srcdir)/include/libneuro.sym"
 SDLFLAGS="`sdl-config --libs`" 

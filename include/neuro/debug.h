@@ -50,10 +50,10 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 
 extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
-/* don't call this function directly, use Neuro_SetFilter(3) */
-extern void Neuro_CoreSetFilter(char *project_name, char *channel);
+/* don't call this function directly, use Neuro_DebugSetFilter(3) */
+extern void Neuro_CoreDebugSetFilter(char *project_name, char *channel);
 
-#define Neuro_SetFilter(x) Neuro_CoreSetFilter(NEURO_PROJECT_NAMESPACE,  x)
+#define Neuro_DebugSetFilter(x) Neuro_CoreDebugSetFilter(NEURO_PROJECT_NAMESPACE,  x)
 
 extern void Neuro_DebugChannel(const char *project_name, const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
@@ -78,15 +78,15 @@ to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
 
 #define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-	       	"Error", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+	       	"error", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
 #define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-		"Warn", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+		"warn", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
 #define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-	       	"Trace", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+	       	"trace", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
 #define NEURO_PROJECT_NAME(x) char *NEURO_PROJECT_NAMESPACE=x
 

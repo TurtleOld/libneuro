@@ -1,3 +1,15 @@
+2007-08-18	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/debug.c :
+	Finished coding the debugging functions 
+	Neuro_DebugChannel() and Neuro_CoreDebugSetFilter(),
+	they are both fully interfaced by a certain amount
+	of macros to make their use easier.
+
+2007-08-17	Nicholas Niro	<nik_89@neuroponic.com>
+	* configure.ac :
+	Changed the CFlag -ansi to the internationnal 
+	one : -std=iso9899:1990.
+
 2007-08-06	Nicholas Niro	<nik_89@neuroponic.com>
 	* include/neuro/debug.h :
 	Fixed the standard debugging macros, they had

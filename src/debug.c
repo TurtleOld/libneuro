@@ -25,13 +25,14 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
-#include <stdio.h> /* printf vfprintf */
-#include <stdarg.h> /* va_start va_end */
-#include <string.h> /* strcmp */
+#include <stdio.h> /* printf() vfprintf() */
+#include <stdarg.h> /* va_start() va_end() */
+#include <string.h> /* strcmp()  strlen()*/
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
 #include <ebuf.h>
+#include <other.h> /* Neuro_SepChr2() */
 
 /*-------------------- Main Module Header --------------------------*/
 #include "debug.h"
@@ -48,8 +49,6 @@ typedef struct DEBUG_CHANNEL
 	char *channel; /* the module name, example : bitmap <-- NEURO_MODULE_CHANNEL() */
 	
 	u32 class; /* the class, see debug.h -- enum DEBUG_CLASS */
-	
-	u32 rule; /* 1:+    0:- */
 }DEBUG_CHANNEL;
 
 /*-------------------- Global Variables ----------------------------*/
@@ -60,6 +59,12 @@ static u8 debug_level = 0;
 
 static EBUF *debug_l;
 
+static const int Debug_ClassMasks[] = {
+	0x00000007,
+	0x00000001,
+	0x00000002,
+	0x00000004
+};
 
 static const char *Debug_Classes[] = {
 	"all",
@@ -73,6 +78,174 @@ static const char *Debug_Classes[] = {
 
 
 /*-------------------- Static Functions ----------------------------*/
+
+static void
+clean_debug_channel(void *src)
+{
+	DEBUG_CHANNEL *tmp;
+
+	tmp = (DEBUG_CHANNEL*)src;
+
+	if (tmp)
+	{
+		if (tmp->namespace)
+			free(tmp->namespace);
+
+		if (tmp->channel)
+			free(tmp->channel);
+	}
+}
+
+static int
+elem_getclass(char *class)
+{
+	u32 i = 5;
+	i32 class_type = -1;
+
+	while (i-- > 0)
+	{
+		if (!strcmp(Debug_Classes[i], class))
+		{
+			class_type = Debug_ClassMasks[i];
+			break;
+		}		
+	}
+
+
+	return class_type;
+}
+
+static void
+calibrate_string(char *string)
+{
+	int len = strlen(string);
+
+	while (len-- > 0)
+	{
+		/*Debug_Val(0, "herein -> %c\n", string[len]);*/
+		if (string[len] >= 'A' && string[len] <= 'Z')
+			string[len] ^= 0x20;
+	}
+}
+
+static DEBUG_CHANNEL *
+filter_elem_exist(const char *namespace, const char *elem)
+{
+	DEBUG_CHANNEL *buf;
+	u32 total = 0;
+
+	if (Neuro_EBufIsEmpty(debug_l))
+		return NULL;
+
+	total = Neuro_GiveEBufCount(debug_l) + 1;
+
+	while (total-- > 0)
+	{
+		buf = Neuro_GiveEBuf(debug_l, total);
+
+		if (!buf->namespace)
+			continue;
+
+		if (!strcmp(namespace, buf->namespace))
+		{
+			if (!strcmp(elem, buf->channel))
+			{
+				return buf;
+			}
+		}
+	}
+
+	return NULL;
+}
+
+static DEBUG_CHANNEL *
+filter_handleElem(char *namespace, char *elem)
+{
+	char *toggle = NULL;
+	DEBUG_CHANNEL *buf;
+	u8 type = 0;
+	i32 class_type = 0;
+
+	/* Debug_Val(0, "HANDLE \"%s\" len %d\n", elem, strlen(elem)); */
+
+	if (strlen(elem) <= 1 || memchr(elem, ' ', strlen(elem)))
+	{
+		NEURO_WARN("too small filter element found", NULL);
+		return NULL;
+	}
+
+	toggle = memchr(elem, '-', strlen(elem));
+
+	if (!toggle)
+	{
+		toggle = memchr(elem, '+', strlen(elem));
+		type = 1;
+	}
+
+	if (toggle)
+		*toggle = '\0';
+	else
+	{
+		NEURO_WARN("the character + or - is required before the channel name", NULL);
+		return NULL;
+	}
+	
+	if (toggle == elem)
+	{
+		elem = "all";
+	}
+
+	calibrate_string(elem);
+
+	class_type = elem_getclass(elem);
+
+	if (class_type < 0)
+	{
+		NEURO_ERROR("Invalid class used \"%s\", Valid classes: all warn error trace", elem);
+		return NULL;
+	}
+
+	/* prior to creating a new element, we need to check the buffer for 
+	 * an element with the same name so we can modify it instead of 
+	 * creating a conflicting one.
+	 */
+
+	if ((buf = filter_elem_exist(namespace, &toggle[1])))
+	{
+		NEURO_TRACE("elem exists: %s", buf->channel);
+
+		if (type == 0)
+			buf->class ^= class_type;
+		else
+			buf->class &= class_type;
+
+		return buf;
+	}
+
+	Neuro_AllocEBuf(debug_l, sizeof(DEBUG_CHANNEL*), sizeof(DEBUG_CHANNEL));
+
+	buf = Neuro_GiveCurEBuf(debug_l);
+
+	if (buf)
+	{
+		buf->channel = calloc(1, strlen(&toggle[1]) + 1);
+		strncpy(buf->channel, &toggle[1], strlen(&toggle[1]));
+
+		buf->namespace = calloc(1, strlen(namespace) + 1);
+		strncpy(buf->namespace, namespace, strlen(namespace));
+		if (type == 1)
+			buf->class = class_type;
+		/* Debug_Val(0, "before %s\n", elem); */
+		/* Debug_Val(0, "after %s\n", elem); */
+	}
+	else
+	{
+		NEURO_ERROR("Out of Memory", NULL);
+		return NULL;
+	}
+
+	return buf;
+}
 
 /*-------------------- Global Functions ----------------------------*/
 
@@ -164,11 +337,13 @@ IsLittleEndian()
 }
 
 /* filter should be in the format class<+|->channel (ex: warn+bitmap)
+ * an element that doesn't have a class will be treated as class
+ * all by default.
  * and it can contain a virtually unlimited amount of 
  * space separated elements.
  */
 void
-Neuro_CoreSetFilter(char *project_name, char *filter)
+Neuro_CoreDebugSetFilter(char *project_name, char *filter)
 {
 	/* this function's purpose is to populate
 	 * our filtering ebuffer debug_l.
@@ -193,15 +368,12 @@ Neuro_CoreSetFilter(char *project_name, char *filter)
 	 * but we still check the others. We then use again Neuro_SepChr2()
 	 * for every elements with their corresponding type <+|->.
 	 *
-	 * This done, we need to loop the ebuffor debug_l to see if
+	 * This done, we need to loop the ebuffer debug_l to see if
 	 * the filter to be added is already present (in that case, we
 	 * drop the filter and don't output anything) or if the filter
 	 * is contradictory to an existing one, we simply modify the
 	 * existing one to become the new filter.
 	 */
-
-
-	DEBUG_CHANNEL *buf;
 
 	if (!project_name || !filter)
 	{
@@ -213,16 +385,44 @@ Neuro_CoreSetFilter(char *project_name, char *filter)
 	{
 		Neuro_CleanEBuf(&debug_l);
 		Neuro_CreateEBuf(&debug_l);
+		Neuro_SetcallbEBuf(debug_l, clean_debug_channel);
 	}
 
-	Neuro_AllocEBuf(debug_l, sizeof(DEBUG_CHANNEL*), sizeof(DEBUG_CHANNEL));
+	/* we start by separating all the elements in the filter string */
+	{
+		EBUF *sep;
+		u32 total = 0;
 
-	buf = Neuro_GiveCurEBuf(debug_l);
+		sep = Neuro_SepChr2(' ', filter);
 
-	if (buf)
-		buf->channel = filter;
-	else
-		NEURO_ERROR("Out of Memory", NULL);	
+		if (Neuro_EBufIsEmpty(sep))
+		{
+			NEURO_WARN("No valid filter elements to parse", NULL);
+			return;
+		}
+
+		total = Neuro_GiveEBufCount(sep) + 1;
+
+		while (total-- > 0)
+		{
+			DEBUG_CHANNEL *tmp;
+			SepChr_Data *buf;
+
+			buf = Neuro_GiveEBuf(sep, total);
+
+			tmp = filter_handleElem(project_name, buf->string);
+
+			if (!tmp)
+			{
+				NEURO_WARN("Failed to create/modify element", NULL);
+				continue;
+			}
+
+			NEURO_TRACE("created: %s", tmp->channel);
+		}
+
+		Neuro_CleanEBuf(&sep);
+	}
 }
 
 void
@@ -231,9 +431,10 @@ Neuro_DebugChannel(const char *project_name, const char *channel, char *type, ch
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;
-	u32 total = 0;
+	u32 total = 0, i = 0;
+	u32 print_message = 0; /* toggle */
 
-	return;
+	/* Debug_Val(0, "Herein %s %s->%s [%d]\n", project_name, channel, type, lineNum); */
 
 	if (!project_name || !channel || !type || !filename || !funcName || !control)
 	{
@@ -250,41 +451,75 @@ Neuro_DebugChannel(const char *project_name, const char *channel, char *type, ch
 		return;
 	}
 
-	/* we allow the call of this function even 
-	 * if the init wasn't priorly called.
-	 */
-	if (!debug_l)
-	{
-		Neuro_CreateEBuf(&debug_l);
-
-		Neuro_SetFilter("Error");
-		Neuro_SetFilter("Warn");
-
-		NEURO_WARN("temporary default debugging set -- 2", NULL);
-	}
-
 	if (Neuro_EBufIsEmpty(debug_l))
 		return;
 
 	total = Neuro_GiveEBufCount(debug_l) + 1;
 
-	while (total-- > 0)
+	while (i < total)
 	{
+		buf = Neuro_GiveEBuf(debug_l, i);
 
-		buf = Neuro_GiveEBuf(debug_l, total);
-
-		if (!strcmp(channel, buf->channel) || !strcmp(type, buf->channel))
+		if (!strcmp(project_name, buf->namespace))
 		{
-			if (output_detailed == 1)
-				fprintf(stderr, "%s : (%s:%s) %s:%s:%d -- ", type, project_name, channel, filename, funcName, lineNum);
+			int class_type = 0;
 
-			va_start(args, control);
-			vfprintf(stderr, control, args);
-			va_end(args);
 
-			fprintf(stderr, "\n"); /* we do a line feed */
+			class_type = elem_getclass(type);
+
+			if (class_type < 0)
+			{
+				NEURO_ERROR("Invalid class used", NULL);
+				return;
+			}
+
+			/*Debug_Val(0, "class type %d\n", buf->class);
+			Debug_Val(0, "%s -> %s\n", channel, buf->channel);*/
+
+			/* the "all" type always matches every elements :) */
+			if (!strcmp(channel, buf->channel) || !strcmp("all", buf->channel))
+			{
+				if ((buf->class & class_type) == 0)
+					print_message = 0;
+				else
+					print_message = 1;
+			}
 		}
-	}}
+
+		i++;
+	}
+
+	if (print_message == 1)
+	{
+		u8 output_type[10];
+		u32 len = strlen(type);
+
+		if (len >= 10)
+		{
+			NEURO_ERROR("Type class default size of 10 is too low for present use, please raise it and recompile", NULL);
+			return;
+		}
+
+		/* we set the ending NULL */
+
+		output_type[len] = '\0';
+		/* we Capitalize the type string */
+		while (len-- > 0)
+		{
+			output_type[len] = type[len] ^ 0x20;
+		}
+
+
+		if (output_detailed == 1)
+			fprintf(stderr, "%s : (%s:%s) %s:%s:%d -- ", output_type, project_name, channel, filename, funcName, lineNum);
+
+		va_start(args, control);
+		vfprintf(stderr, control, args);
+		va_end(args);
+
+		fprintf(stderr, "\n"); /* we do a line feed */
+	}
+}
 
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -293,11 +528,7 @@ int
 Debug_Init()
 {
 	Neuro_CreateEBuf(&debug_l);
-	
-	Neuro_SetFilter("Error");
-	Neuro_SetFilter("Warn");
-
-	NEURO_WARN("temporary default debugging set", NULL);
+	Neuro_SetcallbEBuf(debug_l, clean_debug_channel);
 
 	return 0;
 }
