@@ -72,7 +72,7 @@
  *
  * Now that the EBUF pointer is created, the next step is to 
  * initialize it by using Neuro_CreateEBuf(3). Among other, 
- * it allocated enough memory for its own internal data and 
+ * it allocates enough memory for its own internal data and 
  * then resets them to default initial values. \n
  *
  * When no longer needed, the pointer should be freed by using
@@ -106,12 +106,16 @@
  * \n \n \n
  *
  * READ AND WRITE : \n \n
- * reading from an ebuf element is quite easy, it works kind of
+ * reading/writing from an ebuf element is quite easy, it works kind of
  * the same as when you call malloc(). After calling Neuro_AllocEBuf(3)
  * or Neuro_MultiAllocEBuf(3), you can use either Neuro_GiveEBuf(3) 
  * or Neuro_GiveCurEBuf(3). Those two functions return a void pointer
  * which you simply put into the correct variable. You can then read
- * or write from the structure directly. \n \n \n
+ * or write from the structure directly. If you want to work on all the
+ * data of the buffer, you need to fetch how much elements are contained.
+ * For the purpose the function Neuro_GiveEBufCount(3) has to be used.
+ * Then, when looping, a simple call to Neuro_GiveEBuf(3) has to be used
+ * to get each data structs.\n \n \n
  * 
  * MOVING DATA : \n \n
  *
