@@ -1062,7 +1062,14 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 	if (pixels)
 		*pixels = srf->pixels;
 	if (clip_rect)
+	{
 		*clip_rect = (Rectan*)&srf->clip_rect;
+
+		(*clip_rect)->x = srf->clip_rect.x;
+		(*clip_rect)->y = srf->clip_rect.y;
+		(*clip_rect)->h = srf->clip_rect.h;
+		(*clip_rect)->w = srf->clip_rect.w;
+	}
 	if (bpp)
 		*bpp = srf->format->BytesPerPixel;
 	if (Rmask)
