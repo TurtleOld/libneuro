@@ -51,9 +51,9 @@ extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *fu
 extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 
 /* don't call this function directly, use Neuro_DebugSetFilter(3) */
-extern void Neuro_CoreDebugSetFilter(char *project_name, char *channel);
+extern void Neuro_SetCoreDebugFilter(char *project_name, char *channel);
 
-#define Neuro_DebugSetFilter(x) Neuro_CoreDebugSetFilter(NEURO_PROJECT_NAMESPACE,  x)
+#define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
 extern void Neuro_DebugChannel(const char *project_name, const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
 

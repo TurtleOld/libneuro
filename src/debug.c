@@ -343,7 +343,7 @@ IsLittleEndian()
  * space separated elements.
  */
 void
-Neuro_CoreDebugSetFilter(char *project_name, char *filter)
+Neuro_SetCoreDebugFilter(char *project_name, char *filter)
 {
 	/* this function's purpose is to populate
 	 * our filtering ebuffer debug_l.
