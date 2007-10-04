@@ -62,8 +62,6 @@ extern int vasprintf(char **, const char *, va_list);
 
 /*-------------------- Static Variables ----------------------------*/
 
-static u8 debug_level = 0;
-
 static EBUF *debug_l;
 
 /* this variable is used in the Neuro_s() function */
@@ -259,63 +257,6 @@ filter_handleElem(char *namespace, char *elem)
 }
 
 /*-------------------- Global Functions ----------------------------*/
-
-void
-Debug_Channel(const char *channel, const char *type, const char *filename, 
-		const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...)
-{
-	va_list args;
-	DEBUG_CHANNEL *buf;
-	u32 total = 0;
-
-	if (Neuro_EBufIsEmpty(debug_l))
-		return;
-
-	total = Neuro_GiveEBufCount(debug_l) + 1;
-
-	while (total-- > 0)
-	{
-
-		buf = Neuro_GiveEBuf(debug_l, total);
-
-		if (!strcmp(channel, buf->channel) || !strcmp(type, buf->channel))
-		{
-			if (output_detailed == 1)
-				fprintf(stderr, "%s : (%s) %s:%s:%d -- ", type, channel, filename, funcName, lineNum);
-
-			va_start(args, control);
-			vfprintf(stderr, control, args);
-			va_end(args);
-
-			fprintf(stderr, "\n"); /* we do a line feed */
-		}
-	}
-}
-
-/* */
-void
-Debug_Val(u8 level, const char *control, ...)
-{
-	va_list args;
-	/* char *msg;*/
-	
-	if (debug_level >= level)
-	{
-		/* msg = calloc(1, 520); */
-		va_start(args, control);
-		/* vasprintf(msg, control, args); */
-		vfprintf(stderr, control, args);
-		va_end(args);
-
-		/* free(msg); */
-	}
-}
-
-void
-Neuro_SetDebugLevel(u8 level)
-{
-	debug_level = level;
-}
 
 int
 IsLittleEndian()
