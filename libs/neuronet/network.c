@@ -57,6 +57,7 @@ struct CONNECT_DATA
 
 	t_tick connection_start_time;
 	t_tick idle_time; /* idle time... actually its the exact time we last recieved activity from the connection */
+	t_tick timeout;
 
 	EBUF *output; /* output buffer contains PACKET_BUFFER elements */
 };
@@ -197,9 +198,9 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 	if (!client)
 		return;
 
-	/* if (parent->type == 0) */
+	if(client->timeout != 0)
 	{
-		if (client->idle_time + 500 < Neuro_GetTickCount())
+		if (client->idle_time + client->timeout < Neuro_GetTickCount())
 		{
 			Neuro_SCleanEBuf(parent->connections, client);
 			NEURO_WARN("Connection dropped due to timeout", NULL);
@@ -497,6 +498,17 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 
 /*-------------------- Global Functions ----------------------------*/
 
+int
+NNet_SetTimeout(CONNECT_DATA *src, t_tick ts)
+{
+       if(!src)
+               return 1;
+
+       src->timeout = ts;
+
+       return 0;
+}
+
 void
 NNet_SetDebugFilter(char *filter)
 {
@@ -680,6 +692,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 
 	tmp->connection_start_time = Neuro_GetTickCount();
 	tmp->idle_time = tmp->connection_start_time;
+	tmp->timeout = 500;
 
 	*result = tmp;
 	
