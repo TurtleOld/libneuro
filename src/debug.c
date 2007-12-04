@@ -267,8 +267,8 @@ Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 
 }
 
 void
-Debug_Channel(const char *channel, char *type, char *filename, 
-		char *funcName, u32 lineNum, u8 output_detailed, char *control, ...)
+Debug_Channel(const char *channel, const char *type, const char *filename, 
+		const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...)
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;
@@ -426,8 +426,8 @@ Neuro_SetCoreDebugFilter(char *project_name, char *filter)
 }
 
 void
-Neuro_DebugChannel(const char *project_name, const char *channel, char *type, char *filename, 
-		char *funcName, u32 lineNum, u8 output_detailed, char *control, ...)
+Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, 
+		const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...)
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;

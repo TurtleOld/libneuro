@@ -48,14 +48,14 @@ enum DEBUG_CLASS
  */
 extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum);
 
-extern void Debug_Channel(const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
+extern void Debug_Channel(const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
 
 /* don't call this function directly, use Neuro_DebugSetFilter(3) */
 extern void Neuro_SetCoreDebugFilter(char *project_name, char *channel);
 
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
-extern void Neuro_DebugChannel(const char *project_name, const char *channel, char *type, char *filename, char *funcName, u32 lineNum, u8 output_detailed, char *control, ...);
+extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
 
 /*! Prints predefined
  * messages and also makes for a very
