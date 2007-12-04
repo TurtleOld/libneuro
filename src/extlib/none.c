@@ -71,6 +71,18 @@ Lib_SetAlpha(v_object *vobj, u8 alpha)
 	
 }
 
+void 
+Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
+{
+
+}
+
+u32 
+Lib_GetPixel(v_object *srf, int x, int y)
+{
+	return 0;
+}
+
 v_object *
 Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gmask,
 		u32 Bmask, u32 Amask)
@@ -189,6 +201,12 @@ Lib_VideoExit()
 }
 
 /*----------------- Input Events -----------------*/
+
+u8
+Lib_CheckKeyStatus(u32 key)
+{
+	return 0;
+}
 
 u8
 Lib_GetMouseState(i32 *x, i32 *y)
