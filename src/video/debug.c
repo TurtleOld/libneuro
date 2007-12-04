@@ -41,6 +41,8 @@
 
 /*--------------------      Other       ----------------------------*/
 
+NEURO_MODULE_CHANNEL("video/debug");
+
 /*-------------------- Global Variables ----------------------------*/
 
 /*-------------------- Static Variables ----------------------------*/
@@ -190,7 +192,7 @@ Graphics_DebugPrintMissing(EBUF *src)
 		
 		if (cur->next == Graphics_GetFirstElem())
 		{
-			Error_Print("This element points to the beginning element\n");
+			NEURO_ERROR("This element points to the beginning element", NULL);
 			break;
 		}
 		else
@@ -201,7 +203,7 @@ Graphics_DebugPrintMissing(EBUF *src)
 	 * its data. 
 	 */
 
-	Debug_Print("Debug queue status report");
+	NEURO_TRACE("Debug queue status report", NULL);
 
 	if (!Neuro_EBufIsEmpty(missing_list))
 	{
@@ -294,7 +296,7 @@ Graphics_DebugQueueIntegrityCheck()
 
 	if (Graphics_GetFirstElem == NULL)
 	{
-		Error_Print("failed, first_element is NULL");
+		NEURO_ERROR("failed, first_element is NULL", NULL);
 		return;
 	}
 
@@ -410,7 +412,7 @@ Graphics_DebugQueueIntegrityCheck()
 	}
 
 	/* now we output our report */
-	Debug_Print("Data Integrity Check Report");
+	NEURO_TRACE("Data Integrity Check Report", NULL);
 
 	Debug_Val(0, "Queue integrity : %d\n", correct_queue_integ);
 	Debug_Val(0, "Correct last element : %d\n", correct_last_elem);

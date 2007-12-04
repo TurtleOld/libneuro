@@ -39,7 +39,11 @@
 
 /*--- Main Module Header ---*/
 #include <graphics.h>
- 
+
+/*--- Other ---*/
+
+NEURO_MODULE_CHANNEL("video/graphics");
+
 /*--- Global Variables ---*/
 
 /*--- Static Variables ---*/
@@ -362,7 +366,7 @@ Graphics_Init()
 
 		if (_err_ == 1)
 		{
-			Error_Print("Lib_VideoInit failed");
+			NEURO_ERROR("Lib_VideoInit failed", NULL);
 			return 1;
 		}
 	}
@@ -372,7 +376,7 @@ Graphics_Init()
 		
 		if (_err_ == 1)
 		{
-			Error_Print("Lib_VideoInit failed");
+			NEURO_ERROR("Lib_VideoInit failed", NULL);
 			return 1;
 		}
 		
@@ -391,7 +395,7 @@ Graphics_Init()
 
 		if (sclScreen2 == NULL)
 		{
-			Error_Print("Couldn't create a v object : sclScreen2");
+			NEURO_ERROR("Couldn't create a v object : sclScreen2", NULL);
 			return 1;
 		}
 		

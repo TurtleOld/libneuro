@@ -179,7 +179,7 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 		if (*buf == NULL)
 		{
 			/* theres a big problem */
-			Error_Print("Memory buffer unknown error");
+			NEURO_ERROR("Memory buffer unknown error", NULL);
 			return;
 		}
 

@@ -97,7 +97,7 @@ clean_debug_channel(void *src)
 }
 
 static int
-elem_getclass(char *class)
+elem_getclass(const char *class)
 {
 	u32 i = 5;
 	i32 class_type = -1;
@@ -421,7 +421,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 
 	if (!project_name || !channel || !type || !filename || !funcName || !control)
 	{
-		char *output = NULL;
+		const char *output = NULL;
 
 		if (funcName)
 			output = funcName;
