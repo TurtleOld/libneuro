@@ -42,12 +42,6 @@ enum DEBUG_CLASS
 	DBG_End
 };
 
-/*! This function shouldn't be used directly because
- * Macros were made to fill automatically the arguments
- * like the file name, function name, line number.
- */
-extern void Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum);
-
 extern void Debug_Channel(const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
 
 /* don't call this function directly, use Neuro_DebugSetFilter(3) */
@@ -56,15 +50,6 @@ extern void Neuro_SetCoreDebugFilter(char *project_name, char *channel);
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
 extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
-
-/*! Prints predefined
- * messages and also makes for a very
- * easy to call function with only one 
- * argument which extends to 4 automatically 
- */
-#define Debug_Print(x) Neuro_DebugPrint("Debug Message", x, __FILE__, __FUNCTION__, __LINE__)
-#define Error_Print(x) Neuro_DebugPrint("Error Message", x, __FILE__, __FUNCTION__, __LINE__)
-#define Info_Print(x) Neuro_DebugPrint("Information Message", x, __FILE__, __FUNCTION__, __LINE__)
 
 /* attempt to make developpers be warned when they used 
  * NEURO_ERROR, _WARN or _TRACE without first calling

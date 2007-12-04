@@ -250,23 +250,6 @@ filter_handleElem(char *namespace, char *elem)
 /*-------------------- Global Functions ----------------------------*/
 
 void
-Neuro_DebugPrint(char *type, char *control, char *filename, char *funcName, u32 lineNum)
-{
-	/*
-	va_list args;
-	char *msg = calloc(1, 520);
-	
-	va_start(args, control);
-	vasprintf(msg, control, args);
-	va_end(args);
-	*/
-	fprintf(stderr, "%s : %s:%s:%d -- %s\n", type, filename, funcName, lineNum, control);
-	/* fprintf(stderr, "%s\n", control); */
-	
-	/* free(msg); */
-}
-
-void
 Debug_Channel(const char *channel, const char *type, const char *filename, 
 		const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...)
 {
