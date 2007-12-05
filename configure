@@ -22114,7 +22114,7 @@ if test $ac_cv_lib_z_gzgetc = yes; then
 cat >>confdefs.h <<\_ACEOF
 #define USE_ZLIB
 _ACEOF
-
+ LIBS="$LIBS -lz"
 else
   { { echo "$as_me:$LINENO: error: You don't have the Z library" >&5
 echo "$as_me: error: You don't have the Z library" >&2;}
