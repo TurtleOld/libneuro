@@ -251,7 +251,7 @@ filter_handleElem(char *namespace, char *elem)
 
 void
 Debug_Channel(const char *channel, const char *type, const char *filename, 
-		const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...)
+		const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...)
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;
@@ -283,7 +283,7 @@ Debug_Channel(const char *channel, const char *type, const char *filename,
 
 /* */
 void
-Debug_Val(u8 level, char *control, ...)
+Debug_Val(u8 level, const char *control, ...)
 {
 	va_list args;
 	/* char *msg;*/
@@ -410,7 +410,7 @@ Neuro_SetCoreDebugFilter(char *project_name, char *filter)
 
 void
 Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, 
-		const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...)
+		const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...)
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;

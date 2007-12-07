@@ -42,14 +42,14 @@ enum DEBUG_CLASS
 	DBG_End
 };
 
-extern void Debug_Channel(const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
+extern void Debug_Channel(const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...);
 
 /* don't call this function directly, use Neuro_DebugSetFilter(3) */
-extern void Neuro_SetCoreDebugFilter(char *project_name, char *channel);
+extern void Neuro_SetCoreDebugFilter(char *project_name, char *filter);
 
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
-extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, const u32 lineNum, const u8 output_detailed, const char *control, ...);
+extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...);
 
 /* attempt to make developpers be warned when they used 
  * NEURO_ERROR, _WARN or _TRACE without first calling
@@ -84,7 +84,7 @@ to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
  *
  * @related Neuro_SetDebugLevel(3)
  */
-extern void Debug_Val(u8 level, char *control, ...);
+extern void Debug_Val(u8 level, const char *control, ...);
 
 /** 
  * @sdescri sets the current debug level
