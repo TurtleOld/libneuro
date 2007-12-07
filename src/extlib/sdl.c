@@ -289,14 +289,14 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	if (_err_)
 	{
-		Error_Print("SDL_Init failure");
+		NEURO_ERROR("SDL_Init failure", NULL);
 		return _err_;
 	}
 
 	temp1 = SDL_SetVideoMode(options.Xsize, options.Ysize, options.bpp, options.Primary_screen_flags);
 	if (temp1 == NULL)
 	{
-		Error_Print("SDL_SetVideoMode failure");
+		NEURO_ERROR("SDL_SetVideoMode failure", NULL);
 		return 1;
 	}
 	
@@ -319,7 +319,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 		if (temp2 == NULL)
 		{
-			Error_Print("Lib_CreateVObject failure");
+			NEURO_ERROR("Lib_CreateVObject failure", NULL);
 			return 1;
 		}
 	}
@@ -435,14 +435,14 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	_err = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	if (_err)
 	{
-		Error_Print("Couldn't select the encoding unicode");
+		NEURO_ERROR("Couldn't select the encoding unicode", NULL);
 		return NULL;
 	}
 	
 	_err = FT_Set_Char_Size(face, size * 64, size * 64, 72, 72);
 	if (_err)
 	{
-		Error_Print("Couldn't set face character size");
+		NEURO_ERROR("Couldn't set face character size", NULL);
 		return NULL;
 	}
 
@@ -489,7 +489,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 	if (_err)
 	{
-		Error_Print("Couldn't load character");
+		NEURO_ERROR("Couldn't load character", NULL);
 		return NULL;
 	}
 
@@ -503,7 +503,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 		
 		if (face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
 		{
-			Debug_Print("Unknown non bitmap format");
+			NEURO_TRACE("Unknown non bitmap format", NULL);
 			return NULL;
 		}
 		/*if (face->glyph->format == FT_GLYPH_FORMAT_BITMAP)
