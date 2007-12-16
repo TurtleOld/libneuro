@@ -51,9 +51,11 @@ CONFIG_HEADER = $(top_builddir)/include/neuro/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libvideo_la_LIBADD =
+am__libvideo_la_SOURCES_DIST = painter.c coredraw.c graphics.c debug.c \
+	interface.c pixels.c
 am__objects_1 = painter.lo coredraw.lo graphics.lo debug.lo \
 	interface.lo pixels.lo
-am_libvideo_la_OBJECTS = $(am__objects_1)
+@USE_VIDEO_TRUE@am_libvideo_la_OBJECTS = $(am__objects_1)
 libvideo_la_OBJECTS = $(am_libvideo_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include/neuro
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -67,7 +69,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libvideo_la_SOURCES)
-DIST_SOURCES = $(libvideo_la_SOURCES)
+DIST_SOURCES = $(am__libvideo_la_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -141,6 +143,8 @@ SHELL = @SHELL@
 STRIP = @STRIP@
 USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
+USE_VIDEO_FALSE = @USE_VIDEO_FALSE@
+USE_VIDEO_TRUE = @USE_VIDEO_TRUE@
 USE_X11_FALSE = @USE_X11_FALSE@
 USE_X11_TRUE = @USE_X11_TRUE@
 VERSION = @VERSION@
@@ -204,7 +208,7 @@ lib_sources = \
 		interface.c  \
 		pixels.c
 
-libvideo_la_SOURCES = $(lib_sources)
+@USE_VIDEO_TRUE@libvideo_la_SOURCES = $(lib_sources)
 AM_CFLAGS = @NEUROFLAGS@
 all: all-am
 
@@ -461,10 +465,6 @@ uninstall-am: uninstall-info-am
 	pdf pdf-am ps ps-am tags uninstall uninstall-am \
 	uninstall-info-am
 
-#AM_CFLAGS= @SDLFLAGS@
-
-#LIB_FLAGS= @NEUROLIBFLAGS@
-#libvideo_la_LDFLAGS = $(LIB_FLAGS)
 
 #include_HEADERS= \
 #		     graphics.h

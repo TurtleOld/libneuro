@@ -44,7 +44,7 @@ enum DEBUG_CLASS
 
 extern void Debug_Channel(const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...);
 
-/* don't call this function directly, use Neuro_DebugSetFilter(3) */
+/* don't call this function directly, use Neuro_SetDebugFilter(3) */
 extern void Neuro_SetCoreDebugFilter(char *project_name, char *filter);
 
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)

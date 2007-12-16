@@ -1,3 +1,23 @@
+2007-12-16	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/neuro_main.c :
+	Implemented a new function (Neuro_SetNeuroDebugFilter) 
+	that is to be used by external applications in order to
+	set the actual debugging filters used for getting
+	outputs from libneuro itself.
+
+2007-12-15	Nicholas Niro	<nik_89@neuroponic.com>
+	* autoconf.ac :
+	Added an option to disable any video functions from
+	libneuro to enable the creation of a light weight 
+	version of the API.
+
+	* src/debug.c :
+	Removed old debugging methods from the module.
+
+	* src/* :
+	Had to fix source files to convert to the new
+	debugging methods.
+
 2007-08-18	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/debug.c :
 	Finished coding the debugging functions 

@@ -51,6 +51,12 @@
 
 /*-------------------- Global Functions ----------------------------*/
 
+void
+Neuro_SetNeuroDebugFilter(char *filter)
+{
+	Neuro_SetDebugFilter(filter);
+}
+
 /*-------------------- Poll ----------------------------------------*/
 
 int

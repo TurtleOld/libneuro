@@ -87,6 +87,7 @@ Neuro_SetFrameSkip
 Neuro_SetImgLayer
 Neuro_SetImgPos
 Neuro_SetImgSrcPos
+Neuro_SetNeuroDebugFilter
 Neuro_SetScreenSize
 Neuro_SetcallbEBuf
 Neuro_Sleep

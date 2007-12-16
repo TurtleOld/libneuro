@@ -84,6 +84,8 @@ AC_ARG_WITH(lowlib,
 [			     dummy, X11, sdl ],
 lowlib="$withval", lowlib="sdl")
 
+AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities of this library [[default=no]]], enable_Video=no, enable_Video=yes)
+
 freetype_enable=no
 
 # host related checkings
@@ -98,6 +100,8 @@ case $host in
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
 		;;
 	*)
+#by default we now compile against X11 on POSIX machines
+		lowlib=X11
 		targ=unix
 		need_no_undefined=no
 		;;
@@ -146,6 +150,14 @@ dnl List of libraries Neuro can use
 dnl ----------------
 SELECTED_LOWLIB=`echo $lowlib`
 
+dnl ----------------
+dnl Video check
+dnl ----------------
+AM_CONDITIONAL(USE_VIDEO, test x$enable_Video = yes)
+if test $enable_Video = no; then
+# we disable the low library by putting it to the dummy driver
+	SELECTED_LOWLIB=dummy
+fi
 
 dnl ----------------
 dnl SDL check
