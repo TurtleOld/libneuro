@@ -4,9 +4,11 @@ SUBDIRS = \
 	  memory \
 	  misc \
 	  extlib \
-	  video \
 	  events
 
+if USE_VIDEO
+SUBDIRS += video
+endif
 
 lib_LTLIBRARIES = libneuro.la
 
@@ -20,9 +22,14 @@ libneuro_la_LDFLAGS = \
 		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 
-libneuro_la_LIBADD = \
+SUBLIBS = \
 	     memory/libmemory.la \
 	     misc/libmisc.la \
 	     extlib/libextlib.la \
-	     video/libvideo.la \
 	     events/libevents.la 
+
+if USE_VIDEO
+SUBLIBS += video/libvideo.la
+endif
+
+libneuro_la_LIBADD = $(SUBLIBS)

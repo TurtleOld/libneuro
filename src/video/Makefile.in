@@ -51,11 +51,9 @@ CONFIG_HEADER = $(top_builddir)/include/neuro/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libvideo_la_LIBADD =
-am__libvideo_la_SOURCES_DIST = painter.c coredraw.c graphics.c debug.c \
-	interface.c pixels.c
 am__objects_1 = painter.lo coredraw.lo graphics.lo debug.lo \
 	interface.lo pixels.lo
-@USE_VIDEO_TRUE@am_libvideo_la_OBJECTS = $(am__objects_1)
+am_libvideo_la_OBJECTS = $(am__objects_1)
 libvideo_la_OBJECTS = $(am_libvideo_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include/neuro
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -69,7 +67,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libvideo_la_SOURCES)
-DIST_SOURCES = $(am__libvideo_la_SOURCES_DIST)
+DIST_SOURCES = $(libvideo_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -196,6 +194,7 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 EXTRA_DIST = video.h pool.h
@@ -208,7 +207,10 @@ lib_sources = \
 		interface.c  \
 		pixels.c
 
-@USE_VIDEO_TRUE@libvideo_la_SOURCES = $(lib_sources)
+
+#if USE_VIDEO
+libvideo_la_SOURCES = $(lib_sources)
+#endif
 AM_CFLAGS = @NEUROFLAGS@
 all: all-am
 

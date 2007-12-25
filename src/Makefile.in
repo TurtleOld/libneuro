@@ -40,6 +40,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@USE_VIDEO_TRUE@am__append_1 = video
+@USE_VIDEO_TRUE@am__append_2 = video/libvideo.la
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -58,8 +60,10 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libneuro_la_DEPENDENCIES = memory/libmemory.la misc/libmisc.la \
-	extlib/libextlib.la video/libvideo.la events/libevents.la
+@USE_VIDEO_TRUE@am__DEPENDENCIES_1 = video/libvideo.la
+am__DEPENDENCIES_2 = memory/libmemory.la misc/libmisc.la \
+	extlib/libextlib.la events/libevents.la $(am__DEPENDENCIES_1)
+libneuro_la_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_libneuro_la_OBJECTS = debug.lo neuro_main.lo
 libneuro_la_OBJECTS = $(am_libneuro_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include/neuro
@@ -83,7 +87,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = $(SUBDIRS)
+DIST_SUBDIRS = memory misc extlib events video
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -208,15 +212,10 @@ prefix = @prefix@
 program_transform_name = @program_transform_name@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
+subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = \
-	  memory \
-	  misc \
-	  extlib \
-	  video \
-	  events
-
+SUBDIRS = memory misc extlib events $(am__append_1)
 lib_LTLIBRARIES = libneuro.la
 libneuro_la_SOURCES = \
 		      debug.c \
@@ -226,13 +225,9 @@ libneuro_la_LDFLAGS = \
 		      @NEUROLDFLAGS@ \
 		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
-libneuro_la_LIBADD = \
-	     memory/libmemory.la \
-	     misc/libmisc.la \
-	     extlib/libextlib.la \
-	     video/libvideo.la \
-	     events/libevents.la 
-
+SUBLIBS = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
+	events/libevents.la $(am__append_2)
+libneuro_la_LIBADD = $(SUBLIBS)
 all: all-recursive
 
 .SUFFIXES:

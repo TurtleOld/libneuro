@@ -153,7 +153,7 @@ SELECTED_LOWLIB=`echo $lowlib`
 dnl ----------------
 dnl Video check
 dnl ----------------
-AM_CONDITIONAL(USE_VIDEO, test x$enable_Video = yes)
+AM_CONDITIONAL(USE_VIDEO, test x$enable_Video = xyes)
 if test $enable_Video = no; then
 # we disable the low library by putting it to the dummy driver
 	SELECTED_LOWLIB=dummy
@@ -257,6 +257,12 @@ src/extlib/Makefile
 src/misc/Makefile
 docs/Makefile
 ])
+
+# if the neuronet project is in the house, we handle it
+if test -d src/neuronet; then
+	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
+	AC_CONFIG_SUBDIRS([src/neuronet])
+fi
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 

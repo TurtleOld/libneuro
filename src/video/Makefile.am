@@ -12,9 +12,7 @@ lib_sources = 	\
 		interface.c  \
 		pixels.c
 
-if USE_VIDEO
 libvideo_la_SOURCES = $(lib_sources)
-endif
 
 AM_CFLAGS= @NEUROFLAGS@
 
