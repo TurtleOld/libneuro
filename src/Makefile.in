@@ -41,7 +41,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @USE_VIDEO_TRUE@am__append_1 = video
-@USE_VIDEO_TRUE@am__append_2 = video/libvideo.la
+@USE_NEURONET_TRUE@am__append_2 = neuronet
+@USE_VIDEO_TRUE@am__append_3 = video/libvideo.la
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -87,7 +88,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	uninstall-recursive
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = memory misc extlib events video
+DIST_SUBDIRS = memory misc extlib events video neuronet
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -157,6 +158,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_NEURONET_FALSE = @USE_NEURONET_FALSE@
+USE_NEURONET_TRUE = @USE_NEURONET_TRUE@
 USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
 USE_VIDEO_FALSE = @USE_VIDEO_FALSE@
@@ -215,7 +218,7 @@ sharedstatedir = @sharedstatedir@
 subdirs = @subdirs@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = memory misc extlib events $(am__append_1)
+SUBDIRS = memory misc extlib events $(am__append_1) $(am__append_2)
 lib_LTLIBRARIES = libneuro.la
 libneuro_la_SOURCES = \
 		      debug.c \
@@ -226,7 +229,7 @@ libneuro_la_LDFLAGS = \
 		      -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE)
 
 SUBLIBS = memory/libmemory.la misc/libmisc.la extlib/libextlib.la \
-	events/libevents.la $(am__append_2)
+	events/libevents.la $(am__append_3)
 libneuro_la_LIBADD = $(SUBLIBS)
 all: all-recursive
 

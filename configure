@@ -465,7 +465,7 @@ ac_includes_default="\
 #endif"
 
 ac_subdirs_all="$ac_subdirs_all src/neuronet"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S RANLIB ac_ct_RANLIB EGREP ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_VIDEO_TRUE USE_VIDEO_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLDFLAGS subdirs LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S RANLIB ac_ct_RANLIB EGREP ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_VIDEO_TRUE USE_VIDEO_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS NEUROFLAGS NEUROLDFLAGS USE_NEURONET_TRUE USE_NEURONET_FALSE subdirs LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1040,6 +1040,7 @@ Optional Features:
   --disable-libtool-lock  avoid locking (might break parallel builds)
   --enable-Debug	enable the debugging of this program [default=no]
   --disable-video	disables all the video particularities of this library [default=no]
+  --disable-neuronet disables the neuronet library from being built [default=no]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -4137,7 +4138,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 4140 "configure"' > conftest.$ac_ext
+  echo '#line 4141 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -5724,7 +5725,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:5727:" \
+echo "$as_me:5728:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6781,11 +6782,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6784: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6785: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6788: \$? = $ac_status" >&5
+   echo "$as_me:6789: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7024,11 +7025,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7027: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7028: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7031: \$? = $ac_status" >&5
+   echo "$as_me:7032: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7084,11 +7085,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7087: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7088: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7091: \$? = $ac_status" >&5
+   echo "$as_me:7092: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9269,7 +9270,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9272 "configure"
+#line 9273 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9367,7 +9368,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9370 "configure"
+#line 9371 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11560,11 +11561,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11563: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11564: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11567: \$? = $ac_status" >&5
+   echo "$as_me:11568: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -11620,11 +11621,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11623: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11624: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:11627: \$? = $ac_status" >&5
+   echo "$as_me:11628: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -12981,7 +12982,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12984 "configure"
+#line 12985 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13079,7 +13080,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13082 "configure"
+#line 13083 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13916,11 +13917,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13919: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13920: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13923: \$? = $ac_status" >&5
+   echo "$as_me:13924: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -13976,11 +13977,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13979: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13980: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:13983: \$? = $ac_status" >&5
+   echo "$as_me:13984: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16011,11 +16012,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16014: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16015: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16018: \$? = $ac_status" >&5
+   echo "$as_me:16019: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16254,11 +16255,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16257: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16258: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16261: \$? = $ac_status" >&5
+   echo "$as_me:16262: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16314,11 +16315,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16317: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16318: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16321: \$? = $ac_status" >&5
+   echo "$as_me:16322: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18499,7 +18500,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18502 "configure"
+#line 18503 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18597,7 +18598,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18600 "configure"
+#line 18601 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19643,6 +19644,14 @@ if test "${enable_video+set}" = set; then
   enable_Video=no
 else
   enable_Video=yes
+fi;
+
+# Check whether --enable-neuronet or --disable-neuronet was given.
+if test "${enable_neuronet+set}" = set; then
+  enableval="$enable_neuronet"
+  enable_Neuronet=no
+else
+  enable_Neuronet=yes
 fi;
 
 freetype_enable=no
@@ -23809,13 +23818,25 @@ echo
 
 
 # if the neuronet project is in the house, we handle it
-if test -d src/neuronet; then
-	          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
+
+
+if test x$enable_Neuronet = xyes; then
+  USE_NEURONET_TRUE=
+  USE_NEURONET_FALSE='#'
+else
+  USE_NEURONET_TRUE='#'
+  USE_NEURONET_FALSE=
+fi
+
+if test x$enable_Neuronet = xyes; then
+	if test -d src/neuronet/src; then
+		          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
 
 
 
 subdirs="$subdirs src/neuronet"
 
+	fi
 fi
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
@@ -23957,6 +23978,13 @@ if test -z "${USE_X11_TRUE}" && test -z "${USE_X11_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"USE_X11\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"USE_X11\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${USE_NEURONET_TRUE}" && test -z "${USE_NEURONET_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"USE_NEURONET\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"USE_NEURONET\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -24601,6 +24629,8 @@ s,@X_LIBS@,$X_LIBS,;t t
 s,@X_EXTRA_LIBS@,$X_EXTRA_LIBS,;t t
 s,@NEUROFLAGS@,$NEUROFLAGS,;t t
 s,@NEUROLDFLAGS@,$NEUROLDFLAGS,;t t
+s,@USE_NEURONET_TRUE@,$USE_NEURONET_TRUE,;t t
+s,@USE_NEURONET_FALSE@,$USE_NEURONET_FALSE,;t t
 s,@subdirs@,$subdirs,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF

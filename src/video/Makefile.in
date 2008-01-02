@@ -139,6 +139,8 @@ RANLIB = @RANLIB@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+USE_NEURONET_FALSE = @USE_NEURONET_FALSE@
+USE_NEURONET_TRUE = @USE_NEURONET_TRUE@
 USE_SDL_FALSE = @USE_SDL_FALSE@
 USE_SDL_TRUE = @USE_SDL_TRUE@
 USE_VIDEO_FALSE = @USE_VIDEO_FALSE@
@@ -207,10 +209,7 @@ lib_sources = \
 		interface.c  \
 		pixels.c
 
-
-#if USE_VIDEO
 libvideo_la_SOURCES = $(lib_sources)
-#endif
 AM_CFLAGS = @NEUROFLAGS@
 all: all-am
 

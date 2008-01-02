@@ -1,0 +1,5 @@
+This is the directory into which the neuronet library can be copied to
+in order to "attach" it to the neuro library.
+
+Copy the whole project's files, including all the configure tools and
+files. The command lndir could also be used to do it too.

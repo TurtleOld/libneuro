@@ -10,6 +10,10 @@ if USE_VIDEO
 SUBDIRS += video
 endif
 
+if USE_NEURONET
+SUBDIRS += neuronet
+endif
+
 lib_LTLIBRARIES = libneuro.la
 
 libneuro_la_SOURCES = \
