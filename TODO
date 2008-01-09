@@ -1,5 +1,8 @@
 Things to do in the neuro library.
 
+misc -- the whole misc/ directory's source files require
+	a major cleanup.
+
 misc -- move Color conversion functions:
 	 - The color conversion functions should be moved
 	   to their own source file (Neuro_RGB**).
@@ -42,8 +45,7 @@ extlib -- the fonts have a memory leak:
 	   leak, no matter how much fonts you
 	   create. It could be a leak in freetype
 	   itself. 
-
-	   * Just checked and the values
+	*** NOTE Just checked and the values
 	   are different and they are the exact
 	   same on another project not at all
 	   using the fonts...
@@ -59,17 +61,10 @@ debug -- The implementation needs a namespace method:
 	   that projects will set in a similar matter as
 	   NEURO_MODULE_CHANNEL but rather globally to the
 	   whole project this time instead of just per module.
-
-debug -- need more "intelligent" processing(low priority):
-	 - The Neuro_DebugVerbose function needs to input
-	   more high level strings. We need the function to
-	   input strings that need to be processed for special
-	   characters which will change the behavior of the
-	   output system. I want this to be exactly like the
-	   debugging system in wine; a system using +<channel>
-	   commas to separate and -<channel> we also need 
-	   something like : warn+<channel>,error-<channel>,
-	   etc.
+	*** DONE but needs more work in order to make it easily added
+	    into projects as this requires a macro to be set in a global header
+	    in order to work... which would be a little hard to figure for people
+	    that start to use the library.
 
 bitmap -- Add checks to approve bitmap files:
 	 - In order to make the bitmap loader more robust,
@@ -128,3 +123,11 @@ extlib X11 -- implement gfx shared memory :
 	  pretty much any graphical operations, the
 	  addition of MIT shared memory for every images
 	  will be used.
+
+implement subprojects :
+	libneuronet : done
+	libneurogui : to do
+	libgeometry : to do
+	sprite module : to do
+	image loader : to do
+	
