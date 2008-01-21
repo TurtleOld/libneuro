@@ -1,3 +1,18 @@
+2008-01-21	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/misc :
+	Created a new submodule called bitmap in its own
+	directory with its own small library.
+
+	* src/misc/bitmap :
+	Spread the old bitmap.c file into 3 distinct source
+	files : core.c process.c and io.c. They compose
+	the now code that is used to load bitmaps from
+	bitmap files.
+
+	* configure.ac :
+	The script was changed in order to implement the
+	new bitmap module.
+
 2007-12-16	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/neuro_main.c :
 	Implemented a new function (Neuro_SetNeuroDebugFilter) 

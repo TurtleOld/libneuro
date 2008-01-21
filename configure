@@ -23814,7 +23814,7 @@ includedir=$includedir/neuro
 echo
 
 # enumerate the Makefiles to be created
-                                                                                                    ac_config_files="$ac_config_files Makefile include/Makefile include/neuro/Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile docs/Makefile"
+                                                                                                              ac_config_files="$ac_config_files Makefile include/Makefile include/neuro/Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile src/misc/bitmap/Makefile docs/Makefile"
 
 
 # if the neuronet project is in the house, we handle it
@@ -24444,6 +24444,7 @@ do
   "src/events/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/events/Makefile" ;;
   "src/extlib/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/extlib/Makefile" ;;
   "src/misc/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/misc/Makefile" ;;
+  "src/misc/bitmap/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/misc/bitmap/Makefile" ;;
   "docs/Makefile" ) CONFIG_FILES="$CONFIG_FILES docs/Makefile" ;;
   "src/neuronet/include/ebuf.h" ) CONFIG_LINKS="$CONFIG_LINKS src/neuronet/include/ebuf.h:include/neuro/ebuf.h" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;

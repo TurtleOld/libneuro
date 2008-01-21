@@ -875,7 +875,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 
 
 	chrono = Neuro_GetTickCount();
-	*img = readBitmapFile(path);
+	*img = Bitmap_LoadBMP(path);
 
 	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
 	

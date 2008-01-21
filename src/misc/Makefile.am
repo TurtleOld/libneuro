@@ -1,17 +1,15 @@
 #!/bin/bash
 
+SUBDIRS = bitmap
+
 noinst_LTLIBRARIES = libmisc.la
 
 AM_CFLAGS= @NEUROFLAGS@
 
-libmisc_la_SOURCES = 	\
+libmisc_la_SOURCES = \
 		other.c \
-		arg.c \
-		bitmap.c
+		arg.c 
+# 		bitmap.c
 
-#chgen.c
-
-#if USE_X11
-#libmisc_la_SOURCES += bitmap.c
-#endif
-
+libmisc_la_LIBADD = \
+		    bitmap/libbitmap.la
