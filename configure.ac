@@ -86,7 +86,16 @@ lowlib="$withval", lowlib="sdl")
 
 AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities of this library [[default=no]]], enable_Video=no, enable_Video=yes)
 
+enable_Neuronet=no
+
 AC_ARG_ENABLE(neuronet, [  --disable-neuronet disables the neuronet library from being built [[default=no]]], enable_Neuronet=no, enable_Neuronet=yes)
+
+if test ! -d src/neuronet/src; then
+	if test x$enable_Neuronet = xyes; then
+		echo "Neuronet was enabled but it is not present in the tree..."
+	fi
+	enable_Neuronet=no
+fi
 
 freetype_enable=no
 
@@ -263,11 +272,9 @@ docs/Makefile
 
 # if the neuronet project is in the house, we handle it
 AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
-if test x$enable_Neuronet = xyes; then
-	if test -d src/neuronet/src; then
-		AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
-		AC_CONFIG_SUBDIRS([src/neuronet])
-	fi
+if test x$enable_Neuronet = xyes; then	
+	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
+	AC_CONFIG_SUBDIRS([src/neuronet])
 fi
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])

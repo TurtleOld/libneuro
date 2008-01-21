@@ -19646,6 +19646,8 @@ else
   enable_Video=yes
 fi;
 
+enable_Neuronet=no
+
 # Check whether --enable-neuronet or --disable-neuronet was given.
 if test "${enable_neuronet+set}" = set; then
   enableval="$enable_neuronet"
@@ -19653,6 +19655,13 @@ if test "${enable_neuronet+set}" = set; then
 else
   enable_Neuronet=yes
 fi;
+
+if test ! -d src/neuronet/src; then
+	if test x$enable_Neuronet = xyes; then
+		echo "Neuronet was enabled but it is not present in the tree..."
+	fi
+	enable_Neuronet=no
+fi
 
 freetype_enable=no
 
@@ -23829,14 +23838,12 @@ else
 fi
 
 if test x$enable_Neuronet = xyes; then
-	if test -d src/neuronet/src; then
-		          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
+	          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
 
 
 
 subdirs="$subdirs src/neuronet"
 
-	fi
 fi
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])

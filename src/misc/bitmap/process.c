@@ -365,7 +365,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 			{
 				*aux = 0;
 
-				if (bmap->infoheader.height >= *y)
+				if (*y >= bmap->infoheader.height)
 				{
 					NEURO_ERROR("attempted to draw an invalid location", NULL);
 					return;
@@ -443,6 +443,8 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
 	u32 i = 0;
 	BITMAP_COLOR *buf;
+	u32 color;
+	u8 *tmp;
 
 	while (i < bmap->infoheader.ncolors)
 	{
@@ -450,38 +452,16 @@ process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 		
 		buf = Neuro_GiveCurEBuf(bcolors);
 		
-		/*buf->r = palette[(i * 4) + 2];
-		buf->g = palette[(i * 4) + 1];
-		buf->b = palette[(i * 4)];
-		*/
+		
+		fpdata32(input, &color);
 
-		/*
-		fpdata8(input, &buf->b);
-		fpdata8(input, &buf->g);
-		fpdata8(input, &buf->r);
-		fpdata8(input, &buf->a);
-		*/
-#if USE_ZLIB 1
-		buf->b = gzgetc(input);
-		buf->g = gzgetc(input);
-		buf->r = gzgetc(input);
+		tmp = (u8*)&color;
+
+		buf->b = tmp[0];
+		buf->g = tmp[1];
+		buf->r = tmp[2];
+		/* buf->a = tmp[3]; */
 		
-		/* I leave this just in case */
-		/* buf->a = fgetc(input); */
-		
-		/* skip the alpha color */
-		gzgetc(input);	
-#else /* NOT USE_ZLIB */
-		buf->b = fgetc(input);
-		buf->g = fgetc(input);
-		buf->r = fgetc(input);
-		
-		/* I leave this just in case */
-		/* buf->a = fgetc(input); */
-		
-		/* skip the alpha color */
-		fgetc(input);
-#endif /* NOT USE_ZLIB */
 		i++;
 	}
 }
