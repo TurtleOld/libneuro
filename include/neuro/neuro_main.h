@@ -30,10 +30,60 @@
 extern "C" {
 #endif
 
+/**
+ * @name
+ * Neuro_Library
+ *
+ * @description
+ * Neuro is a library that combines enough tools to abstract
+ * a broad array of uses for applications. It was primarily coded
+ * for providing a light renderer which can handle which images have
+ * to be drawn first according to their level.
+ * (a painter's algorithm if you prefer) but
+ * it later started to include much more tools that were useful
+ * for way more than just graphical applications. \n \n
+ *
+ * Libneuro has 8 sections plus additionnal projects inside it : \n
+ * \\fI*\\fP \\fBextlib\\fP \n
+ * \\fI*\\fP memory \n
+ * \\fI*\\fP video \n
+ * \\fI*\\fP events \n
+ * \\fI*\\fP misc \n \n
+ *
+ * Libneuro was previously fully dependant on SDL but then some
+ * functionalities of SDL weren't perfect and thus it was decided
+ * to make libneuro have it's own abstraction for low level graphical
+ * libraries in order to permit the implementation for other low
+ * level libraries. And that's how the extlib (external library) section
+ * of libneuro was done. The module currently contains 3 main drivers.
+ * X11, SDL and none(or dummy). The X11 driver now being the main driver
+ * for libneuro. The functions in the extlib module are primarily of the Lib_
+ * prefix but they aren't exported to external functions so they can't be used
+ * directly. The misc/other.c module contains Neuro_ bindings for all the
+ * Lib_ functions. \n \n
+ *
+ * memory
+ *
+ * video
+ *
+ *
+ *
+ *
+ *
+ *
+ **/
+
+
+/* */
 extern void Neuro_SetNeuroDebugFilter(char *filter);
 
+/* */
 extern int Neuro_Poll();
+
+/* */
 extern int Neuro_Init();
+
+/* */
 extern void Neuro_Quit();
 
 #ifdef __cplusplus

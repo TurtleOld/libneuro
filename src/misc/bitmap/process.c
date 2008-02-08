@@ -579,6 +579,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 #endif /* NOT USE_ZLIB */
 
 		NEURO_TRACE("Bitmap size %d", ctx->psize);
+		NEURO_TRACE("Width size %d", ctx->wmult);
 
 		/* we calculate the chunk of data that will be loaded for each 
 		 * cycles or polls.
@@ -624,7 +625,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 				 * This variable is used to know which
 				 * byte we are processing currently.
 				 */
-				ctx->advance = 4;
+				ctx->advance = sizeof(int);
 			}
 
 			/* since the function process_bitmap requires 
@@ -641,7 +642,8 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 				 * variables to the bits processor.
 				 *
 				 */
-				process_bitmap(ctx->bmap, ctx->output, &data[4 - ctx->advance], 
+				process_bitmap(ctx->bmap, ctx->output, 
+						&data[sizeof(int) - ctx->advance], 
 						ctx->bmap_colors, &ctx->x, &ctx->y, 
 						&ctx->aux_var, &ctx->aux_buf);
 
@@ -654,9 +656,10 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 				/* a new row started and we got fresh data 
 				 * for the next row so we handle them.
 				 */
-				if (ctx->advance == 4)
+				if (ctx->advance == sizeof(int))
 					continue;
 
+				NEURO_TRACE("skipped %d bytes", sizeof(int) - ctx->advance);
 				/* we flush the remaining bytes if any */
 				ctx->advance = 1;
 			}
