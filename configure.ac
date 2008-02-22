@@ -65,6 +65,10 @@ AC_LIBTOOL_WIN32_DLL
 # libtool setup
 AM_PROG_LIBTOOL
 
+dnl we get rid of the -g default flag
+if test $CFLAGS = "-g"; then
+	CFLAGS=""
+fi
 
 # set the flags
 CFLAGS="$CFLAGS -std=iso9899:1990 -Wall -pedantic -I\$(top_srcdir)/src" 
@@ -82,7 +86,7 @@ AC_ARG_WITH(lowlib,
 [			   Default is "sdl";]
 [ 			   Possible low libraries are :]
 [			     dummy, X11, sdl ],
-lowlib="$withval", lowlib="sdl")
+lowlib="$withval", lowlib="nothing")
 
 AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities of this library [[default=no]]], enable_Video=no, enable_Video=yes)
 
@@ -109,10 +113,15 @@ case $host in
 		need_no_undefined=yes
 		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
+		if test x$lowlib = xnothing; then
+			lowlib=sdl
+		fi
 		;;
 	*)
 #by default we now compile against X11 on POSIX machines
-		lowlib=X11
+		if test x$lowlib = xnothing; then
+			lowlib=X11
+		fi
 		targ=unix
 		need_no_undefined=no
 		;;

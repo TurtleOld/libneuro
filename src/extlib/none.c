@@ -164,36 +164,6 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 
 }
 
-v_object *
-Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst)
-{
-	return NULL;
-}
-
-font_object *
-Lib_LoadFontFile(const char *fonts_file_path)
-{
-	return NULL;
-}
-
-void
-Lib_CleanFont(font_object *font)
-{
-
-}
-
-int
-Lib_FontsInit()
-{
-	return 0;
-}
-
-void
-Lib_FontsExit()
-{
-
-}
-
 void
 Lib_VideoExit()
 {

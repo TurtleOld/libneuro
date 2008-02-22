@@ -19613,6 +19613,9 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 
 
+if test $CFLAGS = "-g"; then
+	CFLAGS=""
+fi
 
 # set the flags
 CFLAGS="$CFLAGS -std=iso9899:1990 -Wall -pedantic -I\$(top_srcdir)/src"
@@ -19635,7 +19638,7 @@ if test "${with_lowlib+set}" = set; then
   withval="$with_lowlib"
   lowlib="$withval"
 else
-  lowlib="sdl"
+  lowlib="nothing"
 fi;
 
 # Check whether --enable-video or --disable-video was given.
@@ -19676,10 +19679,15 @@ case $host in
 		need_no_undefined=yes
 		targ=w32
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
+		if test x$lowlib = xnothing; then
+			lowlib=sdl
+		fi
 		;;
 	*)
 #by default we now compile against X11 on POSIX machines
-		lowlib=X11
+		if test x$lowlib = xnothing; then
+			lowlib=X11
+		fi
 		targ=unix
 		need_no_undefined=no
 		;;

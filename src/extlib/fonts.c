@@ -187,9 +187,12 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 		screen = Neuro_GetScreenBuffer();
 
-		Lib_SyncPixels(output);
+		if (output)
+		{
+			Lib_SyncPixels(output);
 
-		Lib_LockVObject(output);
+			Lib_LockVObject(output);
+		}
 
 #if enable_alpha		
 		if (face->glyph->bitmap.pixel_mode == FT_PIXEL_MODE_GRAY && !space_char)
@@ -302,7 +305,8 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 			}
 		}	
 
-		Lib_UnlockVObject(output);
+		if (output)
+			Lib_UnlockVObject(output);
 
 		if (!space_char)
 		{
