@@ -77,6 +77,25 @@ to make the process work. example : NEURO_MODULE_CHANNEL("graphics")"
 
 #define NEURO_MODULE_CHANNEL(x) static char *NEURO_CURRENT_CHANNEL=x
 
+/* This fonction can be used to
+ * extend the use of the 3 debug
+ * functions in this module :
+ * NEURO_ERROR _WARNING and _DEBUG.
+ * it can be used to actually
+ * enable more than one argument
+ * to be passed to the resulting
+ * message.
+ *
+ * example would be :
+ * NEURO_ERROR("%s", Neuro_s("Debug failed with code %d at loop #%d", errno, cycle_num));
+ *
+ * the string would be grown as 
+ * needed and it is automatically
+ * freed at Debug_Clean(); call.
+ * (done by Neuro_Quit();)
+ */
+extern char *Neuro_s(const char *control, ...);
+
 /**
  * @sdescri flexible formatted text output function with levels
  * @description depending on the current debug level, will 

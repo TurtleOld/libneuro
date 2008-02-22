@@ -51,10 +51,10 @@ CONFIG_HEADER = $(top_builddir)/include/neuro/config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libextlib_la_LIBADD =
-am__libextlib_la_SOURCES_DIST = none.c x11.c sdl.c
-@USE_SDL_FALSE@@USE_X11_FALSE@am__objects_1 = none.lo
-@USE_SDL_FALSE@@USE_X11_TRUE@am__objects_1 = x11.lo
-@USE_SDL_TRUE@am__objects_1 = sdl.lo
+am__libextlib_la_SOURCES_DIST = none.c fonts.c x11.c sdl.c
+@USE_SDL_FALSE@@USE_X11_FALSE@am__objects_1 = none.lo fonts.lo
+@USE_SDL_FALSE@@USE_X11_TRUE@am__objects_1 = x11.lo fonts.lo
+@USE_SDL_TRUE@am__objects_1 = sdl.lo fonts.lo
 am_libextlib_la_OBJECTS = $(am__objects_1)
 libextlib_la_OBJECTS = $(am_libextlib_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include/neuro
@@ -206,8 +206,8 @@ noinst_LTLIBRARIES = libextlib.la
 
 #lib_LTLIBRARIES = libneuro_video_none.drv.la libneuro_video_x11.drv.la libneuro_video_sdl.drv.la
 AM_CFLAGS = @NEUROFLAGS@
-@USE_SDL_FALSE@@USE_X11_FALSE@lib_sources = none.c
-@USE_SDL_FALSE@@USE_X11_TRUE@lib_sources = x11.c
+@USE_SDL_FALSE@@USE_X11_FALSE@lib_sources = none.c fonts.c
+@USE_SDL_FALSE@@USE_X11_TRUE@lib_sources = x11.c fonts.c
 
 #libneuro_video_none_drv_la_SOURCES = none.c
 #libneuro_video_x11_drv_la_SOURCES = x11.c
@@ -216,7 +216,7 @@ AM_CFLAGS = @NEUROFLAGS@
 #libneuro_video_none_drv_la_LDFLAGS = @NONE_LDFLAGS@
 #libneuro_video_x11_drv_la_LDFLAGS = @X11_LDFLAGS@
 #libneuro_video_sdl_drv_la_LDFLAGS = @SDL_LDFLAGS@
-@USE_SDL_TRUE@lib_sources = sdl.c
+@USE_SDL_TRUE@lib_sources = sdl.c fonts.c
 libextlib_la_SOURCES = $(lib_sources) 
 all: all-am
 
@@ -269,6 +269,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fonts.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/none.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x11.Plo@am__quote@

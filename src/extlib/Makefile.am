@@ -30,4 +30,6 @@ endif
 
 endif
 
+lib_sources += fonts.c
+
 libextlib_la_SOURCES = $(lib_sources) 

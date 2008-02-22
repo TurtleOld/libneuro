@@ -25,7 +25,7 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
-#include <stdio.h> /* printf() vfprintf() */
+#include <stdio.h> /* printf() vfprintf() vasprintf()*/
 #include <stdarg.h> /* va_start() va_end() */
 #include <string.h> /* strcmp()  strlen()*/
 
@@ -51,6 +51,11 @@ typedef struct DEBUG_CHANNEL
 	u32 class; /* the class, see debug.h -- enum DEBUG_CLASS */
 }DEBUG_CHANNEL;
 
+/* this is to avoid having a warning that the function 
+ * isn't set.
+ */
+extern int vasprintf(char **, const char *, va_list);
+
 /*-------------------- Global Variables ----------------------------*/
 
 /*-------------------- Static Variables ----------------------------*/
@@ -58,6 +63,9 @@ typedef struct DEBUG_CHANNEL
 static u8 debug_level = 0;
 
 static EBUF *debug_l;
+
+/* this variable is used in the Neuro_s() function */
+static char *string_maker;
 
 static const int Debug_ClassMasks[] = {
 	0x00000007,
@@ -504,6 +512,42 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	}
 }
 
+/* This fonction can be used to
+ * extend the use of the 3 debug
+ * functions in this module :
+ * NEURO_ERROR _WARNING and _DEBUG.
+ * it can be used to actually
+ * enable more than one argument
+ * to be passed to the resulting
+ * message.
+ *
+ * example would be :
+ * NEURO_ERROR("%s", Neuro_s("Debug failed with code %d at loop #%d", errno, cycle_num));
+ *
+ * the string would be grown as 
+ * needed and it is automatically
+ * freed at Debug_Clean(); call.
+ * (done by Neuro_Quit();)
+ */
+char *
+Neuro_s(const char *control, ...)
+{
+	int len = 0;
+	va_list args;
+
+	va_start(args, control);
+
+	if (string_maker)
+	{
+		free(string_maker);
+		string_maker = NULL;
+	}
+
+	len = vasprintf(&string_maker, control, args);
+	va_end(args);
+
+	return string_maker;
+}
 
 /*-------------------- Constructor Destructor ----------------------*/
 
@@ -520,4 +564,10 @@ void
 Debug_Clean()
 {
 	Neuro_CleanEBuf(&debug_l);
+
+	if (string_maker)
+	{
+		free(string_maker);
+		string_maker = NULL;
+	}
 }
