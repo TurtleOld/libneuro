@@ -7,6 +7,9 @@ misc -- move Color conversion functions:
 	 - The color conversion functions should be moved
 	   to their own source file (Neuro_RGB**).
 
+extlib (X11) -- Lib_SetColorKey has a memory leak:
+	 - A very nasty one on that, needs to be fixed.
+
 extlib (SDL) -- Needs a buffer to hold the v_objects:
 	 - I just noticed that the SDL doesn't have a
 	   v_object cleaned like the X11 driver, we
