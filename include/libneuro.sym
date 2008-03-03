@@ -21,10 +21,12 @@ Neuro_CleanKeyboard
 Neuro_CleanMouse
 Neuro_CleanPixels
 Neuro_CopyEBuf
+Neuro_CreateBMPCTX
 Neuro_CreateEBuf
 Neuro_CreateVObject
 Neuro_DebugChannel
 Neuro_DebugPrint
+Neuro_DestroyBMPCTX
 Neuro_DestroyDraw
 Neuro_DumbBoundsCheck
 Neuro_EBufIsEmpty
@@ -51,6 +53,7 @@ Neuro_GiveRGB24
 Neuro_GiveRGB32
 Neuro_GiveRGB8
 Neuro_GiveRGBA_special
+Neuro_GradualLoadBMP
 Neuro_HorizontalBoundCrop
 Neuro_Init
 Neuro_LoadBMP

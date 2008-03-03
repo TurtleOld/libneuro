@@ -30,6 +30,10 @@ endif
 
 endif
 
+if USE_FREETYPE2
 lib_sources += fonts.c
+else
+lib_sources += fonts-none.c
+endif
 
 libextlib_la_SOURCES = $(lib_sources) 

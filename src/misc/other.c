@@ -365,11 +365,15 @@ Neuro_GiveRGB32(u8 R, u8 G, u8 B)
 u32
 Neuro_MapRGB(u8 R, u8 G, u8 B)
 {
+#if USE_VIDEO
 	v_object *screen;
 
 	screen = Neuro_GetScreenBuffer();
 
 	return Lib_MapRGB(screen, R, G, B);
+#else /* NOT USE_VIDEO */
+	return 0;
+#endif /* NOT USE_VIDEO */
 }
 
 u32
@@ -682,6 +686,7 @@ Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
 void
 Neuro_PrintFPS()
 {
+#if USE_VIDEO
 	t_tick fps;
 
 	Neuro_GiveFPS(&fps);
@@ -690,6 +695,7 @@ Neuro_PrintFPS()
 	{
 		printf("current fps : %d\n", fps);
 	}
+#endif /* USE_VIDEO */
 }
 
 /* substract num2 from num1 and returns the answer only if it is positive,
@@ -878,7 +884,9 @@ Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *d
 void
 Neuro_FreeVObject(v_object *source)
 {
+#if USE_VIDEO
 	Graphics_FreeVObject(source);
+#endif /* USE_VIDEO */
 }
 
 void
@@ -955,3 +963,32 @@ Neuro_UnlockVObject(v_object *vobj)
 	Lib_UnlockVObject(vobj);
 }
 
+BMP_CTX *
+Neuro_CreateBMPCTX(const char *path)
+{
+#if USE_VIDEO
+	return Bitmap_CreateCTX(path);
+#else /* NOT USE_VIDEO */
+	return NULL;
+#endif /* NOT USE_VIDEO */
+}
+
+v_object *
+Neuro_DestroyBMPCTX(BMP_CTX *ctx)
+{
+#if USE_VIDEO
+	return Bitmap_DestroyCTX(ctx);
+#else /* NOT USE_VIDEO */
+	return NULL;
+#endif /* NOT USE_VIDEO */
+}
+
+i8
+Neuro_GradualLoadBMP(BMP_CTX *ctx)
+{
+#if USE_VIDEO
+	return Bitmap_Poll(ctx);
+#else /* NOT USE_VIDEO */
+	return 100;
+#endif /* NOT USE_VIDEO */
+}

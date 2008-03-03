@@ -12,7 +12,7 @@ extlib (X11) -- Lib_SetColorKey has a memory leak:
 
 extlib (SDL) -- Needs a buffer to hold the v_objects:
 	 - I just noticed that the SDL doesn't have a
-	   v_object cleaned like the X11 driver, we
+	   v_object cleaner like the X11 driver, we
 	   need to implement one as soon as possible
 	   to avoid a maximum amount of memory leaks.
 	   This should be pretty easy, just need to

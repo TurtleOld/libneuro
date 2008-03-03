@@ -37,7 +37,7 @@
 #define buffer_old_method 0
 #define USE_ALPHA 1
 
-NEURO_MODULE_CHANNEL("x11_driver");
+NEURO_MODULE_CHANNEL("x11");
 
 /* hardcoded generated alpha results */
 #include "alpha.inc"
@@ -91,44 +91,45 @@ clean_Vobjects(void *src)
 	/* if (!buf)
 		return; */
 
-	Debug_Val(10, "cleaning process ... elem 0x%x\n", buf);
+	NEURO_TRACE("cleaning process ... elem 0x%x", buf);
 
 	/*if (dmain->display == buf->display)
 		Debug_Val(10, "This element is the main display --\n");*/
 	
 	if (buf->data)
 	{
-		/* Debug_Val(10, "Freeing pixmap data\n"); */
+		NEURO_TRACE("Freeing pixmap data", NULL);
 		XFreePixmap(dmain->display, buf->data);
 	}
 
 	if (buf->shapemask)
 	{
-		/* Debug_Val(10, "Freeing pixmap mask\n"); */
+		NEURO_TRACE("Freeing pixmap mask", NULL);
 		XFreePixmap(dmain->display, buf->shapemask);
 	}
 
 	if (buf->raw_data)
 	{
-		/* Debug_Val(10, "destroying XImage raw data\n"); */
+		NEURO_TRACE("destroying XImage raw data", NULL);
 		(buf->raw_data->f.destroy_image)(buf->raw_data);
 	}
 	
 	if (buf->GC)
 	{
-		/* Debug_Val(10, "Freeing Graphic Context\n"); */
+		NEURO_TRACE("Freeing Graphic Context", NULL);
 		XFreeGC(buf->display, buf->GC);
 	}
 	
 	if (buf->win)
 	{
-		/* Debug_Val(10, "Destroying Window\n"); */
+		NEURO_TRACE("Destroying Window", NULL);
 		XDestroyWindow(buf->display, buf->win);
 	}
 	
 	if (buf->display)
 	{
-		/* Debug_Val(10, "Closing display elem 0x%x display 0x%x\n", buf, buf->display); */
+		NEURO_TRACE("%s", 
+			Neuro_s("Closing display elem 0x%x display 0x%x", buf, buf->display));
 		XCloseDisplay(buf->display);
 	}
 	/* Debug_Val(10, "cleaning process done ...\n"); */
@@ -252,7 +253,8 @@ CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
 	
 	if (_err != 0)
 	{
-		Debug_Val(0, "error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+		NEURO_ERROR("error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+
 		if (*pix)
 			XFreePixmap(dmain->display, *pix);
 	}
@@ -281,7 +283,7 @@ CreateMask(v_object *vobj, i32 width, i32 height)
 
 	if (mask->height != height)
 	{
-		Debug_Val(0, "Incorrect mask height %d need to be %d\n", mask->height, height);
+		NEURO_ERROR("%s", Neuro_s("Incorrect mask height %d need to be %d", mask->height, height));
 		
 		return NULL;
 	}
@@ -514,8 +516,8 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	/* consistency check */
 	if (mask_data->width != width)
 	{
-		NEURO_ERROR("mask_data has a different width than the image!", NULL);
-		Debug_Val(0, "mask_data width %d image width %d\n", mask_data->width, width);
+		NEURO_ERROR("mask_data has a different width than the image! %s", 
+			Neuro_s("mask_data width %d image width %d", mask_data->width, width));
 
 		(mask_data->f.destroy_image)(mask_data);
 
@@ -524,8 +526,8 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 
 	if (mask_data->height != height)
 	{
-		NEURO_ERROR("mask_data has a different height than the image!", NULL);
-		Debug_Val(0, "mask_data height %d image height %d\n", mask_data->height, height);
+		NEURO_ERROR("mask_data has a different height than the image! %s", 
+			Neuro_s("mask_data height %d image height %d", mask_data->height, height));
 
 		(mask_data->f.destroy_image)(mask_data);
 
@@ -574,7 +576,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	
 		if (_err != 0)
 		{
-			Debug_Val(0, "error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+			NEURO_ERROR("error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
 		}
 
 		if (gc)
@@ -612,6 +614,18 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	XSetForeground(dmain->display, dmain->GC, pixel);
 	XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y);
 	
+
+	/*
+	if (tmp->raw_data == NULL)
+	{
+		NEURO_ERROR("the XImage raw_data is empty", NULL);
+		return;
+	}
+
+	(tmp->raw_data->f.put_pixel)(tmp->raw_data, x, y, pixel);*/
+
+
+
 	/* tmp->pixel_data_changed = 1; */
 }
 
@@ -870,7 +884,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	chrono = Neuro_GetTickCount();
 	*img = Bitmap_LoadBMP(path);
 
-	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
+	NEURO_TRACE("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
 	
 	return; /* int needed */
 }
@@ -900,7 +914,7 @@ Lib_LoadBMPBuffer(void *data, v_object **img)
 	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(data, &temp);
 	
-	Debug_Val(0, "Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
+	NEURO_TRACE("Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
 	
 	if (!temp)
 	{

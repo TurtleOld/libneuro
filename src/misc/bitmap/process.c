@@ -43,7 +43,7 @@
 
 /*--------------------      Other       ----------------------------*/
 
-NEURO_MODULE_CHANNEL("bitmap/process");
+NEURO_MODULE_CHANNEL("bitmap");
 
 /* this macro is used to offset the actual workable value
  * of the bitmap's width and height values.
@@ -578,8 +578,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #endif /* NOT USE_ZLIB */
 
-		NEURO_TRACE("Bitmap size %d", ctx->psize);
-		NEURO_TRACE("Width size %d", ctx->wmult);
+		NEURO_TRACE("%s", Neuro_s("Bitmap size %d Width size %d", ctx->psize, ctx->wmult));
 
 		/* we calculate the chunk of data that will be loaded for each 
 		 * cycles or polls.

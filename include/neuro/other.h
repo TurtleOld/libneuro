@@ -257,14 +257,13 @@ extern void Neuro_LockVObject(v_object *vobj);
  */
 extern void Neuro_UnlockVObject(v_object *vobj);
 
+extern BMP_CTX *Neuro_CreateBMPCTX(const char *path);
+
+extern v_object *Neuro_DestroyBMPCTX(BMP_CTX *ctx);
+
+extern i8 Neuro_GradualLoadBMP(BMP_CTX *ctx);
+
 /*--- end extlib Neuro_ interface ---*/
-
-/* don't touch this :) */
-
-/* temporary macros to call the functions from bitmap.h */
-#define Neuro_CreateBMPCTX Bitmap_CreateCTX
-#define Neuro_DestroyBMPCTX Bitmap_DestroyCTX
-#define Neuro_GradualLoadBMP Bitmap_Poll
 
 #ifdef __cplusplus
 }

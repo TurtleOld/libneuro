@@ -54,7 +54,9 @@ typedef struct DEBUG_CHANNEL
 /* this is to avoid having a warning that the function 
  * isn't set.
  */
+#if HAVE_VASPRINTF
 extern int vasprintf(char **, const char *, va_list);
+#endif /* HAVE_VASPRINTF */
 
 /*-------------------- Global Variables ----------------------------*/
 
@@ -543,7 +545,12 @@ Neuro_s(const char *control, ...)
 		string_maker = NULL;
 	}
 
+#if HAVE_VASPRINTF
 	len = vasprintf(&string_maker, control, args);
+#else /* NOT HAVE_VASPRINTF */
+	string_maker = calloc(1, 512);
+	len = vsnprintf(&string_maker, 512, control, args);
+#endif /* NOT HAVE_VASPRINTF*/
 	va_end(args);
 
 	return string_maker;

@@ -1,13 +1,12 @@
-
 /*    
  * libneuro, a light weight abstraction of high or lower libraries 
  * and toolkit for applications.
- * Copyright (C) 2005-2006  Nicholas Niro, Robert Lemay
+ * Copyright (C) 2005-2008 Nicholas Niro, Robert Lemay
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,102 +18,60 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-/* neuro.c
- * Main libNeuro source file.
+/* fonts-none.c
+ *
+ * Abstracts the use of the fonts functionnalities
+ * in the driver.
+ *
+ * This particular file implements empty interface functions.
  */
 
 /*-------------------- Extern Headers Including --------------------*/
-
+#include <stdlib.h>
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
+#include <other.h>
 #include <graphics.h>
-#include <events.h>
-#include <extlib.h>
-#include <debug.h>
 
 /*-------------------- Main Module Header --------------------------*/
-#include <neuro_main.h>
-
+#include <extlib.h>
 
 /*--------------------      Other       ----------------------------*/
-
 /*-------------------- Global Variables ----------------------------*/
-
 /*-------------------- Static Variables ----------------------------*/
-
 /*-------------------- Static Prototypes ---------------------------*/
-
-
-
 /*-------------------- Static Functions ----------------------------*/
-
 /*-------------------- Global Functions ----------------------------*/
 
-void
-Neuro_SetNeuroDebugFilter(char *filter)
+v_object *
+Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32 color, Rectan *src, Rectan *dst)
 {
-	Neuro_SetDebugFilter(filter);
+	return NULL;
 }
 
-/*-------------------- Poll ----------------------------------------*/
-
-int
-Neuro_Poll()
+font_object *
+Lib_LoadFontFile(const char *fonts_file_path)
 {
-	int _err = 0;
-	
-	Events_Poll();
+	return NULL;
+}
 
-#if USE_VIDEO
-	Graphics_Poll();
-#endif /* USE_VIDEO */
+void
+Lib_CleanFont(font_object *font)
+{
 
-	_err = Lib_PollEvent(NULL);
-
-	return _err;
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Neuro_Init()
+Lib_FontsInit()
 {
-	int _err = 0;
-	
-	_err = Debug_Init();
-	if (_err)
-		return _err;
-#if USE_VIDEO
-	_err = Graphics_Init();
-	if (_err)
-	{
-		return _err;
-	}
-#endif /* USE_VIDEO */
-
-	_err = Events_Init();
-	if (_err)
-	{
-		return _err;
-	}
-
-	_err = Lib_FontsInit();
-	if (_err)
-	{
-		return _err;
-	}
-	
-	return _err;
+	return 0;
 }
 
 void
-Neuro_Quit()
+Lib_FontsExit()
 {
-	Lib_FontsExit();
-	Events_Clean();
-#if USE_VIDEO
-	Graphics_Clean();
-#endif /* USE_VIDEO */
-	Debug_Clean();
+
 }

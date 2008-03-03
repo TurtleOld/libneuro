@@ -42,7 +42,7 @@
 
 /*--- Other ---*/
 
-NEURO_MODULE_CHANNEL("video/graphics");
+NEURO_MODULE_CHANNEL("video");
 
 /*--- Global Variables ---*/
 
@@ -224,7 +224,7 @@ void
 Graphics_Poll()
 {	
 	if (debug_instruction_buffer || dynamic_debug)
-		Debug_Val(0, "cycle\n");
+		NEURO_TRACE("cycle", NULL);
 
 	/* we will call a function in the module pixels in a near future */
 	/*

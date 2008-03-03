@@ -71,6 +71,8 @@
 
 /*--------------------      Other       ----------------------------*/
 
+NEURO_MODULE_CHANNEL("video");
+
 /*-------------------- Global Variables ----------------------------*/
 
 /*-------------------- Static Variables ----------------------------*/
@@ -474,8 +476,8 @@ Graphics_PainterReset()
 void
 Graphics_PainterClean()
 {
-	Debug_Val(0, "Raw total %d\n", Neuro_GiveEBufCount(Raw));
-	Debug_Val(0, "Queue total %d\n", Neuro_GiveEBufCount(Queue));
+	NEURO_TRACE("Raw total %d", Neuro_GiveEBufCount(Raw));
+	NEURO_TRACE("Queue total %d", Neuro_GiveEBufCount(Queue));
 
 	Neuro_CleanEBuf(&Raw);	
 	Neuro_CleanEBuf(&Queue);

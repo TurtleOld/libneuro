@@ -44,7 +44,7 @@
 
 /*--------------------      Other       ----------------------------*/
 
-NEURO_MODULE_CHANNEL("bitmap/core");
+NEURO_MODULE_CHANNEL("bitmap");
 
 /*-------------------- Global Variables ----------------------------*/
 

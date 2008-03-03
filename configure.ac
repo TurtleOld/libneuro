@@ -102,6 +102,7 @@ if test ! -d src/neuronet/src; then
 fi
 
 freetype_enable=no
+zlib_enable=no
 
 # host related checkings
 
@@ -165,6 +166,8 @@ AC_HEADER_TIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([memchr memset strchr], , [AC_MSG_ERROR([a required function is missing.])])
 
+AC_CHECK_FUNCS([vasprintf])
+
 dnl ----------------
 dnl List of libraries Neuro can use
 dnl ----------------
@@ -202,14 +205,8 @@ if test $SELECTED_LOWLIB = sdl; then
 	fi
 
 	freetype_enable=yes
+	zlib_enable=yes
 fi
-dnl ----------------
-dnl Zlib check
-dnl ----------------
-AC_CHECK_LIB(z, gzgetc, 
-	     [AC_DEFINE(USE_ZLIB, , ["ZLIB main flag"])] LIBS="$LIBS -lz", 
-	     [AC_MSG_ERROR(You don't have the Z library)])
-
 
 dnl ----------------
 dnl X11 check
@@ -227,7 +224,20 @@ if test $SELECTED_LOWLIB = X11; then
 #	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
 
 	freetype_enable=yes
+	zlib_enable=yes
 fi
+
+dnl ----------------
+dnl Zlib check
+dnl ----------------
+if test x$zlib_enable = xyes; then
+AC_CHECK_LIB(z, gzgetc, 
+	     [AC_DEFINE(USE_ZLIB, , ["ZLIB main flag"])] LIBS="$LIBS -lz", 
+	     [AC_MSG_ERROR(You don't have the Z library)])
+fi
+
+
+
 
 dnl ----------------
 dnl libmath check
@@ -238,6 +248,7 @@ AC_CHECK_LIB(m, log10, , [AC_MSG_ERROR(You don't have libm -- math)])
 dnl ----------------
 dnl Freetype2 Check
 dnl ----------------
+AM_CONDITIONAL(USE_FREETYPE2, test x$freetype_enable = xyes)
 if test x$freetype_enable = xyes; then
 	AC_CHECK_LIB(freetype, FT_New_Face,
 		     [LIBS="$LIBS `freetype-config --libs`" CFLAGS="$CFLAGS `freetype-config --cflags`"], 

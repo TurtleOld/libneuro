@@ -37,7 +37,7 @@
 
 /*--------------------      Other       ----------------------------*/
 
-NEURO_MODULE_CHANNEL("bitmap/io");
+NEURO_MODULE_CHANNEL("bitmap");
 
 /*-------------------- Global Variables ----------------------------*/
 
