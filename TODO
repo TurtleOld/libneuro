@@ -10,6 +10,12 @@ misc -- move Color conversion functions:
 extlib (X11) -- Lib_SetColorKey has a memory leak:
 	 - A very nasty one on that, needs to be fixed.
 
+	* After checking with valgrind I actually found
+	  out that the memory leak lies in the X11
+	  client interface... I recently upgraded my 
+	  Xorg from 6.8.2 to 6.9.0 and that's what I'm
+	  getting now... A huge amount of memory leaks.
+
 extlib (SDL) -- Needs a buffer to hold the v_objects:
 	 - I just noticed that the SDL doesn't have a
 	   v_object cleaner like the X11 driver, we
