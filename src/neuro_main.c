@@ -27,6 +27,7 @@
 
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <config.h>
 #include <global.h>
 #include <graphics.h>
 #include <events.h>

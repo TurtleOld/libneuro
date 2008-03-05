@@ -981,7 +981,12 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 	Neuro_AllocEBuf(vobjs, sizeof(V_OBJECT*), sizeof(V_OBJECT));
 		
 	tmp2 = Neuro_GiveCurEBuf(vobjs);
-	
+
+	if (!dmain)
+	{
+		NEURO_ERROR("Main screen buffer dmain is NULL", NULL);
+		return NULL;
+	}
 	/* Debug_Val(0, "width %d height %d asked depth %d  default_depth %d\n", 
 			width, height, depth,
 			DefaultDepth(dmain->display, dmain->screen));*/

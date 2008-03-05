@@ -360,6 +360,7 @@ Graphics_Init()
 
 	ltime = time(NULL);
 	
+	NEURO_TRACE("Initialising main video", NULL);
 	if (screen_buffer)
 	{
 		_err_ = Lib_VideoInit(&screen, &sclScreen);

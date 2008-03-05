@@ -101,6 +101,9 @@
 /* "SDL main flag" */
 #undef USE_SDL
 
+/* "Video is activated" */
+#undef USE_VIDEO
+
 /* "X11 main flag" */
 #undef USE_X11
 

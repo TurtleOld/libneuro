@@ -105,7 +105,6 @@ freetype_enable=no
 zlib_enable=no
 
 # host related checkings
-
 AC_MSG_CHECKING([if we need -no-undefined])
 case $host in
 	*-*-cygwin | *-*-mingw* | *-*-pw32*)
@@ -113,6 +112,8 @@ case $host in
 		NEUROLDFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
 		targ=w32
+		#we disable neuronet no matter what	
+
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
 		if test x$lowlib = xnothing; then
 			lowlib=sdl
@@ -180,6 +181,8 @@ AM_CONDITIONAL(USE_VIDEO, test x$enable_Video = xyes)
 if test $enable_Video = no; then
 # we disable the low library by putting it to the dummy driver
 	SELECTED_LOWLIB=dummy
+else
+	AC_DEFINE(USE_VIDEO, 1, ["Video is activated"])
 fi
 
 dnl ----------------
@@ -270,6 +273,20 @@ fi
 AC_SUBST(NEUROFLAGS)
 AC_SUBST(NEUROLDFLAGS)
 
+# if the neuronet project is in the house, we handle it
+if test x$enable_Neuronet = xyes; then
+
+	if test x$targ = xw32; then
+		echo "Neuronet can't be compiled with libneuro when the library is compiled for w32... You need to compile neuronet directly instead."
+		enable_Neuronet=no
+	else
+	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
+	AC_CONFIG_SUBDIRS([src/neuronet])
+	fi
+	
+	AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
+fi
+
 # set the installation path for the headers
 includedir=$includedir/neuro
 
@@ -289,13 +306,6 @@ src/misc/Makefile
 src/misc/bitmap/Makefile
 docs/Makefile
 ])
-
-# if the neuronet project is in the house, we handle it
-AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
-if test x$enable_Neuronet = xyes; then	
-	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
-	AC_CONFIG_SUBDIRS([src/neuronet])
-fi
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 

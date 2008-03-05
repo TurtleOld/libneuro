@@ -465,7 +465,7 @@ ac_includes_default="\
 #endif"
 
 ac_subdirs_all="$ac_subdirs_all src/neuronet"
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S RANLIB ac_ct_RANLIB EGREP ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_VIDEO_TRUE USE_VIDEO_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS USE_FREETYPE2_TRUE USE_FREETYPE2_FALSE NEUROFLAGS NEUROLDFLAGS USE_NEURONET_TRUE USE_NEURONET_FALSE subdirs LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS NEURO_MAJOR_VERSION NEURO_MINOR_VERSION NEURO_MICRO_VERSION NEURO_INTERFACE_AGE NEURO_BINARY_AGE NEURO_VERSION LT_CURRENT LT_REVISION LT_AGE INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar build build_cpu build_vendor build_os host host_cpu host_vendor host_os CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP LN_S RANLIB ac_ct_RANLIB EGREP ECHO AR ac_ct_AR DLLTOOL ac_ct_DLLTOOL AS ac_ct_AS OBJDUMP ac_ct_OBJDUMP CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE CXXCPP F77 FFLAGS ac_ct_F77 LIBTOOL NO_UNDEFINED_TRUE NO_UNDEFINED_FALSE LIBOBJS USE_VIDEO_TRUE USE_VIDEO_FALSE USE_SDL_TRUE USE_SDL_FALSE USE_X11_TRUE USE_X11_FALSE X_CFLAGS X_PRE_LIBS X_LIBS X_EXTRA_LIBS USE_FREETYPE2_TRUE USE_FREETYPE2_FALSE NEUROFLAGS NEUROLDFLAGS subdirs USE_NEURONET_TRUE USE_NEURONET_FALSE LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -19670,7 +19670,6 @@ freetype_enable=no
 zlib_enable=no
 
 # host related checkings
-
 echo "$as_me:$LINENO: checking if we need -no-undefined" >&5
 echo $ECHO_N "checking if we need -no-undefined... $ECHO_C" >&6
 case $host in
@@ -19679,6 +19678,8 @@ case $host in
 		NEUROLDFLAGS="$NEUROLIBFLAGS -no-undefined"
 		need_no_undefined=yes
 		targ=w32
+		#we disable neuronet no matter what
+
 		#LIBS="$LIBS -lc -lgcc_s -ldl"
 		if test x$lowlib = xnothing; then
 			lowlib=sdl
@@ -22023,6 +22024,12 @@ fi
 if test $enable_Video = no; then
 # we disable the low library by putting it to the dummy driver
 	SELECTED_LOWLIB=dummy
+else
+
+cat >>confdefs.h <<\_ACEOF
+#define USE_VIDEO 1
+_ACEOF
+
 fi
 
 
@@ -23946,16 +23953,21 @@ fi
 
 
 
-# set the installation path for the headers
-includedir=$includedir/neuro
-
-echo
-
-# enumerate the Makefiles to be created
-                                                                                                              ac_config_files="$ac_config_files Makefile include/Makefile include/neuro/Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile src/misc/bitmap/Makefile docs/Makefile"
-
-
 # if the neuronet project is in the house, we handle it
+if test x$enable_Neuronet = xyes; then
+
+	if test x$targ = xw32; then
+		echo "Neuronet can't be compiled with libneuro when the library is compiled for w32... You need to compile neuronet directly instead."
+		enable_Neuronet=no
+	else
+	          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
+
+
+
+subdirs="$subdirs src/neuronet"
+
+	fi
+
 
 
 if test x$enable_Neuronet = xyes; then
@@ -23966,14 +23978,16 @@ else
   USE_NEURONET_FALSE=
 fi
 
-if test x$enable_Neuronet = xyes; then
-	          ac_config_links="$ac_config_links src/neuronet/include/ebuf.h:include/neuro/ebuf.h"
-
-
-
-subdirs="$subdirs src/neuronet"
-
 fi
+
+# set the installation path for the headers
+includedir=$includedir/neuro
+
+echo
+
+# enumerate the Makefiles to be created
+                                                                                                              ac_config_files="$ac_config_files Makefile include/Makefile include/neuro/Makefile src/Makefile src/memory/Makefile src/video/Makefile src/events/Makefile src/extlib/Makefile src/misc/Makefile src/misc/bitmap/Makefile docs/Makefile"
+
 
 #AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
 
@@ -24775,9 +24789,9 @@ s,@USE_FREETYPE2_TRUE@,$USE_FREETYPE2_TRUE,;t t
 s,@USE_FREETYPE2_FALSE@,$USE_FREETYPE2_FALSE,;t t
 s,@NEUROFLAGS@,$NEUROFLAGS,;t t
 s,@NEUROLDFLAGS@,$NEUROLDFLAGS,;t t
+s,@subdirs@,$subdirs,;t t
 s,@USE_NEURONET_TRUE@,$USE_NEURONET_TRUE,;t t
 s,@USE_NEURONET_FALSE@,$USE_NEURONET_FALSE,;t t
-s,@subdirs@,$subdirs,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
 CEOF
 
