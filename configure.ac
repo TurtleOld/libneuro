@@ -283,9 +283,8 @@ if test x$enable_Neuronet = xyes; then
 	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
 	AC_CONFIG_SUBDIRS([src/neuronet])
 	fi
-	
-	AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
 fi
+AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
 
 # set the installation path for the headers
 includedir=$includedir/neuro
