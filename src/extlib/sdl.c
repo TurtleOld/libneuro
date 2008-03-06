@@ -67,7 +67,7 @@
  * SDL_GetMouseState	-> Lib_GetMouseState
 */
 
-NEURO_MODULE_CHANNEL("sdl_driver");
+NEURO_MODULE_CHANNEL("sdl");
 
 typedef struct options_list
 {
@@ -301,12 +301,19 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		
 		temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);
 
-		Debug_Val(0, "MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
+		/*
+		fprintf(stderr, "herein\n");
+		*/
+		
+		NEURO_TRACE("%s", Neuro_s("MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
 				Rmask, Gmask, Bmask, Amask,
 				temp1->format->Rmask,
 				temp1->format->Gmask,
 				temp1->format->Bmask,
-				temp1->format->Amask);
+				temp1->format->Amask));
+		/*		
+		fprintf(stderr, "done\n");
+		*/
 
 		/* temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask); */
 
@@ -347,7 +354,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	chrono = Neuro_GetTickCount();
 	*img = Bitmap_LoadBMP(path);
 
-	Debug_Val(0, "Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
+	NEURO_TRACE("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
 #else /* NOT NATIVE_BMP */
 
 	*img = SDL_LoadBMP(path);

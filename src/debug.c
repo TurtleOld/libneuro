@@ -69,6 +69,8 @@ static EBUF *debug_l;
 /* this variable is used in the Neuro_s() function */
 static char *string_maker;
 
+
+#define DEBUG_CLASS_AMOUNT 4
 static const int Debug_ClassMasks[] = {
 	0x00000007,
 	0x00000001,
@@ -109,7 +111,7 @@ clean_debug_channel(void *src)
 static int
 elem_getclass(const char *class)
 {
-	u32 i = 5;
+	u32 i = DEBUG_CLASS_AMOUNT;
 	i32 class_type = -1;
 
 	while (i-- > 0)
@@ -214,7 +216,6 @@ filter_handleElem(char *namespace, char *elem)
 		NEURO_ERROR("Invalid class used \"%s\", Valid classes: all warn error trace", elem);
 		return NULL;
 	}
-
 	/* prior to creating a new element, we need to check the buffer for 
 	 * an element with the same name so we can modify it instead of 
 	 * creating a conflicting one.
@@ -445,7 +446,13 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	}
 
 	if (Neuro_EBufIsEmpty(debug_l))
+	{	
+		if (output_detailed == 1)
+			fprintf(stderr, "- : (%s:%s) %s:%s:%d -- ", project_name, channel, filename, funcName, lineNum);
+
+		fprintf(stderr, "temporary message because the debug buffer is empty\n");
 		return;
+	}
 
 	total = Neuro_GiveEBufCount(debug_l) + 1;
 
@@ -549,7 +556,7 @@ Neuro_s(const char *control, ...)
 	len = vasprintf(&string_maker, control, args);
 #else /* NOT HAVE_VASPRINTF */
 	string_maker = calloc(1, 512);
-	len = vsnprintf(&string_maker, 512, control, args);
+	len = vsnprintf(string_maker, 512, control, args);
 #endif /* NOT HAVE_VASPRINTF*/
 	va_end(args);
 
@@ -561,8 +568,11 @@ Neuro_s(const char *control, ...)
 int
 Debug_Init()
 {
-	Neuro_CreateEBuf(&debug_l);
-	Neuro_SetcallbEBuf(debug_l, clean_debug_channel);
+	if (Neuro_EBufIsEmpty(debug_l) && debug_l == NULL)
+	{
+		Neuro_CreateEBuf(&debug_l);
+		Neuro_SetcallbEBuf(debug_l, clean_debug_channel);
+	}
 
 	return 0;
 }
