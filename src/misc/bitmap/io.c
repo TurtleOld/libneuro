@@ -60,7 +60,7 @@ Ngetc(nFILE *input)
 	if (ret < 0)
 	{
 		int errnum;
-		char *error;
+		const char *error;
 
 		error = gzerror(input, &errnum);
 		NEURO_ERROR("ZLIB returned an error -- %s", Neuro_s("%s - errnum %d", error, errnum));
