@@ -66,7 +66,7 @@ struct BMP_CTX
 	BITMAP_HDATA *bmap; /* this is how we will get informations about the bitmap */
 	int aux_var; /* auxiliary variable that can be used by external functions */
 	char *aux_buf; /* same as aux_var but a buffer */
-	u32 wmult;
+	double wmult;
 	u32 DATA;
 	i32 advance;
 	u32 row_amount; /* processing of the current row */

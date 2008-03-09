@@ -47,6 +47,43 @@ NEURO_MODULE_CHANNEL("bitmap");
 
 /*-------------------- Static Functions ----------------------------*/
 
+int
+Ngetc(nFILE *input)
+{
+#if USE_ZLIB 1
+	i32 ret = 0;
+	u8 data = 0;
+	
+	/* ret = gzread(input, &data, 1); */
+	ret = gzgetc(input);
+
+	if (ret < 0)
+	{
+		int errnum;
+		char *error;
+
+		error = gzerror(input, &errnum);
+		NEURO_ERROR("ZLIB returned an error -- %s", Neuro_s("%s - errnum %d", error, errnum));
+		return 0;
+	}
+
+	/*
+	u32 len = gzread(input, *output, sizeof(u32));
+	if (len < 1)
+		return 1;
+	return 0;*/
+
+	if (data)
+		ret = (u8)data;
+
+	return ret;
+
+
+#else /* NOT USE_ZLIB */
+	return fgetc(input);
+#endif /* NOT USE_ZLIB */
+}
+
 /*-------------------- Global Functions ----------------------------*/
 
 /* returns 0 on success and puts the data in *output
@@ -61,12 +98,7 @@ fpdata8(nFILE *input, u8 *output)
 		return 1;
 	}
 
-#if USE_ZLIB 1
-	*output = gzgetc(input);
-#else /* NOT USE_ZLIB */
-	*output = fgetc(input);
-#endif /* NOT USE_ZLIB */
-
+	*output = Ngetc(input);
 
 	return 0;
 }
@@ -88,18 +120,13 @@ fpdata16(nFILE *input, u16 *output)
 
 	if (IsLittleEndian())
 	{
-#if USE_ZLIB 1
-		feed[0] = gzgetc(input);
-		feed[1] = gzgetc(input);
-#else /* NOT USE_ZLIB */
-		feed[0] = fgetc(input);
-		feed[1] = fgetc(input);
-#endif /* NOT USE_ZLIB */
+		feed[0] = Ngetc(input);
+		feed[1] = Ngetc(input);
 	}
 	else
 	{
-		feed[1] = gzgetc(input);
-		feed[0] = gzgetc(input);
+		feed[1] = Ngetc(input);
+		feed[0] = Ngetc(input);
 	}
 
 	buf = (u16*)&feed;
@@ -127,25 +154,18 @@ fpdata32(nFILE *input, u32 *output)
 	}
 
 	if (IsLittleEndian())
-	{
-#if USE_ZLIB 1
-		feed[0] = gzgetc(input);
-		feed[1] = gzgetc(input);
-		feed[2] = gzgetc(input);
-		feed[3] = gzgetc(input);
-#else /* NOT USE_ZLIB */
-		feed[0] = fgetc(input);
-		feed[1] = fgetc(input);
-		feed[2] = fgetc(input);
-		feed[3] = fgetc(input);
-#endif /* NOT USE_ZLIB */
+	{	
+		feed[0] = Ngetc(input);
+		feed[1] = Ngetc(input);
+		feed[2] = Ngetc(input);
+		feed[3] = Ngetc(input);
 	}
 	else
 	{
-		feed[3] = gzgetc(input);
-		feed[2] = gzgetc(input);
-		feed[1] = gzgetc(input);
-		feed[0] = gzgetc(input);
+		feed[3] = Ngetc(input);
+		feed[2] = Ngetc(input);
+		feed[1] = Ngetc(input);
+		feed[0] = Ngetc(input);
 	}
 
 	buf = (u32*)&feed;
