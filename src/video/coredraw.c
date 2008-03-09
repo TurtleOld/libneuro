@@ -118,8 +118,7 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 	{
 		if (cur->current->layer >= 99999)
 		{
-			NEURO_TRACE("Destroying font", NULL);
-			Debug_Val(0, "&0x%x\n", cur);
+			NEURO_TRACE("Destroying font - &0x%x", cur);
 		}
 	}
 
@@ -156,8 +155,8 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 
 	if (debug_clean_instruction_buffer)
 	{
-		NEURO_TRACE("*initial values", NULL);
-		Debug_Val(0, "Amount of elems %d\n", Neuro_GiveEBufCount(verify_m) - 1);
+		NEURO_TRACE("*initial values - Amount of elems %d", 
+				Neuro_GiveEBufCount(verify_m) - 1);
 		Graphics_DebugPrintMissing(verify_m);
 	}
 
@@ -314,7 +313,7 @@ Graphics_CoreDrawAll()
 		idst.y = cur->current->dy;
 
 		if (debug_instruction_buffer)
-			Debug_Val(0, "%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer);
+			NEURO_TRACE("%s", Neuro_s("%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer));
 		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
@@ -342,10 +341,9 @@ Graphics_CoreDrawAll()
 				{
 					if (cur->current->layer >= 99999)
 					{
-						NEURO_TRACE("Drawing font", NULL);
-						Debug_Val(0, "Coord (%d,%d) &0x%x\n", 
+						NEURO_TRACE("%s", Neuro_s("Drawing font - Coord (%d,%d) &0x%x\n", 
 								cur->current->dx,
-								cur->current->dy, cur);
+								cur->current->dy, cur));
 					}
 				}
 			}
@@ -415,7 +413,7 @@ Graphics_CoreDrawAll()
 				cur->current->type = TDRAW_DYNAMIC_CLEAN;
 				
 				if (dynamic_debug)
-					Debug_Val(0, "Dynamic : Tagging addr %x to clean\n", cur);
+					NEURO_TRACE("Dynamic : Tagging addr %x to clean", cur);
 				/* Debug_Val(0, "drawn dynamic\n"); */
 			}
 			break;
@@ -488,7 +486,7 @@ Graphics_CoreDrawAll()
 			
 			default:
 			{
-				Debug_Val(0, "ERROR Draw unknown type %d\n", cur->current->type);
+				NEURO_ERROR("Draw unknown type %d\n", cur->current->type);
 			}
 			break;
 		}
@@ -568,11 +566,8 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 		
 		if (!cur->current)
 		{
-			Debug_Val(0, "BAD : the instruction 0x%x has an empty content!\n", 
-					cur);
-
-			Debug_Val(0, "DEBUG data : indep 0x%x  its next element 0x%x\n",
-					indep, indep->next);
+			NEURO_ERROR("%s", Neuro_s("BAD : the instruction 0x%x has an empty content! indep 0x%x its next element 0x%x", 
+					cur, indep, indep->next));
 			/* odd error, this ain't supposed to happen :L */
 			return 0;
 		}
@@ -581,10 +576,8 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 		{
 			if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
 			{
-				NEURO_TRACE("INITIAL Redrawing font", NULL);
-
-				Debug_Val(0, "Font type %d (%d,%d) &0x%x\n", cur->current->type, 
-						buf.x, buf.y, cur);
+				NEURO_TRACE("%s", Neuro_s("INITIAL Redrawing font -- Font type %d (%d,%d) &0x%x\n", cur->current->type, 
+						buf.x, buf.y, cur));
 			}
 		}
 		
@@ -603,11 +596,10 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 			{
 				if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
 				{
-					NEURO_TRACE("INITIAL 2 Redrawing font", NULL);
-					Debug_Val(0, "bounds_ret %d current (%d,%d) indep (%d,%d)\n", 
+					NEURO_TRACE("%s", Neuro_s("INITIAL 2 Redrawing font -- bounds_ret %d current (%d,%d) indep (%d,%d)\n", 
 							bounds_ret, 
 							buf.x, buf.y,
-							indep_body.x, indep_body.y);
+							indep_body.x, indep_body.y));
 				}	
 			}
 

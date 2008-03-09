@@ -270,9 +270,9 @@ Graphics_Poll()
 	
 	if (debug_instruction_buffer)
 	{
-		Debug_Val(0, "--BEGIN debug print\n");
+		NEURO_TRACE("--BEGIN debug print", NULL);
 		Graphics_DebugPrintQueue();
-		Debug_Val(0, "--END debug print\n");
+		NEURO_TRACE("--END debug print", NULL);
 	}
 
 	/* construct the instruction buffer */
@@ -301,9 +301,9 @@ Graphics_Poll()
 		
 		if (debug_instruction_buffer)
 		{
-			Debug_Val(0, "*BEGIN debug print\n");
+			NEURO_TRACE("*BEGIN debug print", NULL);
 			Graphics_DebugPrintQueue();
-			Debug_Val(0, "*END debug print\n");
+			NEURO_TRACE("*END debug print", NULL);
 		}
 
 		/* we check to see if the first element 

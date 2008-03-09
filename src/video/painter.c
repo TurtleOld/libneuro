@@ -211,15 +211,15 @@ computeRawEngine(RAW_ENGINE *toadd)
 	}
 
 	if (debug_instruction_buffer)
-		Debug_Val(0, "Push --> layer %d type %d\n", toadd->layer, toadd->type);
+		NEURO_TRACE("%s", Neuro_s("Push --> layer %d type %d", toadd->layer, toadd->type));
 	
 	if (last_element != NULL)
 	{
 		if (last_element->current == NULL)
 		{
-			Debug_Val(0, "CAUGHT ERROR in last_element current == %d -- debug %d\nDropping this call\n", 
+			NEURO_ERROR("%s", Neuro_s("dropping this call -- last_element current == %d - debug %d", 
 				current, 
-				(int)last_element->current);
+				(int)last_element->current));
 			return NULL;
 		}
 
@@ -307,9 +307,9 @@ computeRawEngine(RAW_ENGINE *toadd)
 	
 	if (debug_instruction_buffer)
 	{
-		Debug_Val(0, "BEGIN inside computeRawEngine debug print\n");
+		NEURO_TRACE("BEGIN inside computeRawEngine debug print", NULL);
 		Graphics_DebugPrintQueue();
-		Debug_Val(0, "END inside computeRawEngine debug print\n");
+		NEURO_TRACE("END inside computeRawEngine debug print", NULL);
 	}
 
 	return buf;
