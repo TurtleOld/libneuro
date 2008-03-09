@@ -234,9 +234,15 @@ dnl ----------------
 dnl Zlib check
 dnl ----------------
 if test x$zlib_enable = xyes; then
-AC_CHECK_LIB(z, gzgetc, 
-	     [AC_DEFINE(USE_ZLIB, , ["ZLIB main flag"])] LIBS="$LIBS -lz", 
-	     [AC_MSG_ERROR(You don't have the Z library)])
+	if test x$targ = xw32; then
+		AC_CHECK_LIB(zdll, gzgetc,
+		     [AC_DEFINE(USE_ZLIB, , ["ZLIB main flag"])] LIBS="$LIBS -lzdll",
+		     [AC_MSG_ERROR(You don't have the Z library)])
+	else
+		AC_CHECK_LIB(z, gzgetc, 
+		     [AC_DEFINE(USE_ZLIB, , ["ZLIB main flag"])] LIBS="$LIBS -lz", 
+		     [AC_MSG_ERROR(You don't have the Z library)])
+	fi
 fi
 
 

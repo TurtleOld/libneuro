@@ -1,4 +1,8 @@
 2008-03-08	Nicholas Niro	<nik_89@neuroponic.com>
+	* configure.ac :
+	added a condition which will compile another kind
+	of z library for w32 systems.
+
 	* src/misc/bitmap/intern_bitmap.h :
 	changed u32 wmult to double wmult so it can correctly
 	be used to calculate the number of pixels an image

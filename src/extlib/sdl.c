@@ -300,10 +300,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		get_default_mask(&Rmask, &Gmask, &Bmask, &Amask);
 		
 		temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);
-
-		/*
-		fprintf(stderr, "herein\n");
-		*/
 		
 		NEURO_TRACE("%s", Neuro_s("MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
 				Rmask, Gmask, Bmask, Amask,
@@ -311,9 +307,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 				temp1->format->Gmask,
 				temp1->format->Bmask,
 				temp1->format->Amask));
-		/*		
-		fprintf(stderr, "done\n");
-		*/
 
 		/* temp2 = (SDL_Surface*)Lib_CreateVObject(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, temp1->format->Rmask, temp1->format->Gmask, temp1->format->Bmask, temp1->format->Amask); */
 
