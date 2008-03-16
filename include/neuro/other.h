@@ -47,6 +47,9 @@ typedef struct SepChr_Data
 
 extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
 
+/* new separate character function using the EBUF tech */
+extern EBUF *Neuro_SepChr3(const unsigned char chr, char *source, u32 len);
+
 /*--- end string manipulation ---*/
 
 /*--- RGB ---*/

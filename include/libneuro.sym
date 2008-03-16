@@ -78,6 +78,7 @@ Neuro_ResetEBuf
 Neuro_SCleanEBuf
 Neuro_SepChr
 Neuro_SepChr2
+Neuro_SepChr3
 Neuro_SetAlpha
 Neuro_SetColorKey
 Neuro_SetCoreDebugFilter

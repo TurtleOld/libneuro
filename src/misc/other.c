@@ -48,6 +48,8 @@
 
 #include "../video/video.h" /* for Graphics_FreeVObject() */
 
+NEURO_MODULE_CHANNEL("other");
+
 u8
 Chk_bound(Rectan *rec, i16 x, i16 y, i16 w, i16 h)
 {
@@ -251,6 +253,72 @@ Neuro_SepChr2(const unsigned char chr, char *source)
 
 	return temp;
 }
+
+/* new separate character function using the EBUF tech */
+EBUF *
+Neuro_SepChr3(const unsigned char chr, char *source, u32 len)
+{
+	u32 total;
+	u32 i = 0, i2 = 0;
+	EBUF *temp;
+	SepChr_Data *tmp;
+	char *buf;
+
+	if (source)
+	{
+		total = strlen(source);
+		if (total == 0 || len > total)
+		{
+			NEURO_WARN("%s", Neuro_s("length %d is invalid -- debug - total %d", len, total));
+			return NULL;
+		}
+		
+		total = len;
+	}
+	else
+		return NULL;
+
+	Neuro_CreateEBuf(&temp);
+	Neuro_SetcallbEBuf(temp, clean_sepchr_ebuf);
+	
+	buf = calloc(1, total);
+	
+	while (i < total)
+	{
+		if (source[i] == chr)
+		{
+			Neuro_AllocEBuf(temp, sizeof(SepChr_Data*), sizeof(SepChr_Data));
+			tmp = Neuro_GiveCurEBuf(temp);
+			
+			tmp->string = calloc(1, i2 + 1);
+			strncpy(tmp->string, buf, i2);
+			tmp->string[i2] = '\0';
+			i2 = 0;
+		}
+		else
+		{
+			buf[i2] = source[i];
+			i2++;
+		}
+		
+		i++;
+	}
+	
+	if (i2 > 0)
+	{
+		Neuro_AllocEBuf(temp, sizeof(SepChr_Data*), sizeof(SepChr_Data));
+		tmp = Neuro_GiveCurEBuf(temp);
+			
+		tmp->string = calloc(1, i2 + 1);
+		strncpy(tmp->string, buf, i2);
+		tmp->string[i2] = '\0';
+	}
+
+	free(buf);
+
+	return temp;
+}
+
 
 u32
 Neuro_GiveRGB8(u8 R, u8 G, u8 B)
