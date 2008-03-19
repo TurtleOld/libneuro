@@ -196,7 +196,7 @@ clean_sepchr_ebuf(void *src)
 
 /* new separate character function using the EBUF tech */
 EBUF *
-Neuro_SepChr2(const unsigned char chr, char *source)
+Neuro_SepChr2(const unsigned char chr, const char *source)
 {
 	u32 total;
 	u32 i = 0, i2 = 0;
@@ -256,7 +256,7 @@ Neuro_SepChr2(const unsigned char chr, char *source)
 
 /* new separate character function using the EBUF tech */
 EBUF *
-Neuro_SepChr3(const unsigned char chr, char *source, u32 len)
+Neuro_SepChr3(const unsigned char chr, const char *source, u32 len)
 {
 	u32 total;
 	u32 i = 0, i2 = 0;

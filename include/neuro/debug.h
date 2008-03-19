@@ -43,7 +43,7 @@ enum DEBUG_CLASS
 };
 
 /* don't call this function directly, use Neuro_SetDebugFilter(3) */
-extern void Neuro_SetCoreDebugFilter(char *project_name, char *filter);
+extern void Neuro_SetCoreDebugFilter(const char *project_name, const char *filter);
 
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 

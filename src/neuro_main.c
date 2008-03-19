@@ -53,7 +53,7 @@
 /*-------------------- Global Functions ----------------------------*/
 
 void
-Neuro_SetNeuroDebugFilter(char *filter)
+Neuro_SetNeuroDebugFilter(const char *filter)
 {
 	Neuro_SetDebugFilter(filter);
 }

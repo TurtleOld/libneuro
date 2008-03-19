@@ -1,3 +1,9 @@
+2008-03-19	Nicholas Niro	<nik_89@neuroponic.com>
+	* general :
+	changed the type of argument certain functions
+	have to constants to signify that their value
+	will not be mangled with.
+
 2008-03-08	Nicholas Niro	<nik_89@neuroponic.com>
 	* configure.ac :
 	added a condition which will compile another kind

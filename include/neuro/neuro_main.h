@@ -75,7 +75,7 @@ extern "C" {
 
 
 /* */
-extern void Neuro_SetNeuroDebugFilter(char *filter);
+extern void Neuro_SetNeuroDebugFilter(const char *filter);
 
 /* */
 extern int Neuro_Poll();

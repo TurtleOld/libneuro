@@ -45,10 +45,10 @@ typedef struct SepChr_Data
 	char *string;
 }SepChr_Data;
 
-extern EBUF *Neuro_SepChr2(const u8 chr, char *source);
+extern EBUF *Neuro_SepChr2(const u8 chr, const char *source);
 
 /* new separate character function using the EBUF tech */
-extern EBUF *Neuro_SepChr3(const unsigned char chr, char *source, u32 len);
+extern EBUF *Neuro_SepChr3(const unsigned char chr, const char *source, u32 len);
 
 /*--- end string manipulation ---*/
 
