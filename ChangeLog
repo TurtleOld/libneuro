@@ -1,3 +1,9 @@
+2008-05-04	Nicholas Niro	<nik_89@neuroponic.com>
+	* include/neuro/other.h :
+	Added a macro entry for Neuro_GiveImageSize to
+	have Neuro_GetImageSize so the function can be
+	used with both prefixes.
+
 2008-03-19	Nicholas Niro	<nik_89@neuroponic.com>
 	* general :
 	changed the type of argument certain functions

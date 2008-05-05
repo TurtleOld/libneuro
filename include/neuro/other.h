@@ -83,6 +83,7 @@ extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
  * width and height require the address of u32 to put the data on.
  */
 extern void Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height);
+#define Neuro_GetImageSize Neuro_GiveImageSize
 
 extern void Neuro_Sleep(u32 t);
 
