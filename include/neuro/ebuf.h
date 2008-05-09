@@ -91,7 +91,25 @@
  * the manual freeing of allocated pointers inside the structure. 
  * Among other, this permits EBUF pointers to contain other
  * EBUF pointers and/or manually allocated pointers and the
- * hability to free them cleanly.\n \n \n
+ * hability to free them cleanly.\n \n 
+ *
+ * NOTE : Neuro_SCleanEBuf(3) \\fIdoesn't\\fR keep the data order in the
+ * buffer at all. It actually is made to break the data order in
+ * order to be more efficient. \n \n
+ *
+ * \\fIhere's an example\\fR, 3 elements were allocated :
+ * elements 1, 2 and 3. The element number 4 is added to this
+ * buffer to form (1, 2, 3 and 4). The element number 2 is then
+ * removed from the buffer, which would \\fInormally\\fR do
+ * (1, 3 and 4) \\fIbut no\\fR, this actually does (1, 4 and 3). \n \n
+ *
+ * The last element is \\fIalways\\fR moved to the position of the
+ * deleted element which actually breaks the order of the data
+ * in the buffer completely (but is necessary for performance reasons). \n \n
+ *
+ * \\fIIn order to fix this sorting quirk\\fR, all the steps in order to do so
+ * are stated in the \\fIMOVING DATA\\fR section of this very manual.
+ * \n \n \n
  *
  * ALLOCATING NEW DATA : \n \n
  *
