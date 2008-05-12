@@ -1,5 +1,12 @@
 Things to do in the neuro library.
 
+debug -- bugged Neuro_DebugChannel:
+	 - It doesn't always work, it needs to
+	   be tested fully because it definitely
+	   contains bugs. (warn+all error+all to
+	   the filter and EBUF doesn't output any
+	   warnings when it is supposed to do so).
+
 misc/arg -- the source file doesn't have a code template
 	 - The code template templates/template_source 
 	   needs to be implemented for this module.

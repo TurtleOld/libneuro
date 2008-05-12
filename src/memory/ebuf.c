@@ -249,9 +249,12 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	void *buf;
 	u32 elem;
 	u32 total;
-	
+
 	if (!eng || !object)
+	{
+		NEURO_WARN("Element eng or object is NULL", NULL);
 		return;
+	}
 	
 	total = Neuro_GiveEBufCount(eng);
 	
@@ -263,8 +266,10 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	 * pointer object from the ** array and puts it in elem.
 	 */
 	if (Neuro_GiveEBufElem(eng, object, &elem))
+	{
+		NEURO_WARN("Element wasn't found in the buffer", NULL);
 		return;
-	
+	}
 	
 	/* we call the callback that will clean 
 	 * allocated pointers in the structure if 
@@ -272,6 +277,8 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	 */
 	if (eng->callback != NULL)
 		eng->callback(object);
+	else
+		NEURO_TRACE("There's no cleaning callback for this buffer (this could be normal)", NULL);
 	
 	free(object);
 
