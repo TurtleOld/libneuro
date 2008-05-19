@@ -81,7 +81,7 @@ typedef struct debug_status
 /* inside graphics.c */
 extern u8 Graphics_DrawIsPresent(v_elem *elem);
 
-extern u8  Graphics_GetSafeDrawOp();
+extern u8 Graphics_GetSafeDrawOp();
 
 extern void Graphics_SetSafeDrawOp(u8 safe);
 
@@ -89,6 +89,7 @@ extern void Graphics_ResetScreenDraw();
 
 extern void Graphics_SetDrawnLastCycle();
 
+extern void Graphics_RedrawScreen();
 
 /* inside painter.c */
 extern int Graphics_PainterInit();

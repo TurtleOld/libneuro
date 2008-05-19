@@ -426,7 +426,7 @@ proc Clean_String {str} {
 	# added at the very beginning for every paragraphs.
 	# we replace by the full string and add a \b character
 	# at the end to get rid of the space.
-	regsub -all "\(\\\\n \)*\\\\n " $temp "&\b" new_string
+	#regsub -all "\(\\\\n \)*\\\\n " $temp "&\b" new_string
 
 	set temp $new_string
 	# we also get rid of any trailing spaces

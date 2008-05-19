@@ -1,5 +1,10 @@
 Things to do in the neuro library.
 
+graphics/other -- Implement Neuro_PutPixel and GetPixel:
+	 - The location where those functions needs
+	   to be put is probably best in the extlib
+	   module.
+
 debug -- bugged Neuro_DebugChannel:
 	 - It doesn't always work, it needs to
 	   be tested fully because it definitely

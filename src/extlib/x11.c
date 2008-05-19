@@ -32,6 +32,7 @@
 #include <ebuf.h>
 #include <other.h>
 #include <graphics.h>
+#include "../video/video.h" /* Graphics_RedrawScreen */
 #include <errno.h> /* errno */
 
 #define buffer_old_method 0
@@ -1348,7 +1349,7 @@ Lib_PollEvent(void *event_input)
 	{
 		Toggle_Exposed = 1;
 		/* Debug_Print("Redrawing from expose"); */
-		Neuro_RedrawScreen();
+		Graphics_RedrawScreen();
 	}
 
 	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, FocusOut, &event) == True)  

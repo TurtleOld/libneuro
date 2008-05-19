@@ -93,7 +93,7 @@ cleanPixels()
 /*-------------------- Global Functions ----------------------------*/
 
 void
-Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel)
+Graphics_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel)
 {
 	/*EBUF *tmp;
 	PIXEL_ENGINE *buf;
@@ -126,15 +126,17 @@ Neuro_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel)
 }
 
 u32
-Neuro_GetPixel(v_object *vobj, u32 x, u32 y)
+Graphics_GetPixel(v_object *vobj, u32 x, u32 y)
 {
 	return Lib_GetPixel(vobj, x, y);
 }
 
 void
-Neuro_CleanPixels()
+Graphics_CleanPixels()
 {
 	clean_pixel_in_this_cycle = 1;
+	
+	cleanPixels();
 }
 
 /*-------------------- Poll ----------------------------------------*/

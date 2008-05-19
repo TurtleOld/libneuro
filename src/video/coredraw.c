@@ -612,7 +612,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				bufa.w = 0;
 				bufa.h = 0;
 
-				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+				Graphics_AddDrawingInstruction(cur->current->layer, TDRAW_VOLATILE, &cur->current->src, 
 						&bufa, cur->current->surface_ptr);
 			
 				/*Debug_Val(0, "dynamic is inside this object\n");*/
@@ -640,7 +640,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				Neuro_VerticalBoundCrop(&indep_body, &isrc, &idst);
 				Neuro_HorizontalBoundCrop(&indep_body, &isrc, &idst);
 
-				Neuro_PushVolatileDraw(cur->current->layer, 
+				Graphics_AddDrawingInstruction(cur->current->layer, TDRAW_VOLATILE, 
 						&isrc, &idst, cur->current->surface_ptr);
 
 				if (debug_track_fonts)
@@ -686,9 +686,10 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 					/* isrc.w += indep_body.w - buf.w; */
 					isrc.h -= buf.h - indep_body.h;
 				}
-				
-				/* Neuro_PushVolatileDraw(cur->current->layer, 
-						&isrc, &idst, cur->current->surface_ptr);*/
+
+				/* Graphics_AddDrawingInstruction(cur->current->layer, 
+				 	TDRAW_VOLATILE, &isrc, &idst, cur->current->surface_ptr);
+				*/
 				
 				/* temporary hack that seems to work, we draw the whole 
 				 * static image... this needs testing and a better 
@@ -700,7 +701,8 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				hack.w = 0;
 				hack.h = 0;
 
-				Neuro_PushVolatileDraw(cur->current->layer, &cur->current->src, 
+				Graphics_AddDrawingInstruction(cur->current->layer, TDRAW_VOLATILE, 
+						&cur->current->src, 
 						&hack, cur->current->surface_ptr);
 
 				/*Debug_Val(0, "we have a case 3 situation!\n");*/
@@ -742,8 +744,8 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				nsrc.h = cur->current->src.h;
 				*/
 
-				Neuro_PushVolatileDraw(cur->current->layer, &nsrc, 
-						&bufa, cur->current->surface_ptr);
+				Graphics_AddDrawingInstruction(cur->current->layer, TDRAW_VOLATILE,
+						&nsrc, &bufa, cur->current->surface_ptr);
 
 				if (debug_track_fonts)
 				{

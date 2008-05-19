@@ -385,7 +385,7 @@ Graphics_AddDrawingInstruction(u32 layer, u8 type, Rectan *isrc, Rectan *idst, v
 	 * and I think the whole screen will be 
 	 * redrawn.
 	 */
-	Neuro_RedrawScreen();
+	Graphics_RedrawScreen();
 
 	/* if (buf->type == TDRAW_STATIC || buf->type == TDRAW_DYNAMIC)
 		Graphics_SetAllToRedraw();*/

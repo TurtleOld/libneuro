@@ -1,3 +1,54 @@
+2008-05-19	Nicholas Niro	<nik_89@neuroponic.com>
+	* docs/neuroman.tcl :
+	Commented an instruction which pushed the \b
+	character for every space that weren't needed.
+	This might break something but so far, it got
+	rid of unneeded quirks in the output version
+	of man pages.
+
+	* include/neuro/graphics.h :
+	Cleaned up from all the unneeded obsolete 
+	functions and also removed the old Static,
+	volatile and dynamic functions breaking
+	the backward compatibility of libneuro.
+	Also started to document the functions in the
+	module.
+
+	* include/neuro/neuro_main.h :
+	Fixed the documentation sligthly.
+
+	* src/extlib/x11.c :
+	After the cleaning of the graphics module
+	the function call Neuro_RedrawScreen was renamed
+	to Graphics_RedrawScreen and the correct header
+	was changed accordingly.
+
+	* src/misc/bitmap/process.c :
+	Changed any calls from Neuro_PutPixel to
+	Lib_PutPixel, it might be changed back to
+	the neuro version but only after extlib is
+	cleaned up and an interface source file is
+	created for it.
+
+	* src/video/coredraw.c :
+	After the older unneeded functions were removed
+	the calls to Neuro_PushVolatileDraw had to be
+	changed to Graphics_DrawingInstruction with
+	an argument set to TDRAW_VOLATILE in order
+	to not change the way the module behaves.
+
+	* src/video/graphics.c :
+	Changed the name of Neuro_RedrawScreen and
+	Neuro_RefreshScreen to Graphics_ also
+	deleted the obsolete functions 
+	Neuro_AddBackground and Neuro_AddDirectDrawing.
+
+	* src/video/interface.c :
+	Changed any calls from Neuro_RedrawScreen
+	to Graphics_RedrawScreen also removed the 3
+	Static, Volatile and Dynamic Draw pushing
+	functions completely.
+
 2008-05-04	Nicholas Niro	<nik_89@neuroponic.com>
 	* include/neuro/other.h :
 	Added a macro entry for Neuro_GiveImageSize to

@@ -159,7 +159,7 @@ Neuro_SetFpsLimit(u32 fpsLimit)
 }
 
 void
-Neuro_RedrawScreen()
+Graphics_RedrawScreen()
 {
 	draw_this_cycle = 1;
 }
@@ -176,9 +176,12 @@ Graphics_SetDrawnLastCycle()
 	drawn_last_cycle = 1;
 }
 
-/* clean the whole screen */
+/* might become obsolete
+ *
+ * clean the whole screen 
+ */
 void
-Neuro_RefreshScreen()
+Graphics_RefreshScreen()
 {
 	Lib_FillRect(sclScreen, NULL, 0);
 
@@ -191,25 +194,6 @@ void
 Neuro_GiveFPS(t_tick *output)
 {
 	*output = lFps;
-}
-
-/* use this function to set the background 
- * --will soon become obsolete--
- */
-void
-Neuro_AddBackground(v_object *isurface)
-{
-	/* obsoleted */
-}
-
-void 
-Neuro_AddDirectDrawing(Rectan *isrc, Rectan *idst, v_object *isurface)
-{
-	Lib_BlitObject(isurface, isrc, sclScreen, idst);
-	
-	/*Lib_BlitObject(sclScreen2, NULL, screen, NULL);
-	updScreen(0);
-	Lib_Flip(screen);*/
 }
 
 void *
@@ -225,16 +209,6 @@ Graphics_Poll()
 {	
 	if (debug_instruction_buffer || dynamic_debug)
 		NEURO_TRACE("cycle", NULL);
-
-	/* we will call a function in the module pixels in a near future */
-	/*
-	if (clean_pixel_in_this_cycle)
-	{
-		cleanPixels();
-		clean_pixel_in_this_cycle = 0;
-	}
-	*/
-
 
 	if (ltime + 1 <= time(NULL))
 	{

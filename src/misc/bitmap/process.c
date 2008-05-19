@@ -36,7 +36,7 @@
 #include <ebuf.h>
 #include <other.h>
 
-#include <graphics.h> /* Neuro_PutPixel */
+#include <extlib.h> /* Lib_PutPixel */
 
 /*-------------------- Main Module Header --------------------------*/
 #include "intern_bitmap.h"
@@ -183,7 +183,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
-				Neuro_PutPixel(image, *x, 
+				Lib_PutPixel(image, *x, 
 						(bmap->infoheader.height + SIZE_OFFSET) - *y, 
 						Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
@@ -272,7 +272,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 					       		image, *x, 
 							(bmap->infoheader.height + SIZE_OFFSET) - *y, 
 							cbuf->r, cbuf->g, cbuf->b));
-					Neuro_PutPixel(image, *x, 
+					Lib_PutPixel(image, *x, 
 						(bmap->infoheader.height + SIZE_OFFSET) - *y, 
 						Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 				}
@@ -340,7 +340,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 			
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height + SIZE_OFFSET) - *y, 
+				Lib_PutPixel(image, *x, (bmap->infoheader.height + SIZE_OFFSET) - *y, 
 						Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 
 				*x = *x + 1;
@@ -392,7 +392,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 					return;
 				}
 
-				Neuro_PutPixel(image, *x, (bmap->infoheader.height + SIZE_OFFSET) - *y, 
+				Lib_PutPixel(image, *x, (bmap->infoheader.height + SIZE_OFFSET) - *y, 
 						Neuro_MapRGB((*buf)[2], (*buf)[1], (*buf)[0]));
 
 				*x = *x + 1;

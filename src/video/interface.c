@@ -238,7 +238,7 @@ Neuro_FlushDraw(v_elem *eng)
 		/* flag the algorithm to tell it something changed 
 		 * and an action needs to be taken.
 		 */
-		Neuro_RedrawScreen();
+		Graphics_RedrawScreen();
 		/* draw_this_cycle = 1; */
 	}
 	else
@@ -274,30 +274,8 @@ Neuro_DestroyDraw(v_elem *eng)
 
 
 	
-	Neuro_RedrawScreen();
+	Graphics_RedrawScreen();
 	/* draw_this_cycle = 1; */
 
 	return 0;
-}
-
-void
-Neuro_PushStaticDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
-{
-	Graphics_AddDrawingInstruction(layer, TDRAW_STATIC, isrc, idst, isurface);
-}
-
-void
-Neuro_PushDynamicDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
-{
-	Graphics_AddDrawingInstruction(layer, TDRAW_DYNAMIC, isrc, idst, isurface);
-}
-
-/* push a drawing instruction that will be deleted from the queue and raw 
- * after being drawn. This replaces the hackish override method with an 
- * ultra versatile one and much less costy ;P.
- */
-void
-Neuro_PushVolatileDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface)
-{
-	Graphics_AddDrawingInstruction(layer, TDRAW_VOLATILE, isrc, idst, isurface);
 }

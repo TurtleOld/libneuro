@@ -2,7 +2,7 @@
 
 EXTRA_DIST = neuroman.tcl make_man.sh
 
-manuals = *.3
+manuals = *.3 *.html
 
 man_MANS = $(manuals)
 

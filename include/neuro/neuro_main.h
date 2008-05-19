@@ -45,8 +45,8 @@ extern "C" {
  *
  * Libneuro has 8 sections plus additionnal projects inside it : \n
  * \\fI*\\fP \\fBextlib\\fP \n
- * \\fI*\\fP memory \n
- * \\fI*\\fP video \n
+ * \\fI*\\fP memory --> Neuro_EBuf(3) \n
+ * \\fI*\\fP video  --> Neuro_Graphics(3) \n
  * \\fI*\\fP events \n
  * \\fI*\\fP misc \n \n
  *
