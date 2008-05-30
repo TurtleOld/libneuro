@@ -1,3 +1,16 @@
+2008-05-30	Nicholas Niro	<nik_89@neuroponic.com>
+	* include/neuro/ebuf.h :
+	Added new elements to the documentation.
+
+	* include/libneuro.sym :
+	Removed obsolete functions from the library.
+	Most notably, the function Neuro_RawPutPixel
+	and Neuro_RawGetPixel are now removed and
+	replaced by Neuro_PutPixel and Neuro_GetPixel.
+
+	* docs/neuroman.tcl :
+	Did some minor changes to the script.
+
 2008-05-19	Nicholas Niro	<nik_89@neuroponic.com>
 	* docs/neuroman.tcl :
 	Commented an instruction which pushed the \b

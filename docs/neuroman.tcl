@@ -411,27 +411,39 @@ proc Clean_String {str} {
 	set new_string ""
 	set temp ""
 
+	set new_string $tochange
+
 	# \\052 == '*'
 	# \\\\175 == '\}' and \c\}
+	regsub -all " \\052( |\n|$|)" $tochange {} new_string
+	#regsub -all {(\*[[:blank:]]|[[:blank:]]\*)} $tochange {} new_string
+	#regsub -all {(    |   |  | |)\*( |  |   )} $tochange {} new_string
 
-	regsub -all " \\052( |\n|$)" $tochange {} new_string
+	# this gets rid of any stars at the end of a line without
+	# getting rid of the carriage return
+	#regsub -all "\\052\n" $new_string "\n" new_string
 
 	set temp $new_string
+
 	# we get rid of any * right before a '\}'
 	regsub -all " \\052(\})" $temp "\}" new_string
 
-	set temp $new_string
+	#set temp $new_string
 
 	# we get rid of the very annoying space that gets
 	# added at the very beginning for every paragraphs.
 	# we replace by the full string and add a \b character
 	# at the end to get rid of the space.
 	#regsub -all "\(\\\\n \)*\\\\n " $temp "&\b" new_string
+	#regsub -all {$ \n[[:space:]]\n[[:space:]]} $temp "\n\n" new_string
+	#regsub -all -line {^[[:space:]]} $temp "coco" new_string
 
-	set temp $new_string
-	# we also get rid of any trailing spaces
+	#set temp $new_string
+
+	# we also get rid of any beginning spaces
 	regsub -all -line "^ " $temp "" new_string
-
+	#regsub -all -nocase {\n[[:space:]][a,z]} $temp "coco" new_string
+	#regsub -all {} $temp "coco" new_string
 
 	set tochange $new_string
 }

@@ -2,7 +2,9 @@
 
 EXTRA_DIST = neuroman.tcl make_man.sh
 
-manuals = *.3 *.html
+manuals = *.3
+
+htmls = *.html
 
 man_MANS = $(manuals)
 
@@ -13,4 +15,4 @@ $(manuals): neuroman.tcl make_man.sh
 	./make_man.sh
 
 clean-local:
-	-rm -f $(manuals)
+	-rm -f $(manuals) $(htmls)

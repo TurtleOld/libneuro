@@ -40,7 +40,7 @@
  * from a buffer. 
  * \n \n \n
  *
- *
+ * .SH\n
  * INTRODUCTION : \n \n
  *
  * This \\fImanual\\fR presents the way the module has
@@ -50,7 +50,7 @@
  * is to give a general insight as to which functions are 
  * needed to attain a result. \n \n \n
  *
- *
+ * .SH\n
  * BEGINNING : \n \n
  *
  * To make use of even the slightest of this module, the first 
@@ -67,7 +67,7 @@
  * not contain global data in the module, making it
  * thread safe. \n \n \n
  *
- *
+ * .SH\n
  * INITIALISING AND FREEING : \n \n
  *
  * Now that the EBUF pointer is created, the next step is to 

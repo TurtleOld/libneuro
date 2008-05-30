@@ -169,7 +169,7 @@ filter_elem_exist(const char *namespace, const char *elem)
 }
 
 static DEBUG_CHANNEL *
-filter_handleElem(char *namespace, char *elem)
+filter_handleElem(const char *namespace, char *elem)
 {
 	char *toggle = NULL;
 	DEBUG_CHANNEL *buf;
@@ -391,7 +391,11 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		if (output_detailed == 1)
 			fprintf(stderr, "- : (%s:%s) %s:%s:%d -- ", project_name, channel, filename, funcName, lineNum);
 
-		fprintf(stderr, "temporary message because the debug buffer is empty\n");
+		fprintf(stderr, "temporary message because the debug buffer is empty --> ");
+		va_start(args, control);
+		vfprintf(stderr, control, args);
+		va_end(args);
+		fprintf(stderr, "\n");
 		return;
 	}
 

@@ -614,7 +614,7 @@ Neuro_GiveImageSize(v_object *image, i32 *width, i32 *height)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 u32 
-Neuro_RawGetPixel(v_object *srf, int x, int y)
+Neuro_GetPixel(v_object *srf, int x, int y)
 {
 
 	return Lib_GetPixel(srf, x, y);
@@ -688,7 +688,7 @@ Neuro_RawGetPixel(v_object *srf, int x, int y)
  *   * NOTE: The surface must be locked before calling this!
  *    */
 void 
-Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel)
+Neuro_PutPixel(v_object *srf, int x, int y, u32 pixel)
 {
 
 	Lib_PutPixel(srf, x, y, pixel);

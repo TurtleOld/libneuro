@@ -100,17 +100,39 @@ typedef INSTRUCTION_ENGINE v_elem;
  */
 extern void *Neuro_GetScreenBuffer();
 
-/* Neuro_PushDraw
+/** Neuro_PushDraw
  * @sdescri
- * this is the new generation of the drawing push functions, this will 
- * replace completely the current drawing system method if it presents
- * better performances than the old (dynamic, static and volatile) system.
- *
- * the "older" system is however kept for backward compatibility and this
- * function uses the same algorithm so it would be unwise to remove the
- * other functions.
+ * adds a new element to the painter's algorithm.
  *
  * @description
+ * Neuro_PushDraw is the core interface of the module as it is the
+ * function to add a new element to the painter's algorithm.
+ * Once added, this element is drawn on the screen at every cycles.
+ * It is possible to change the position of the element and various
+ * other values with the context that is returned from the function
+ * and by the use of the referenced functions. \n \n
+ *
+ * Here is the list : \n \n
+ *
+ * \\fBNeuro_FetchDraw(3)\\fR - to get the values that are with the element. \n \n
+ * \\fBNeuro_SetImgPos(3)\\fR - set the destination of the image on the screen. \n \n
+ * \\fBNeuro_SetImgSrcPos(3)\\fR - set the source rectangle inside the image itself 
+ * which will be drawn on the screen (can be used to draw only parts of
+ * an image). \n \n
+ * \\fBNeuro_CleanDraw(3)\\fR - to be called \\fBbefore\\fR any changes to the
+ * element. \n \n
+ * \\fBNeuro_FlushDraw(3)\\fR - to be called \\fBafter\\fR any changes made 
+ * to the values of the element. \n \n
+ * \\fBNeuro_DestroyDraw(3)\\fR - destroys the element created using this function.
+ * \n \n
+ *
+ * input in this function and even ultimately destroying
+ * this element altogether from the buffer using Neuro_DestroyDraw(3).
+ *
+ * @related
+ * Neuro_FetchDraw(3), Neuro_SetImgPos(3), Neuro_SetImgSrcPos(3),
+ * Neuro_SetDraw(3), Neuro_CleanDraw(3), Neuro_FlushDraw(3),
+ * Neuro_DestroyDraw(3)
  *
  * @param[in]
  * the layer which is the order by which this element is to be drawn in
@@ -128,9 +150,7 @@ extern void *Neuro_GetScreenBuffer();
  *
  * @returnval
  * a context variable used to access the element's internal values after
- * it have been pushed to the buffer. This context can be used to
- * alter values input in this function and even ultimately destroying
- * this element altogether from the buffer.
+ * it have been pushed to the buffer.
  */
 extern v_elem *Neuro_PushDraw(u32 layer, Rectan *isrc, Rectan *idst, v_object *isurface);
 

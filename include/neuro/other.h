@@ -163,9 +163,9 @@ extern int Neuro_ArgProcess();
 
 /*--- extlib Neuro_ interface ---*/
 
-extern u32 Neuro_RawGetPixel(v_object *srf, int x, int y);
+extern u32 Neuro_GetPixel(v_object *srf, int x, int y);
 
-extern void Neuro_RawPutPixel(v_object *srf, int x, int y, u32 pixel);
+extern void Neuro_PutPixel(v_object *srf, int x, int y, u32 pixel);
 
 /* blit one surface to another one with this function */
 extern void Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst);

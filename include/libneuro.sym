@@ -1,5 +1,3 @@
-Neuro_AddBackground
-Neuro_AddDirectDrawing
 Neuro_AddPressedKeyEvent
 Neuro_AddPressedMouseEvent
 Neuro_AddPressedMultiKeyEvent
@@ -25,7 +23,6 @@ Neuro_CreateBMPCTX
 Neuro_CreateEBuf
 Neuro_CreateVObject
 Neuro_DebugChannel
-Neuro_DebugPrint
 Neuro_DestroyBMPCTX
 Neuro_DestroyDraw
 Neuro_DumbBoundsCheck
@@ -65,15 +62,8 @@ Neuro_MultiAllocEBuf
 Neuro_Poll
 Neuro_PrintFPS
 Neuro_PushDraw
-Neuro_PushDynamicDraw
-Neuro_PushStaticDraw
-Neuro_PushVolatileDraw
 Neuro_PutPixel
 Neuro_Quit
-Neuro_RawGetPixel
-Neuro_RawPutPixel
-Neuro_RedrawScreen
-Neuro_RefreshScreen
 Neuro_RenderUnicode
 Neuro_ResetEBuf
 Neuro_SCleanEBuf
