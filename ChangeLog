@@ -1,3 +1,16 @@
+2008-06-01	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/debug.c :
+	Fixed the order by which the debugging channels
+	are used to ensure that the correct output can
+	be expected by the developers. Because this
+	bug was fixed, I removed the heavy debbugging
+	message being written on the console thus
+	libneuro is now stable again.
+
+	* src/video/coredraw.c :
+	Added additionnal debugging (trace) outputs
+	to track a bug with libngui.
+
 2008-05-30	Nicholas Niro	<nik_89@neuroponic.com>
 	* include/neuro/ebuf.h :
 	Added new elements to the documentation.

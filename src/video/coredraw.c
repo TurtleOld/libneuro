@@ -375,6 +375,7 @@ Graphics_CoreDrawAll()
 				 *
 				 * broken for some reason
 				 */
+				NEURO_TRACE("Pushed a SRedraw and flagged for redrawing", NULL);
 				Graphics_RedrawSection(cur);
 
 				/* Debug_Val(0, "Redrawn a static element\n"); */
@@ -544,6 +545,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 	int bounds_ret = 0;
 	int output = 0;
 
+	NEURO_TRACE("Redrawing Section", NULL);
 
 	indep_body.x = indep->current->dx;
 	indep_body.y = indep->current->dy;

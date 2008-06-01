@@ -366,7 +366,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 {
 	va_list args;
 	DEBUG_CHANNEL *buf;
-	u32 total = 0, i = 0;
+	u32 total = 0;
 	u32 print_message = 0; /* toggle */
 
 	/* Debug_Val(0, "Herein %s %s->%s [%d]\n", project_name, channel, type, lineNum); */
@@ -386,8 +386,10 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		return;
 	}
 
+	
 	if (Neuro_EBufIsEmpty(debug_l))
 	{	
+#if DETAILED_DEBUG /* to debug this module's functionnality */
 		if (output_detailed == 1)
 			fprintf(stderr, "- : (%s:%s) %s:%s:%d -- ", project_name, channel, filename, funcName, lineNum);
 
@@ -396,14 +398,16 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		vfprintf(stderr, control, args);
 		va_end(args);
 		fprintf(stderr, "\n");
+#endif /* DETAILED_DEBUG */
+
 		return;
 	}
 
 	total = Neuro_GiveEBufCount(debug_l) + 1;
 
-	while (i < total)
+	while (total-- > 0)
 	{
-		buf = Neuro_GiveEBuf(debug_l, i);
+		buf = Neuro_GiveEBuf(debug_l, total);
 
 		if (!strcmp(project_name, buf->namespace))
 		{
@@ -430,8 +434,6 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 					print_message = 1;
 			}
 		}
-
-		i++;
 	}
 
 	if (print_message == 1)
