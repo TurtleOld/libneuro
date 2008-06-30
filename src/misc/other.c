@@ -551,6 +551,13 @@ Neuro_GiveConvertRGB(u32 color, u8 *R, u8 *G, u8 *B)
 		{
 			if (IsLittleEndian())
 			{
+				tempR = color & 0x00FF0000;
+				tempG = color & 0x0000FF00;
+				tempB = color & 0x000000FF;
+
+				*R = tempR >> 16;
+				*G = tempG >> 8;
+				*B = tempB;
 			}
 			else
 			{

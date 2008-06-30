@@ -1,3 +1,24 @@
+2008-06-30	Nicholas Niro	<nik_89@neuroponic.com>
+	* src/events/events.c :
+	Due to performance problems with libneurogui, it
+	was found that the method with which events were
+	handled was creating the issue. To fix it, a new
+	event based method is introduced in this patch
+	instead of the old polling method.
+
+	* src/extlib/x11.c src/extlib/sdl.c :
+	Work were done in order to implement the changes
+	which were added to the events module.
+
+	* src/misc/other.c :
+	A bug was found regarding alpha rendering, it was
+	later pin pointed that the bit depth of the screen
+	was to blame because the function to give 
+	color information Neuro_GiveConvertRGB to the alpha
+	rendering function was not supporting 24 bits. This
+	was fixed in this release but 32 bits and 8 bits
+	are still to be done.
+
 2008-06-01	Nicholas Niro	<nik_89@neuroponic.com>
 	* src/debug.c :
 	Fixed the order by which the debugging channels

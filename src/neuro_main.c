@@ -65,7 +65,10 @@ Neuro_Poll()
 {
 	int _err = 0;
 	
-	Events_Poll();
+	/* this should now be moved to Lib_PollEvent 
+	 * if it is still used.
+	 */
+	/* Events_Poll(); */
 
 #if USE_VIDEO
 	Graphics_Poll();

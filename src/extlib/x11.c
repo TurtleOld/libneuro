@@ -28,6 +28,7 @@
 #include <string.h>
 #include <X11/Xlib.h>
 
+#include <events.h> /* to send input trigger events */
 #include <extlib.h>
 #include <ebuf.h>
 #include <other.h>
@@ -77,6 +78,7 @@ static i32 swidth = 800, sheight = 600; /* externally settable screen size */
 
 static u8 Toggle_Exposed = 1;
 static u8 mouse_wheel = 0; /* mouse wheel variable */
+static char current_keymap[32]; /* present map of keys pressed */
 
 static XColor tpixel;
 
@@ -371,7 +373,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	}
 
 	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask |
-		       ButtonReleaseMask | FocusChangeMask);
+		       ButtonReleaseMask | FocusChangeMask | PointerMotionMask);
 
 	XFlush(tmp->display);
 
@@ -669,14 +671,16 @@ AlphaPixels(u32 alpha_color, u32 indep_color, u32 alpha)
 	Neuro_GiveConvertRGB(alpha_color, &aR, &aG, &aB);
 	Neuro_GiveConvertRGB(indep_color, &iR, &iG, &iB);
 
-
-	/* rR = (iR * (1 - (alpha / 255))) + aR * (alpha / 255);
+	/*
+	rR = (iR * (1 - (alpha / 255))) + aR * (alpha / 255);
 	rG = (iG * (1 - (alpha / 255))) + aG * (alpha / 255);
-	rB = (iB * (1 - (alpha / 255))) + aB * (alpha / 255);*/
-
+	rB = (iB * (1 - (alpha / 255))) + aB * (alpha / 255);
+	*/
+	
 	rR = HCD_IAlpha[iR][alpha] + HCD_Alpha[aR][alpha];
 	rG = HCD_IAlpha[iG][alpha] + HCD_Alpha[aG][alpha];
 	rB = HCD_IAlpha[iB][alpha] + HCD_Alpha[aB][alpha];
+	
 
 		
 	return Neuro_MapRGB(rR, rG, rB);
@@ -688,7 +692,7 @@ DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
 	u32 screen_color;
 	Rectan tmp;
 	v_object *screen;
-	u32 new_color;
+	u32 conv_color;
 	
 	if (!rectangle)
 		return;
@@ -714,9 +718,9 @@ DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
 			screen_color = Lib_GetPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h);
 
 			
-			new_color = AlphaPixels(screen_color, color, alpha);
+			conv_color = AlphaPixels(screen_color, color, alpha);
 
-			Lib_PutPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h, new_color);
+			Lib_PutPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h, conv_color);
 			
 		}
 	}
@@ -731,7 +735,7 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 	Rectan rsrc, rdst;
 	u32 screen_color;
 	u32 image_color;
-	u32 new_color;
+	u32 color;
 	
 	if (!src || !dst || !image)
 		return;
@@ -763,11 +767,11 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 
 			screen_color = Lib_GetPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h);
 			
-			/* new_color = AlphaPixels(screen_color, image_color, alpha); */
-			new_color = AlphaPixels(image_color, screen_color, alpha);
+			/* color = AlphaPixels(screen_color, image_color, alpha); */
+			color = AlphaPixels(image_color, screen_color, alpha);
 
 
-			Lib_PutPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h, new_color);
+			Lib_PutPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h, color);
 			
 		}
 	}
@@ -1218,7 +1222,7 @@ Lib_CheckKeyStatus(u32 key)
 		return 0;
 	}
 
-	XQueryKeymap(dmain->display, keyd);
+	/* XQueryKeymap(dmain->display, keyd); */
 
 	keytocheck = XKeysymToKeycode(dmain->display, key);
 	
@@ -1226,13 +1230,13 @@ Lib_CheckKeyStatus(u32 key)
 	
 	while (i-- > 0)
 	{
-		if (keyd[i])
+		if (current_keymap[i])
 		{
-			temp = keycode_value(keyd[i], &anchor);
+			temp = keycode_value(current_keymap[i], &anchor);
 			/*Debug_Val(0, "Keycode[%d][%d] temp %d 8* %d n %d -- %d\n", i, anchor,
 						temp,
 						(8 * i) + temp,
-						keyd[i], keytocheck);*/
+						current_keymap[i], keytocheck);*/
 			if (anchor == 1)
 			{
 				while (anchor == 1)
@@ -1240,7 +1244,7 @@ Lib_CheckKeyStatus(u32 key)
 					if (((8 * i) + temp) == keytocheck)
 						return 1;
 				
-					temp = keycode_value(keyd[i], &anchor);
+					temp = keycode_value(current_keymap[i], &anchor);
 					
 					if (((8 * i) + temp) == keytocheck)
 						return 1;
@@ -1322,6 +1326,15 @@ Lib_PollEvent(void *event_input)
 	{
 		return 1;
 	}
+
+	/* FIXME using callbacks or event handling, 
+	 * this poll shouldn't be needed anymore.
+	 *
+	 * Using events instead of a loop will
+	 * definitely make the project MUCH faster.
+	 */
+	/* Events_Poll(); */
+
 	/*
 	XNextEvent(dmain->display, &event);
 
@@ -1364,11 +1377,43 @@ Lib_PollEvent(void *event_input)
 		Toggle_Exposed = 1;
 	}
 	
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, ButtonPress, &event) == True)  
+	{
+		/* Debug_Val(0, "Button event %d\n", event.xbutton.button); */
+		mouse_wheel = event.xbutton.button;
+
+		NEURO_TRACE("got an X button event press", NULL);
+		Events_TriggerButton(event.xbutton.button, event.xbutton.x, event.xbutton.y, 0);
+	}
+
 	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, ButtonRelease, &event) == True)  
 	{
 		/* Debug_Val(0, "Button event %d\n", event.xbutton.button); */
 		mouse_wheel = event.xbutton.button;
+
+		NEURO_TRACE("got an X button event release", NULL);
+		Events_TriggerButton(event.xbutton.button, event.xbutton.x, event.xbutton.y, 1);
 	}
+
+	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, MotionNotify, &event) == True)  
+	{
+		/* NEURO_TRACE("Mouse motion XEvent", NULL);*/
+		Events_TriggerMotion(event.xmotion.x, event.xmotion.y);
+	}
+
+	if (XCheckTypedWindowEvent(dmain->display, *dmain->cwin, KeyRelease, &event) == True)
+	{
+		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 0);
+		/* XQueryKeymap(dmain->display, current_keymap); */
+		NEURO_TRACE("got an X key event", NULL);
+	}
+
+	if (XCheckTypedWindowEvent(dmain->display, *dmain->cwin, KeyPress, &event) == True)
+	{
+		/* XQueryKeymap(dmain->display, current_keymap); */
+		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 1);
+		NEURO_TRACE("got an X key event", NULL);
+	}	
 	
 	return 0;
 }

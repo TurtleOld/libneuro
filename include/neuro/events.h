@@ -65,6 +65,11 @@ extern void Neuro_GetMousePos(int *x, int *y);
 
 
 /* used internally */
+
+extern void Events_TriggerMotion(int x, int y);
+extern void Events_TriggerButton(u32 button, int x, int y, int status);
+extern void Events_TriggerKey(u32 keysym, int keystatus);
+
 extern void Events_Poll(void);
 extern int Events_Init(void);
 extern void Events_Clean(void);

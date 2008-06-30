@@ -782,6 +782,12 @@ Lib_PollEvent(void *s_event)
 	SDL_Event event;
 	int _err = 0;
 
+	/* FIXME : temporary, please push the events
+	 * using the trigger functions in the events
+	 * module.
+	 */
+	Events_Poll();
+
 	while(SDL_PollEvent(&event))
 	{
 		switch (event.type)

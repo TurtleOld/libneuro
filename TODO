@@ -1,5 +1,10 @@
 Things to do in the neuro library.
 
+*** events -- Implement an event based set of functions:
+	 - Currently, the state of the mouse and 
+	   keyboard are looped... the drivers will
+	   need to be changed accordingly.
+
 graphics/other -- Implement Neuro_PutPixel and GetPixel:
 	 - The location where those functions needs
 	   to be put is probably best in the extlib

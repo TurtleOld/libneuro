@@ -98,6 +98,64 @@ clean_mouse_list(void *src)
 	}
 }
 
+
+static void
+trigger_key(KEYBEVENT *key, u8 keystatus)
+{
+	
+	if (key->lastState == 0)
+	{
+		/* we check if the key is being pressed */
+		if (keystatus == 1)
+		{
+			key->lastState = 1;
+			/* check if the callback exists */
+			if (key->callback)
+			{
+				/* the key is being pressed so we call the 
+				 * corresponding callback function.
+				 */
+				if (key->send_key == 0)
+					(key->callback)();
+				else
+					(key->callback)(key->key);
+			}
+		}
+	}
+	else
+	{
+		if (keystatus == 0)
+		{
+			key->lastState = 0;
+			if (key->callbackReleased)
+			{
+				/* the key is not pressed anymore so we call the 
+				 * corresponding callback function.
+				 */
+			
+				if (key->send_key == 0)
+					(key->callbackReleased)();
+				else
+					(key->callbackReleased)(key->key);
+			
+			}
+		}
+		else
+		{
+			if (key->callback)
+			{
+				/* the key is being pressed so we call the 
+				 * corresponding callback function.
+				 */
+				if (key->send_key == 0)
+					(key->callback)();
+				else
+					(key->callback)(key->key);
+			}
+		}
+	}
+}
+
 /* 
  * this function checks every elements in the _klist buffer, 
  * checks which keys are being pressed in it and calls the
@@ -119,7 +177,7 @@ handle_keys()
 	 * method.
 	 */
 	total = Neuro_GiveEBufCount(_klist) + 1;
-	
+
 	while (total-- > 0)
 	{
 		/* pass the element total from the buffer _klist
@@ -127,57 +185,52 @@ handle_keys()
 		 */
 		tmp = Neuro_GiveEBuf(_klist, total);
 
-		if (tmp->lastState == 0)
-		{
+		trigger_key(tmp, Lib_CheckKeyStatus(tmp->key));
+	}
+}
 
-			/* we check if the key is being pressed */
-			if (Lib_CheckKeyStatus(tmp->key) == 1)
-			{
-				tmp->lastState = 1;
-				/* check if the callback exists */
-				if (tmp->callback)
-				{
-					/* the key is being pressed so we call the 
-					 * corresponding callback function.
-					 */
-					if (tmp->send_key == 0)
-						(tmp->callback)();
-					else
-						(tmp->callback)(tmp->key);
-				}
-			}
-		}
-		else
+static void
+trigger_button(MOUSEEVENT *mouse, int x, int y, int status)
+{
+	u32 total = 0;
+	Mouse_Callback *cbk_buf; /* callback buffer */
+
+	if (mouse->lastState == 0)
+	{
+		/* this elements last state now is set to 1 
+		 * meaning it was last clicked.
+		 */
+		mouse->lastState = 1;
+
+		if (Neuro_EBufIsEmpty(mouse->ClickEventCbk))
+			return;
+
+		total = Neuro_GiveEBufCount(mouse->ClickEventCbk) + 1;
+
+		while (total-- > 0)
 		{
-			if (Lib_CheckKeyStatus(tmp->key) == 0)
-			{
-				tmp->lastState = 0;
-				if (tmp->callbackReleased)
-				{
-					/* the key is not pressed anymore so we call the 
-					 * corresponding callback function.
-					 */
-				
-					if (tmp->send_key == 0)
-						(tmp->callbackReleased)();
-					else
-						(tmp->callbackReleased)(tmp->key);
-				
-				}
-			}
-			else
-			{
-				if (tmp->callback)
-				{
-					/* the key is being pressed so we call the 
-					 * corresponding callback function.
-					 */
-					if (tmp->send_key == 0)
-						(tmp->callback)();
-					else
-						(tmp->callback)(tmp->key);
-				}
-			}
+			cbk_buf = Neuro_GiveEBuf(mouse->ClickEventCbk, total);
+
+			if (cbk_buf->callback)
+				(cbk_buf->callback)(x, y);
+		}
+	}
+	else if (mouse->lastState == 1)
+	{
+		/* we reset the state back to nothing */
+		mouse->lastState = 0;
+	
+		if (Neuro_EBufIsEmpty(mouse->ReleaseEventCbk))
+			return;
+
+		total = Neuro_GiveEBufCount(mouse->ReleaseEventCbk) + 1;
+
+		while (total-- > 0)
+		{
+			cbk_buf = Neuro_GiveEBuf(mouse->ReleaseEventCbk, total);
+
+			if (cbk_buf->callback)
+				(cbk_buf->callback)(x, y);
 		}
 	}
 }
@@ -197,9 +250,8 @@ handle_mouse()
 {
 	u8 button;
 	int x, y;
-	u32 total, total2;
+	u32 total;
 	MOUSEEVENT *tmp;
-	Mouse_Callback *cbk_buf; /* callback buffer */
 	
 	/* check to see if the buffer _mlist is empty and leave if it is */
 	if (Neuro_EBufIsEmpty(_mlist))
@@ -211,6 +263,9 @@ handle_mouse()
 	 */
 	button = Lib_GetMouseState(&x, &y);
 
+	/* we pass those as variables which can be recovered
+	 * by external programs at will.
+	 */
 	mouse_x = x;
 	mouse_y = y;
 	
@@ -228,58 +283,13 @@ handle_mouse()
 		 * _mlist into tmp
 		 */
 		tmp = Neuro_GiveEBuf(_mlist, total);
-		
 		if (button)
 		{
 			if (button == tmp->button)
-			{
-				if (!tmp->lastState)
-				{
-					/* this elements last state now is set to 1 
-					 * meaning it was last clicked.
-					 */
-					tmp->lastState = 1;
-
-					if (Neuro_EBufIsEmpty(tmp->ClickEventCbk))
-						return;
-
-					total2 = Neuro_GiveEBufCount(tmp->ClickEventCbk) + 1;
-
-					while (total2-- > 0)
-					{
-						cbk_buf = Neuro_GiveEBuf(tmp->ClickEventCbk, total2);
-
-						if (cbk_buf->callback)
-							(cbk_buf->callback)(x, y);
-					}
-
-					return;
-				}
-			}
+				trigger_button(tmp, x, y, 1);
+			else
+				trigger_button(tmp, x, y, 0);
 		}
-		else
-		{
-			if (tmp->lastState == 1)
-			{
-				/* we reset the state back to nothing */
-				tmp->lastState = 0;
-			
-				if (Neuro_EBufIsEmpty(tmp->ReleaseEventCbk))
-					return;
-
-				total2 = Neuro_GiveEBufCount(tmp->ReleaseEventCbk) + 1;
-
-				while (total2-- > 0)
-				{
-					cbk_buf = Neuro_GiveEBuf(tmp->ReleaseEventCbk, total2);
-
-					if (cbk_buf->callback)
-						(cbk_buf->callback)(x, y);
-				}
-
-				return;
-			}
-		}	
 	}
 }
 
@@ -498,6 +508,81 @@ Neuro_CleanMouse()
 	
 	Neuro_CreateEBuf(&_mlist);
 }
+
+
+void
+Events_TriggerMotion(int x, int y)
+{
+	/* we pass those as variables which can be recovered
+	 * by external programs at will.
+	 */
+	mouse_x = x;
+	mouse_y = y;
+}
+
+void
+Events_TriggerButton(u32 button, int x, int y, int status)
+{
+	u32 total;
+	MOUSEEVENT *tmp;
+	
+	/* check to see if the buffer _mlist is empty and leave if it is */
+	if (Neuro_EBufIsEmpty(_mlist))
+		return;		
+	
+	/* we put the total amount of elements in _mlist to total 
+	 * and increment by 1 to support a while (somevar-- > 0) 
+	 * method.
+	 */
+	total = Neuro_GiveEBufCount(_mlist) + 1;
+
+	/* we push the coordinate of the click */
+	Events_TriggerMotion(x, y);
+
+	/* Debug_Val(0, "mouse (%d,%d) button %d \n", x, y, button); */
+
+	while (total-- > 0)
+	{
+		/* pass the element total from the buffer 
+		 * _mlist into tmp
+		 */
+		tmp = Neuro_GiveEBuf(_mlist, total);
+	
+		/* if (button == tmp->button) */
+		trigger_button(tmp, x, y, status);
+	}
+}
+
+void
+Events_TriggerKey(u32 keysym, int keystatus)
+{
+	u32 total;
+	KEYBEVENT *tmp;
+	
+	
+	/* we check if _klist is empty, if it is, we leave. */
+	if (Neuro_EBufIsEmpty(_klist))
+		return;
+	
+	/* we put the total amount of elements in _klist to total 
+	 * and increment by 1 to support a while (somevar-- > 0) 
+	 * method.
+	 */
+	total = Neuro_GiveEBufCount(_klist) + 1;
+
+	while (total-- > 0)
+	{
+		/* pass the element total from the buffer _klist
+		 * to the pointer tmp.
+		 */
+		tmp = Neuro_GiveEBuf(_klist, total);
+
+		if (tmp->key == keysym)
+			trigger_key(tmp, keystatus);
+	}
+
+}
+
 
 
 void
