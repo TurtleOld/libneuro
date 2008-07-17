@@ -70,10 +70,10 @@ static char *string_maker;
 
 #define DEBUG_CLASS_AMOUNT 4
 static const int Debug_ClassMasks[] = {
-	0x00000007,
-	0x00000001,
-	0x00000002,
-	0x00000004
+	0x00000007, /* all */
+	0x00000001, /* warn */
+	0x00000002, /* error */
+	0x00000004  /* trace */
 };
 
 static const char *Debug_Classes[] = {
@@ -82,6 +82,8 @@ static const char *Debug_Classes[] = {
 	"error",
 	"trace"
 };
+
+#define DETAILED_DEBUG 0
 
 /*-------------------- Static Prototypes ---------------------------*/
 
@@ -173,7 +175,7 @@ filter_handleElem(const char *namespace, char *elem)
 {
 	char *toggle = NULL;
 	DEBUG_CHANNEL *buf;
-	u8 type = 0;
+	u8 type = 0; /* 1 addition, 0 deletion */
 	i32 class_type = 0;
 
 	/* Debug_Val(0, "HANDLE \"%s\" len %d\n", elem, strlen(elem)); */
@@ -221,12 +223,14 @@ filter_handleElem(const char *namespace, char *elem)
 
 	if ((buf = filter_elem_exist(namespace, &toggle[1])))
 	{
-		NEURO_TRACE("elem exists: %s", buf->channel);
+		NEURO_TRACE("%s", Neuro_s("elem exists: %s class %d type %d class_type %d", buf->channel, buf->class, type, class_type));
 
-		if (type == 0)
+		if (type == 1)
 			buf->class ^= class_type;
 		else
-			buf->class &= class_type;
+			buf->class &= ~(u32)class_type;
+
+		NEURO_TRACE("new class %d", buf->class);
 
 		return buf;
 	}
@@ -246,6 +250,8 @@ filter_handleElem(const char *namespace, char *elem)
 			buf->class = class_type;
 		/* Debug_Val(0, "before %s\n", elem); */
 		/* Debug_Val(0, "after %s\n", elem); */
+
+		NEURO_TRACE("%s", Neuro_s("(%s) Element -> %s %s", namespace, elem, buf->channel));
 	}
 	else
 	{
@@ -345,6 +351,9 @@ Neuro_SetCoreDebugFilter(const char *project_name, const char *filter)
 
 			buf = Neuro_GiveEBuf(sep, total);
 
+			if (DETAILED_DEBUG)
+				fprintf(stderr, "pushed \'%s\' to filter_handleElem\n", buf->string);
+			
 			tmp = filter_handleElem(project_name, buf->string);
 
 			if (!tmp)
@@ -387,20 +396,19 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	}
 
 	
-	if (Neuro_EBufIsEmpty(debug_l))
+	/* if (Neuro_EBufIsEmpty(debug_l)) */
+	if (DETAILED_DEBUG)
 	{	
-#if DETAILED_DEBUG /* to debug this module's functionnality */
 		if (output_detailed == 1)
-			fprintf(stderr, "- : (%s:%s) %s:%s:%d -- ", project_name, channel, filename, funcName, lineNum);
+			fprintf(stderr, "- : (%s:%s) %s:%s:%d type %s -- ", project_name, channel, filename, funcName, lineNum, type);
 
-		fprintf(stderr, "temporary message because the debug buffer is empty --> ");
+		fprintf(stderr, "debug --> ");
 		va_start(args, control);
 		vfprintf(stderr, control, args);
 		va_end(args);
 		fprintf(stderr, "\n");
-#endif /* DETAILED_DEBUG */
 
-		return;
+		/* return; */
 	}
 
 	total = Neuro_GiveEBufCount(debug_l) + 1;
@@ -409,10 +417,15 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	{
 		buf = Neuro_GiveEBuf(debug_l, total);
 
+		if (DETAILED_DEBUG)
+			fprintf(stderr, "Is \'%s\' the same as \'%s\'? ... ", 
+					project_name, buf->namespace);
 		if (!strcmp(project_name, buf->namespace))
 		{
 			int class_type = 0;
-
+		
+			if (DETAILED_DEBUG)
+				fprintf(stderr, "Yes\n");
 
 			class_type = elem_getclass(type);
 
@@ -425,14 +438,31 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 			/*Debug_Val(0, "class type %d\n", buf->class);
 			Debug_Val(0, "%s -> %s\n", channel, buf->channel);*/
 
+
+			if (DETAILED_DEBUG)
+				fprintf(stderr, "Is \'%s | %s\' the same as \'%s\'? ... ", 
+					channel, "all", buf->channel);
 			/* the "all" type always matches every elements :) */
 			if (!strcmp(channel, buf->channel) || !strcmp("all", buf->channel))
 			{
+				if (DETAILED_DEBUG)
+					fprintf(stderr, "Yes extra -> [%d] & [%d] = %d\n", buf->class, class_type, buf->class & class_type);
+
 				if ((buf->class & class_type) == 0)
 					print_message = 0;
 				else
 					print_message = 1;
 			}
+			else
+			{
+				if (DETAILED_DEBUG)
+					fprintf(stderr, "No\n");
+			}
+		}
+		else
+		{
+			if (DETAILED_DEBUG)
+				fprintf(stderr, "No\n");
 		}
 	}
 
@@ -465,6 +495,11 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		va_end(args);
 
 		fprintf(stderr, "\n"); /* we do a line feed */
+	}
+	else
+	{
+		if (DETAILED_DEBUG)
+			fprintf(stderr, "Debug message rejected due to filter\n");
 	}
 }
 

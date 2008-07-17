@@ -146,7 +146,8 @@
  * To get the address of a certain element, we need to use the function
  * Neuro_GiveEBufAddr(3). \n
  * Here's how we do it : \n \n
- *
+ * 
+ * .br
  * -- in this code example, we will transfer the last element into -- \n
  * -- a certain position in the buffer and transfer that certain -- \n
  * -- position into the last place. -- \n \n

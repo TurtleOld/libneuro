@@ -415,9 +415,9 @@ proc Clean_String {str} {
 
 	# \\052 == '*'
 	# \\\\175 == '\}' and \c\}
-	regsub -all " \\052( |\n|$|)" $tochange {} new_string
-	#regsub -all {(\*[[:blank:]]|[[:blank:]]\*)} $tochange {} new_string
-	#regsub -all {(    |   |  | |)\*( |  |   )} $tochange {} new_string
+	#regsub -all " \\052( |\n|$|)" $tochange {} new_string
+	regsub -all {(\*[[:blank:]]|[[:blank:]]\*)} $tochange {} new_string
+	regsub -all {(    |   |  | |)\*( |  |   )} $tochange {} new_string
 
 	# this gets rid of any stars at the end of a line without
 	# getting rid of the carriage return
