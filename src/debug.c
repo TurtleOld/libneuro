@@ -226,7 +226,10 @@ filter_handleElem(const char *namespace, char *elem)
 		NEURO_TRACE("%s", Neuro_s("elem exists: %s class %d type %d class_type %d", buf->channel, buf->class, type, class_type));
 
 		if (type == 1)
-			buf->class ^= class_type;
+		{
+			if ((buf->class & class_type) == 0)
+				buf->class ^= class_type;
+		}
 		else
 			buf->class &= ~(u32)class_type;
 
@@ -409,6 +412,11 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		fprintf(stderr, "\n");
 
 		/* return; */
+	}
+
+	if (Neuro_EBufIsEmpty(debug_l))
+	{
+		return;
 	}
 
 	total = Neuro_GiveEBufCount(debug_l) + 1;
