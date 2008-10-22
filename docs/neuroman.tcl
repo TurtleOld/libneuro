@@ -18,9 +18,9 @@
 
 # the configuration file requires 5 lines
 # the first line is the name of the program/library
-# the firs line is the section number 
-#	here are all the sections with a description but you will 
-#	generally use the section 3.
+# the first line is the section number 
+#	here are all the sections with a description but the most common
+#	is generally the section 3.
 #	Section
 #	1    User commands
 #	2    System calls, that is, functions provided by the kernel.
@@ -33,8 +33,8 @@
 #	9    Another
 #	n    New documentation, that may be moved to a more appropriate section.
 #	l    Local documentation referring to this particular system.
-# the second line is the center footer
-# the third line is the left footer
+# the second line is the center footer text
+# the third line is the left footer text
 # and the last line is the center header
 
 # here is an example configuration file
@@ -47,50 +47,64 @@
 
 # the syntax inside the header files
 
-# first of all, the script will parse the comments that are 
-# just above a function prototype which starts with the extern keyword
-# and it will only parse those with an extra star ie /**
-# so to make this script work good you need to have this minimum:
+# In order for this script to correctly parse comment blocks,
+# a special comment block has to be used. Any comments starting
+# by /* are ignored, only those starting by /** are parsed
+# by this script. Terminating a comment block can be done using
+# two methods, either with the normal comment block end */
+# or the double comment block end **/. The normal comment block
+# is meant to precede a function prototype like this example :
 #/**
 # *
 # *
 # */
 #extern void somefunc(int foo, int bar);
 
-# the actual stuff that will be put in the man page will need to be enclosed
-# between the /** and the */ this is how the script will know the end of the
-# things to parse.
+# The double ending comment block simply parses the comment and nothing
+# else, here is an example :
+# /**
+#  *
+#  *
+#  **/
+# using this method, a near infinite amount of man pages can be created
+# without the need to have a function. The only drawback is that the
+# name macro (see @name below) _has_ to be set because there's no 
+# function prototype to gather the name of the man page file from.
 
-# the script will also fetch data from the extern prototype too, it will 
-# get the function name, return type, variable types and names it will parse
-# until it goes to the ending ';' and it will ignore any ( and ) characters.
+# an ending comment block of type */ actually has a special parser
+# which also parses the next line's function prototype.
+# It gets the function name, return type, variable type and variable name. 
 
-# inside the /** */ comments, a special "language" has to be used which uses
+# inside the /** (*)*/ comments, a special "language" has to be used which uses
 # commands or variables. commands/variables always start with the character '@'
 # for example : @description
-# the script will parse all the current data (the text) into the last "command"
+
+# the script parses all the current data (the text) into the last "command"
 # issued.
-# heres the complete list of those commands/variables and what they do :
+# here are the complete list of those commands/variables and what they do :
 #
 # take note that those commands can be entered in any order.
 #
 #
 #
-# @name		-- the name the man page file name will be, necessary for all except
-#		   the functions which automatically defaults to the function name.
+# @name		-- Name of the man page file. (not required for */ ending comments
+#					      but mandatory for **/ ending comments)
 #		   If this variable is present for a function prototype then it will
-#		   override the function name with this name.
-# @sdescri	-- this is the small description, the summary that should be about 1
-# 		   sentence.
-# @description	-- this is the exhaustive description, it can be of any length you want.
-# @param	-- this command is special, you can not just write @param , you also have
-#		   to put the param's "direction" (input output or both) in the form
-#		   @param[...] (see below) You don't need to specify which function 
-#		   argument the param goes to, it goes sequentially and remember to put a 
-#		   description for each @param[...].
-# @param[in]	-- the input type see @param
-# @param[out]	-- the output type see @param
-# @param[io]	-- both input and output see @param
+#		   override the function name with this value.
+# @sdescri	-- A small description, a summary that should only be about 1 sentence.
+# @description	-- An exhaustive description, it can be of any length.
+# @param[in]	-- Input argument type is used to signify that the particular variable
+#		   is meant as read only by the function. See @param for more details.
+# @param[out]	-- Output argument type, same as input but signifies that the variable
+#		   is meant to be output of the function. See @param for more details.
+# @param[io]	-- Both way argument type is used as both input and output at once, 
+#		   see @param for more details.
+# @param	-- Can not be used as is, has to be used in the form shown right above
+#		   like @param[in]. This argument has the particularity to be automatically
+#		   matched with arguments of the prototype function at hand.
+#		   Say theres 5 arguments in the function prototype, well a total amount of
+#		   5 @param[...] will need to be used to describe all the argument's meaning
+#		   and behavior.
 # @related	-- text after this (which should be functions or such) will be put in the see also
 #		   section.
 # @examples	-- text after this is put in the code examples section.
@@ -294,70 +308,60 @@ proc parseComment {comment name sdescri ldescri options returnval example errors
 
 	foreach word $comment {
 
-		#puts $word
+		puts "Parse all words : $word"
 
 		#set word [string trim $word \"*\"]
 
 		if {$word == "@name"} {
 			pushData $ctype $buffer extra
-
 			set ctype cname
 	
 			set buffer ""
 		} elseif {$word == "@sdescri"} {
 			pushData $ctype $buffer extra
-
 			set ctype small_d
 	
 			set buffer ""
 		} elseif {$word == "@description"} {
 			pushData $ctype $buffer extra
-
 			set ctype long_d
 	
 			set buffer ""
 		} elseif {$word == "@param\[in\]"} {
 			pushData $ctype $buffer extra
-
 			set ctype opt
 			set extra 0
 	
 			set buffer ""
 		} elseif {$word == "@param\[out\]"} {
 			pushData $ctype $buffer extra
-
 			set ctype opt
 			set extra 1
 	
 			set buffer ""
 		} elseif {$word == "@param\[io\]"} {
 			pushData $ctype $buffer extra
-
 			set ctype opt
 			set extra 2
 	
 			set buffer ""
 		} elseif {$word == "@related"} { 
 			pushData $ctype $buffer extra
-
 			set ctype rela
 	
 			set buffer ""
 		} elseif {$word == "@examples"} {
 			pushData $ctype $buffer extra
-
 			set ctype exmp
 	
 			set buffer ""
 		} elseif {$word == "@returnval"} {
 			pushData $ctype $buffer extra
-
 			set ctype retv
 	
 			set buffer ""
 		} elseif {$word == "@errors"} {
 			pushData $ctype $buffer extra
-
 			set ctype err
 	
 			set buffer ""
@@ -448,6 +452,7 @@ proc Clean_String {str} {
 	set tochange $new_string
 }
 
+# parses strictly a comment block
 proc genMan_Unique {comment} {
 	global individual
 	global config
@@ -530,6 +535,7 @@ proc genMan_Unique {comment} {
 
 }
 
+# parses a comment block followed by a function prototype
 proc genMan {comment function} {
 	global individual
 	global config
