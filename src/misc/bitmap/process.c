@@ -459,7 +459,7 @@ parse_bitmap_header(nFILE *input)
 	return buf;
 }
 
-void
+static void
 process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
 	u32 i = 0;
@@ -593,7 +593,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		ctx->row_amount = ctx->wmult;
 
 		/* we advance up to the point where the bitmap's data are. */
-#if USE_ZLIB 1
+#ifdef USE_ZLIB
 		gzseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #else /* NOT USE_ZLIB */
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
@@ -706,7 +706,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 			
 			Neuro_CleanEBuf(&ctx->bmap_colors);
 
-#if USE_ZLIB 1 
+#ifdef USE_ZLIB
 			if (ctx->f_bitmap)
 				gzclose(ctx->f_bitmap);
 #else /* NOT USE_ZLIB */

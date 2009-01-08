@@ -398,7 +398,7 @@ Neuro_ArgOption(char *string, int options, void (*action)(char *data))
 }
 
 int
-Neuro_ArgProcess()
+Neuro_ArgProcess(void)
 {
 	/* interesting notes : 
 	 * - options can contain more than one option in it
@@ -480,7 +480,7 @@ Neuro_ArgProcess()
 				if (strchr(input->string, '='))
 				{
 					_err = 2;
-					NEURO_WARN(0, "Invalid use of the option character \'-\', it may only be used alone or with other options, \nto pass an argument to it, please use either the long version of the option (ie --foo=bar)\nor have a space between the option and the argument (ie -f bar).");
+					NEURO_WARN("Invalid use of the option character \'-\', it may only be used alone or with other options, \nto pass an argument to it, please use either the long version of the option (ie --foo=bar)\nor have a space between the option and the argument (ie -f bar).", NULL);
 				}
 				else
 				{
@@ -691,7 +691,7 @@ Neuro_ArgProcess()
 }
 
 void
-Neuro_ArgClean()
+Neuro_ArgClean(void)
 {
 	Neuro_CleanEBuf(&bufinput);
 	Neuro_CleanEBuf(&loptions);

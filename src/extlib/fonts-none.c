@@ -65,13 +65,13 @@ Lib_CleanFont(font_object *font)
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Lib_FontsInit()
+Lib_FontsInit(void)
 {
 	return 0;
 }
 
 void
-Lib_FontsExit()
+Lib_FontsExit(void)
 {
 
 }

@@ -268,7 +268,7 @@ filter_handleElem(const char *namespace, char *elem)
 /*-------------------- Global Functions ----------------------------*/
 
 int
-IsLittleEndian()
+IsLittleEndian(void)
 {
 	int i = 1;
 	char *p;
@@ -556,7 +556,7 @@ Neuro_s(const char *control, ...)
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Debug_Init()
+Debug_Init(void)
 {
 	if (Neuro_EBufIsEmpty(debug_l) && debug_l == NULL)
 	{
@@ -568,7 +568,7 @@ Debug_Init()
 }
 
 void
-Debug_Clean()
+Debug_Clean(void)
 {
 	Neuro_CleanEBuf(&debug_l);
 

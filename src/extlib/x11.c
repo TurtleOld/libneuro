@@ -365,7 +365,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	
 		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
 			200, 200, swidth, sheight, 1, CopyFromParent,
-			CopyFromParent, CopyFromParent, CWBackingStore | CWBackPixel, &wattrib);
+			CopyFromParent, NULL, CWBackingStore | CWBackPixel, &wattrib);
 			
 		tmp->cwin = &tmp->win;
 	
@@ -1122,7 +1122,7 @@ Lib_GiveVobjectProp(v_object *source, Rectan *output)
 }
 
 u32
-Lib_GetDefaultDepth()
+Lib_GetDefaultDepth(void)
 {
 	return DefaultDepth(dmain->display, dmain->screen);
 }
@@ -1192,7 +1192,7 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 }
 
 void
-Lib_VideoExit()
+Lib_VideoExit(void)
 {
 	/* clean the tiny pixel buffer for pixels I/O */
 #if temp
@@ -1312,7 +1312,7 @@ Lib_GetMouseState(i32 *x, i32 *y)
 }
 
 void
-Lib_EventPoll()
+Lib_EventPoll(void)
 {
 
 }
@@ -1419,13 +1419,13 @@ Lib_PollEvent(void *event_input)
 }
 
 int
-Lib_EventsInit()
+Lib_EventInit(void)
 {
 	return 0;
 }
 
 void
-Lib_EventsExit()
+Lib_EventExit(void)
 {
 	
 }

@@ -47,10 +47,10 @@ NEURO_MODULE_CHANNEL("bitmap");
 
 /*-------------------- Static Functions ----------------------------*/
 
-int
+static int
 Ngetc(nFILE *input)
 {
-#if USE_ZLIB 1
+#ifdef USE_ZLIB
 	i32 ret = 0;
 	u8 data = 0;
 	

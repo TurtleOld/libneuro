@@ -401,7 +401,7 @@ Graphics_PushRaw(RAW_ENGINE *raw)
 
 
 INSTRUCTION_ENGINE *
-Graphics_GetFirstElem()
+Graphics_GetFirstElem(void)
 {
 	return first_element;
 }
@@ -413,7 +413,7 @@ Graphics_SetFirstElem(INSTRUCTION_ENGINE *elem)
 }
 
 INSTRUCTION_ENGINE *
-Graphics_GetLastElem()
+Graphics_GetLastElem(void)
 {
 	return last_element;
 }
@@ -425,13 +425,13 @@ Graphics_SetLastElem(INSTRUCTION_ENGINE *elem)
 }
 
 EBUF *
-Graphics_GetRawBuffer()
+Graphics_GetRawBuffer(void)
 {
 	return Raw;
 }
 
 EBUF *
-Graphics_GetQueueBuffer()
+Graphics_GetQueueBuffer(void)
 {
 	return Queue;
 }
@@ -439,7 +439,7 @@ Graphics_GetQueueBuffer()
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Graphics_PainterInit()
+Graphics_PainterInit(void)
 {
 	i32 screenwidth, screenheight;
 	
@@ -459,7 +459,7 @@ Graphics_PainterInit()
 }
 
 int
-Graphics_PainterReset()
+Graphics_PainterReset(void)
 {
 	Neuro_CleanEBuf(&Raw);
 	Neuro_CleanEBuf(&Queue);
@@ -474,7 +474,7 @@ Graphics_PainterReset()
 }
 
 void
-Graphics_PainterClean()
+Graphics_PainterClean(void)
 {
 	NEURO_TRACE("Raw total %d", Neuro_GiveEBufCount(Raw));
 	NEURO_TRACE("Queue total %d", Neuro_GiveEBufCount(Queue));

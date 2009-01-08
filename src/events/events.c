@@ -41,6 +41,11 @@ typedef struct KEYBEVENT
 	u8 lastState;		/* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
 	void (*callback)(); 	/* a callback we will call when key is pressed*/
 	void (*callbackReleased)(); /* a callback we will call when the key is no longer pressed */
+	/* second version of the above callbacks, used when a single KEYBEVENT is set to catch all the keysyms 
+	 * and return them to the end program.
+	 */ 
+	void (*callback2)(u32 keysym);
+	void (*callbackReleased2)(u32 keysym);
 	u8 send_key; 		/* werther or not we send to key value as argument 
        				 * to the callback.
 				 */
@@ -118,7 +123,7 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
 				if (key->send_key == 0)
 					(key->callback)();
 				else
-					(key->callback)(key->key);
+					(key->callback2)(key->key);
 			}
 		}
 	}
@@ -136,7 +141,7 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
 				if (key->send_key == 0)
 					(key->callbackReleased)();
 				else
-					(key->callbackReleased)(key->key);
+					(key->callbackReleased2)(key->key);
 			
 			}
 		}
@@ -150,7 +155,7 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
 				if (key->send_key == 0)
 					(key->callback)();
 				else
-					(key->callback)(key->key);
+					(key->callback2)(key->key);
 			}
 		}
 	}
@@ -162,7 +167,7 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
  * corresponding callbacks.
  */
 static void
-handle_keys()
+handle_keys(void)
 {
 	u32 total;
 	KEYBEVENT *tmp;
@@ -246,7 +251,7 @@ trigger_button(MOUSEEVENT *mouse, int x, int y, int status)
  * 
  */
 static void
-handle_mouse()
+handle_mouse(void)
 {
 	u8 button;
 	int x, y;
@@ -330,7 +335,8 @@ mouseListChange(u32 button, void (*callback)(int x, int y), MOUSEEVENT *ptr, u8 
 }
 
 static void
-addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), u8 send_key)
+addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), 
+		void (*pressedCallback2)(u32 keysym), void (*releasedCallback2)(u32 keysym), u8 send_key)
 {
 	KEYBEVENT *tmp = NULL;
 
@@ -369,24 +375,40 @@ addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(), u
 
 	tmp->key = keysym;
 	if (pressedCallback)
-		tmp->callback = pressedCallback;
+	{
+		if (send_key)
+			tmp->callback2 = pressedCallback2;
+		else
+			tmp->callback = pressedCallback;
+	}
 	if (releasedCallback)
-		tmp->callbackReleased = releasedCallback;
+	{
+		if (send_key)
+			tmp->callbackReleased2 = releasedCallback2;
+		else
+			tmp->callbackReleased = releasedCallback;
+	}
 	
 	tmp->send_key = send_key;
 	tmp->lastState = 0;
 }
 
 static void
-addKeyPressEvent(u32 keysym, void (*callback)(), u8 send_key)
+addKeyPressEvent(u32 keysym, void (*callback)(), void (*callback2)(u32 keysym), u8 send_key)
 {
-	addKeyEvent(keysym, callback, NULL, send_key);
+	if (send_key)
+		addKeyEvent(keysym, NULL, NULL, callback2, NULL, send_key);
+	else
+		addKeyEvent(keysym, callback, NULL, NULL, NULL, send_key);
 }
 
 static void
-addKeyReleaseEvent(u32 keysym, void (*callback)(), u8 send_key)
+addKeyReleaseEvent(u32 keysym, void (*callback)(), void (*callback2)(u32 keysym), u8 send_key)
 {
-	addKeyEvent(keysym, NULL, callback, send_key);
+	if (send_key)
+		addKeyEvent(keysym, NULL, NULL, NULL, callback2, send_key);
+	else
+		addKeyEvent(keysym, NULL, callback, NULL, NULL, send_key);
 }
 
 /*--- Global Functions ---*/
@@ -403,29 +425,29 @@ Neuro_GetMousePos(int *x, int *y)
 void 
 Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)())
 {
-	addKeyPressEvent(keysym, callback, 0);
+	addKeyPressEvent(keysym, callback, NULL, 0);
 }
 
 void 
 Neuro_AddReleasedKeyEvent(u32 keysym, void (*callback)())
 {
-	addKeyReleaseEvent(keysym, callback, 0);
+	addKeyReleaseEvent(keysym, callback, NULL, 0);
 }
 
 void
 Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym))
 {
-	addKeyPressEvent(keysym, callback, 1);
+	addKeyPressEvent(keysym, NULL, callback, 1);
 }
 
 void
 Neuro_AddReleasedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym))
 {
-	addKeyReleaseEvent(keysym, callback, 1);
+	addKeyReleaseEvent(keysym, NULL, callback, 1);
 }
 
 void
-Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
+Neuro_AddPressedMouseEvent(u32 button, void (*callback)(int x, int y))
 {
 	MOUSEEVENT *tmp;
 	u32 total = 0;
@@ -459,7 +481,7 @@ Neuro_AddPressedMouseEvent(u32 button, void (*callback)())
 }
 
 void
-Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
+Neuro_AddReleasedMouseEvent(u32 button, void (*callback)(int x, int y))
 {
 	MOUSEEVENT *tmp;
 	u32 total = 0;
@@ -492,7 +514,7 @@ Neuro_AddReleasedMouseEvent(u32 button, void (*callback)())
 }
 
 void
-Neuro_CleanKeyboard()
+Neuro_CleanKeyboard(void)
 {
 	Neuro_CleanEBuf(&_klist);
 	_klist = NULL;
@@ -501,7 +523,7 @@ Neuro_CleanKeyboard()
 }
 
 void
-Neuro_CleanMouse()
+Neuro_CleanMouse(void)
 {
 	Neuro_CleanEBuf(&_mlist);
 	_mlist = NULL;
@@ -586,14 +608,14 @@ Events_TriggerKey(u32 keysym, int keystatus)
 
 
 void
-Events_Poll()
+Events_Poll(void)
 {	
 	handle_keys();
 	handle_mouse();
 }
 
 int
-Events_Init()
+Events_Init(void)
 {
 	Neuro_CreateEBuf(&_klist);
 	Neuro_CreateEBuf(&_mlist);
@@ -607,7 +629,7 @@ Events_Init()
 }
 
 void
-Events_Clean()
+Events_Clean(void)
 {
 	Neuro_CleanEBuf(&_klist);
 	Neuro_CleanEBuf(&_mlist);

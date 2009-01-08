@@ -109,7 +109,7 @@ Lib_UpdateRect(v_object *source, Rectan *src)
 }
 
 u32
-Lib_GetDefaultDepth()
+Lib_GetDefaultDepth(void)
 {
 	return 0;
 }
@@ -165,7 +165,7 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 }
 
 void
-Lib_VideoExit()
+Lib_VideoExit(void)
 {
 
 }
@@ -185,7 +185,7 @@ Lib_GetMouseState(i32 *x, i32 *y)
 }
 
 void
-Lib_EventPoll()
+Lib_EventPoll(void)
 {
 
 }
@@ -197,13 +197,13 @@ Lib_PollEvent(void *event)
 }
 
 int
-Lib_EventsInit()
+Lib_EventInit(void)
 {
 	return 0;
 }
 
 void
-Lib_EventsExit()
+Lib_EventExit(void)
 {
 	
 }

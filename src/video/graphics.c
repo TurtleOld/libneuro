@@ -130,7 +130,7 @@ Graphics_DrawIsPresent(v_elem *elem)
 }
 
 u8 
-Graphics_GetSafeDrawOp()
+Graphics_GetSafeDrawOp(void)
 {
 	return safe_draw_operation;
 }
@@ -144,6 +144,7 @@ Graphics_SetSafeDrawOp(u8 safe)
 	safe_draw_operation = safe;
 }
 
+#ifdef interim
 /* might become obsolete */
 void
 Neuro_SetFrameSkip(u32 frameskip)
@@ -157,25 +158,27 @@ Neuro_SetFpsLimit(u32 fpsLimit)
 {
 	fps_limit = fpsLimit;
 }
+#endif /* interim */
 
 void
-Graphics_RedrawScreen()
+Graphics_RedrawScreen(void)
 {
 	draw_this_cycle = 1;
 }
 
 void
-Graphics_ResetScreenDraw()
+Graphics_ResetScreenDraw(void)
 {
 	draw_this_cycle = 0;
 }
 
 void
-Graphics_SetDrawnLastCycle()
+Graphics_SetDrawnLastCycle(void)
 {
 	drawn_last_cycle = 1;
 }
 
+#ifdef interim
 /* might become obsolete
  *
  * clean the whole screen 
@@ -189,6 +192,7 @@ Graphics_RefreshScreen()
 
 	safe_draw_operation = 0;
 }
+#endif /* interim */
 
 void
 Neuro_GiveFPS(t_tick *output)
@@ -197,7 +201,7 @@ Neuro_GiveFPS(t_tick *output)
 }
 
 void *
-Neuro_GetScreenBuffer()
+Neuro_GetScreenBuffer(void)
 {
 	return (void*)sclScreen;
 }
@@ -205,7 +209,7 @@ Neuro_GetScreenBuffer()
 /*--- Poll ---*/
 
 void
-Graphics_Poll()
+Graphics_Poll(void)
 {	
 	if (debug_instruction_buffer || dynamic_debug)
 		NEURO_TRACE("cycle", NULL);
@@ -314,7 +318,7 @@ Graphics_Poll()
 			Lib_BlitObject(sclScreen, NULL, screen, NULL);
 		
 		if (second_screen_buffer == 0)
-			updScreen(0);
+			updScreen(NULL);
 		
 		draw_this_cycle = 0;
 	}
@@ -322,13 +326,13 @@ Graphics_Poll()
 	if (second_screen_buffer)
 	{
 		Lib_BlitObject(sclScreen2, NULL, screen, NULL);
-		updScreen(0);
+		updScreen(NULL);
 	}
 }
 
 /*--- Constructor Destructor ---*/
 int
-Graphics_Init()
+Graphics_Init(void)
 {
 	int _err_ = 0;
 
@@ -389,7 +393,7 @@ Graphics_Init()
 }
 
 void 
-Graphics_Clean()
+Graphics_Clean(void)
 {		
 
 	Graphics_PainterClean();

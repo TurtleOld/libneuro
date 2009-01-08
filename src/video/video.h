@@ -118,8 +118,6 @@ extern int Graphics_RedrawSection(INSTRUCTION_ENGINE *indep);
 
 extern void Graphics_CoreDrawAll(); /* new for draw_objects */
 
-extern int Graphics_RedrawSection(); /* new for redraw_erased_for_object */
-
 extern void Graphics_CoreCleanAll();
 
 extern void Graphics_CoreCleanDoneDynamics(); /* new for clean_drawn_objects */
@@ -140,6 +138,19 @@ extern void Graphics_DebugPrintMissing(EBUF *src); /* new for print_missing */
 
 extern void Graphics_DebugQueueIntegrityCheck(); /* new for Queue_Integrity_Check */
 
+
+/* inside pixels.c *obsolete* don't use just yet */
+extern void Graphics_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel);
+
+extern u32 Graphics_GetPixel(v_object *vobj, u32 x, u32 y);
+
+extern void Graphics_CleanPixels();
+
+extern int Pixels_Init();
+
+extern void Pixels_Clean();
+
+extern void Pixels_Poll();
 
 
 /*

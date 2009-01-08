@@ -75,6 +75,8 @@ extern u32 Neuro_MapRGB(u8 R, u8 G, u8 B);
  * returns a u32 that contains a 24bit color system. 
  */
 extern u32 Neuro_GiveRGB(u8 R, u8 G, u8 B);
+
+extern u32 Neuro_GiveRGBA_special(u8 R, u8 G, u8 B);
 /*--- end RGB ---*/
 
 /*--- util ---*/
@@ -113,6 +115,10 @@ extern void Neuro_VerticalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
 extern void Neuro_HorizontalBoundCrop(Rectan *indep, Rectan *isrc, Rectan *idst);
 
+/* substract num2 from num1 and returns the answer only if it is positive,
+ * if it is not, returns 0 
+ */
+extern i16 Neuro_CalcOnlyPos(i16 num1, i16 num2);
 /*--- end crop ---*/
 
 /*--- obsolete ---*/

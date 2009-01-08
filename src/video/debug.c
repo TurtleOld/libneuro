@@ -57,7 +57,7 @@ NEURO_MODULE_CHANNEL("video/debug");
 
 /* debug function */
 void
-Graphics_DebugPrintQueue() 
+Graphics_DebugPrintQueue(void) 
 {
 	INSTRUCTION_ENGINE *cur;
 	
@@ -241,7 +241,7 @@ Graphics_DebugPrintMissing(EBUF *src)
 }
 
 void
-Graphics_DebugQueueIntegrityCheck()
+Graphics_DebugQueueIntegrityCheck(void)
 {
 	INSTRUCTION_ENGINE *cur; /* ordered element from the queue */
 	u32 qtotal; /* the queue engine buffer total decrementor */

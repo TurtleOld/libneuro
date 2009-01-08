@@ -362,13 +362,13 @@ Lib_CleanFont(font_object *font)
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Lib_FontsInit()
+Lib_FontsInit(void)
 {
 	return FT_Init_FreeType(&font_lib);
 }
 
 void
-Lib_FontsExit()
+Lib_FontsExit(void)
 {
 	FT_Done_FreeType(font_lib);
 }

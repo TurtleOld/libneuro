@@ -109,7 +109,7 @@ Bitmap_CreateCTX(const char *path)
 
 	if (output == NULL)
 		return NULL;
-#if USE_ZLIB 1
+#ifdef USE_ZLIB
 	output->f_bitmap = gzopen(path, "rb"); /* can also be used for non compressed files */
 #else /* NOT USE_ZLIB */
 	output->f_bitmap = fopen(path, "rb");

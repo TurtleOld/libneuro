@@ -10,7 +10,7 @@
 #include <neuro_engine.h>
 #include <ebuf.h>
 
-#if USE_ZLIB 1
+#ifdef USE_ZLIB
 /* this is used to open the bitmaps, 
  * the beauty of zlib is it works 
  * for compressed and uncompressed

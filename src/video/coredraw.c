@@ -278,7 +278,7 @@ Graphics_DestroyElement(INSTRUCTION_ENGINE *elem)
 }
 
 void
-Graphics_CoreDrawAll()
+Graphics_CoreDrawAll(void)
 {
 	Rectan isrc, idst;
 	INSTRUCTION_ENGINE *cur, *last = NULL;
@@ -511,7 +511,7 @@ Graphics_CoreDrawAll()
 }
 
 void
-Graphics_SetAllToRedraw()
+Graphics_SetAllToRedraw(void)
 {
 	INSTRUCTION_ENGINE *cur;
 	
@@ -767,7 +767,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 }
 
 void
-Graphics_CoreCleanAll()
+Graphics_CoreCleanAll(void)
 {
 	INSTRUCTION_ENGINE *cur;
 
@@ -792,7 +792,7 @@ Graphics_CoreCleanAll()
 
 /* only clean those with the type TDRAW_DYNAMIC_CLEAN */
 void
-Graphics_CoreCleanDoneDynamics()
+Graphics_CoreCleanDoneDynamics(void)
 {
 	INSTRUCTION_ENGINE *cur;
 

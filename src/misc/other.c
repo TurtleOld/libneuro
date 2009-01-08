@@ -35,7 +35,10 @@
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 #else /* NOT WIN32 */
+	#ifndef __USE_BSD
 	#define __USE_BSD
+	#endif /* NOT __USE_BSD */
+
 	#include <unistd.h>
 #endif /* NOT WIN32 */
 
@@ -50,7 +53,7 @@
 
 NEURO_MODULE_CHANNEL("other");
 
-u8
+static u8
 Chk_bound(Rectan *rec, i16 x, i16 y, i16 w, i16 h)
 {
 	if (rec->x <= x && (rec->x + rec->w) >= x)
@@ -123,7 +126,7 @@ Neuro_Sleep(u32 t)
 }
 
 u32
-Neuro_GetTickCount()
+Neuro_GetTickCount(void)
 {
 #ifdef WIN32
 	if (IsLittleEndian())
@@ -159,7 +162,7 @@ Neuro_SepChr(const unsigned char chr, char *source, int *items)
 
 	
 	if (slen == 0)
-		return 0;
+		return NULL;
 	while ((last_ptr + o_ptr) < slen)
 	{
 		if (o_ptr == 0)
@@ -759,7 +762,7 @@ Neuro_PutPixel(v_object *srf, int x, int y, u32 pixel)
 }
 
 void
-Neuro_PrintFPS()
+Neuro_PrintFPS(void)
 {
 #if USE_VIDEO
 	t_tick fps;

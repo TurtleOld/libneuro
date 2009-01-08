@@ -60,7 +60,7 @@ typedef struct PIXEL_ENGINE
 /*-------------------- Static Functions ----------------------------*/
 
 static void
-cleanPixels()
+cleanPixels(void)
 {
 	EBUF *tmp;
 	Rectan buf;
@@ -132,7 +132,7 @@ Graphics_GetPixel(v_object *vobj, u32 x, u32 y)
 }
 
 void
-Graphics_CleanPixels()
+Graphics_CleanPixels(void)
 {
 	clean_pixel_in_this_cycle = 1;
 	
@@ -142,7 +142,7 @@ Graphics_CleanPixels()
 /*-------------------- Poll ----------------------------------------*/
 
 void
-Pixels_Poll()
+Pixels_Poll(void)
 {
 	
 }
@@ -150,7 +150,7 @@ Pixels_Poll()
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Pixels_Init()
+Pixels_Init(void)
 {
 	Neuro_CreateEBuf(&_Pixel);
 
@@ -158,7 +158,7 @@ Pixels_Init()
 }
 
 void
-Pixels_Clean()
+Pixels_Clean(void)
 {
 	Neuro_CleanEBuf(&_Pixel);
 }

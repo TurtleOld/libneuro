@@ -38,6 +38,7 @@
 
 #define NATIVE_BMP 1
 
+#include <events.h>
 #include <global.h>
 #include <graphics.h>
 #include <extlib.h>
@@ -673,7 +674,7 @@ Lib_UnlockVObject(v_object *vobj)
 }
 
 u32
-Lib_GetDefaultDepth()
+Lib_GetDefaultDepth(void)
 {
 	return options.bpp;
 }
@@ -718,7 +719,7 @@ Lib_GetVObjectData(v_object *vobj, u32 *flags, i32 *h, i32 *w, u32 *pitch,
 }
 
 void
-Lib_VideoExit()
+Lib_VideoExit(void)
 {
 	SDL_Quit();
 }
@@ -739,7 +740,7 @@ Lib_CheckKeyStatus(u32 key)
 }
 
 void
-Lib_EventPoll()
+Lib_EventPoll(void)
 {
 	SDL_Event event;
 
@@ -811,14 +812,14 @@ Lib_PollEvent(void *s_event)
 }
 
 int
-Lib_EventsInit()
+Lib_EventInit(void)
 {
 	/* nothing needed, done in the video init */
 	return 0;
 }
 
 void
-Lib_EventsExit()
+Lib_EventExit(void)
 {
 	/* nothing needed, done in the video exit */
 }

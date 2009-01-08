@@ -61,7 +61,7 @@ Neuro_SetNeuroDebugFilter(const char *filter)
 /*-------------------- Poll ----------------------------------------*/
 
 int
-Neuro_Poll()
+Neuro_Poll(void)
 {
 	int _err = 0;
 	
@@ -82,7 +82,7 @@ Neuro_Poll()
 /*-------------------- Constructor Destructor ----------------------*/
 
 int
-Neuro_Init()
+Neuro_Init(void)
 {
 	int _err = 0;
 	
@@ -113,7 +113,7 @@ Neuro_Init()
 }
 
 void
-Neuro_Quit()
+Neuro_Quit(void)
 {
 	Lib_FontsExit();
 	Events_Clean();

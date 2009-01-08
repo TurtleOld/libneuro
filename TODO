@@ -1,5 +1,10 @@
 Things to do in the neuro library.
 
+man -- the function Neuro_EBufIsEmpty:
+	 - the documentation of the return 2 isn't
+	   present in the man page. It is the value
+	   returned when the input EBUF is NULL.
+
 docs -- add a configure entry for Tcl:
 	 - the configure script needs to
 	   check if Tcl is available to build the
