@@ -223,6 +223,21 @@ Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
 	total = &eng->total;
 	mem = &eng->mem;
 	
+	/*
+	if (amount == 1)
+	{
+		Neuro_AllocEBuf(eng, sptp, sobj);
+		return;
+	}*/
+
+	i = amount;
+
+	while (i-- > 0)
+	{
+		Neuro_AllocEBuf(eng, sptp, sobj);
+	}
+
+#if temp
 	/* we only do anything if the buffer doesn't contain anything 
 	 * to avoid memory leaks.
 	 */
@@ -233,7 +248,7 @@ Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
 		*mem = 0;
 
 	
-		i = *total;
+		i = *total + 1;
 
 		/* we need to allocate every * elements in the ** */
 		while (i-- > 0)
@@ -241,6 +256,7 @@ Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj)
 			(*buf)[i] = calloc(1, sobj);
 		}
 	}
+#endif /* temp */
 }
 
 void
