@@ -31,36 +31,66 @@
 extern "C" {
 #endif
 
-/*! TODO */
+/**
+ * @name
+ * Neuro_Events
+ *
+ * @sdescri
+ * A module which permits Input events like keyboard and mouse to be
+ * set to a callback which is called once they are triggered.
+ *
+ * @description
+ * Neuro Events module
+ * 
+ * @related
+ * Neuro_AddPressedKeyEvent(3), Neuro_AddReleasedKeyEvent(3),
+ * Neuro_AddPressedMouseEvent(3), Neuro_AddReleasedMouseEvent(3),
+ * Neuro_AddPressedMultiKeyEvent(3), Neuro_AddReleasedMultiKeyEvent(3),
+ * Neuro_CleanKeyboard(3), Neuro_CleanMouse(3), Neuro_GetMousePos(3)
+ **/
+
+/** TODO */
 extern void Neuro_AddPressedKeyEvent(u32 keysym, void (*callback)());
 
-/*! TODO */
+/** TODO */
 extern void Neuro_AddReleasedKeyEvent(u32 keysym, void (*callback)());
 
 
-/*! TODO */
+/** TODO */
 extern void Neuro_AddPressedMouseEvent(u32 button, void (*callback)(int x, int y));
 
-/*! TODO */
+/** TODO */
 extern void Neuro_AddReleasedMouseEvent(u32 button, void (*callback)(int x, int y));
 
 
-/* same as the normal pressedkeyevent but also 
+/**
+ * @sdescri 
+ * same as the normal Neuro_AddPressedKeyEvent(3) function but also 
  * sends the key number as the first argument of
  * the callback so one callback can be used for
  * more than one key at once.
+ *
+ * @param[in]
+ * the keysym of the keyboard that is catched and sent to the callback.
+ *
+ * @param[in]
+ * this callback is called with the keysym that was catched.
+ *
+ * @related
+ * Neuro_AddReleasedMultiKeyEvent(3)
  */
 extern void Neuro_AddPressedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym));
 
+/** TODO */
 extern void Neuro_AddReleasedMultiKeyEvent(u32 keysym, void (*callback)(u32 keysym));
 
-/*! TODO */
+/** TODO */
 extern void Neuro_CleanKeyboard();
 
-/*! TODO */
+/** TODO */
 extern void Neuro_CleanMouse();
 
-/* puts the mouse coordinates into x and y */
+/** puts the mouse coordinates into x and y */
 extern void Neuro_GetMousePos(int *x, int *y);
 
 

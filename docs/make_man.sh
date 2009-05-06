@@ -11,6 +11,8 @@ echo "Libneuro Functions" >> $tmpfile
 
 argument=$(echo ../include/neuro/*.h)
 
-tclsh ./neuroman.tcl -c $tmpfile -i $argument
+time tclsh ./neuroman.tcl -c $tmpfile -i $argument
+
+time ./neuroman $argument
 
 rm $tmpfile

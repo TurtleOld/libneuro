@@ -529,6 +529,8 @@ Neuro_CleanMouse(void)
 	_mlist = NULL;
 	
 	Neuro_CreateEBuf(&_mlist);
+
+	Neuro_SetcallbEBuf(_mlist, clean_mouse_list);
 }
 
 

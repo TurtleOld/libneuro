@@ -30,6 +30,44 @@
 extern "C" {
 #endif
 
+/**
+ * @name 
+ * Neuro_Debug
+ *
+ * @description
+ * <p>
+ * Module debug
+ * </p>
+ *
+ * <h2>Filter format</h2>
+ * <p>
+ * Filters establish what channel is or not to be outputted
+ * to the default error channel. A filter is a string which
+ * contains space separated statements. Each statements 
+ * contain a channel and each channel can have one of up to
+ * 3 classes plus a special catch all class. The format for
+ * channels and classes is : "class[+|-]channel". 
+ * (a real example here would be "warn+bitmap" where the 
+ * bitmap channel will output any warnings it encounter)
+ * A special channel catch all "all" can also be used
+ * basicly enabling the inclusion of all the channels or
+ * classes and the ability to remove those that aren't
+ * needed, like : "all+all trace-bitmap".
+ *
+ * <p>
+ * Here's a list of the classes :
+ * <ul>
+ * 	<li>warn</li>
+ * 	<li>error</li>
+ * 	<li>trace</li>
+ * 	<li>all</li>
+ * </ul>
+ *</p>
+ *
+ * </p>
+ **/
+
+/** TODO */
 enum DEBUG_CLASS
 {
 	DBG_Start,
@@ -42,30 +80,37 @@ enum DEBUG_CLASS
 	DBG_End
 };
 
-/* don't call this function directly, use Neuro_SetDebugFilter(3) */
+/** don't call this function directly, use Neuro_SetDebugFilter(3) */
 extern void Neuro_SetCoreDebugFilter(const char *project_name, const char *filter);
 
+/** TODO */
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
+/** TODO */
 extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...);
 
+/** TODO */
 #define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
 	       	"error", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
+/** TODO */
 #define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
 		"warn", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
+/** TODO */
 #define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
 	       	"trace", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
 
+/** TODO */
 #define NEURO_PROJECT_NAME(x) char *NEURO_PROJECT_NAMESPACE=x
 
+/** TODO */
 #define NEURO_MODULE_CHANNEL(x) static char *NEURO_CURRENT_CHANNEL=x
 
-/* This fonction can be used to
+/** This fonction can be used to
  * extend the use of the 3 debug
  * functions in this module :
  * NEURO_ERROR _WARNING and _DEBUG.
@@ -74,6 +119,7 @@ extern void Neuro_DebugChannel(const char *project_name, const char *channel, co
  * to be passed to the resulting
  * message.
  *
+ * @examples
  * example would be :
  * NEURO_ERROR("%s", Neuro_s("Debug failed with code %d at loop #%d", errno, cycle_num));
  *
@@ -102,8 +148,12 @@ extern char *Neuro_s(const char *control, ...);
 		else			\
 			0;})
 */
+
+/** */
 extern int IsLittleEndian();
 
+
+/* internal only */
 extern int Debug_Init();
 extern void Debug_Clean();
 

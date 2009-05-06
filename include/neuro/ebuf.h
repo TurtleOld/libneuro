@@ -30,100 +30,120 @@
  * Neuro_EBuf
  *
  * @description
- * IN SHORT : \n \n
+ * <h2>IN SHORT :</h2>
  *
- * \\fIEBuf\\fR stands for Engine Buffer. 
- * Its primary use is to make structures  
- * \\fIallocation\\fR and \\fIreallocation\\fR quick 
- * and easy; It provides \\fIsecure\\fR and easy ways to 
- * dynamically \\fIadd\\fR, \\fIremove\\fR and \\fImodify\\fR entries 
- * from a buffer. 
- * \n \n \n
- *
- * .SH\n
- * INTRODUCTION : \n \n
- *
- * This \\fImanual\\fR presents the way the module has
- * to be used (which \\fIfunctions\\fR to call and in what order) 
- * \\fIbriefly\\fR,
- * without going into too much details. The goal of this \\fImanual\\fR
+ * <p>
+ * <i>EBuf</i> stands for Engine Buffer. 
+ * Its primary use is to make structures <i>allocation</i> 
+ * and <i>reallocation</i> quick and easy; It provides 
+ * <i>secure</i> and easy ways to dynamically <i>add</i>, 
+ * <i>remove</i> and <i>modify</i> entries from a buffer. 
+ * </p>
+ *   
+ * <h2>INTRODUCTION :</h2>
+ * <p>
+ * This <i>manual</i> presents the way the module has
+ * to be used (which <i>functions</i> to call and in what order) 
+ * <i>briefly</i>,
+ * without going into too much details. The goal of this <i>manual</i>
  * is to give a general insight as to which functions are 
- * needed to attain a result. \n \n \n
+ * needed to attain a result.
+ * </p>
  *
- * .SH\n
- * BEGINNING : \n \n
- *
+ * <h2>BEGINNING :</h2>
+ * <p>
  * To make use of even the slightest of this module, the first 
- * requirement is to create a \\fIpointer\\fR to an EBUF type. \n \n
+ * requirement is to create a <i>pointer</i> to an EBUF(3) type.  
+ * </p>
  *
- * \\fIhere's an example\\fR : EBUF *abuffer; \n \n
+ * <p><i>here's an example</i> : EBUF *abuffer;</p>
  *
+ * <p>
  * You cannot use a direct variable like : EBUF abuffer  --
  * for parity reasons(safegard of the data integrity),
  * the content of the structure is to remain hidden
- * from external programs. \n 
+ * from external programs.  
+ * </p>
  *
+ * <p>
  * The EBuf module is completely reentrant, meaning it does 
  * not contain global data in the module, making it
- * thread safe. \n \n \n
+ * thread safe.   
+ * </p>
  *
- * .SH\n
- * INITIALISING AND FREEING : \n \n
+ * <h2>INITIALISING AND FREEING :</h2>
  *
- * Now that the EBUF pointer is created, the next step is to 
+ * <p>
+ * Now that the EBUF(3) pointer is created, the next step is to 
  * initialize it by using Neuro_CreateEBuf(3). Among other, 
  * it allocates enough memory for its own internal data and 
- * then resets them to default initial values. \n
+ * then resets them to default initial values. 
+ * </p>
  *
+ * <p>
  * When no longer needed, the pointer should be freed by using
- * Neuro_CleanEBuf(3). It frees the EBUF's internal buffer 
- * completely. In the case that the use of the EBUF pointer
+ * Neuro_CleanEBuf(3). It frees the EBUF(3)'s internal buffer 
+ * completely. In the case that the use of the EBUF(3) pointer
  * is needed after it is freed, the call of Neuro_CreateEBuf(3)
  * is required again. In the case that just one element 
  * in the buffer needs to be freed, the use of
- * Neuro_SCleanEBuf(3) is required. \n 
+ * Neuro_SCleanEBuf(3) is required.  
+ * </p>
  *
+ * <p>
  * In addition to normal freeing, you can also set a callback
  * right after the initialization using Neuro_SetcallbEBuf(3). 
  * The callback will be called for every elements that the 
- * EBUF contains right before they are freed (by either calling 
+ * EBUF(3) contains right before they are freed (by either calling 
  * Neuro_CleanEBuf(3) or Neuro_SCleanEBuf(3)), permitting 
  * the manual freeing of allocated pointers inside the structure. 
- * Among other, this permits EBUF pointers to contain other
- * EBUF pointers and/or manually allocated pointers and the
- * hability to free them cleanly.\n \n 
+ * Among other, this permits EBUF(3) pointers to contain other
+ * EBUF(3) pointers and/or manually allocated pointers and the
+ * hability to free them cleanly.  
+ * </p>
  *
- * NOTE : Neuro_SCleanEBuf(3) \\fIdoesn't\\fR keep the data order in the
+ * <p>
+ * <b>NOTE :</b> Neuro_SCleanEBuf(3) <i>doesn't</i> keep the data order in the
  * buffer at all. It actually is made to break the data order in
- * order to be more efficient. \n \n
+ * order to be more efficient.  
+ * </p>
  *
- * \\fIhere's an example\\fR, 3 elements were allocated :
+ * <p>
+ * <i>here's an example</i>, 3 elements were allocated :
  * elements 1, 2 and 3. The element number 4 is added to this
  * buffer to form (1, 2, 3 and 4). The element number 2 is then
- * removed from the buffer, which would \\fInormally\\fR do
- * (1, 3 and 4) \\fIbut no\\fR, this actually does (1, 4 and 3). \n \n
+ * removed from the buffer, which would <i>normally</i> do
+ * (1, 3 and 4) <i>but no</i>, this actually does (1, 4 and 3).  
+ * </p>
  *
- * The last element is \\fIalways\\fR moved to the position of the
+ * <p>
+ * The last element is <i>always</i> moved to the position of the
  * deleted element which actually breaks the order of the data
- * in the buffer completely (but is necessary for performance reasons). \n \n
+ * in the buffer completely (but is necessary for performance reasons).  
+ * </p>
  *
- * \\fIIn order to fix this sorting quirk\\fR, all the steps in order to do so
- * are stated in the \\fIMOVING DATA\\fR section of this very manual.
- * \n \n \n
+ * <p>
+ * <i>In order to fix this sorting quirk</i>, all the steps in order to do so
+ * are stated in the <i>MOVING DATA</i> section of this very manual.
+ * </p>
+ *   
+ * <h2>ALLOCATING NEW DATA :</h2>
  *
- * ALLOCATING NEW DATA : \n \n
- *
+ * <p>
  * by now, we have initalised and possibly set a callback to the
  * instance, but we are still missing an important step :
- * creating a structure template which the instance EBUF will 
+ * creating a structure template which the instance EBUF(3) will 
  * contain. Theres only two ways to allocate : Neuro_AllocEBuf(3)
  * and Neuro_MultiAllocEBuf(3)
  * A basic structure template was used in the example in
  * the man page for the function Neuro_AllocEBuf(3) which is 
  * exactly the function we need to use to allocate a new element. 
- * \n \n \n
+ * </p>
+ *   
  *
- * READ AND WRITE : \n \n
+ * <h2>READ AND WRITE :</h2>
+ *
+ * <p>
  * reading/writing from an ebuf element is quite easy, it works kind of
  * the same as when you call malloc(). After calling Neuro_AllocEBuf(3)
  * or Neuro_MultiAllocEBuf(3), you can use either Neuro_GiveEBuf(3) 
@@ -133,63 +153,66 @@
  * data of the buffer, you need to fetch how much elements are contained.
  * For the purpose the function Neuro_GiveEBufCount(3) has to be used.
  * Then, when looping, a simple call to Neuro_GiveEBuf(3) has to be used
- * to get each data structs.\n \n \n
+ * to get each data structs.  
+ * </p>
  * 
- * MOVING DATA : \n \n
- *
+ * <h2>MOVING DATA :</h2>
+ *<p>
  * on certain occasions, you might want to change the order by which
- * the data in the EBUF buffer is organised. This is needed when you
+ * the data in the EBUF(3) buffer is organised. This is needed when you
  * want to sort the elements. For this effect, we actually need to use
  * the function Neuro_SetEBuf(3) to copy a certain element to a 
  * precise address on the buffer. This can't be used directly, we 
  * actually need to get the address of the element we want to change.
  * To get the address of a certain element, we need to use the function
- * Neuro_GiveEBufAddr(3). \n
- * Here's how we do it : \n \n
+ * Neuro_GiveEBufAddr(3). 
+ * Here's how we do it :  
+ * </p>
+ *
+ * @examples
+ *
+ * -- in this code example, we will transfer the last element into -- 
+ * -- a certain position in the buffer and transfer that certain -- 
+ * -- position into the last place. --  
+ *
+ * -- ST is a structure we use throughout the EBUF(3) man pages -- 
+ * -- if you have no idea whats it for, check a few man paged -- 
+ * -- on EBUF(3), especially the Neuro_SetcallbEBuf(3) one. -- 
+ * -- we assume this pointer already points to an EBUF(3) element -- 
+ * ST *element; 
+ * u32 elem_value;  
+ *
+ * ...  
  * 
- * .br
- * -- in this code example, we will transfer the last element into -- \n
- * -- a certain position in the buffer and transfer that certain -- \n
- * -- position into the last place. -- \n \n
+ * -- we need the array number of the element to call the next -- 
+ * -- functions -- 
+ * if (Neuro_GiveEBufElem(myeng, element, &elem_value)) 
+ * 	return; -- an error occured so we bail out -- 
  *
- * -- ST is a structure we use throughout the EBUF man pages -- \n
- * -- if you have no idea whats it for, check a few man paged -- \n
- * -- on EBUF, especially the Neuro_SetcallbEBuf(3) one. -- \n
- * -- we assume this pointer already points to an EBUF element -- \n
- * ST *element; \n
- * u32 elem_value; \n \n
+ * -- we then copy the last element into that certain's element address -- 
+ * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, elem_value), Neuro_GiveCurEBuf(myeng));  
  *
- * ... \n \n
- * 
- * -- we need the array number of the element to call the next -- \n
- * -- functions -- \n
- * if (Neuro_GiveEBufElem(myeng, element, &elem_value)) \n
- * 	return; -- an error occured so we bail out -- \n
+ * -- now that we copied the address of the last element into -- 
+ * -- our certain element. we need to copy our certain element into -- 
+ * -- the last position. --  
  *
- * -- we then copy the last element into that certain's element address -- \n
- * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, elem_value), Neuro_GiveCurEBuf(myeng)); \n \n
- *
- * -- now that we copied the address of the last element into -- \n
- * -- our certain element. we need to copy our certain element into -- \n
- * -- the last position. -- \n \n
- *
- * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, Neuro_GiveEBufCount(myeng)), element); \n \n
+ * Neuro_SetEBuf(myeng, Neuro_GiveEBufAddr(myeng, Neuro_GiveEBufCount(myeng)), element);  
  *
  * And thats it folks! Now, next time we loop the buffer, the order will have
  * a certain element at the end and the last element in what ever position our
  * certain element was.
- * \n \n \n
+ *   
  *
- * PLEASE NOTE : you CAN'T use the returned value of the function 
- * Neuro_GiveEBufCount(3) to FIGURE if the EBUF is empty (ie it 
- * doesn't contain any elements or isn't allocated by Neuro_CreateEBuf(3)).
- * FOR THIS, you have to use the function Neuro_EBufIsEmpty(3) which returns
- * 1 if the buffer can NOT be used and 0 if it CAN. Any use of an EBUF
- * which returns 1 when you call Neuro_EBufIsEmpty(3) can create VERY
- * unwanted results and VERY likely cause a segmentation fault.
+ * <b>PLEASE NOTE :</b> you <b>can't</b> use the returned value of the function 
+ * Neuro_GiveEBufCount(3) to figure if the EBUF(3) is <b>empty</b> (ie when it 
+ * doesn't contain any elements or when still unallocated).
+ * <b>for this</b>, you have to use the function Neuro_EBufIsEmpty(3) which returns
+ * 1 if the buffer can <b>not</b> be used and 0 if it <b>can</b>. Any use of an EBUF(3)
+ * which returns 1 when you call Neuro_EBufIsEmpty(3) can create <b>very</b>
+ * unwanted results and <b>very</b> likely cause a segmentation fault.
  *
  * @related
- * Neuro_CreateEBuf(3), Neuro_SetcallbEBuf(3), 
+ * EBUF(3), Neuro_CreateEBuf(3), Neuro_SetcallbEBuf(3), 
  * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3),
  * Neuro_CleanEBuf(3), Neuro_SCleanEBuf(3),
  * Neuro_GiveEBufCount(3), Neuro_GiveEBufElem(3),
@@ -212,7 +235,8 @@
 extern "C" {
 #endif
 
-/* 
+/**
+ * @description
  * the Engine Buffer object. A pointer variable 
  * of this type is required. 
  * Example : EBUF *myeng;
@@ -240,9 +264,9 @@ typedef struct EBUF EBUF;
  *
  * @examples 
  *
- * static EBUF *myeng; \n \n
+ * static EBUF *myeng;  
  * 
- * ... \n \n
+ * ...  
  *
  * Neuro_CreateEBuf(&myeng);
  *
@@ -277,44 +301,44 @@ extern void Neuro_CreateEBuf(EBUF **eng);
  *
  * @examples
  *
- * typedef struct ST \n
- * { \n
- * 	char *someString; \n
- * }ST; \n \n \n
+ * typedef struct ST 
+ * { 
+ * 	char *someString; 
+ * }ST;   
  *
  *
- * static EBUF *myeng; \n \n
+ * static EBUF *myeng;  
  *
- * static void \n
- * callbackclean(void *src) \n
- * { \n
- * 	ST *temp; \n \n
+ * static void 
+ * callbackclean(void *src) 
+ * { 
+ * 	ST *temp;  
  *
- * 	temp = (ST*)src; \n \n
+ * 	temp = (ST*)src;  
  *
- * 	if (temp) \n
- * 	{ \n
- * 		if (temp->someString) \n
- * 			free(temp->someString); \n
- * 	} \n
- * } \n \n
+ * 	if (temp) 
+ * 	{ 
+ * 		if (temp->someString) 
+ * 			free(temp->someString); 
+ * 	} 
+ * }  
  *
- * ... \n \n
+ * ...  
  *
- * Neuro_CreateEBuf(&myeng); \n \n
- * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
+ * Neuro_CreateEBuf(&myeng);  
+ * Neuro_SetcallbEBuf(myeng, callbackclean);  
  *
- * ... \n \n
+ * ...  
  *
- * ST *foo; \n \n
+ * ST *foo;  
  *
- * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST));  
  *
- * foo = Neuro_GiveCurEBuf(myeng); \n \n
+ * foo = Neuro_GiveCurEBuf(myeng);  
  *
- * foo->someString = (char*)malloc(50); \n \n
+ * foo->someString = (char*)malloc(50);  
  *
- * ... \n \n
+ * ...  
  *
  * Neuro_CleanEBuf(&myeng);
  *
@@ -353,24 +377,24 @@ extern void Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src));
  * the size of the normal form of the structure (usually sizeof can be used to find it).
  *
  * @examples
- * typedef struct ST \n
- * { \n
- * 	int foobar; \n
- * }ST; \n \n \n
+ * typedef struct ST 
+ * { 
+ * 	int foobar; 
+ * }ST;   
  *
  *
- * static EBUF *myeng; \n \n
+ * static EBUF *myeng;  
  *
  *
- * ... \n \n
+ * ...  
  *
- * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_CreateEBuf(&myeng);  
  *
- * ... \n \n
+ * ...  
  *
- * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST));  
  *
- * ... \n \n
+ * ...  
  *
  * Neuro_CleanEBuf(&myeng);
  *
@@ -425,13 +449,13 @@ extern void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj
  *
  * @examples 
  *
- * static EBUF *myeng; \n \n
+ * static EBUF *myeng;  
  * 
- * ... \n \n
+ * ...  
  *
  * Neuro_CreateEBuf(&myeng);
  *
- * ... \n \n
+ * ...  
  *
  * Neuro_CleanEBuf(&myeng);
  *
@@ -460,34 +484,34 @@ extern void Neuro_CleanEBuf(EBUF **eng);
  * 
  * @examples
  *
- * typedef struct ST \n
- * { \n
- * 	char *someString; \n
- * }ST; \n \n \n
+ * typedef struct ST 
+ * { 
+ * 	char *someString; 
+ * }ST;   
  *
- * static EBUF *myeng; \n \n 
+ * static EBUF *myeng;   
  *
- * ... \n \n
+ * ...  
  *
- * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_CreateEBuf(&myeng);  
  *
- * ... \n \n
+ * ...  
  *
- * ST *buf; \n \n
+ * ST *buf;  
  *
- * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST));  
  *
- * buf = Neuro_GetCurEBuf(myeng); \n \n
+ * buf = Neuro_GetCurEBuf(myeng);  
  *
- * buf->someString = "hello"; \n \n
+ * buf->someString = "hello";  
  *
- * -- lets say we no longer need the variable -- \n
- * -- we can clean it using this function -- \n
- * Neuro_SCleanEBuf(myeng, buf); \n \n
+ * -- lets say we no longer need the variable -- 
+ * -- we can clean it using this function -- 
+ * Neuro_SCleanEBuf(myeng, buf);  
  *
- * ... \n \n
+ * ...  
  *
- * Neuro_CleanEBuf(&myeng); \n \n
+ * Neuro_CleanEBuf(&myeng);  
  *
  * @related
  * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), Neuro_CleanEBuf(3), Neuro_GiveEBuf(3), Neuro_GiveCurEBuf(3)
@@ -518,33 +542,33 @@ extern void Neuro_SCleanEBuf(EBUF *eng, void *object);
  *
  * @examples
  *
- * -- in this example, I ommited the initial creation of the buffer, -- \n
- * -- the final cleaning of the buffer, -- \n
- * -- the cleaning callback function, -- \n
- * -- the allocation of the buffer and -- \n
- * -- the struct ST and its typedef. -- \n
- * -- SEE the man page for the function Neuro_AllocEBuf(3) for those -- \n
- * -- and SEE the man page for Neuro_SetcallbEBuf(3) for the callback -- \n \n
+ * -- in this example, I ommited the initial creation of the buffer, -- 
+ * -- the final cleaning of the buffer, -- 
+ * -- the cleaning callback function, -- 
+ * -- the allocation of the buffer and -- 
+ * -- the struct ST and its typedef. -- 
+ * -- SEE the man page for the function Neuro_AllocEBuf(3) for those -- 
+ * -- and SEE the man page for Neuro_SetcallbEBuf(3) for the callback --  
  *
- * ST *buf; \n
- * unsigned int total = 0; \n \n
+ * ST *buf; 
+ * unsigned int total = 0;  
  *
- * -- we check if the buffer is empty -- \n
- * if (Neuro_EBufIsEmpty(myeng)) \n
- * 	return; \n \n
+ * -- we check if the buffer is empty -- 
+ * if (Neuro_EBufIsEmpty(myeng)) 
+ * 	return;  
  *
- * -- we get the total number of elements in myeng -- \n
- * -- and also increment it by one because we will -- \n
- * -- loop the elements from finish to start -- \n
- * total = Neuro_GiveEBufCount(myeng) + 1; \n \n
+ * -- we get the total number of elements in myeng -- 
+ * -- and also increment it by one because we will -- 
+ * -- loop the elements from finish to start -- 
+ * total = Neuro_GiveEBufCount(myeng) + 1;  
  *
- * while (total-- > 0) \n
- * { \n
- * 	buf = Neuro_GiveEBuf(myeng, total); \n \n
+ * while (total-- > 0) 
+ * { 
+ * 	buf = Neuro_GiveEBuf(myeng, total);  
  *
- * 	... \n \n
+ * 	...  
  *
- * } \n
+ * } 
  *
  * @related
  * Neuro_AllocEBuf(3), Neuro_GiveEBuf(3),
@@ -583,83 +607,83 @@ extern u32 Neuro_GiveEBufCount(EBUF *eng);
  * 0 on no error.
  *
  * @examples
- * \n
- * typedef struct ST \n
- * { \n
- * 	char *someString; \n
- * }ST; \n \n \n
- *
- * -- we create a struct element -- \n
- * -- called an_element into which -- \n
- * -- we will put the address of an ebuf allocated element -- \n
- * -- this method can be used to track certain key elements inside the buffer. -- \n
- *
- * static ST *an_element; \n \n
- *
- * static EBUF *myeng; \n \n
- *
- * static void \n
- * callbackclean(void *src) \n
- * { \n
- * 	ST *temp; \n \n
- *
- * 	temp = (ST*)src; \n \n
- *
- * 	if (temp) \n
- * 	{ \n
- * 		if (temp->someString) \n
- * 			free(temp->someString); \n
- * 	} \n
- * } \n \n
- *
- * ... \n \n
- *
- * Neuro_CreateEBuf(&myeng); \n \n
- * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
- *
- * ... \n \n
- *
- * ST *foo; \n \n
- *
- * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
- *
- * foo = Neuro_GiveCurEBuf(myeng); \n \n
- *
- *
- * foo->someString = (char*)malloc(50); \n \n
- *
- * -- we set our variable to the address that the pointer foo points to -- \n
- * -- this makes it behave the exact same as if it was actually -- \n
- * -- the pointer foo... we can then access the data from it -- \n
- *  -- for any purpose and fast. -- \n
- * an_element = foo; \n \n
  * 
- * ... \n \n
+ * typedef struct ST 
+ * { 
+ * 	char *someString; 
+ * }ST;   
  *
- * -- in a certain function, we use the content of the pointer an_element -- \n
- * -- but for certain cases we also need to get its array number. -- \n
- * -- This only works if this particular pointer was allocated in an EBUF. -- \n \n
+ * -- we create a struct element -- 
+ * -- called an_element into which -- 
+ * -- we will put the address of an ebuf allocated element -- 
+ * -- this method can be used to track certain key elements inside the buffer. -- 
  *
- * u32 elem_value = 0; \n \n
+ * static ST *an_element;  
  *
- * if (Neuro_GiveEBufElem(myeng, an_element, &elem_value)) \n
- * { \n
- * 	printf("an error happened, the element (an_element) wasn't found in the buffer (myeng)\\\\n"); \n
- * 	return; \n
- * } \n \n
+ * static EBUF *myeng;  
  *
- * -- now, if there wasn't any errors, the variable an_element -- \n
- * -- contains the array number for the pointer an_element. -- \n
- * -- this number can be used with the function Neuro_GiveEBuf(3) or Neuro_GiveEBufAddr(3). \n \n
+ * static void 
+ * callbackclean(void *src) 
+ * { 
+ * 	ST *temp;  
  *
- * ... \n \n
+ * 	temp = (ST*)src;  
+ *
+ * 	if (temp) 
+ * 	{ 
+ * 		if (temp->someString) 
+ * 			free(temp->someString); 
+ * 	} 
+ * }  
+ *
+ * ...  
+ *
+ * Neuro_CreateEBuf(&myeng);  
+ * Neuro_SetcallbEBuf(myeng, callbackclean);  
+ *
+ * ...  
+ *
+ * ST *foo;  
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST));  
+ *
+ * foo = Neuro_GiveCurEBuf(myeng);  
+ *
+ *
+ * foo->someString = (char*)malloc(50);  
+ *
+ * -- we set our variable to the address that the pointer foo points to -- 
+ * -- this makes it behave the exact same as if it was actually -- 
+ * -- the pointer foo... we can then access the data from it -- 
+ *  -- for any purpose and fast. -- 
+ * an_element = foo;  
+ * 
+ * ...  
+ *
+ * -- in a certain function, we use the content of the pointer an_element -- 
+ * -- but for certain cases we also need to get its array number. -- 
+ * -- This only works if this particular pointer was allocated in an EBUF. --  
+ *
+ * u32 elem_value = 0;  
+ *
+ * if (Neuro_GiveEBufElem(myeng, an_element, &elem_value)) 
+ * { 
+ * 	printf("an error happened, the element (an_element) wasn't found in the buffer (myeng)\n"); 
+ * 	return; 
+ * }  
+ *
+ * -- now, if there wasn't any errors, the variable an_element -- 
+ * -- contains the array number for the pointer an_element. -- 
+ * -- this number can be used with the function Neuro_GiveEBuf(3) or Neuro_GiveEBufAddr(3).  
+ *
+ * ...  
  *
  * Neuro_CleanEBuf(&myeng);
  *
  * 
  *
  * @related
- * Neuro_GiveEBufAddr(3), Neuro_GiveEBuf
+ * Neuro_GiveEBufAddr(3), Neuro_GiveEBuf(3)
  */
 extern int Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem);
 
@@ -681,12 +705,12 @@ extern int Neuro_GiveEBufElem(EBUF *eng, void *object, u32 *elem);
  * the pointer of the element. It returns NULL on error.
  *
  * @examples
- * -- see the man page for Neuro_GiveEBuf(3) for how this -- \n
- * -- function can be used. Also, almost all the functions -- \n
- * -- use this function in their examples so just check how --\n
- * -- they use it... usually, this function is called right -- \n
- * -- after you allocate the buffer using Neuro_AllocEBuf(3), -- \n
- * -- because we need to get the pointer so we can populate it. -- \n
+ * -- see the man page for Neuro_GiveEBuf(3) for how this -- 
+ * -- function can be used. Also, almost all the functions -- 
+ * -- use this function in their examples so just check how --
+ * -- they use it... usually, this function is called right -- 
+ * -- after you allocate the buffer using Neuro_AllocEBuf(3), -- 
+ * -- because we need to get the pointer so we can populate it. -- 
  *
  * @related
  * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3),
@@ -745,66 +769,66 @@ extern void **Neuro_GiveEBufAddr(EBUF *eng, u32 elem);
  * so it is possible to "morph" it into any other pointer type.
  *
  * @examples
- * \n
- * typedef struct ST \n
- * { \n
- * 	char *someString; \n
- * }ST; \n \n \n
- *
- *
- * static EBUF *myeng; \n \n
- *
- * static void \n
- * callbackclean(void *src) \n
- * { \n
- * 	ST *temp; \n \n
- *
- * 	temp = (ST*)src; \n \n
- *
- * 	if (temp) \n
- * 	{ \n
- * 		if (temp->someString) \n
- * 			free(temp->someString); \n
- * 	} \n
- * } \n \n
- *
- * ... \n \n
- *
- * Neuro_CreateEBuf(&myeng); \n \n
- * Neuro_SetcallbEBuf(myeng, callbackclean); \n \n
- *
- * ... \n \n
- *
- * ST *foo; \n \n
- *
- * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST)); \n \n
- *
- * foo = Neuro_GiveCurEBuf(myeng); \n \n
- *
- * foo->someString = (char*)malloc(50); \n \n
- *
- * ... \n \n
- *
- * -- this code outputs to the default output channel -- \n
- * -- the content of every elements of the buffer -- \n
- * u32 total = 0; \n
- * ST *temp = NULL; \n \n
- *
- * if (Neuro_EBufIsEmpty(myeng)) \n
- * 	return; \n \n
- *
- * total = Neuro_GiveEBufCount(myeng) + 1; \n \n
- *
- * while (total-- > 0) \n
- * { \n
- * 	temp = Neuro_GiveEBuf(myeng, total); \n \n
  * 
- * 	printf("some value : %s\\\\n", temp->someString); \n
- * } \n \n
+ * typedef struct ST 
+ * { 
+ * 	char *someString; 
+ * }ST;   
  *
- * ... \n \n
  *
- * Neuro_CleanEBuf(&myeng); \n
+ * static EBUF *myeng;  
+ *
+ * static void 
+ * callbackclean(void *src) 
+ * { 
+ * 	ST *temp;  
+ *
+ * 	temp = (ST*)src;  
+ *
+ * 	if (temp) 
+ * 	{ 
+ * 		if (temp->someString) 
+ * 			free(temp->someString); 
+ * 	} 
+ * }  
+ *
+ * ...  
+ *
+ * Neuro_CreateEBuf(&myeng);  
+ * Neuro_SetcallbEBuf(myeng, callbackclean);  
+ *
+ * ...  
+ *
+ * ST *foo;  
+ *
+ * Neuro_AllocEBuf(myeng, sizeof(ST*), sizeof(ST));  
+ *
+ * foo = Neuro_GiveCurEBuf(myeng);  
+ *
+ * foo->someString = (char*)malloc(50);  
+ *
+ * ...  
+ *
+ * -- this code outputs to the default output channel -- 
+ * -- the content of every elements of the buffer -- 
+ * u32 total = 0; 
+ * ST *temp = NULL;  
+ *
+ * if (Neuro_EBufIsEmpty(myeng)) 
+ * 	return;  
+ *
+ * total = Neuro_GiveEBufCount(myeng) + 1;  
+ *
+ * while (total-- > 0) 
+ * { 
+ * 	temp = Neuro_GiveEBuf(myeng, total);  
+ * 
+ * 	printf("some value : %s\n", temp->someString); 
+ * }  
+ *
+ * ...  
+ *
+ * Neuro_CleanEBuf(&myeng); 
  *
  * @related
  * Neuro_AllocEBuf(3), Neuro_MultiAllocEBuf(3), 
@@ -895,19 +919,19 @@ extern void Neuro_SetEBuf(EBUF *eng, void **to, void *from);
  * an EBUF pointer which gets copied into the EBUF to.
  *
  * @examples
- * static EBUF *myeng; \n \n
+ * static EBUF *myeng;  
  *
- * ... \n \n
+ * ...  
  * 
- * Neuro_CreateEBuf(&myeng); \n \n
+ * Neuro_CreateEBuf(&myeng);  
  *
- * ... \n \n
+ * ...  
  *
  * EBUF *clone;
  *
  * Neuro_CopyEBuf(clone, myeng);
  *
- * ... \n \n
+ * ...  
  *
  * Neuro_CleanEBuf(&myeng);
  *

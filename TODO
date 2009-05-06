@@ -5,6 +5,16 @@ man -- the function Neuro_EBufIsEmpty:
 	   present in the man page. It is the value
 	   returned when the input EBUF is NULL.
 
+docs -- change of script:
+	 - Implement (and finish) the new haskell neuroman
+	   tool which supports html output (and eventually man pages).
+
+docs -- removal of docs, to be moved independently of libneuro:
+	 - I guess it would be better to simply move docs
+	   out of the core sources and permit embedding of the
+	   docs rather than directly having them in the tree would
+	   be better at every levels.
+
 docs -- add a configure entry for Tcl:
 	 - the configure script needs to
 	   check if Tcl is available to build the

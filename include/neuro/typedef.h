@@ -35,11 +35,11 @@
 /*! \section signed 
  * the 1st bit to the left is a negative toggle, the number can be negative 
  */
-/*! signed char which is 8 bit */
+/** signed char which is 8 bit */
 typedef signed char i8;
-/*! signed short which is 16 bit */
+/** signed short which is 16 bit */
 typedef signed short i16;
-/*! signed int which is 32 bit */
+/** signed int which is 32 bit */
 typedef signed int i32;
 /*! TODO long long is not ansi compliant */
 /* typedef signed long long i64; */
@@ -47,30 +47,31 @@ typedef signed int i32;
 /*! \section unsigned 
  * the 1st bit from the left is also used to store data instead of a negative toggle 
  */
-/*! TODO */
+/** TODO */
 typedef unsigned char u8;
-/*! TODO */
+/** TODO */
 typedef unsigned short u16;
-/*! TODO */
+/** TODO */
 typedef unsigned int u32;
 /*! TODO long long is not ansi compliant */
 /* typedef unsigned long long u64; */
 
 /* \section other */
 
-/*! used to contain time data */
+/** used to contain time data */
 typedef signed int t_tick; 
 
-/*! used to contain rectangle coordinates */
+/** used to contain rectangle coordinates 
+ */
 typedef struct Rectan 
 {
 	i16 x, y, w, h;
 }Rectan;
 
-/* video object */
+/** video object */
 typedef void v_object;
 
-/* font "face" object */
+/** font "face" object */
 typedef void font_object;
 
 #endif /* __TYPEDEF_H */
