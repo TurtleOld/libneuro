@@ -552,7 +552,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 			
 			if (ctx->bmap->header.type != 0x4d42)
 			{
-				NEURO_WARN("Invalid bitmap file magic %d", ctx->bmap->header.type);
+ 				NEURO_WARN("Invalid bitmap file magic 0x%x", ctx->bmap->header.type);
 				return -1;
 			}
 		}
