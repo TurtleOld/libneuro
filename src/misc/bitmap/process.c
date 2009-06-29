@@ -604,8 +604,16 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		/* we calculate the chunk of data that will be loaded for each 
 		 * cycles or polls.
 		 */
-		ctx->cut_size = ctx->psize / 30;
-		loops = ctx->cut_size;
+		if (ctx->psize < 30)
+		{
+			ctx->cut_size = ctx->psize;
+			loops = ctx->cut_size;
+		}
+		else
+		{
+			ctx->cut_size = ctx->psize / 30;
+			loops = ctx->cut_size;
+		}
 
 		/* we lock the surface */
 		Neuro_LockVObject(ctx->output);
