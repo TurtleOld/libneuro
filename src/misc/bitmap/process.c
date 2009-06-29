@@ -437,26 +437,46 @@ parse_bitmap_header(nFILE *input)
 
 	tmp = &buf->infoheader;
 	
-	fpdata16(input, &buf->header.type);
-	fpdata32(input, &buf->header.size);
-	fpdata16(input, &buf->header.reserved1);
-	fpdata16(input, &buf->header.reserved2);
-	fpdata32(input, &buf->header.offset);
+	if (fpdata16(input, &buf->header.type) < 0)
+		goto error;
+	if (fpdata32(input, &buf->header.size) < 0)
+		goto error;
+	if (fpdata16(input, &buf->header.reserved1) < 0)
+		goto error;
+	if (fpdata16(input, &buf->header.reserved2) < 0)
+		goto error;
+	if (fpdata32(input, &buf->header.offset) < 0)
+		goto error;
 	
-	fpdata32(input, &tmp->size);
-	fpdata32(input, (u32*)&tmp->width);
-	fpdata32(input, (u32*)&tmp->height);
+	if (fpdata32(input, &tmp->size) < 0)
+		goto error;
+	if (fpdata32(input, (u32*)&tmp->width) < 0)
+		goto error;
+	if (fpdata32(input, (u32*)&tmp->height) < 0)
+		goto error;
 
-	fpdata16(input, &tmp->planes);
-	fpdata16(input, &tmp->bits);
-	fpdata32(input, &tmp->compression);
-	fpdata32(input, &tmp->imagesize);
-	fpdata32(input, (u32*)&tmp->xresolution);
-	fpdata32(input, (u32*)&tmp->yresolution);
-	fpdata32(input, &tmp->ncolors);
-	fpdata32(input, &tmp->importantcolours);
+	if (fpdata16(input, &tmp->planes) < 0)
+		goto error;
+	if (fpdata16(input, &tmp->bits) < 0)
+		goto error;
+	if (fpdata32(input, &tmp->compression) < 0)
+		goto error;
+	if (fpdata32(input, &tmp->imagesize) < 0)
+		goto error;
+	if (fpdata32(input, (u32*)&tmp->xresolution) < 0)
+		goto error;
+	if (fpdata32(input, (u32*)&tmp->yresolution) < 0)
+		goto error;
+	if (fpdata32(input, &tmp->ncolors) < 0)
+		goto error;
+	if (fpdata32(input, &tmp->importantcolours) < 0)
+		goto error;
 	
 	return buf;
+
+error:
+	free(buf);
+	return NULL;
 }
 
 static void
