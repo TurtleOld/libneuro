@@ -498,7 +498,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	}
 }
 
-/* This fonction can be used to
+/* This function can be used to
  * extend the use of the 3 debug
  * functions in this module :
  * NEURO_ERROR _WARNING and _DEBUG.
