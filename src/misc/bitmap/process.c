@@ -543,7 +543,13 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		 */
 
 		ctx->bmap = parse_bitmap_header(ctx->f_bitmap);
-		
+	
+ 		if (ctx->bmap == NULL)
+ 		{
+ 			NEURO_WARN("Unable to parse the bitmap header", NULL);
+ 			return -1;
+ 		}
+ 
 		/* we do consistency checks of the image to
 		 * see if it is really a bitmap.
 		 */
