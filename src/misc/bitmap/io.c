@@ -62,9 +62,17 @@ Ngetc(nFILE *input)
 		int errnum;
 		const char *error;
 
-		error = gzerror(input, &errnum);
-		NEURO_ERROR("ZLIB returned an error -- %s", Neuro_s("%s - errnum %d", error, errnum));
-		return 0;
+		if (gzeof(input) == 0)
+		{
+			error = gzerror(input, &errnum);
+			NEURO_ERROR("ZLIB returned an error -- %s", Neuro_s("%s - errnum %d (returned value %d)", error, errnum, ret));
+			return 0;
+		}
+		else
+		{
+			NEURO_TRACE("file is eof", ret);
+			return -1;
+		}
 	}
 
 	/*
