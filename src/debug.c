@@ -134,7 +134,6 @@ calibrate_string(char *string)
 
 	while (len-- > 0)
 	{
-		/*Debug_Val(0, "herein -> %c\n", string[len]);*/
 		if (string[len] >= 'A' && string[len] <= 'Z')
 			string[len] ^= 0x20;
 	}
@@ -177,8 +176,6 @@ filter_handleElem(const char *namespace, char *elem)
 	DEBUG_CHANNEL *buf;
 	u8 type = 0; /* 1 addition, 0 deletion */
 	i32 class_type = 0;
-
-	/* Debug_Val(0, "HANDLE \"%s\" len %d\n", elem, strlen(elem)); */
 
 	if (strlen(elem) <= 1 || memchr(elem, ' ', strlen(elem)))
 	{
@@ -251,8 +248,6 @@ filter_handleElem(const char *namespace, char *elem)
 		strncpy(buf->namespace, namespace, strlen(namespace));
 		if (type == 1)
 			buf->class = class_type;
-		/* Debug_Val(0, "before %s\n", elem); */
-		/* Debug_Val(0, "after %s\n", elem); */
 
 		NEURO_TRACE("%s", Neuro_s("(%s) Element -> %s %s", namespace, elem, buf->channel));
 	}
@@ -381,8 +376,6 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 	u32 total = 0;
 	u32 print_message = 0; /* toggle */
 
-	/* Debug_Val(0, "Herein %s %s->%s [%d]\n", project_name, channel, type, lineNum); */
-
 	if (!project_name || !channel || !type || !filename || !funcName || !control)
 	{
 		const char *output = NULL;
@@ -442,10 +435,6 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 				NEURO_ERROR("Invalid class used", NULL);
 				return;
 			}
-
-			/*Debug_Val(0, "class type %d\n", buf->class);
-			Debug_Val(0, "%s -> %s\n", channel, buf->channel);*/
-
 
 			if (DETAILED_DEBUG)
 				fprintf(stderr, "Is \'%s | %s\' the same as \'%s\'? ... ", 
