@@ -100,13 +100,21 @@ Ngetc(nFILE *input)
 int
 fpdata8(nFILE *input, u8 *output)
 {
+	int ret = 0;
+
 	if (input == NULL || output == NULL)
 	{
 		NEURO_WARN("Arguments are NULL", NULL);
 		return 1;
 	}
 
-	*output = Ngetc(input);
+	ret = Ngetc(input);
+
+
+	if (ret < 0)
+		return -1;
+
+	*output = ret;
 
 	return 0;
 }
@@ -119,22 +127,30 @@ fpdata16(nFILE *input, u16 *output)
 {
 	u8 feed[2];
 	u16 *buf;
-	
+	int ret[2];
+
 	if (input == NULL || output == NULL)
 	{
 		NEURO_WARN("Arguments are NULL", NULL);
 		return 1;
 	}
 
+	ret[0] = Ngetc(input);
+	ret[1] = Ngetc(input);
+
+
+	if (ret[0] < 0 || ret[1] < 0)
+		return -1;
+
 	if (IsLittleEndian())
 	{
-		feed[0] = Ngetc(input);
-		feed[1] = Ngetc(input);
+		feed[0] = ret[0];
+		feed[1] = ret[1];
 	}
 	else
 	{
-		feed[1] = Ngetc(input);
-		feed[0] = Ngetc(input);
+		feed[1] = ret[0];
+		feed[0] = ret[1];
 	}
 
 	buf = (u16*)&feed;
@@ -153,7 +169,8 @@ fpdata32(nFILE *input, u32 *output)
 	/* register int feed; */
 	u8 feed[4];
 	u32 *buf;
-	
+	int ret[4];
+
 	
 	if (input == NULL || output == NULL)
 	{
@@ -161,19 +178,28 @@ fpdata32(nFILE *input, u32 *output)
 		return 1;
 	}
 
+	ret[0] = Ngetc(input);
+	ret[1] = Ngetc(input);
+	ret[2] = Ngetc(input);
+	ret[3] = Ngetc(input);
+
+
+	if (ret[0] < 0 || ret[1] < 0 || ret[2] < 0 || ret[3] < 0)
+		return -1;
+
 	if (IsLittleEndian())
 	{	
-		feed[0] = Ngetc(input);
-		feed[1] = Ngetc(input);
-		feed[2] = Ngetc(input);
-		feed[3] = Ngetc(input);
+		feed[0] = ret[0];
+		feed[1] = ret[1];
+		feed[2] = ret[2];
+		feed[3] = ret[3];
 	}
 	else
 	{
-		feed[3] = Ngetc(input);
-		feed[2] = Ngetc(input);
-		feed[1] = Ngetc(input);
-		feed[0] = Ngetc(input);
+		feed[3] = ret[0];
+		feed[2] = ret[1];
+		feed[1] = ret[2];
+		feed[0] = ret[3];
 	}
 
 	buf = (u32*)&feed;
