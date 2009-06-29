@@ -456,9 +456,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 				if (DETAILED_DEBUG)
 					fprintf(stderr, "Yes extra -> [%d] & [%d] = %d\n", buf->class, class_type, buf->class & class_type);
 
-				if ((buf->class & class_type) == 0)
-					print_message = 0;
-				else
+				if ((buf->class & class_type) == class_type)
 					print_message = 1;
 			}
 			else
