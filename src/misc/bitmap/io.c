@@ -52,9 +52,10 @@ Ngetc(nFILE *input)
 {
 #ifdef USE_ZLIB
 	i32 ret = 0;
-	u8 data = 0;
+	/*u8 data = 0;
 	
-	/* ret = gzread(input, &data, 1); */
+	ret = gzread(input, &data, 1); */
+
 	ret = gzgetc(input);
 
 	if (ret < 0)
@@ -79,10 +80,10 @@ Ngetc(nFILE *input)
 	u32 len = gzread(input, *output, sizeof(u32));
 	if (len < 1)
 		return 1;
-	return 0;*/
+	return 0;
 
 	if (data)
-		ret = (u8)data;
+		ret = (u8)data;*/
 
 	return ret;
 
