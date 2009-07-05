@@ -362,18 +362,29 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	{
 		wattrib.backing_store = WhenMapped;
 		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
+		wattrib.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | 
+					ButtonReleaseMask | EnterWindowMask |
+					LeaveWindowMask | PointerMotionMask |
+					Button1MotionMask |
+					Button2MotionMask | Button3MotionMask |
+					Button4MotionMask | Button5MotionMask |
+					ExposureMask | VisibilityChangeMask |
+					StructureNotifyMask |
+					SubstructureNotifyMask | SubstructureRedirectMask |
+					FocusChangeMask | PropertyChangeMask |
+					ColormapChangeMask | OwnerGrabButtonMask;
 	
 		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
 			200, 200, swidth, sheight, 1, CopyFromParent,
-			CopyFromParent, NULL, CWBackingStore | CWBackPixel, &wattrib);
-			
+			CopyFromParent, NULL, CWBackingStore | CWBackPixel | CWEventMask, &wattrib);
+		
 		tmp->cwin = &tmp->win;
 	
 		XMapWindow(tmp->display, tmp->win);
 	}
 
-	XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | ButtonPressMask |
-		       ButtonReleaseMask | FocusChangeMask | PointerMotionMask);
+	/* XSelectInput(tmp->display, *tmp->cwin, ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask |
+		       ButtonReleaseMask | FocusChangeMask | PointerMotionMask); */
 
 	XFlush(tmp->display);
 
@@ -1405,16 +1416,16 @@ Lib_PollEvent(void *event_input)
 	{
 		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 0);
 		/* XQueryKeymap(dmain->display, current_keymap); */
-		NEURO_TRACE("got an X key event", NULL);
+		NEURO_TRACE("got an X key event release", NULL);
 	}
 
 	if (XCheckTypedWindowEvent(dmain->display, *dmain->cwin, KeyPress, &event) == True)
 	{
 		/* XQueryKeymap(dmain->display, current_keymap); */
 		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 1);
-		NEURO_TRACE("got an X key event", NULL);
+		NEURO_TRACE("got an X key event press", NULL);
 	}	
-	
+
 	return 0;
 }
 
