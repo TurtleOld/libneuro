@@ -1222,7 +1222,7 @@ Lib_VideoExit(void)
 u8
 Lib_CheckKeyStatus(u32 key)
 {
-	char keyd[32];
+	/* char keyd[32]; */
 	u32 i = 32;
 	KeyCode keytocheck;
 	u8 anchor;
