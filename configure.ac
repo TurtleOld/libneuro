@@ -34,6 +34,7 @@ AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
 #AC_INIT(Neuro, $NEURO_VERSION)
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/neuro_main.c])
 AC_CONFIG_HEADERS([include/neuro/config.h])
 
