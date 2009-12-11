@@ -103,8 +103,9 @@ struct EBUF
 
 void
 Neuro_CreateEBuf(EBUF **eng)
-{	
-	
+{
+	*eng = Neuro_CreateEBuf2();
+#if old
 	/* we allocate only the header EBUF structure */
 	*eng = (EBUF*)calloc(1, sizeof(EBUF));
 	
@@ -115,7 +116,25 @@ Neuro_CreateEBuf(EBUF **eng)
 	(*eng)->total = 0;
 	(*eng)->buffer = NULL;
 	(*eng)->callback = NULL;
+#endif /* old */
+}
 
+EBUF *
+Neuro_CreateEBuf2()
+{
+	EBUF *output = NULL;
+
+	output = (EBUF*)calloc(1, sizeof(EBUF));
+
+	/* set ALL the elements in the header EBUF structure 
+	 * to their default NULL or 0 values.
+	 */
+	output->mem = 0;
+	output->total = 0;
+	output->buffer = NULL;
+	output->callback = NULL;
+
+	return output;
 }
 
 void
@@ -322,8 +341,73 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 }
 
 void
+Neuro_CleanEBuf2(EBUF *eng)
+{
+	void *buf;
+	u32 i;	
+	
+	if (!eng)
+		return;
+		
+	buf = &eng->buffer;
+	i = eng->total;
+	
+	/* loop all the elements in the EBUF **, call the
+	 * callback(if theres one!) with the actual element 
+	 * as the argument and finally free the element.
+	 *
+	 * in short : free every * in the ** array.
+	 */
+	while (i-- > 0)
+	{
+		
+		buf = Neuro_GiveEBuf(eng, i);
+		
+		if (buf)
+		{
+			if (eng->callback)
+			{
+				eng->callback(buf);
+			}
+			free(buf);
+		}
+		/* Debug_Val(0, "#%d -- cleaned\n", i); */
+	}
+
+	/* free the actual ** array */
+	if (eng->buffer != NULL)
+	{
+		free(eng->buffer);
+		eng->buffer = NULL;
+	}
+	
+	/* Debug_Val(0, "cleaned %d elements\n", eng->total); */
+	eng->total = 0;
+	eng->mem = 0;
+
+	free(eng);
+}
+
+
+void
 Neuro_CleanEBuf(EBUF **engi)
 {
+	EBUF *eng;
+	
+	/*
+	 * this is to avoid very big and puzzling call to the **engi element like
+	 * (*engi)->mem  or engi[0]->mem. This is for cleaner code.
+	 */
+	eng = *engi;
+	
+	if (!eng)
+		return;
+
+	Neuro_CleanEBuf2(eng);
+
+	*engi = NULL;
+	
+#if old
 	void *buf;
 	EBUF *eng;
 	u32 i;
@@ -379,7 +463,12 @@ Neuro_CleanEBuf(EBUF **engi)
 		free(*engi);
 		*engi = NULL;
 	}
+#endif /* old */
+
+
 }
+
+
 
 u32 
 Neuro_GiveEBufCount(EBUF *eng)

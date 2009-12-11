@@ -270,12 +270,37 @@ typedef struct EBUF EBUF;
  *
  * Neuro_CreateEBuf(&myeng);
  *
+ * ...
+ *
  * @related 
- * Neuro_CleanEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_CleanEBuf(3), Neuro_CleanEBuf2(3) Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
  * Neuro_EBufIsEmpty(3)
  *
  */
 extern void Neuro_CreateEBuf(EBUF **eng);
+
+/**
+ * @sdescri
+ * creates an useable EBUF element
+ *
+ * @description
+ * This function returns an initialized EBUF elemnt.
+ *
+ * @examples
+ *
+ * static EBUF *myeng;
+ *
+ * ...
+ *
+ * myeng = Neuro_CreateEBuf2();
+ *
+ * ...
+ *
+ * @related
+ * Neuro_CleanEBuf(3), Neuro_CleanEBuf2(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3),
+ * Neuro_EBufIsEmpty(3)
+ */
+extern EBUF *Neuro_CreateEBuf2();
 
 /** Neuro_SetcallbEBuf
  * @sdescri 
@@ -460,11 +485,37 @@ extern void Neuro_MultiAllocEBuf(EBUF *eng, u32 amount, size_t sptp, size_t sobj
  * Neuro_CleanEBuf(&myeng);
  *
  * @related 
- * Neuro_CreateEBuf(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_CreateEBuf(3), Neuro_CreateEBuf2(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
  * Neuro_SCleanEBuf(3)
  *
  */
 extern void Neuro_CleanEBuf(EBUF **eng);
+
+/** Neuro_CleanEBuf2
+ * @sdescri 
+ * destructor of an EBUF element.
+ *
+ * @description 
+ *
+ * @examples 
+ *
+ * static EBUF *myeng;  
+ * 
+ * ...  
+ *
+ * myeng = Neuro_CreateEBuf2();
+ *
+ * ...  
+ *
+ * Neuro_CleanEBuf2(myeng);
+ * myeng = NULL;
+ *
+ * @related 
+ * Neuro_CreateEBuf(3), Neuro_CreateEBuf2(3), Neuro_AllocEBuf(3), Neuro_SetcallbEBuf(3), 
+ * Neuro_SCleanEBuf(3)
+ *
+ */
+extern void Neuro_CleanEBuf2(EBUF *eng);
 
 /** Neuro_SCleanEBuf
  * @sdescri

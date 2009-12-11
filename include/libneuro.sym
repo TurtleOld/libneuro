@@ -14,6 +14,7 @@ Neuro_BoundsCheck
 Neuro_CalcOnlyPos
 Neuro_CleanDraw
 Neuro_CleanEBuf
+Neuro_CleanEBuf2
 Neuro_CleanFont
 Neuro_CleanKeyboard
 Neuro_CleanMouse
@@ -21,6 +22,7 @@ Neuro_CleanPixels
 Neuro_CopyEBuf
 Neuro_CreateBMPCTX
 Neuro_CreateEBuf
+Neuro_CreateEBuf2
 Neuro_CreateVObject
 Neuro_DebugChannel
 Neuro_DestroyBMPCTX
