@@ -39,6 +39,7 @@ typedef struct KEYBEVENT
 {
 	u32 key;		/* the actual keyboard key keysym */
 	u8 lastState;		/* used to know if its been previously clicked or released  0 is nothing, 1 is that it was clicked previously */
+	u32 trigger; 		/* set to != 0 if the event was triggered, 0 otherwise, 1 is pressed and 2 is released */
 	void (*callback)(); 	/* a callback we will call when key is pressed*/
 	void (*callbackReleased)(); /* a callback we will call when the key is no longer pressed */
 	/* second version of the above callbacks, used when a single KEYBEVENT is set to catch all the keysyms 
@@ -114,13 +115,14 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
 		if (keystatus == 1)
 		{
 			key->lastState = 1;
+			key->trigger = 1;
 			/* check if the callback exists */
 			if (key->callback)
 			{
 				/* the key is being pressed so we call the 
 				 * corresponding callback function.
 				 */
-				if (key->send_key == 0)
+				if (key->send_key == 0 && key->callback)
 					(key->callback)();
 				else
 					(key->callback2)(key->key);
@@ -132,13 +134,14 @@ trigger_key(KEYBEVENT *key, u8 keystatus)
 		if (keystatus == 0)
 		{
 			key->lastState = 0;
+			key->trigger = 2;
 			if (key->callbackReleased)
 			{
 				/* the key is not pressed anymore so we call the 
 				 * corresponding callback function.
 				 */
 			
-				if (key->send_key == 0)
+				if (key->send_key == 0 && key->callbackReleased)
 					(key->callbackReleased)();
 				else
 					(key->callbackReleased2)(key->key);
@@ -391,6 +394,7 @@ addKeyEvent(u32 keysym, void (*pressedCallback)(), void (*releasedCallback)(),
 	
 	tmp->send_key = send_key;
 	tmp->lastState = 0;
+	tmp->trigger = 0;
 }
 
 static void
@@ -420,6 +424,45 @@ Neuro_GetMousePos(int *x, int *y)
 		*x = mouse_x;
 	if (y)
 		*y = mouse_y;
+}
+
+int
+Neuro_GetKeyStatus(int keysym)
+{
+	u32 total;
+	KEYBEVENT *tmp;
+		
+	/* we check if _klist is empty, if it is, we leave. */
+	if (Neuro_EBufIsEmpty(_klist))
+		return 0;
+	
+	/* we put the total amount of elements in _klist to total 
+	 * and increment by 1 to support a while (somevar-- > 0) 
+	 * method.
+	 */
+	total = Neuro_GiveEBufCount(_klist) + 1;
+
+	while (total-- > 0)
+	{
+		/* pass the element total from the buffer _klist
+		 * to the pointer tmp.
+		 */
+		tmp = Neuro_GiveEBuf(_klist, total);
+
+		/* trigger_key(tmp, Lib_CheckKeyStatus(tmp->key)); */
+
+		if (tmp->key == keysym)
+		{
+			int output = tmp->trigger;
+
+			if (tmp->trigger == 2)
+				tmp->trigger = 0;
+
+			return output;
+		}
+	}
+
+	return 0;
 }
 
 void 

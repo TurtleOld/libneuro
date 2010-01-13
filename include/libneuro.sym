@@ -33,6 +33,7 @@ Neuro_FetchDraw
 Neuro_FlushDraw
 Neuro_FreeVObject
 Neuro_GetImageSize
+Neuro_GetKeyStatus
 Neuro_GetMousePos
 Neuro_GetPixel
 Neuro_GetScreenBuffer

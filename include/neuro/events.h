@@ -93,6 +93,8 @@ extern void Neuro_CleanMouse();
 /** puts the mouse coordinates into x and y */
 extern void Neuro_GetMousePos(int *x, int *y);
 
+/* porcelein function which permits peeking the trigger state of the keyboard events. */
+extern int Neuro_GetKeyStatus(int keysym);
 
 /* used internally */
 
