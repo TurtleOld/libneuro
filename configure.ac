@@ -95,7 +95,7 @@ enable_Neuronet=no
 
 AC_ARG_ENABLE(neuronet, [  --disable-neuronet disables the neuronet library from being built [[default=no]]], enable_Neuronet=no, enable_Neuronet=yes)
 
-if test ! -d src/neuronet/src; then
+if test ! -d neuronet/src; then
 	if test x$enable_Neuronet = xyes; then
 		echo "Neuronet was enabled but it is not present in the tree..."
 	fi
@@ -287,8 +287,8 @@ if test x$enable_Neuronet = xyes; then
 		echo "Neuronet can't be compiled with libneuro when the library is compiled for w32... You need to compile neuronet directly instead."
 		enable_Neuronet=no
 	else
-	AC_CONFIG_LINKS(src/neuronet/include/ebuf.h:include/neuro/ebuf.h)
-	AC_CONFIG_SUBDIRS([src/neuronet])
+	AC_CONFIG_LINKS(neuronet/include/ebuf.h:include/neuro/ebuf.h)
+	AC_CONFIG_SUBDIRS([neuronet])
 	fi
 fi
 AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)

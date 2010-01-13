@@ -7,3 +7,7 @@ SUBDIRS = \
 	  include \
 	  src
 #	  docs
+
+if USE_NEURONET
+SUBDIRS += neuronet
+endif
