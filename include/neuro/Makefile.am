@@ -8,6 +8,7 @@ include_HEADERS = \
 		  debug.h \
 		  ebuf.h \
 		  events.h \
+		  keymap.h \
 		  extlib.h \
 		  graphics.h \
 		  neuro_main.h \

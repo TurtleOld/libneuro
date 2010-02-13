@@ -31,6 +31,7 @@
 
 #include "ebuf.h"
 #include "debug.h"
+#include "keymap.h"
 #include "extlib.h"
 #include "graphics.h"
 #include "events.h"
