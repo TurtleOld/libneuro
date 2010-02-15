@@ -21,12 +21,12 @@ docs -- add a configure entry for Tcl:
 	   manual pages. If it isn't, no errors should
 	   be raised, only disable documentation building.
 
-*** events -- Implement an event based set of functions:
+*** events (done) -- Implement an event based set of functions:
 	 - Currently, the state of the mouse and 
 	   keyboard are looped... the drivers will
 	   need to be changed accordingly.
 
-graphics/other -- Implement Neuro_PutPixel and GetPixel:
+graphics/other (done) -- Implement Neuro_PutPixel and GetPixel:
 	 - The location where those functions needs
 	   to be put is probably best in the extlib
 	   module.
@@ -49,7 +49,7 @@ misc -- move Color conversion functions:
 	 - The color conversion functions should be moved
 	   to their own source file (Neuro_RGB**).
 
-extlib (X11) -- Lib_SetColorKey has a memory leak:
+extlib (X11) (passed) -- Lib_SetColorKey has a memory leak:
 	 - A very nasty one on that, needs to be fixed.
 
 	* After checking with valgrind I actually found
@@ -125,6 +125,29 @@ bitmap -- Add checks to approve bitmap files:
 	   done to check the magic word. We also need to put
 	   a check to see if the data size are correct according
 	   to a value in the header(something like data size).
+
+***general -- a split of code is required (high priority):
+	 - After developping libneuronet heavily, it was clear
+	   that libneuro became an heavy dependency. End coders
+	   that use neuronet don't really want to use libneuro's
+	   gfx api code and thus it becomes vastly unecessary code.
+	 - A first non drastic approach was to implement a
+	   configure option which disabled all of the video, font and
+	   such functionalities of libneuro which was then unofficially
+	   called light libneuro.
+	 - Now, I want to fully split the libneuro code, the current
+	   libneuro project will contain only a set of toolbox modules
+	   like debug, ebuf, (the new lbuf) and string splitters.
+	   The split task is probably easier than it seems but a certain
+	   dilemma is required regarding the code history of the changes.
+	   The safest approach would be to _copy_ the history for both
+	   the splitted projects.
+	 - The video project, code named libneurovideo for now will contain
+	   all the rest not mentionned in the earlier step, things like extlib,
+	   color functions, painter's algorithm, bitmap loader and such will be
+	   the main functionnalities of the project. The project will have a safe
+	   spot in essence exactly the same as the libneuronet spot
+	   for quick inclusion into the libneuro compilation process.
 
 general -- document the API (high priority):
 	 - All the external functions of the API should be 
