@@ -62,18 +62,19 @@ extern int vasprintf(char **, const char *, va_list);
 
 /*-------------------- Static Variables ----------------------------*/
 
-static EBUF *debug_l;
+static EBUF *debug_l; /* contains DEBUG_CHANNEL elems */
 
 /* this variable is used in the Neuro_s() function */
 static char *string_maker;
 
 
-#define DEBUG_CLASS_AMOUNT 4
+#define DEBUG_CLASS_AMOUNT 4 /* the 5th one is very special */
 static const int Debug_ClassMasks[] = {
 	0x00000007, /* all */
 	0x00000001, /* warn */
 	0x00000002, /* error */
-	0x00000004  /* trace */
+	0x00000004,  /* trace */
+	0x00000010 /* for any class, this is to not show it */
 };
 
 static const char *Debug_Classes[] = {
@@ -222,13 +223,11 @@ filter_handleElem(const char *namespace, char *elem)
 	{
 		NEURO_TRACE("%s", Neuro_s("elem exists: %s class %d type %d class_type %d", buf->channel, buf->class, type, class_type));
 
-		if (type == 1)
-		{
-			if ((buf->class & class_type) == 0)
-				buf->class ^= class_type;
-		}
-		else
-			buf->class &= ~(u32)class_type;
+		if ((buf->class & class_type) == 0)
+			buf->class ^= class_type;
+
+		if (type == 0)
+			buf->class ^= Debug_ClassMasks[4];
 
 		NEURO_TRACE("new class %d", buf->class);
 
@@ -246,9 +245,13 @@ filter_handleElem(const char *namespace, char *elem)
 
 		buf->namespace = calloc(1, strlen(namespace) + 1);
 		strncpy(buf->namespace, namespace, strlen(namespace));
-		if (type == 1)
-			buf->class = class_type;
 
+		buf->class = class_type;
+
+		if (type == 0)
+			buf->class ^= Debug_ClassMasks[4];
+
+		/* fprintf(stdout, "Added elem with class %d -- witness no show flag %d\n", buf->class, Debug_ClassMasks[4]); */
 		NEURO_TRACE("%s", Neuro_s("(%s) Element -> %s %s", namespace, elem, buf->channel));
 	}
 	else
@@ -445,7 +448,9 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 				if (DETAILED_DEBUG)
 					fprintf(stderr, "Yes extra -> [%d] & [%d] = %d\n", buf->class, class_type, buf->class & class_type);
 
-				if ((buf->class & class_type) == class_type)
+				if (buf->class & Debug_ClassMasks[4])
+					print_message = 0;
+				else if (buf->class & class_type)
 					print_message = 1;
 			}
 			else
