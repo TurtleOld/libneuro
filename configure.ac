@@ -97,12 +97,14 @@ enable_Neuronet=no
 
 AC_ARG_ENABLE(neuronet, [  --disable-neuronet disables the neuronet library from being built [[default=no]]], enable_Neuronet=no, enable_Neuronet=yes)
 
-if test ! -d neuronet/src; then
-	if test x$enable_Neuronet = xyes; then
-		echo "Neuronet was enabled but it is not present in the tree..."
-	fi
-	enable_Neuronet=no
-fi
+AC_ARG_WITH(pollType, 
+[  --with-pollType=<pollType>	which of select, poll or epoll]
+[	 			   neuronet will use.]
+[				   Default is "epoll" under unix systems]
+[				   and "select" under win32 (no other choice under win32)]
+[ 				   Possible valid choices are :]
+[				     epoll, poll, select ],
+pollType="$withval", pollType="nothing")
 
 freetype_enable=no
 zlib_enable=no
@@ -267,6 +269,77 @@ if test x$freetype_enable = xyes; then
 		     [AC_MSG_ERROR(You don't have the libfreetype2 library you can get it from freetype.sourceforge.net)])
 fi
 
+dnl ----------------
+dnl Neuronet checks
+dnl ----------------
+
+if test x$enable_Neuronet = xyes; then
+
+dnl ----------------
+dnl libwsock32 check
+dnl ----------------
+if test x$targ = xw32; then
+#AC_CHECK_LIB(wsock32, WSAStartup, 
+#	     , [AC_MSG_ERROR(you don't have libwsock32)])
+	LIBS="$LIBS -lwsock32"
+fi
+
+if test x$pollType = xepoll; then
+	AC_CHECK_HEADER(sys/epoll.h, epoll_header=yes, epoll_header=no)
+
+	AC_MSG_CHECKING([epoll functions implemented and useable])
+	if test x$epoll_header = xyes; then
+		AC_RUN_IFELSE(
+			[AC_LANG_SOURCE([[
+		#include <stdlib.h> /* exit */
+		#include <unistd.h> /* close */
+		#include <sys/epoll.h>
+
+		int main()
+		{
+			int _err = 0;
+
+			_err = epoll_create(1);
+
+			if (_err == -1)
+				exit(1);
+
+			close(_err);
+
+			exit(0);
+		}
+			]])], [epoll_success=yes] , [epoll_success=no])
+
+		if test x$epoll_success = xyes; then
+			AC_MSG_RESULT(yes)
+			AC_DEFINE(HAVE_EPOLL, 1, The epoll function)
+		else
+			AC_MSG_RESULT(no)
+			AC_MSG_WARN([The epoll functions do not work, going with poll]) 
+			pollType=poll
+		fi
+	else
+		AC_MSG_WARN([The epoll functions do not work, going with poll]) 
+		pollType=poll
+	fi
+fi
+
+if test x$pollType = xpoll; then
+	AC_MSG_NOTICE([The poll function is not yet implemented, going with select])
+	pollType=select
+fi
+
+if test x$pollType = xselect; then
+	if test x$targ == xw32; then
+		# the headers under w32 are different, so we won't even bother
+		# checking for the availability.
+		AC_DEFINE(HAVE_SELECT, 1, The select function)
+	else
+		AC_CHECK_HEADER(sys/select.h, [AC_DEFINE(HAVE_SELECT, 1, The select function)], [AC_MSG_ERROR([You need the header and library for the select function!])])
+	fi
+fi
+
+fi # neuronet enabled
 
 dnl ----------------
 dnl Debug toggle
@@ -282,17 +355,6 @@ fi
 AC_SUBST(NEUROFLAGS)
 AC_SUBST(NEUROLDFLAGS)
 
-# if the neuronet project is in the house, we handle it
-if test x$enable_Neuronet = xyes; then
-
-	if test x$targ = xw32; then
-		echo "Neuronet can't be compiled with libneuro when the library is compiled for w32... You need to compile neuronet directly instead."
-		enable_Neuronet=no
-	else
-	AC_CONFIG_LINKS(neuronet/include/ebuf.h:include/neuro/ebuf.h)
-	AC_CONFIG_SUBDIRS([neuronet])
-	fi
-fi
 AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
 
 # set the installation path for the headers
@@ -305,6 +367,7 @@ AC_CONFIG_FILES([
 Makefile
 include/Makefile
 include/neuro/Makefile
+include/neuro/nnet/Makefile
 src/Makefile
 src/memory/Makefile
 src/video/Makefile
@@ -313,10 +376,13 @@ src/extlib/Makefile
 src/misc/Makefile
 src/misc/bitmap/Makefile
 docs/Makefile
+libs/Makefile
+libs/neuronet/Makefile
 ])
 
 AC_OUTPUT
 
 echo " "
+echo "enable neuronet : $enable_Neuronet"
 echo "This is the low library Neuro will use : $SELECTED_LOWLIB"
 echo " "

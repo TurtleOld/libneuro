@@ -1,3 +1,6 @@
+
+SUBDIRS = nnet
+
 noinst_HEADERS = \
 		 config.h.in \
 		 global.h

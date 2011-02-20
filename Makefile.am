@@ -5,9 +5,6 @@ ACLOCAL_AMFLAGS= -I m4
 
 SUBDIRS = \
 	  include \
-	  src
+	  src \
+	  libs
 #	  docs
-
-if USE_NEURONET
-SUBDIRS += neuronet
-endif
