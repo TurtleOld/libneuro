@@ -1,24 +1,4 @@
-/* sv_core.c
- * the core source of the server be it
- * stand alone or embeded.
- *
- * It will need to support both TCP communications
- * and direct with functions(actually, the TCP communications
- * will be on another module and they will call the functions from
- * this very module).
- *
- * This module will need to handle more than one player at once so it
- * would be safe to say that this will be the most complex element of 
- * the server or more precisely : the game(be it singleplayer or 
- * multiplayer). 
- *
- * The major element of this module will be to buffer input and output
- * that needs to be sent or just recieved by/from the clients. We will
- * then handle those so all the clients recieve accurate informations
- * about the game.
- *
- * Singleplayer and multiplayer (be it coop or deathmatch) will have
- * their behaviors scripted with TCL scripts.
+/* network.c 
  */
 
 /*-------------------- Extern Headers Including --------------------*/
