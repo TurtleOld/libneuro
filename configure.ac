@@ -315,8 +315,6 @@ src/misc/bitmap/Makefile
 docs/Makefile
 ])
 
-#AC_MSG_NOTICE([This is the low library Neuro will use : $SELECTED_LOWLIB])
-
 AC_OUTPUT
 
 echo " "
