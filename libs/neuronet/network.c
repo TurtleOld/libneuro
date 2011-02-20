@@ -709,6 +709,9 @@ NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 
 	tmp = Neuro_GiveCurEBuf(src->output);
 
+	if (!tmp)
+		return 1;
+
 	tmp->data = calloc(1, len);
 
 	memcpy(tmp->data, message, len);
