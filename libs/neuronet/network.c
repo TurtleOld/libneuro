@@ -87,7 +87,7 @@ typedef struct PACKET_BUFFER PACKET_BUFFER;
 
 struct PACKET_BUFFER
 {
-	char data[MAX_PACKET_SIZE];
+	char *data;
 	u32 len;
 };
 
@@ -115,6 +115,19 @@ static int Client_Recv(int connection, char **output);
 static int CheckPipeAvail(int connection, int type);
 
 /*-------------------- Static Functions ----------------------------*/
+
+static void
+clean_packet_buffer(void *src)
+{
+	PACKET_BUFFER *tmp;
+
+	tmp = (PACKET_BUFFER*)src;
+
+	if (tmp)
+	{
+		free(tmp->data);
+	}
+}
 
 static void
 clean_listen_context(void *src)
@@ -191,6 +204,7 @@ Handle_Connections(LISTEN_DATA *parent)
 		tmp->addrlen = addrlen;
 
 		Neuro_CreateEBuf(&tmp->output);
+		Neuro_SetcallbEBuf(tmp->output, clean_packet_buffer);
 	}
 }
 
@@ -566,7 +580,8 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 
 	tmp->output = NULL;
 	Neuro_CreateEBuf(&tmp->output);
-	
+	Neuro_SetcallbEBuf(tmp->output, clean_packet_buffer);
+
 	tmp->socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (tmp->socket <= 0)
 	{
@@ -684,6 +699,8 @@ NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 	Neuro_AllocEBuf(src->output, sizeof(PACKET_BUFFER*), sizeof(PACKET_BUFFER));
 
 	tmp = Neuro_GiveCurEBuf(src->output);
+
+	tmp->data = calloc(1, len);
 
 	memcpy(tmp->data, message, len);
 	tmp->len = len;
