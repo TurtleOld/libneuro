@@ -112,7 +112,7 @@ static int Client_Send(int connection, char *message, u32 len);
 
 static int Client_Recv(int connection, char **output);
 
-static int CheckPipeAvail(int connection, int type);
+static int CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
 
 /*-------------------- Static Functions ----------------------------*/
 
@@ -390,7 +390,7 @@ Client_Send(int connection, char *message, u32 len)
 	if (connection == 0 || message == NULL || len == 0)
 		return 0;
 
-	_err = CheckPipeAvail(connection, 1);
+	_err = CheckPipeAvail(connection, 1, 0, 50);
 
 	if (_err == 0)
 		return 0;
@@ -407,7 +407,7 @@ Client_Recv(int connection, char **output)
 	if (*output)
 		free(*output);
 
-	if (CheckPipeAvail(connection, 0) == 0)
+	if (CheckPipeAvail(connection, 0, 0, 50) == 0)
 		return -1;
 
 	*output = calloc(1, 512);
@@ -424,7 +424,7 @@ Client_Recv(int connection, char **output)
  * 
  */
 static int
-CheckPipeAvail(int connection, int type)
+CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 {
 	fd_set readfds, writefds, exceptfds;
 	struct timeval timeout_write;
@@ -434,8 +434,8 @@ CheckPipeAvail(int connection, int type)
 	 * 
 	 * 4 seconds wait/retry time
 	 */
-	timeout_write.tv_sec = 4;
-	timeout_write.tv_usec = 0;
+	timeout_write.tv_sec = timeout_sec;
+	timeout_write.tv_usec = timeout_usec;
 	
 	if (type == 0)
 	{
@@ -641,7 +641,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		else
 			_err = 0;
 
-		_err = CheckPipeAvail(tmp->socket, 1);
+		_err = CheckPipeAvail(tmp->socket, 1, 4, 0);
 		if (_err == 0)
 			break;
 	}
