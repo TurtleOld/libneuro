@@ -583,7 +583,7 @@ SVCore_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		if (ioctlsocket(tmp->socket, FIONBIO, &nb) == SOCKET_ERROR)
 			return 1;
 
-		Debug_Val(0, "NON BLOCKED == %d\n", nb);
+		NEURO_TRACE("NON BLOCKED == %d", nb);
 	}
 #endif /* W32 */
 
@@ -593,8 +593,8 @@ SVCore_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		_err = connect(tmp->socket, (struct sockaddr*)&address, sizeof(address));
 
 #ifdef W32
-		Debug_Val(0, "WSAGetLastError() == %d IsBlocking == %d\n", 
-				WSAGetLastError(), WSAIsBlocking());
+		/* NEURO_TRACE("WSAGetLastError() == %d IsBlocking == %d\n", 
+				WSAGetLastError(), WSAIsBlocking()); */
 #endif /* W32 */
 
 		if (_err == 0
@@ -704,7 +704,7 @@ SVCore_Listen(LISTEN_DATA *src, int port)
 
 	if (src->socket <= 0)
 	{
-		Debug_Val(0, "socket creation failed\n");
+		NEURO_ERROR(0, "socket creation failed\n");
 		return 1;
 	}
 
@@ -726,7 +726,7 @@ SVCore_Listen(LISTEN_DATA *src, int port)
 
 	if (_err == -1)
 	{
-		Debug_Val(0, "binding failed\n");
+		NEURO_ERROR("binding failed", NULL);
 		close(src->socket);
 		return 1;
 	}
@@ -734,7 +734,7 @@ SVCore_Listen(LISTEN_DATA *src, int port)
 	_err = listen(src->socket, 2);
 	if (_err == -1)
 	{
-		Debug_Val(0, "flagging the master socket as listening failed\n");
+		NEURO_ERROR("flagging the master socket as listening failed", NULL);
 		close(src->socket);
 		return 1;
 	}
