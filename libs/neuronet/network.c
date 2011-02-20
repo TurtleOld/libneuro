@@ -222,6 +222,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		if (client->idle_time + 500 < Neuro_GetTickCount())
 		{
 			Neuro_SCleanEBuf(parent->connections, client);
+			Debug_Print("Connection dropped due to timeout");
 
 			return;
 		}
