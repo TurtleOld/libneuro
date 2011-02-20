@@ -407,6 +407,9 @@ Client_Recv(int connection, char **output)
 	if (*output)
 		free(*output);
 
+	if (CheckPipeAvail(connection, 0) == 0)
+		return -1;
+
 	*output = calloc(1, 512);
 
 	return recv(connection, *output, 512, MSG_DONTWAIT);
@@ -485,7 +488,9 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 	if (Neuro_EBufIsEmpty(src->connections))
 	{
 		Debug_Print("src->connections is empty");
-		return -1;
+
+		/* we return that the client don't exist */
+		return 0;
 	}
 
 	total = Neuro_GiveEBufCount(src->connections) + 1;
