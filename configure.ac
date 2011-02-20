@@ -8,12 +8,15 @@ AC_INIT(README)
 # NEURO_MINOR_VERSION += 1	when new functions and or modules were added, anything more than mere bug fixes or small changes
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
 #
-NEURO_MAJOR_VERSION=0
-NEURO_MINOR_VERSION=49
-NEURO_MICRO_VERSION=33
-NEURO_INTERFACE_AGE=3
-NEURO_REVISION=7
-NEURO_BINARY_AGE=3
+
+. version.mk
+
+NEURO_MAJOR_VERSION=$MAJOR
+NEURO_MINOR_VERSION=$MINOR
+NEURO_MICRO_VERSION=$MICRO
+NEURO_INTERFACE_AGE=$INTERFACE
+NEURO_REVISION=$REVISION
+NEURO_BINARY_AGE=$BINARY
 NEURO_VERSION=$NEURO_MAJOR_VERSION.$NEURO_MINOR_VERSION.$NEURO_MICRO_VERSION
 
 AC_SUBST(NEURO_MAJOR_VERSION)
