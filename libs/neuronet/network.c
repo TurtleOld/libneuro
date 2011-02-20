@@ -202,7 +202,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		if (client->idle_time + 500 < Neuro_GetTickCount())
 		{
 			Neuro_SCleanEBuf(parent->connections, client);
-			Debug_Print("Connection dropped due to timeout");
+			NEURO_WARN("Connection dropped due to timeout", NULL);
 
 			return;
 		}
@@ -217,7 +217,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 
 		free(rbuffer);
 
-		Debug_Print("Connection lost");
+		NEURO_WARN("Connection lost", NULL);
 
 		Neuro_SCleanEBuf(parent->connections, client);
 
@@ -309,7 +309,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		else
 		{
 
-			Debug_Print("We weren't able to send any data... disconnecting client");
+			NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
 
 			Neuro_SCleanEBuf(parent->connections, client);
 
@@ -455,19 +455,19 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 
 	if (!src || !c)
 	{
-		Debug_Print("Invalid argument");
+		NEURO_ERROR("Invalid argument", NULL);
 		return -1;
 	}
 
 	if (!src->connections)
 	{
-		Error_Print("src->connections is NULL");
+		NEURO_ERROR("src->connections is NULL", NULL);
 		return -1;
 	}
 
 	if (Neuro_EBufIsEmpty(src->connections))
 	{
-		Debug_Print("src->connections is empty");
+		NEURO_WARN("src->connections is empty", NULL);
 
 		/* we return that the client don't exist */
 		return 0;
@@ -494,7 +494,7 @@ NNet_ClientExist(CONNECT_DATA *c)
 
 	if (ACTIVE_LISTEN == NULL)
 	{
-		Debug_Print("ACTIVE_LISTEN is NULL");
+		NEURO_ERROR("ACTIVE_LISTEN is NULL", NULL);
 		return -1;
 	}
 
@@ -508,7 +508,7 @@ NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c)
 
 	if (l == NULL || c == NULL)
 	{
-		Debug_Print("Invalid argument");
+		NEURO_ERROR("Invalid argument", NULL);
 		return -1;
 	}
 
