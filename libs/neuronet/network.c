@@ -275,6 +275,14 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 			}
 			ACTIVE_LISTEN = NULL;
 		}
+
+		free(rbuffer);
+
+		/* if we recieved a packet, we return and don't 
+		 * send packets on this loop just in case we recieve
+		 * more packets.
+		 */
+		return;
 	}
 
 	free(rbuffer);
