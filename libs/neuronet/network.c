@@ -481,7 +481,7 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 /*-------------------- Global Functions ----------------------------*/
 
 int
-SVCore_ClientExist(CONNECT_DATA *c)
+NNet_ClientExist(CONNECT_DATA *c)
 {
 
 	if (ACTIVE_LISTEN == NULL)
@@ -495,7 +495,7 @@ SVCore_ClientExist(CONNECT_DATA *c)
 
 
 int
-SVCore_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c)
+NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c)
 {
 
 	if (l == NULL || c == NULL)
@@ -509,7 +509,7 @@ SVCore_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c)
 
 /* establish connection with a server */
 int
-SVCore_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
+NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 {
 	struct hostent *hent;
 	struct sockaddr_in address; /* client address */
@@ -664,7 +664,7 @@ SVCore_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 
 
 char *
-SVCore_GetIP(CONNECT_DATA *src)
+NNet_GetIP(CONNECT_DATA *src)
 {
 	if (!src)
 		return 0;
@@ -673,7 +673,7 @@ SVCore_GetIP(CONNECT_DATA *src)
 }
 
 int
-SVCore_Send(CONNECT_DATA *src, char *message, u32 len)
+NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 {
 	PACKET_BUFFER *tmp;
 
@@ -692,7 +692,7 @@ SVCore_Send(CONNECT_DATA *src, char *message, u32 len)
 }
 
 int
-SVCore_Listen(LISTEN_DATA *src, int port)
+NNet_Listen(LISTEN_DATA *src, int port)
 {
 	struct sockaddr_in saddress; /* server address */
 	int _err = 0;
@@ -745,7 +745,7 @@ SVCore_Listen(LISTEN_DATA *src, int port)
 /*-------------------- Poll ----------------------------------------*/
 
 int
-SVCore_Poll()
+NNet_Poll()
 {
 	LISTEN_DATA *buf;
 	u32 total = 0;
@@ -772,7 +772,7 @@ SVCore_Poll()
 
 /* see LISTEN_DATA for what to put in type */
 LISTEN_DATA *
-SVCore_Create(int (*callback)(CONNECT_DATA *conn, char *data, u32 len), u32 type)
+NNet_Create(int (*callback)(CONNECT_DATA *conn, char *data, u32 len), u32 type)
 {
 	LISTEN_DATA *output;
 
@@ -806,7 +806,7 @@ SVCore_Create(int (*callback)(CONNECT_DATA *conn, char *data, u32 len), u32 type
 }
 
 void
-SVCore_Destroy(LISTEN_DATA *src)
+NNet_Destroy(LISTEN_DATA *src)
 {
 	if (!src)
 		return;
@@ -815,7 +815,7 @@ SVCore_Destroy(LISTEN_DATA *src)
 }
 
 int
-SVCore_Init()
+NNet_Init()
 {
 #if W32
 	int _err = 0;
@@ -830,7 +830,7 @@ SVCore_Init()
 }
 
 void
-SVCore_Clean()
+NNet_Clean()
 {
 	Neuro_CleanEBuf(&_greatBuffer);
 
