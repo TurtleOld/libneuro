@@ -41,6 +41,12 @@ extern int NNet_ClientExist(CONNECT_DATA *c);
 extern int NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c);
 
 
+/* for each loops, the value returned by this poll is significant 
+ * a value of 1 means that the main loop has to be stopped as an
+ * error or disconnection occured.
+ *
+ * value 0 is all is ok.
+ */
 extern int NNet_Poll();
 extern int NNet_Init();
 extern void NNet_Clean();
