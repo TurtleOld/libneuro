@@ -227,6 +227,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 	/* we recieved something */
 	if (rbuflen > 0)
 	{	
+		NEURO_TRACE("rbuflen %d --|", rbuflen);
 		/* we just got activity from the connection so we set 
 		 * the timeout idle time variable to the current time.
 		 */
@@ -254,6 +255,10 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 				break;
 			}
 			ACTIVE_LISTEN = NULL;
+		}
+		else
+		{
+			NEURO_WARN("packet dropped because it was too big", NULL);
 		}
 
 		free(rbuffer);
@@ -388,10 +393,14 @@ Client_Recv(int connection, char **output)
 		free(*output);
 
 	if (CheckPipeAvail(connection, 0, 0, 50) == 0)
+	{
+		NEURO_TRACE("Recv pipe not available", NULL);
 		return -1;
+	}
 
 	*output = calloc(1, 512);
 
+	NEURO_TRACE("pipe available and recv data", NULL);
 	return recv(connection, *output, 512, MSG_DONTWAIT);
 }
 
