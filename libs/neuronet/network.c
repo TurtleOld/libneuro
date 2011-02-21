@@ -1085,6 +1085,18 @@ NNet_Destroy(LISTEN_DATA *src)
 	Neuro_SCleanEBuf(_greatBuffer, src);
 }
 
+void
+NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c)
+{
+	if (!l || !c)
+		return;
+
+	if (NNet_ClientExist2(l, c))
+	{
+		Neuro_SCleanEBuf(l->connections, c);
+	}
+}
+
 int
 NNet_Init()
 {

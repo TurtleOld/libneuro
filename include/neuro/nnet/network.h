@@ -43,6 +43,8 @@ extern int NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c);
 /* set timeout for an active connection */
 extern int NNet_SetTimeout(CONNECT_DATA *src, t_tick ts);
 
+extern void NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c);
+
 /* to set the debugging filter for this library */
 extern void NNet_SetDebugFilter(char *filter);
 
