@@ -234,7 +234,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		client->idle_time = Neuro_GetTickCount();
 
 		/* we don't accept packets bigger than a certain size */
-		if (rbuflen < MAX_PACKET_SIZE)
+		if (rbuflen <= MAX_PACKET_SIZE)
 		{
 			ACTIVE_LISTEN = parent;
 			switch ((parent->callback)(client, rbuffer, rbuflen))
