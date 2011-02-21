@@ -171,7 +171,7 @@ Handle_Connections(LISTEN_DATA *parent)
 		CONNECT_DATA *tmp;
 
 		/* we have a new client that wishes to connect so we let it connect */
-	
+
 		Neuro_AllocEBuf(parent->connections, sizeof(CONNECT_DATA*), sizeof(CONNECT_DATA));
 
 		tmp = Neuro_GiveCurEBuf(parent->connections);
@@ -224,7 +224,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 
 		return;
 	}
-	
+
 	/* we recieved something */
 	if (rbuflen > 0)
 	{	
@@ -245,7 +245,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 					Neuro_SCleanEBuf(parent->connections, client);
 
 					free(rbuffer);
-					
+
 					ACTIVE_LISTEN = NULL;
 
 					return;
@@ -280,7 +280,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		int _err = 0;
 
 		buf = Neuro_GiveEBuf(client->output, 0);
-		
+
 		/* FILO : First in last out method */
 		if ((_err = Client_Send(client->socket, buf->data, buf->len)) == buf->len)
 		{
@@ -290,7 +290,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 				u32 total = 0;
 				u32 i = 0;
 				PACKET_BUFFER *temp;
-				
+
 
 				total = Neuro_GiveEBufCount(client->output) + 1;
 
@@ -426,7 +426,7 @@ CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 	 */
 	timeout_write.tv_sec = timeout_sec;
 	timeout_write.tv_usec = timeout_usec;
-	
+
 	if (type == 0)
 	{
 		FD_ZERO(&readfds);
@@ -435,7 +435,7 @@ CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 
 		return (FD_ISSET(connection, &readfds) ? 1 : 0);
 	}
-	
+
 	if (type == 1)
 	{
 		FD_ZERO(&writefds);
@@ -444,7 +444,7 @@ CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 
 		return (FD_ISSET(connection, &writefds) ? 1 : 0);
 	}
-	
+
 	if (type == 2)
 	{
 		FD_ZERO(&exceptfds);
@@ -565,7 +565,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		return 1;
 
 	hent = gethostbyname(host);
-	
+
 	if (hent == NULL)
 		return 1;
 
@@ -576,7 +576,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	/* Debug_Val(0, "Connecting to %s:%d\n", host, port); */
 
 	/* write the address we will connect to to a variable */
-	
+
 	sprintf(rIP, "%d.%d.%d.%d", (u8)hent->h_addr_list[0][0],
 		(u8)hent->h_addr_list[0][1],
 		(u8)hent->h_addr_list[0][2],
@@ -609,7 +609,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		NEURO_WARN("socket creation failed", NULL);
 		return 2;
 	}
-	
+
 	/* set the socket to non block */
 #ifndef W32
 	fcntl(tmp->socket, F_SETFL, O_NONBLOCK);
@@ -652,15 +652,15 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 		if (_err == 0)
 			break;
 	}
-		
-		
+
+
 	if (_err == -1)
 	{
 		NEURO_WARN("an error happened with select %d", errno);
 		perror("select()");
 		return 2;
 	}
-		
+
 	if (_err == 0)
 	{
 		NEURO_WARN("connection timed out", NULL);
@@ -695,7 +695,7 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	tmp->timeout = 500;
 
 	*result = tmp;
-	
+
 	return 0;
 }
 
