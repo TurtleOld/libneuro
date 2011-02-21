@@ -66,6 +66,8 @@ struct CONNECT_DATA
 #define MAX_PACKET_SIZE 512
 #define INPUT_PACKET_BUFFERING 20
 
+#define INCLUDE_HEADER 0
+
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
 struct PACKET_BUFFER
@@ -408,7 +410,13 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 	/* fprintf(stderr, "PLEN %d  SIZE %d DATA %d\n", *plen, len, packet_tosend); */
 
+#if INCLUDE_HEADER == 0
+	plen = &len;
+
+	if (rbuffer)
+#else /* INCLUDE_HEADER == 1 */
 	if (*plen > 0 && *plen <= len)
+#endif /* INCLUDE_HEADER == 1 */
 	{
 		FRAGMENT_MASTER *cur;
 		FRAGMENT_SLAVE *bufa;
@@ -425,7 +433,11 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 		/* buffering part... data is processed for buffering */
 
+#if INCLUDE_HEADER == 1
 		if (*plen <= len)
+#else /* INCLUDE_HEADER == 0 */
+		if (*plen < len)
+#endif /* INCLUDE_HEADER == 0 */
 		{
 			/* we have a case where our buffer is containing more than one packet */
 
@@ -441,11 +453,19 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 
 				bufa->len = plen;
-				bufa->data = (char*)&plen[1];
 
+				if (INCLUDE_HEADER)
+				{
+					bufa->data = (char*)&plen[1];
 
+					i += *plen + sizeof(u32);
+				}
+				else
+				{
+					bufa->data = rbuffer;
 
-				i += *plen + sizeof(u32);
+					i += *plen;
+				}
 			}
 		}
 		
@@ -966,19 +986,30 @@ NNet_Send(CONNECT_DATA *src, const char *message, u32 len)
 	/* NEURO_TRACE("%d of DATA to send", len); */
 
 
-	/* we allocate the size of the data that we will send plus the size of an integer 
-	 * which will be the size of the data itself at the beginning of the packet.
-	 */
-	tmp->data = calloc(1, len + sizeof(u32));
+	if (INCLUDE_HEADER)
+	{
+		/* we allocate the size of the data that we will send plus the size of an integer 
+		 * which will be the size of the data itself at the beginning of the packet.
+		 */
+		tmp->data = calloc(1, len + sizeof(u32));
 
-	/* we copy the size of the packet at the beginning of the packet */
-	memcpy(tmp->data, &len, sizeof(u32));
+		/* we copy the size of the packet at the beginning of the packet */
+		memcpy(tmp->data, &len, sizeof(u32));
 
-	/* we copy the data to the packet at the address right after the length of the packet. */
-	memcpy(&tmp->data[sizeof(u32)], message, len);
+		/* we copy the data to the packet at the address right after the length of the packet. */
+		memcpy(&tmp->data[sizeof(u32)], message, len);
 
 
-	tmp->len = len + sizeof(u32);
+		tmp->len = len + sizeof(u32);
+	}
+	else
+	{
+		tmp->data = calloc(1, len);
+
+		memcpy(tmp->data, message, len);
+
+		tmp->len = len;
+	}
 
 	tmp->arrow = tmp->data;
 	tmp->remaining = tmp->len;
