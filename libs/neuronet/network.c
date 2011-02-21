@@ -601,7 +601,7 @@ Handle_Listening(LISTEN_DATA *src)
 	/* checks for new connections and allocate accordingly 
 	 * if theres any.
 	 */
-	if (src->type == 0)
+	if (src->type == TYPE_SERVER)
 		Handle_Connections(src);
 
 	if (Neuro_EBufIsEmpty(src->connections))
@@ -1087,7 +1087,7 @@ NNet_Poll()
 	{
 		buf = Neuro_GiveEBuf(_greatBuffer, total);
 
-		if (buf->type == 1 && Neuro_EBufIsEmpty(buf->connections))
+		if (buf->type == TYPE_CLIENT && Neuro_EBufIsEmpty(buf->connections))
 		{
 			NEURO_ERROR("The client lost all it's connections", NULL);
 			return 1;
@@ -1103,7 +1103,7 @@ NNet_Poll()
 
 /* see LISTEN_DATA for what to put in type */
 LISTEN_DATA *
-NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 type)
+NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 connection_type)
 {
 	LISTEN_DATA *output;
 
@@ -1122,10 +1122,10 @@ NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 
 
 	output = Neuro_GiveCurEBuf(_greatBuffer);
 
-	if (type > 1)
-		type = 1;
+	if (connection_type > TYPE_CLIENT)
+		connection_type = TYPE_CLIENT;
 
-	output->type = type;
+	output->type = connection_type;
 
 	output->callback = callback;
 

@@ -5,6 +5,12 @@
 
 #include <neuro/NEURO.h>
 
+enum CONNECT_TYPE
+{
+	TYPE_SERVER,
+	TYPE_CLIENT
+};
+
 typedef struct LISTEN_DATA LISTEN_DATA;
 typedef struct CONNECT_DATA CONNECT_DATA;
 
@@ -14,9 +20,14 @@ typedef struct CONNECT_DATA CONNECT_DATA;
  * make the callback return 1 to disconnect the current connection.
  * Return 0 for normal continuous behavior.
  *
- * type : 0 is server and 1 is client
+ * connection_type : put one of the CONNECT_TYPE values 
+ * 	example : TYPE_CLIENT
+ *
+ * NOTE NOTE NOTE ******* For ease of use, on a listening server, 
+ * EVERY NEW CLIENT CONNECTIONS ARE INTRODUCED TO THE CALLBACK WITH
+ * AN EMPTY DATA AND 0 LEN PACKET!!!
  */
-extern LISTEN_DATA *NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 type);
+extern LISTEN_DATA *NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 connection_type);
 
 /* destroy/clean a context created using NNet_Create(3) */
 extern void NNet_Destroy(LISTEN_DATA *src);
