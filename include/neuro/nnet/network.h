@@ -40,6 +40,8 @@ extern int NNet_ClientExist(CONNECT_DATA *c);
 
 extern int NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c);
 
+/* to set the debugging filter for this library */
+extern void NNet_SetDebugFilter(char *filter);
 
 /* for each loops, the value returned by this poll is significant 
  * a value of 1 means that the main loop has to be stopped as an

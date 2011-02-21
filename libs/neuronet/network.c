@@ -488,6 +488,12 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 
 /*-------------------- Global Functions ----------------------------*/
 
+void
+NNet_SetDebugFilter(char *filter)
+{
+	Neuro_SetDebugFilter(filter);
+}
+
 int
 NNet_ClientExist(CONNECT_DATA *c)
 {
