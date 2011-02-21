@@ -164,8 +164,7 @@ clean_fragment_master(void *src)
 		if (tmp->data)
 			free(tmp->data);
 
-		if (!Neuro_EBufIsEmpty(tmp->fragmented))
-			Neuro_CleanEBuf(&tmp->fragmented);
+		Neuro_CleanEBuf(&tmp->fragmented);
 	}
 }
 
