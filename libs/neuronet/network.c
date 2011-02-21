@@ -371,6 +371,8 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 	{
 		case 1:
 		{
+			NEURO_TRACE("Disconnection triggered by the foreign callback", NULL);
+
 			/* we disconnect the client from the parent */
 			Neuro_SCleanEBuf(parent->connections, client);	
 
