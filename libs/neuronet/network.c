@@ -317,9 +317,14 @@ pop_input_data(EBUF *input, u32 *len)
 
 	if (Neuro_EBufIsEmpty(master->fragmented))
 	{
-		/* the buffer contains no elements, this is an error */
+		/* the buffer contains no elements, this means that the 
+		 * packet is a whole, theres no chunks in it.
+		 */
 
-		return NULL;
+		*len = master->len;
+		output = master->data;
+
+		return output;
 	}
 
 	slave = Neuro_GiveEBuf(master->fragmented, 0);
@@ -332,6 +337,63 @@ pop_input_data(EBUF *input, u32 *len)
 	return output;
 }
 
+static void
+Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
+{
+	char *packet_tosend = NULL;
+	u32 plen = 0;
+	/* packet handling part... data is processed for handling */
+
+	if (!Neuro_EBufIsEmpty(client->input))
+	{
+		packet_tosend = pop_input_data(client->input, &plen);
+
+		if (!packet_tosend)
+		{
+			NEURO_ERROR("packet_tosend is NULL", NULL);
+			return;
+		}
+	}
+	else
+		return;
+
+	/* we recieved a packet from the connection with a client so we reset 
+	 * the idle time.
+	 */
+	client->idle_time = Neuro_GetTickCount();
+
+	ACTIVE_LISTEN = parent;
+	switch ((parent->callback)(client, packet_tosend, plen))
+	{
+		case 1:
+		{
+			/* we disconnect the client from the parent */
+			Neuro_SCleanEBuf(parent->connections, client);	
+
+			ACTIVE_LISTEN = NULL;
+			return;
+		}
+		break;
+
+		default:
+		{
+			FRAGMENT_MASTER *buf;
+
+			if (!Neuro_EBufIsEmpty(client->input))
+			{
+				buf = Neuro_GiveEBuf(client->input, 0);
+
+				if (Neuro_EBufIsEmpty(buf->fragmented))
+					clean_element_reorder(client->input, buf);
+			}
+		}
+		break;
+
+	}	
+	ACTIVE_LISTEN = NULL;
+
+}
+
 /* this function processes the data that was recieved in the input (read) buffer 
  * and calls the parent's callback with the first packet that was recieved.
  */
@@ -339,38 +401,31 @@ static void
 Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 len)
 {
 	u32 *plen = NULL;
-	char *packet_tosend = NULL;
 
 	plen = (u32*)rbuffer;
-
-	packet_tosend = (char*)&plen[1];
 
 	/* fprintf(stderr, "PLEN %d  SIZE %d DATA %d\n", *plen, len, packet_tosend); */
 
 	if (*plen > 0 && *plen <= len)
 	{
+		FRAGMENT_MASTER *cur;
+		FRAGMENT_SLAVE *bufa;
+		register u32 i = 0;
+
 		/* the packet is valid */
+
+		Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
+
+		cur = Neuro_GiveCurEBuf(client->input);
+			
 
 		/* buffering part... data is processed for buffering */
 
 		if (*plen < len)
 		{
-			FRAGMENT_MASTER *cur;
-			FRAGMENT_SLAVE *bufa;
-			register u32 i = 0;
-
 			/* we have a case where our buffer is containing more than one packet */
 
-
-
-			Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
-
-			cur = Neuro_GiveCurEBuf(client->input);
-
-			
 			Neuro_CreateEBuf(&cur->fragmented);
-
-
 
 			while (i < len)
 			{
@@ -390,57 +445,7 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 			}
 		}
 		
-
-
-
-
-
-		/* packet handling part... data is processed for handling */
-
-		if (!Neuro_EBufIsEmpty(client->input))
-		{
-			packet_tosend = pop_input_data(client->input, plen);
-		}
-
-		/* we recieved a packet from the connection with a client so we reset 
-		 * the idle time.
-		 */
-		client->idle_time = Neuro_GetTickCount();
-
-		ACTIVE_LISTEN = parent;
-		switch ((parent->callback)(client, packet_tosend, *plen))
-		{
-			case 1:
-			{
-				/* we disconnect the client from the parent */
-				Neuro_SCleanEBuf(parent->connections, client);
-				
-				/* free(rbuffer); */
-
-				ACTIVE_LISTEN = NULL;
-				return;
-			}
-			break;
-
-			default:
-			{
-				FRAGMENT_MASTER *buf;
-
-				if (!Neuro_EBufIsEmpty(client->input))
-				{
-					buf = Neuro_GiveEBuf(client->input, 0);
-
-					if (Neuro_EBufIsEmpty(buf->fragmented))
-						clean_element_reorder(client->input, buf);
-				}
-				else
-					free(rbuffer);
-			}
-			break;
-
-		}	
-		ACTIVE_LISTEN = NULL;
-
+		Packet_Processing(parent, client);
 	}
 	else
 	{
@@ -488,58 +493,12 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		return;
 	}
 
+	/* we process packets in our input buffer */
+	Packet_Processing(parent, client);
+
 	/* we recieved something */
 	if (rbuflen > 0)
-	{	
-		NEURO_TRACE("rbuflen %d --|", rbuflen);
-
 		Buffer_Recv_Data(parent, client, rbuffer, rbuflen);
-
-		return;
-
-		/* we just got activity from the connection so we set 
-		 * the timeout idle time variable to the current time.
-		 */
-		client->idle_time = Neuro_GetTickCount();
-
-		/* we don't accept packets bigger than a certain size */
-		if (rbuflen <= MAX_PACKET_SIZE)
-		{
-			ACTIVE_LISTEN = parent;
-			switch ((parent->callback)(client, rbuffer, rbuflen))
-			{
-				case 1:
-				{
-					Neuro_SCleanEBuf(parent->connections, client);
-
-					free(rbuffer);
-
-					ACTIVE_LISTEN = NULL;
-
-					return;
-				}
-				break;
-
-				default:
-				break;
-			}
-			ACTIVE_LISTEN = NULL;
-		}
-		else
-		{
-			NEURO_WARN("packet dropped because it was too big", NULL);
-		}
-
-		free(rbuffer);
-
-		/* if we recieved a packet, we return and don't 
-		 * send packets on this loop just in case we recieve
-		 * more packets.
-		 */
-		return;
-	}
-
-	free(rbuffer);
 
 	/* this code sends packets from the output buffer */
 	if (!Neuro_EBufIsEmpty(client->output))
