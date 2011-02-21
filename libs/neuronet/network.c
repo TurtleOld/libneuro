@@ -2,7 +2,7 @@
  */
 
 /*-------------------- Extern Headers Including --------------------*/
-#ifndef W32
+#ifndef WIN32
 #include <sys/select.h> /* select() */
 
 #define __USE_MISC /* to make inet_aton() work */
@@ -11,12 +11,12 @@
 #include <netinet/in.h> /* htons() */
 #include <netdb.h> /* gethostbyname() */
 
-#else /* W32 */
+#else /* WIN32 */
 
 #include <windows.h>
 #define MSG_DONTWAIT 0
 
-#endif /* W32 */
+#endif /* WIN32 */
 
 #include <unistd.h> /* close() */
 #include <fcntl.h> /* fcntl() (control of the sockets) */
@@ -83,9 +83,9 @@ EBUF *_greatBuffer; /* contains LISTEN_DATA elements */
 
 static LISTEN_DATA *ACTIVE_LISTEN;
 
-#ifdef W32
+#ifdef WIN32
 static WSADATA wsaData;
-#endif /* W32 */
+#endif /* WIN32 */
 
 /*-------------------- Static Prototypes ---------------------------*/
 
@@ -119,11 +119,11 @@ clean_listen_context(void *src)
 
 	if (tmp)
 	{
-#ifdef W32
+#ifdef WIN32
 		closesocket(tmp->socket);
-#else /* NOT W32 */
+#else /* NOT WIN32 */
 		close(tmp->socket);
-#endif /* NOT W32 */
+#endif /* NOT WIN32 */
 
 		Neuro_CleanEBuf(&tmp->connections);
 	}
@@ -138,11 +138,11 @@ clean_connection_context(void *src)
 
 	if (tmp)
 	{
-#ifdef W32
+#ifdef WIN32
 		closesocket(tmp->socket);
-#else /* NOT W32 */
+#else /* NOT WIN32 */
 		close(tmp->socket);
-#endif /* NOT W32 */
+#endif /* NOT WIN32 */
 
 		Neuro_CleanEBuf(&tmp->output);
 	}
@@ -152,11 +152,11 @@ static void
 Handle_Connections(LISTEN_DATA *parent)
 {
 	struct sockaddr_in connect_addr; /* server address */
-#ifndef W32
+#ifndef WIN32
 	u32 addrlen = 0;
-#else /* W32 */
+#else /* WIN32 */
 	i32 addrlen = 0;
-#endif /* W32 */
+#endif /* WIN32 */
 	i32 _err = 0;
 
 
@@ -550,11 +550,11 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	struct sockaddr_in address; /* client address */
 	int _err = 0;
 	int optval;
-#ifndef W32
+#ifndef WIN32
 	socklen_t optlen = 0;
-#else /* W32 */
+#else /* WIN32 */
 	int optlen = 0;
-#endif /* W32 */
+#endif /* WIN32 */
 	char rIP[16];
 	struct timeval timeout_write;
 	CONNECT_DATA *tmp = NULL;
@@ -587,11 +587,11 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	 * connection.
 	 */
 	address.sin_family = AF_INET;
-#ifndef W32
+#ifndef WIN32
 	inet_aton(rIP, (struct in_addr*)&address.sin_addr.s_addr);
-#else /* W32 */
+#else /* WIN32 */
 	address.sin_addr.s_addr = inet_addr(rIP);
-#endif /* W32 */
+#endif /* WIN32 */
 	/* memcpy(&address.sin_addr, &hent->h_addr, sizeof(address.sin_addr)); */
 	address.sin_port = htons(port);
 
@@ -611,9 +611,9 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	}
 
 	/* set the socket to non block */
-#ifndef W32
+#ifndef WIN32
 	fcntl(tmp->socket, F_SETFL, O_NONBLOCK);
-#else /* W32 */
+#else /* WIN32 */
 	{
 		unsigned long nb = 1;
 		if (ioctlsocket(tmp->socket, FIONBIO, &nb) == SOCKET_ERROR)
@@ -621,24 +621,24 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 
 		NEURO_TRACE("NON BLOCKED == %d", nb);
 	}
-#endif /* W32 */
+#endif /* WIN32 */
 
 	_err = 0;
 	while (_err == 0)
 	{
 		_err = connect(tmp->socket, (struct sockaddr*)&address, sizeof(address));
 
-#ifdef W32
+#ifdef WIN32
 		/* NEURO_TRACE("WSAGetLastError() == %d IsBlocking == %d\n", 
 				WSAGetLastError(), WSAIsBlocking()); */
-#endif /* W32 */
+#endif /* WIN32 */
 
 		if (_err == 0
-#ifndef W32
+#ifndef WIN32
 			&& errno != EINPROGRESS && errno != EALREADY
-#else /* W32 */
+#else /* WIN32 */
 			&& errno != WSAEINPROGRESS && errno != WSAEALREADY
-#endif /* W32 */
+#endif /* WIN32 */
 			)
 		{
 			NEURO_WARN("could not connect to host with error %d", errno);
@@ -761,15 +761,15 @@ NNet_Listen(LISTEN_DATA *src, int port)
 
 	_err = bind(src->socket, (struct sockaddr*)&saddress, sizeof(saddress));
 
-#ifndef W32
+#ifndef WIN32
 	fcntl(src->socket, F_SETFL, O_NONBLOCK);
-#else /* W32 */
+#else /* WIN32 */
 	{
 		unsigned long nb = 1;
 		if (ioctlsocket(src->socket, FIONBIO, &nb) == SOCKET_ERROR)
 			return 1;
 	}
-#endif /* W32 */
+#endif /* WIN32 */
 
 	if (_err == -1)
 	{
@@ -864,14 +864,14 @@ NNet_Destroy(LISTEN_DATA *src)
 int
 NNet_Init()
 {
-#if W32
+#if WIN32
 	int _err = 0;
 
 	_err = WSAStartup(MAKEWORD(1, 1), &wsaData);
 
 	if (_err < 0)
 		return 1;
-#endif /* W32 */
+#endif /* WIN32 */
 
 	return 0;
 }
@@ -881,7 +881,7 @@ NNet_Clean()
 {
 	Neuro_CleanEBuf(&_greatBuffer);
 
-#ifdef W32
+#ifdef WIN32
 	WSACleanup();
-#endif /* W32 */
+#endif /* WIN32 */
 }
