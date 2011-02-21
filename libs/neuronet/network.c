@@ -625,7 +625,7 @@ Client_Send(int connection, char *message, u32 len)
 	if (connection == 0 || message == NULL || len == 0)
 		return 0;
 
-	_err = CheckPipeAvail(connection, 1, 0, 50);
+	_err = CheckPipeAvail(connection, 1, 0, 1);
 
 	if (_err == 0)
 		return 0;
@@ -642,7 +642,7 @@ Client_Recv(int connection, char **output)
 	if (*output)
 		free(*output);
 
-	if (CheckPipeAvail(connection, 0, 0, 50) == 0)
+	if (CheckPipeAvail(connection, 0, 0, 1) == 0)
 	{
 		NEURO_TRACE("Recv pipe not available", NULL);
 		return -1;
