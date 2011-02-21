@@ -714,9 +714,14 @@ NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 {
 	PACKET_BUFFER *tmp;
 
-	if (!src || !message || len == 0 || len >= MAX_PACKET_SIZE)
+	if (!src || !message || len == 0)
 		return 1;
 
+	if (len >= MAX_PACKET_SIZE)
+	{
+		NEURO_WARN("too big packet input into the buffer (%d)", len);
+		return 1;
+	}
 
 	Neuro_AllocEBuf(src->output, sizeof(PACKET_BUFFER*), sizeof(PACKET_BUFFER));
 
