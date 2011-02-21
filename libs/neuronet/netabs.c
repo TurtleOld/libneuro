@@ -4,18 +4,19 @@
  * this module is to abstract the following
  * functions -- all network related.
  *
- * socket() -- creates a socket
- * accept() -- accepts a connection on a server
- * bind() -- bind a port for accepting connections on a server
- * connect() -- connects to a server on a client
- * inet_ntoa() -- transforms a sin_addr type into a string (the IP)
- * gethostbyname() -- dns interface to get the IP of a domain
+ * socket -- creates a socket
+ * accept -- accepts a connection on a server
+ * bind -- bind a port for accepting connections on a server
+ * connect -- connects to a server on a client
+ * inet_ntoa -- transforms a sin_addr type into a string (the IP)
+ * gethostbyname -- dns interface to get the IP of a domain
+ * select -- checks to see which file descriptor is available.
  *
  * unix -- w32 -- description
  *
- * close() -- closesocket() -- closes a socket
- * inet_aton() -- inet_addr() -- transforms an IP string into the type sin_addr.s_addr
- * fcntl() -- ioctlsocket() -- to set options on the sockets
+ * close -- closesocket -- closes a socket
+ * inet_aton -- inet_addr -- transforms an IP string into the type sin_addr.s_addr
+ * fcntl -- ioctlsocket -- to set options on the sockets
  *
  *
  *
@@ -31,8 +32,9 @@
  * O_NONBLOCK -- &integer -- to set the socket to not block
  * EINPROGRESS -- WSAEINPROGRESS -- connection in progress
  * EALREADY -- WSAEALREADY -- already connected
- *  -- WSAStartup() -- some winsock init thingy
- *  -- WSACleanup() -- some winsock cleanup thingy
+ *  -- WSAStartup -- winsock init
+ *  -- WSACleanup -- winsock cleanup
+ *  -- SOCKET_ERROR -- winsock way to know theres an error
  *
  *
  *
