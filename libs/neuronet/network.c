@@ -59,17 +59,72 @@ struct CONNECT_DATA
 	t_tick idle_time; /* idle time... actually its the exact time we last recieved activity from the connection */
 	t_tick timeout;
 
-	EBUF *output; /* output buffer contains PACKET_BUFFER elements */
+	EBUF *input; /* input buffer that contains FRAGMENT_MASTER elements */
+	EBUF *output; /* output buffer that contains PACKET_BUFFER elements */
 };
 
 #define MAX_PACKET_SIZE 512
+#define INPUT_PACKET_BUFFERING 20
 
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
 struct PACKET_BUFFER
 {
-	char *data;
 	u32 len;
+	char *data;
+};
+
+
+typedef struct FRAGMENT_MASTER FRAGMENT_MASTER;
+
+/* Inputed packets are known to sometimes be recieved in more than one chunk at once.
+ * This means that a single recieve by recv() could return more than one packet at
+ * once per cycles. 
+ *
+ * Because of that behavior, we have to buffer the input packets and fragment the allocated
+ * buffer into their respective packet sizes. THIS STRUCT IS TO CONTAIN SUCH PACKETS!
+ *
+ * Every packets start with an integer that is the size of the data in a packet.
+ * We check to see if that value is of a valid range then proceed to fill this struct.
+ *
+ * It is important to note that the initial data pointer is the buffer itself which
+ * contains more than one packet (or just one could happen too). The EBUF fragmented
+ * buffer is then filled with pointers to the areas in the initial data pointer.
+ * This method is meant to saves memory by a lot.
+ *
+ *
+ * EXAMPLE :
+ *
+ *	 buffer len(24) :
+ *	 ---------------------------------
+ *	 |000|000|000|000|000|000|000|000|
+ *	 ---------------------------------
+ *
+ *	 single packet len(3) :
+ *	 -----
+ *	 |000|
+ *	 -----
+ *
+ *	 so in that buffer we have 8 packets that are in the same buffer... which we need to
+ *	 fragment up manually.
+ */
+struct FRAGMENT_MASTER
+{
+	/* the length of the initial data */
+	u32 len;
+	/* the data buffer which could contain one or more actual packets. */
+	char *data;
+
+	EBUF *fragmented; /* contains the fragmented PACKET_BUFFER elements */
+};
+
+typedef struct FRAGMENT_SLAVE FRAGMENT_SLAVE;
+
+/* no need to clean this struct type, it should have nothing allocated inside it */
+struct FRAGMENT_SLAVE
+{
+	u32 *len;
+	char *data;
 };
 
 /*-------------------- Global Variables ----------------------------*/
@@ -96,6 +151,23 @@ static int Client_Recv(int connection, char **output);
 static int CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
 
 /*-------------------- Static Functions ----------------------------*/
+
+static void
+clean_fragment_master(void *src)
+{
+	FRAGMENT_MASTER *tmp;
+
+	tmp = (FRAGMENT_MASTER*)src;
+
+	if (tmp)
+	{
+		if (tmp->data)
+			free(tmp->data);
+
+		if (!Neuro_EBufIsEmpty(tmp->fragmented))
+			Neuro_CleanEBuf(&tmp->fragmented);
+	}
+}
 
 static void
 clean_packet_buffer(void *src)
@@ -144,6 +216,7 @@ clean_connection_context(void *src)
 		close(tmp->socket);
 #endif /* NOT WIN32 */
 
+		Neuro_CleanEBuf(&tmp->input);
 		Neuro_CleanEBuf(&tmp->output);
 	}
 }
@@ -184,9 +257,199 @@ Handle_Connections(LISTEN_DATA *parent)
 		memcpy(&tmp->c_address, &connect_addr, sizeof(struct sockaddr_in));
 		tmp->addrlen = addrlen;
 
+		Neuro_CreateEBuf(&tmp->input);
+		Neuro_SetcallbEBuf(tmp->input, clean_fragment_master);
+
 		Neuro_CreateEBuf(&tmp->output);
 		Neuro_SetcallbEBuf(tmp->output, clean_packet_buffer);
 	}
+}
+
+/* we delete the first element and reorder the elements back to their 
+ * normal ordering.
+ */
+static void
+clean_element_reorder(EBUF *input, void *element)
+{
+	u32 total = 0;
+	u32 i = 0;
+	void *temp;
+	void *buf;
+
+	if (Neuro_EBufIsEmpty(input))
+		return;
+
+	Neuro_SCleanEBuf(input, element);
+
+
+	total = Neuro_GiveEBufCount(input);
+
+	/* NEURO_TRACE("BEGIN LOOPING BUFFERED PACKETS", NULL); */
+	while (i < total)
+	{
+		buf = Neuro_GiveEBuf(input, i);
+		temp = Neuro_GiveEBuf(input, i + 1);
+
+		/* NEURO_TRACE("BUFFERED PACKET LEN %d", buf->len); */
+		if (temp == NULL)
+			break;
+
+		Neuro_SetEBuf(input, 
+				Neuro_GiveEBufAddr(input, i + 1), buf);
+
+		Neuro_SetEBuf(input, 
+				Neuro_GiveEBufAddr(input, i), temp);
+	
+		i++;
+	}
+
+}
+
+/* FIFO -- returns the first element in its buffer and removes it from the buffer. */
+static char *
+pop_input_data(EBUF *input, u32 *len)
+{
+	FRAGMENT_MASTER *master;
+	FRAGMENT_SLAVE *slave;
+	char *output = NULL;
+
+	master = Neuro_GiveEBuf(input, 0);
+
+	if (Neuro_EBufIsEmpty(master->fragmented))
+	{
+		/* the buffer contains no elements, this is an error */
+
+		return NULL;
+	}
+
+	slave = Neuro_GiveEBuf(master->fragmented, 0);
+
+	*len = *slave->len;
+	output = slave->data;
+
+	clean_element_reorder(master->fragmented, slave);
+
+	return output;
+}
+
+/* this function processes the data that was recieved in the input (read) buffer 
+ * and calls the parent's callback with the first packet that was recieved.
+ */
+static void
+Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 len)
+{
+	u32 *plen = NULL;
+	char *packet_tosend = NULL;
+
+	plen = (u32*)rbuffer;
+
+	packet_tosend = (char*)&plen[1];
+
+	/* fprintf(stderr, "PLEN %d  SIZE %d DATA %d\n", *plen, len, packet_tosend); */
+
+	if (*plen > 0 && *plen <= len)
+	{
+		/* the packet is valid */
+
+		/* buffering part... data is processed for buffering */
+
+		if (*plen < len)
+		{
+			FRAGMENT_MASTER *cur;
+			FRAGMENT_SLAVE *bufa;
+			register u32 i = 0;
+
+			/* we have a case where our buffer is containing more than one packet */
+
+
+
+			Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
+
+			cur = Neuro_GiveCurEBuf(client->input);
+
+			
+			Neuro_CreateEBuf(&cur->fragmented);
+
+
+
+			while (i < len)
+			{
+				plen = (u32*)&rbuffer[i];
+
+				Neuro_AllocEBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE*), sizeof(FRAGMENT_SLAVE));
+
+				bufa = Neuro_GiveCurEBuf(cur->fragmented);
+
+
+				bufa->len = plen;
+				bufa->data = (char*)&plen[1];
+
+
+
+				i += *plen + sizeof(u32);
+			}
+		}
+		
+
+
+
+
+
+		/* packet handling part... data is processed for handling */
+
+		if (!Neuro_EBufIsEmpty(client->input))
+		{
+			packet_tosend = pop_input_data(client->input, plen);
+		}
+
+		/* we recieved a packet from the connection with a client so we reset 
+		 * the idle time.
+		 */
+		client->idle_time = Neuro_GetTickCount();
+
+		ACTIVE_LISTEN = parent;
+		switch ((parent->callback)(client, packet_tosend, *plen))
+		{
+			case 1:
+			{
+				/* we disconnect the client from the parent */
+				Neuro_SCleanEBuf(parent->connections, client);
+				
+				/* free(rbuffer); */
+
+				ACTIVE_LISTEN = NULL;
+				return;
+			}
+			break;
+
+			default:
+			{
+				FRAGMENT_MASTER *buf;
+
+				if (!Neuro_EBufIsEmpty(client->input))
+				{
+					buf = Neuro_GiveEBuf(client->input, 0);
+
+					if (Neuro_EBufIsEmpty(buf->fragmented))
+						clean_element_reorder(client->input, buf);
+				}
+				else
+					free(rbuffer);
+			}
+			break;
+
+		}	
+		ACTIVE_LISTEN = NULL;
+
+	}
+	else
+	{
+		/* the packet is not valid */
+		NEURO_WARN("Invalid Packet was recieved. Suspected corrupt or not using the correct format for packets.", NULL);
+		return;
+	}
+
+	/* fprintf(stderr, "END PROCESSING : PLEN %d  SIZE %d\n", *plen, len); */
 }
 
 static void
@@ -229,6 +492,11 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 	if (rbuflen > 0)
 	{	
 		NEURO_TRACE("rbuflen %d --|", rbuflen);
+
+		Buffer_Recv_Data(parent, client, rbuffer, rbuflen);
+
+		return;
+
 		/* we just got activity from the connection so we set 
 		 * the timeout idle time variable to the current time.
 		 */
@@ -281,36 +549,16 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 
 		buf = Neuro_GiveEBuf(client->output, 0);
 
-		/* FILO : First in last out method */
+		if (buf->len >= MAX_PACKET_SIZE)
+		{
+			NEURO_ERROR("Trying to send a packet bigger than the limit! %d bytes", 
+					buf->len);
+		}
+
+		/* FIFO : First in first out method */
 		if ((_err = Client_Send(client->socket, buf->data, buf->len)) == buf->len)
 		{
-			Neuro_SCleanEBuf(client->output, buf);
-
-			{
-				u32 total = 0;
-				u32 i = 0;
-				PACKET_BUFFER *temp;
-
-
-				total = Neuro_GiveEBufCount(client->output) + 1;
-
-				while (i < total)
-				{
-					buf = Neuro_GiveEBuf(client->output, i);
-					temp = Neuro_GiveEBuf(client->output, i + 1);
-
-					if (temp == NULL)
-						break;
-
-					Neuro_SetEBuf(client->output, 
-							Neuro_GiveEBufAddr(client->output, i + 1), buf);
-
-					Neuro_SetEBuf(client->output, 
-							Neuro_GiveEBufAddr(client->output, i), temp);
-
-					i++;
-				}
-			}
+			clean_element_reorder(client->output, buf);			
 		}
 		else
 		{
@@ -399,10 +647,10 @@ Client_Recv(int connection, char **output)
 		return -1;
 	}
 
-	*output = calloc(1, 512);
+	*output = calloc(1, MAX_PACKET_SIZE * INPUT_PACKET_BUFFERING);
 
 	NEURO_TRACE("pipe available and recv data", NULL);
-	return recv(connection, *output, 512, MSG_DONTWAIT);
+	return recv(connection, *output, MAX_PACKET_SIZE * INPUT_PACKET_BUFFERING, MSG_DONTWAIT);
 }
 
 /* returns 1 if pipe type [types]
@@ -599,6 +847,10 @@ NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
 	Neuro_AllocEBuf(src->connections, sizeof(CONNECT_DATA*), sizeof(CONNECT_DATA));	
 	tmp = Neuro_GiveCurEBuf(src->connections);
 
+	tmp->input = NULL;
+	Neuro_CreateEBuf(&tmp->input);
+	Neuro_SetcallbEBuf(tmp->input, clean_fragment_master);
+
 	tmp->output = NULL;
 	Neuro_CreateEBuf(&tmp->output);
 	Neuro_SetcallbEBuf(tmp->output, clean_packet_buffer);
@@ -730,10 +982,22 @@ NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 	if (!tmp)
 		return 1;
 
-	tmp->data = calloc(1, len);
+	/* NEURO_TRACE("%d of DATA to send", len); */
 
-	memcpy(tmp->data, message, len);
-	tmp->len = len;
+
+	/* we allocate the size of the data that we will send plus the size of an integer 
+	 * which will be the size of the data itself at the beginning of the packet.
+	 */
+	tmp->data = calloc(1, len + sizeof(u32));
+
+	/* we copy the size of the packet at the beginning of the packet */
+	memcpy(tmp->data, &len, sizeof(u32));
+
+	/* we copy the data to the packet at the address right after the length of the packet. */
+	memcpy(&tmp->data[sizeof(u32)], message, len);
+
+
+	tmp->len = len + sizeof(u32);
 
 	return 0;
 }
