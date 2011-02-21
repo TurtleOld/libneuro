@@ -42,6 +42,21 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 
+#ifndef WIN32
+#include <sys/select.h> /* select() */
+
+#define __USE_MISC /* to make inet_aton() work */
+#include <arpa/inet.h> /* inet_aton() inet_ntoa() */
+#include <sys/socket.h>
+#include <netinet/in.h> /* htons() */
+#include <netdb.h> /* gethostbyname() */
+
+#else /* WIN32 */
+
+#include <windows.h>
+#define MSG_DONTWAIT 0
+
+#endif /* WIN32 */
 
 /*-------------------- Local Headers Including ---------------------*/
 
@@ -63,6 +78,12 @@
 
 /*-------------------- Global Functions ----------------------------*/
 
+
+NetAbs_Closesocket()
+{
+
+}
+
 /*-------------------- Poll ----------------------------------------*/
 
 void
@@ -76,11 +97,23 @@ NetAbs_Poll()
 int
 NetAbs_Init()
 {
+#if WIN32
+	WSADATA wsaData;
+	int _err = 0;
+
+	_err = WSAStartup(MAKEWORD(1, 1), &wsaData);
+
+	if (_err < 0)
+		return 1;
+#endif /* WIN32 */
+
 	return 0;
 }
 
 void
 NetAbs_Clean()
 {
-	
+#ifdef WIN32
+	WSACleanup();
+#endif /* WIN32 */
 }
