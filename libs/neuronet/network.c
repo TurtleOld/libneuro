@@ -71,6 +71,9 @@ typedef struct PACKET_BUFFER PACKET_BUFFER;
 struct PACKET_BUFFER
 {
 	u32 len;
+	u32 remaining;
+
+	char *arrow;
 	char *data;
 };
 
@@ -516,18 +519,36 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 		}
 
 		/* FIFO : First in first out method */
-		if ((_err = Client_Send(client->socket, buf->data, buf->len)) == buf->len)
+		if ((_err = Client_Send(client->socket, buf->arrow, buf->remaining)) == buf->remaining)
 		{
 			clean_element_reorder(client->output, buf);			
 		}
 		else
 		{
 
-			NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
+			if (_err == -1)
+			{
 
-			Neuro_SCleanEBuf(parent->connections, client);
+				NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
 
-			return;
+				Neuro_SCleanEBuf(parent->connections, client);
+
+				return;
+			}
+			else
+			{
+				/* This code actually sets the remaining bytes that weren't sent
+				 * on the last pass of Client_Send() function.
+				 *
+				 * This will ensure that all the data are sent.
+				 */
+				if (_err < buf->remaining)
+				{
+					buf->remaining -= _err;
+
+					buf->arrow = &buf->data[buf->len - buf->remaining];
+				}
+			}
 		}
 	}
 }
@@ -958,6 +979,9 @@ NNet_Send(CONNECT_DATA *src, char *message, u32 len)
 
 
 	tmp->len = len + sizeof(u32);
+
+	tmp->arrow = tmp->data;
+	tmp->remaining = tmp->len;
 
 	return 0;
 }
