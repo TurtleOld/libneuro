@@ -1031,7 +1031,10 @@ NNet_Poll()
 		buf = Neuro_GiveEBuf(_greatBuffer, total);
 
 		if (buf->type == 1 && Neuro_EBufIsEmpty(buf->connections))
+		{
+			NEURO_ERROR("The client lost all it's connections", NULL);
 			return 1;
+		}
 
 		Handle_Listening(buf);
 	}
