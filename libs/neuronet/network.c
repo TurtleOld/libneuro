@@ -5,7 +5,7 @@
 #ifndef W32
 #include <sys/select.h> /* select() */
 
-/* #define __USE_MISC */ /* to make inet_aton() work */
+#define __USE_MISC /* to make inet_aton() work */
 #include <arpa/inet.h> /* inet_aton() inet_ntoa */
 #include <sys/socket.h>
 #include <netinet/in.h> /* htons() */
