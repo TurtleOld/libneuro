@@ -44,7 +44,7 @@ struct LISTEN_DATA
 	struct sockaddr_in saddress; /* server address */
 	u32 addrlen;
 
-	int (*callback)(CONNECT_DATA *conn, char *data, u32 len);
+	int (*callback)(CONNECT_DATA *conn, const char *data, u32 len);
 
 	EBUF *connections; /* contains CONNECT_DATA elements */
 };
@@ -739,7 +739,7 @@ NNet_SetTimeout(CONNECT_DATA *src, t_tick ts)
 }
 
 void
-NNet_SetDebugFilter(char *filter)
+NNet_SetDebugFilter(const char *filter)
 {
 	Neuro_SetDebugFilter(filter);
 }
@@ -773,7 +773,7 @@ NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c)
 
 /* establish connection with a server */
 int
-NNet_Connect(LISTEN_DATA *src, char *host, int port, CONNECT_DATA **result)
+NNet_Connect(LISTEN_DATA *src, const char *host, int port, CONNECT_DATA **result)
 {
 	struct hostent *hent;
 	struct sockaddr_in address; /* client address */
@@ -943,7 +943,7 @@ NNet_GetIP(CONNECT_DATA *src)
 }
 
 int
-NNet_Send(CONNECT_DATA *src, char *message, u32 len)
+NNet_Send(CONNECT_DATA *src, const char *message, u32 len)
 {
 	PACKET_BUFFER *tmp;
 
@@ -1070,7 +1070,7 @@ NNet_Poll()
 
 /* see LISTEN_DATA for what to put in type */
 LISTEN_DATA *
-NNet_Create(int (*callback)(CONNECT_DATA *conn, char *data, u32 len), u32 type)
+NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 type)
 {
 	LISTEN_DATA *output;
 
