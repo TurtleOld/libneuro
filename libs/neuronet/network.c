@@ -416,11 +416,13 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 		Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
 
 		cur = Neuro_GiveCurEBuf(client->input);
-			
+		
+		cur->data = rbuffer;
+		cur->len = *plen;
 
 		/* buffering part... data is processed for buffering */
 
-		if (*plen < len)
+		if (*plen <= len)
 		{
 			/* we have a case where our buffer is containing more than one packet */
 
