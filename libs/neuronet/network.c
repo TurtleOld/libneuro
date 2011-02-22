@@ -59,10 +59,12 @@ struct LISTEN_DATA
 
 struct CONNECT_DATA
 {
+	/* connection core settings */
 	u32 socket; /* specific socket for this connection */
 	struct sockaddr_in c_address; /* client address */
 	u32 addrlen;
 
+	/* connection statistics */
 	t_tick connection_start_time;
 	t_tick idle_time; /* idle time... actually its the exact time we last recieved activity from the connection */
 	t_tick timeout;
@@ -75,6 +77,7 @@ struct CONNECT_DATA
 		 */
 	u8 inclpacket_size; /* includes the packet size before each of the packets */
 
+	/* connection buffers */
 	EBUF *input; /* input buffer that contains FRAGMENT_MASTER elements */
 	EBUF *output; /* output buffer that contains PACKET_BUFFER elements */
 };
@@ -428,6 +431,7 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 {
 	u32 *plen = NULL;
 
+	/* we pass the first 4 bytes to plen for processing */
 	plen = (u32*)rbuffer;
 
 	/* fprintf(stderr, "PLEN %d  SIZE %d DATA %d\n", *plen, len, packet_tosend); */
