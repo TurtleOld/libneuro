@@ -403,6 +403,14 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 			NEURO_ERROR("packet_tosend is NULL", NULL);
 			return 0;
 		}
+
+		if (client->inclpacket_size == 1)
+		{
+			/* we need to strip the beginning size integer 
+			 * from the output.
+			 */
+			packet_tosend = &packet_tosend[sizeof(u32)];
+		}
 	}
 	else
 		return 0;
