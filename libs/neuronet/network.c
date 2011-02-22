@@ -156,7 +156,7 @@ struct FRAGMENT_SLAVE
 /* the variable containing all the informations 
  * for the core network/local server
  */
-EBUF *_greatBuffer; /* contains LISTEN_DATA elements */
+static EBUF *_greatBuffer; /* contains LISTEN_DATA elements */
 
 static LISTEN_DATA *ACTIVE_LISTEN;
 
