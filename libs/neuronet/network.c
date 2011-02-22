@@ -498,6 +498,8 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 		if (client->inclpacket_size == 1 && *plen < len)
 		{
+			NEURO_TRACE("Stream containing multiple packets... processing", NULL);
+
 			/* we have a case where our buffer is containing more than one packet */
 
 			Neuro_CreateEBuf(&cur->fragmented);
@@ -505,6 +507,8 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 			while (i < len)
 			{
 				plen = (u32*)&rbuffer[i];
+
+				NEURO_TRACE("%s", Neuro_s("Processing packet len %d on %d", *plen, len));
 
 				Neuro_AllocEBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE*), sizeof(FRAGMENT_SLAVE));
 
@@ -808,6 +812,7 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 			return 1;
 	}
 
+	NEURO_TRACE("No Active connection found for this connection on total %d", Neuro_GiveEBufCount(src->connections) + 1);
 	return 0;
 }
 
@@ -1194,6 +1199,8 @@ NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 
 
 	if (Neuro_EBufIsEmpty(_greatBuffer))
 	{
+		NEURO_TRACE("Creating the greatBuffer", NULL);
+
 		Neuro_CleanEBuf(&_greatBuffer); /* just in case */
 
 		Neuro_CreateEBuf(&_greatBuffer);
@@ -1201,6 +1208,8 @@ NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 
 	}
 
 	Neuro_AllocEBuf(_greatBuffer, sizeof(LISTEN_DATA*), sizeof(LISTEN_DATA));
+	NEURO_TRACE("Allocating a new connection for the greatBuffer -- connections total %d", 
+			Neuro_GiveEBufCount(_greatBuffer) + 1);
 
 	output = Neuro_GiveCurEBuf(_greatBuffer);
 
@@ -1235,6 +1244,7 @@ NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c)
 
 	if (NNet_ClientExist2(l, c))
 	{
+		NEURO_TRACE("Disconnected a client", NULL);
 		Neuro_SCleanEBuf(l->connections, c);
 	}
 }
