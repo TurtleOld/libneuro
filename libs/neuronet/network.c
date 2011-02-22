@@ -288,6 +288,14 @@ Handle_Connections(LISTEN_DATA *parent)
 		{
 			tmp->inclpacket_size = 1;
 		}
+
+		if (parent->type == TYPE_SERVER)
+		{
+			/* this sends a NULL packet to the server for a new client 
+			 * connection.
+			 */
+			(parent->callback)(tmp, NULL, 0);
+		}
 	}
 }
 
