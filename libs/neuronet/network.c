@@ -87,6 +87,17 @@ struct CONNECT_DATA
 
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
+/* this struct is actually used when a buffer (of any size) can't
+ * be assumed to be sent in just one go. Sending the buffer might
+ * require more than just one pass in order for the buffer to be
+ * successfully sent. 
+ *
+ * The arrow pointer is used to point to the last position where
+ * the data is currently as the data before it was already sent
+ * to the pipe. The remaining integer is used to know how many
+ * bytes are still remaining to be sent through the pipe in
+ * order for the buffer to be sent as a whole.
+ */
 struct PACKET_BUFFER
 {
 	u32 len;
@@ -145,8 +156,13 @@ typedef struct FRAGMENT_SLAVE FRAGMENT_SLAVE;
 /* no need to clean this struct type, it should have nothing allocated inside it */
 struct FRAGMENT_SLAVE
 {
-	u32 *len;
-	char *data;
+	u32 *len; /* FIXME : why is this a pointer and not a scalar */
+	char *data; /* this pointer actually points to data of the data 
+		     * variable inside the FRAGMENT_MASTER structure.
+		     * this is some kind of relationnal method which
+		     * uses only a limited amount of memory to organise
+		     * data.
+		     */
 };
 
 /*-------------------- Global Variables ----------------------------*/
