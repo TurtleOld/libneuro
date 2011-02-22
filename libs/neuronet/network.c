@@ -465,6 +465,18 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 		FRAGMENT_SLAVE *bufa;
 		register u32 i = 0;
 
+		if (*plen == 0 || *plen > len)
+		{ 
+			/* On the first case, the packet is empty, which is really odd.
+			 *
+			 * On the second case, the packet wasn't recieved in full so
+			 * we just return to give the chance for the application to
+			 * recieve it all.
+			 */
+			NEURO_WARN("Invalid packet recieved of wrong length", NULL);
+			return 0;
+		}
+
 		/* the packet is valid */
 
 		Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
