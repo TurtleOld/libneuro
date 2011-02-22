@@ -45,6 +45,14 @@ struct LISTEN_DATA
 	u32 addrlen;
 
 	int (*callback)(CONNECT_DATA *conn, const char *data, u32 len);
+	
+	/* per connection toggles */
+		/* this flag actually toggles if the connection include a 32 bit 
+		 * packet header for each of the packets sent containing the
+		 * size of the packet for parity check. This can be toggled
+		 * on or off with the appropriate function.
+		 */
+	u8 inclpacket_size; /* includes the packet size before each of the packets */
 
 	EBUF *connections; /* contains CONNECT_DATA elements */
 };
@@ -59,14 +67,20 @@ struct CONNECT_DATA
 	t_tick idle_time; /* idle time... actually its the exact time we last recieved activity from the connection */
 	t_tick timeout;
 
+	/* connection toggles */
+		/* this flag actually toggles if the connection include a 32 bit 
+		 * packet header for each of the packets sent containing the
+		 * size of the packet for parity check. This can be toggled
+		 * on or off with the appropriate function.
+		 */
+	u8 inclpacket_size; /* includes the packet size before each of the packets */
+
 	EBUF *input; /* input buffer that contains FRAGMENT_MASTER elements */
 	EBUF *output; /* output buffer that contains PACKET_BUFFER elements */
 };
 
 #define MAX_PACKET_SIZE 512
 #define INPUT_PACKET_BUFFERING 20
-
-#define INCLUDE_HEADER 0
 
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
@@ -266,6 +280,11 @@ Handle_Connections(LISTEN_DATA *parent)
 
 		Neuro_CreateEBuf(&tmp->output);
 		Neuro_SetcallbEBuf(tmp->output, clean_packet_buffer);
+
+		if (parent->inclpacket_size == 1)
+		{
+			tmp->inclpacket_size = 1;
+		}
 	}
 }
 
@@ -412,13 +431,30 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 	/* fprintf(stderr, "PLEN %d  SIZE %d DATA %d\n", *plen, len, packet_tosend); */
 
-#if INCLUDE_HEADER == 0
-	plen = &len;
+	if (client->inclpacket_size == 0)
+	{
+		/* we aren't using the beginning packet method 
+		 * to arbitrarily find out the size of each
+		 * of the recieved packets.
+		 */
+		plen = &len;
+	}
+	else
+	{
+		if (*plen > len)
+		{
+			NEURO_WARN("Client doesn't support the low level packet\
+				       	size header", NULL);
 
+			NEURO_TRACE("%s", Neuro_s("debug --> %d %d %d %d", 
+						rbuffer[0],
+						rbuffer[1],
+						rbuffer[2],
+						rbuffer[3]));
+		}
+	}
+	
 	if (rbuffer)
-#else /* INCLUDE_HEADER == 1 */
-	if (*plen > 0 && *plen <= len)
-#endif /* INCLUDE_HEADER == 1 */
 	{
 		FRAGMENT_MASTER *cur;
 		FRAGMENT_SLAVE *bufa;
@@ -435,11 +471,7 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 		/* buffering part... data is processed for buffering */
 
-#if INCLUDE_HEADER == 1
-		if (*plen <= len)
-#else /* INCLUDE_HEADER == 0 */
-		if (*plen < len)
-#endif /* INCLUDE_HEADER == 0 */
+		if (client->inclpacket_size == 1 && *plen < len)
 		{
 			/* we have a case where our buffer is containing more than one packet */
 
@@ -456,7 +488,7 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 				bufa->len = plen;
 
-				if (INCLUDE_HEADER)
+				if (client->inclpacket_size)
 				{
 					bufa->data = (char*)&plen[1];
 
@@ -988,7 +1020,7 @@ NNet_Send(CONNECT_DATA *src, const char *message, u32 len)
 	/* NEURO_TRACE("%d of DATA to send", len); */
 
 
-	if (INCLUDE_HEADER)
+	if (src->inclpacket_size)
 	{
 		/* we allocate the size of the data that we will send plus the size of an integer 
 		 * which will be the size of the data itself at the beginning of the packet.
@@ -1068,6 +1100,24 @@ NNet_Listen(LISTEN_DATA *src, int port)
 	}
 
 	return 0;
+}
+
+void
+NNet_ClientTogglePacketSize(CONNECT_DATA *client)
+{
+	if (!client)
+		return;
+
+	client->inclpacket_size = 1;
+}
+
+void
+NNet_ServerTogglePacketSize(LISTEN_DATA *server)
+{
+	if (!server)
+		return;
+
+	server->inclpacket_size = 1;
 }
 
 /*-------------------- Poll ----------------------------------------*/

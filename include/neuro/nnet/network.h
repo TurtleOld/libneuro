@@ -59,6 +59,26 @@ extern void NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c);
 /* to set the debugging filter for this library */
 extern void NNet_SetDebugFilter(const char *filter);
 
+/* this function actually toggles if the connection include a 32 bit
+ * packet header for each of the packets sent containing the
+ * size of the packet for parity check. This can be toggled
+ * on or off with the appropriate function.
+ *
+ * NOTE - This is only to be used when libneuronet is used 
+ * as a client AND server!!
+ * never activate this for when libneuronet is used for other
+ * kind of connections.
+ *
+ * This is for client connections, see NNet_ServerTogglePacketSize
+ * for the listening server toggle.
+ */
+extern void NNet_ClientTogglePacketSize(CONNECT_DATA *client);
+
+/* Exactly like NNet_ClientTogglePacketSize but for a listening 
+ * server this time.
+ */
+extern void NNet_ServerTogglePacketSize(LISTEN_DATA *server);
+
 /* for each loops, the value returned by this poll is significant 
  * a value of 1 means that the main loop has to be stopped as an
  * error or disconnection occured.
