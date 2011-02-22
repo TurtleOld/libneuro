@@ -360,7 +360,7 @@ pop_input_data(EBUF *input, u32 *len)
 	return output;
 }
 
-static void
+static int
 Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 {
 	char *packet_tosend = NULL;
@@ -374,11 +374,11 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 		if (!packet_tosend)
 		{
 			NEURO_ERROR("packet_tosend is NULL", NULL);
-			return;
+			return 0;
 		}
 	}
 	else
-		return;
+		return 0;
 
 	/* we recieved a packet from the connection with a client so we reset 
 	 * the idle time.
@@ -396,7 +396,7 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 			Neuro_SCleanEBuf(parent->connections, client);	
 
 			ACTIVE_LISTEN = NULL;
-			return;
+			return 1;
 		}
 		break;
 
@@ -417,12 +417,13 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 	}	
 	ACTIVE_LISTEN = NULL;
 
+	return 0;
 }
 
 /* this function processes the data that was recieved in the input (read) buffer 
  * and calls the parent's callback with the first packet that was recieved.
  */
-static void
+static int
 Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 len)
 {
 	u32 *plen = NULL;
@@ -503,16 +504,19 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 			}
 		}
 		
-		Packet_Processing(parent, client);
+		if (Packet_Processing(parent, client) == 1)
+			return 1;
 	}
 	else
 	{
 		/* the packet is not valid */
 		NEURO_WARN("Invalid Packet was recieved. Suspected corrupt or not using the correct format for packets.", NULL);
-		return;
+		return 0;
 	}
 
 	/* fprintf(stderr, "END PROCESSING : PLEN %d  SIZE %d\n", *plen, len); */
+
+	return 0;
 }
 
 static void
@@ -552,11 +556,15 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
 	}
 
 	/* we process packets in our input buffer */
-	Packet_Processing(parent, client);
+	if (Packet_Processing(parent, client) == 1)
+		return; /* the client buffer might have been freed so we bail out */
 
 	/* we recieved something */
 	if (rbuflen > 0)
-		Buffer_Recv_Data(parent, client, rbuffer, rbuflen);
+	{
+		if (Buffer_Recv_Data(parent, client, rbuffer, rbuflen) == 1)
+			return;
+	}
 
 	/* this code sends packets from the output buffer */
 	if (!Neuro_EBufIsEmpty(client->output))
