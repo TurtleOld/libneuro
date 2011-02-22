@@ -82,8 +82,8 @@ struct CONNECT_DATA
 	EBUF *output; /* output buffer that contains PACKET_BUFFER elements */
 };
 
-#define MAX_PACKET_SIZE 512
-#define INPUT_PACKET_BUFFERING 20
+#define MAX_PACKET_SIZE 5120
+#define INPUT_PACKET_BUFFERING 10
 
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
