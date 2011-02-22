@@ -498,17 +498,23 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 		if (client->inclpacket_size == 1 && *plen + sizeof(u32) < len)
 		{
-			NEURO_TRACE("Stream containing multiple packets... processing", NULL);
+			int amount = 0;
+			NEURO_TRACE("Stream containing multiple packets... processing total lenght %d", len);
 
 			/* we have a case where our buffer is containing more than one packet */
 
 			Neuro_CreateEBuf(&cur->fragmented);
 
+
 			while (i < len)
 			{
+				amount++;
+
 				plen = (u32*)&rbuffer[i];
 
-				NEURO_TRACE("%s", Neuro_s("Processing packet len %d on %d", *plen, len));
+				NEURO_TRACE("%s", Neuro_s("Processing packet [%d] len %d", 
+							amount, 
+							*plen));
 
 				Neuro_AllocEBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE*), sizeof(FRAGMENT_SLAVE));
 
@@ -530,6 +536,8 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 					i += *plen;
 				}
 			}
+
+			NEURO_TRACE("Buffer had %d packets in it", amount);
 		}
 		
 		if (Packet_Processing(parent, client) == 1)
