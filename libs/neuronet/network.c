@@ -496,7 +496,7 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 
 		/* buffering part... data is processed for buffering */
 
-		if (client->inclpacket_size == 1 && *plen < len)
+		if (client->inclpacket_size == 1 && *plen + sizeof(u32) < len)
 		{
 			NEURO_TRACE("Stream containing multiple packets... processing", NULL);
 
