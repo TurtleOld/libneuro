@@ -581,11 +581,12 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 	return 0;
 }
 
+/* sigmask is the events that happened on the socket */
 static void
-Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client)
+Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 {
 	char *rbuffer = NULL;
-	ssize_t rbuflen;
+	ssize_t rbuflen = 0;
 
 	if (!client)
 		return;
