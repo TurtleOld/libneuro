@@ -1062,7 +1062,7 @@ char *
 NNet_GetIP(CONNECT_DATA *src)
 {
 	if (!src)
-		return 0;
+		return NULL;
 
 	return inet_ntoa(src->c_address.sin_addr);
 }
