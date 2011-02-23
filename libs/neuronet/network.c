@@ -4,6 +4,7 @@
 /*-------------------- Extern Headers Including --------------------*/
 #ifndef WIN32
 #include <sys/select.h> /* select() */
+#include <sys/poll.h> /* poll */
 
 #ifndef __USE_MISC
 #define __USE_MISC /* to make inet_aton() work */
@@ -82,6 +83,22 @@ struct CONNECT_DATA
 	/* connection buffers */
 	EBUF *input; /* input buffer that contains FRAGMENT_MASTER elements */
 	EBUF *output; /* output buffer that contains PACKET_BUFFER elements */
+};
+
+typedef struct CONNECT_EVENTS CONNECT_EVENTS;
+
+struct CONNECT_EVENTS
+{
+	int master_socket; /* if 1 then use ldata otherwise, use cdata */
+
+	int sigmask; /* 0 is no event
+			1, 2, 4 -- mask of the event where 1 is read, 
+			2 is write and 4 is exception.
+			*/
+
+	/* note that when master_socket is 0, both ldata and cdata are populated */
+	LISTEN_DATA *ldata;
+	CONNECT_DATA *cdata;
 };
 
 #define MAX_PACKET_SIZE 5120
@@ -176,6 +193,14 @@ struct FRAGMENT_SLAVE
  */
 static EBUF *_greatBuffer; /* contains LISTEN_DATA elements */
 
+
+/* poll -- specific file descriptor buffers */
+static struct pollfd *ufds;
+static int nfds;
+static EBUF *cevents; /* contains CONNECT_EVENTS elements */
+
+
+
 static LISTEN_DATA *ACTIVE_LISTEN;
 
 #ifdef WIN32
@@ -189,6 +214,10 @@ static int Client_Send(int connection, char *message, u32 len);
 static int Client_Recv(int connection, char **output);
 
 static int CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
+
+static void add_ufds(int socket);
+
+static void populate_ufds();
 
 /*-------------------- Static Functions ----------------------------*/
 
@@ -314,6 +343,8 @@ Handle_Connections(LISTEN_DATA *parent)
 			 */
 			(parent->callback)(tmp, NULL, 0);
 		}
+
+		add_ufds(tmp->socket);
 	}
 }
 
@@ -430,7 +461,9 @@ Packet_Processing(LISTEN_DATA *parent, CONNECT_DATA *client)
 			NEURO_TRACE("Disconnection triggered by the foreign callback", NULL);
 
 			/* we disconnect the client from the parent */
-			Neuro_SCleanEBuf(parent->connections, client);	
+			Neuro_SCleanEBuf(parent->connections, client);
+
+			populate_ufds();
 
 			ACTIVE_LISTEN = NULL;
 			return 1;
@@ -598,83 +631,100 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 			Neuro_SCleanEBuf(parent->connections, client);
 			NEURO_WARN("Connection dropped due to timeout", NULL);
 
+			populate_ufds();
+
 			return;
 		}
 	}	
 
-	/* we attempt to recieve data from the connection */
-	rbuflen = Client_Recv(client->socket, &rbuffer);
-
-	/* the connection with the client just ended, we close it up */
-	if (rbuflen == 0)
+	if ((sigmask & 1) == 1)
 	{
+		/* we attempt to recieve data from the connection */
+		rbuflen = Client_Recv(client->socket, &rbuffer);
 
-		free(rbuffer);
+		/* the connection with the client just ended, we close it up */
+		if (rbuflen == 0)
+		{
+			free(rbuffer);
 
-		NEURO_WARN("Connection lost", NULL);
+			NEURO_WARN("Connection lost", NULL);
 
-		Neuro_SCleanEBuf(parent->connections, client);
+			Neuro_SCleanEBuf(parent->connections, client);
 
-		return;
-	}
+			populate_ufds();
 
-	/* we process packets in our input buffer */
-	if (Packet_Processing(parent, client) == 1)
-		return; /* the client buffer might have been freed so we bail out */
-
-	/* we recieved something */
-	if (rbuflen > 0)
-	{
-		if (Buffer_Recv_Data(parent, client, rbuffer, rbuflen) == 1)
 			return;
+		}
+
+		/* we process packets in our input buffer */
+		if (Packet_Processing(parent, client) == 1)
+			return; /* the client buffer might have been freed so we bail out */
+
+		/* we recieved something */
+		if (rbuflen > 0)
+		{
+			if (Buffer_Recv_Data(parent, client, rbuffer, rbuflen) == 1)
+				return;
+		}
+
+		/* return; */
 	}
 
-	/* this code sends packets from the output buffer */
-	if (!Neuro_EBufIsEmpty(client->output))
+	if ((sigmask & 2) == 2)
 	{
-		PACKET_BUFFER *buf;
-		int _err = 0;
 
-		buf = Neuro_GiveEBuf(client->output, 0);
-
-		if (buf->len >= MAX_PACKET_SIZE)
+		/* this code sends packets from the output buffer */
+		while (!Neuro_EBufIsEmpty(client->output))
 		{
-			NEURO_ERROR("Trying to send a packet bigger than the limit! %d bytes", 
-					buf->len);
-		}
+			PACKET_BUFFER *buf;
+			int _err = 0;
 
-		/* FIFO : First in first out method */
-		if ((_err = Client_Send(client->socket, buf->arrow, buf->remaining)) == buf->remaining)
-		{
-			clean_element_reorder(client->output, buf);			
-		}
-		else
-		{
+			buf = Neuro_GiveEBuf(client->output, 0);
 
-			if (_err == -1)
+			if (buf->len >= MAX_PACKET_SIZE)
 			{
+				NEURO_WARN("Trying to send a packet bigger than the limit! %d bytes", 
+						buf->len);
+			}
 
-				NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
-
-				Neuro_SCleanEBuf(parent->connections, client);
-
-				return;
+			/* FIFO : First in first out method */
+			if ((_err = Client_Send(client->socket, buf->arrow, buf->remaining)) == buf->remaining)
+			{
+				clean_element_reorder(client->output, buf);			
 			}
 			else
 			{
-				/* This code actually sets the remaining bytes that weren't sent
-				 * on the last pass of Client_Send() function.
-				 *
-				 * This will ensure that all the data are sent.
-				 */
-				if (_err < buf->remaining)
-				{
-					buf->remaining -= _err;
 
-					buf->arrow = &buf->data[buf->len - buf->remaining];
+				if (_err == -1)
+				{
+
+					NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
+
+					Neuro_SCleanEBuf(parent->connections, client);
+
+
+					populate_ufds();
+
+					return;
+				}
+				else
+				{
+					/* This code actually sets the remaining bytes that weren't sent
+					 * on the last pass of Client_Send() function.
+					 *
+					 * This will ensure that all the data are sent.
+					 */
+					if (_err < buf->remaining)
+					{
+						buf->remaining -= _err;
+
+						buf->arrow = &buf->data[buf->len - buf->remaining];
+					}
 				}
 			}
 		}
+
+		/* return; */
 	}
 }
 
@@ -717,23 +767,25 @@ Handle_Listening(LISTEN_DATA *src)
 		buf = Neuro_GiveEBuf(src->connections, total);
 
 
-		if (buf)
-			Handle_Clients(src, buf);
+		/*if (buf)
+			Handle_Clients(src, buf);*/
 	}
 }
 
 static int
 Client_Send(int connection, char *message, u32 len)
 {
-	int _err = 0;
+	/* int _err = 0; */
 
 	if (connection == 0 || message == NULL || len == 0)
 		return 0;
 
+#if old
 	_err = CheckPipeAvail(connection, 1, 0, 1);
 
 	if (_err == 0)
 		return 0;
+#endif /* old */
 
 	return send(connection, message, len, 0);
 }
@@ -747,11 +799,13 @@ Client_Recv(int connection, char **output)
 	if (*output)
 		free(*output);
 
+#if old
 	if (CheckPipeAvail(connection, 0, 0, 1) == 0)
 	{
 		NEURO_TRACE("Recv pipe not available", NULL);
 		return -1;
 	}
+#endif /* old */
 
 	*output = calloc(1, MAX_PACKET_SIZE * INPUT_PACKET_BUFFERING);
 
@@ -849,6 +903,248 @@ client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
 
 	NEURO_TRACE("No Active connection found for this connection on total %d", Neuro_GiveEBufCount(src->connections) + 1);
 	return 0;
+}
+
+static void
+populate_ufds()
+{
+	int total = 0;
+	LISTEN_DATA *buf;
+
+	if (Neuro_EBufIsEmpty(_greatBuffer))
+		return;
+
+	if (ufds)
+	{
+		free(ufds);
+		ufds = NULL;
+		nfds = 0;
+	}
+
+	total = Neuro_GiveEBufCount(_greatBuffer) + 1;
+
+	while (total-- > 0)
+	{
+		int total2 = 0;
+		CONNECT_DATA *buf2;
+
+		buf = Neuro_GiveEBuf(_greatBuffer, total);
+
+		add_ufds(buf->socket);
+
+		if (Neuro_EBufIsEmpty(buf->connections))
+			continue;
+
+		total2 = Neuro_GiveEBufCount(buf->connections) + 1;
+
+		while (total2-- > 0)
+		{
+			buf2 = Neuro_GiveEBuf(buf->connections, total2);
+
+			add_ufds(buf2->socket);
+		}
+	}
+}
+
+static void
+add_ufds(int socket)
+{
+	if (!ufds)
+		ufds = calloc(1, sizeof(struct pollfd));
+	else
+		ufds = realloc(ufds, (nfds + 1) * sizeof(struct pollfd));
+
+	ufds[nfds].fd = socket;
+	ufds[nfds].events = POLLIN | POLLOUT | POLLERR;
+
+	nfds++;
+}
+
+/* returns a mask */
+static int
+poll_ufds(int socket)
+{
+	int i = nfds;
+	int sigmask = 0;
+
+	while (i-- > 0)
+	{
+		if (ufds[i].fd == socket)
+		{
+			if ((ufds[i].revents & POLLIN) == POLLIN)
+				sigmask += 1;
+			if ((ufds[i].revents & POLLOUT) == POLLOUT)
+				sigmask += 2;
+			if ((ufds[i].revents & POLLERR) == POLLERR)
+				sigmask += 4;
+
+			return sigmask;
+		}
+	}
+
+	return -1;
+}
+
+/* this function calls select and checks which sockets
+ * had which event(s) and fills a new CONNECT_EVENT where
+ * required.
+ */
+static int
+populate_cevents()
+{
+	int _err = 0;
+
+	_err = poll(ufds, nfds, 4000);
+
+	if (_err < 0)
+	{
+		return 0;
+	}
+
+	/* NEURO_TRACE("%s", Neuro_s("Got a new event from select (cevents elem count : %d) -- last_connection value : %d", Neuro_GiveEBufCount(cevents), last_connection)); */
+
+	/* we check what events happened by looping all the file descriptors */
+	{
+		int total = 0;
+		LISTEN_DATA *buf;
+		int sigmask = 0;
+
+		if (Neuro_EBufIsEmpty(_greatBuffer))
+			return 0;
+
+		total = Neuro_GiveEBufCount(_greatBuffer) + 1;
+
+		while (total-- > 0)
+		{
+			int total2 = 0;
+			CONNECT_DATA *buf2;
+
+			buf = Neuro_GiveEBuf(_greatBuffer, total);
+
+			sigmask = poll_ufds(buf->socket);
+
+			if (sigmask > 0)
+			{
+				CONNECT_EVENTS *tmp;
+
+				NEURO_TRACE("New Master Socket Event -- sigmask %x", sigmask);
+
+				Neuro_AllocEBuf(cevents, sizeof(CONNECT_EVENTS*), sizeof(CONNECT_EVENTS));
+				tmp = Neuro_GiveCurEBuf(cevents);
+
+				if (buf->type == TYPE_SERVER)
+					tmp->master_socket = 1;
+				else
+					tmp->master_socket = 0;
+				tmp->sigmask = sigmask;
+				tmp->ldata = buf;
+			}
+
+
+			if (Neuro_EBufIsEmpty(buf->connections))
+				continue;
+
+			total2 = Neuro_GiveEBufCount(buf->connections) + 1;
+
+			while (total2-- > 0)
+			{
+				buf2 = Neuro_GiveEBuf(buf->connections, total2);
+
+				sigmask = poll_ufds(buf2->socket);
+
+				/* NEURO_TRACE("Looping Slave connections -- sigmask %d", sigmask); */
+
+				if (sigmask > 0)
+				{
+					CONNECT_EVENTS *tmp;
+
+					/* NEURO_TRACE("New Slave Socket Event -- sigmask %x", sigmask); */
+
+					Neuro_AllocEBuf(cevents, sizeof(CONNECT_EVENTS*), sizeof(CONNECT_EVENTS));
+					tmp = Neuro_GiveCurEBuf(cevents);
+
+					tmp->master_socket = 0;
+					tmp->sigmask = sigmask;
+					tmp->ldata = buf;
+					tmp->cdata = buf2;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+static CONNECT_EVENTS *
+giveFirstMasterEvent(EBUF *ce)
+{
+	int total = 0;
+	CONNECT_EVENTS *buf;
+
+	total = Neuro_GiveEBufCount(ce) + 1;
+
+	while (total-- > 0)
+	{
+		buf = Neuro_GiveEBuf(ce, total);
+
+		if (buf->master_socket == 1)
+			return buf;
+	}
+
+	return NULL;
+}
+
+static CONNECT_EVENTS *
+giveFirstSlaveEvent(EBUF *ce)
+{
+	int total = 0;
+	CONNECT_EVENTS *buf;
+
+	total = Neuro_GiveEBufCount(ce) + 1;
+
+	while (total-- > 0)
+	{
+		buf = Neuro_GiveEBuf(ce, total);
+
+		if (buf->master_socket == 0)
+			return buf;
+	}
+
+	return NULL;
+}
+
+static void
+handle_events(EBUF *ce)
+{
+	CONNECT_EVENTS *buf;
+
+	buf = giveFirstMasterEvent(ce);
+
+	if (buf == NULL)
+	{
+		buf = giveFirstSlaveEvent(ce);
+
+		if (buf == NULL)
+		{
+			return;
+		}
+		else
+		{
+			/* NEURO_TRACE("Handling Slave Socket Event -- event's mask : %x", buf->sigmask); */
+
+			Handle_Clients(buf->ldata, buf->cdata, buf->sigmask);
+
+			Neuro_SCleanEBuf(ce, buf);
+		}
+	}
+	else
+	{
+		NEURO_TRACE("Handling Master Socket Event -- event's mask : %x", buf->sigmask);
+
+		Handle_Connections(buf->ldata);
+
+		Neuro_SCleanEBuf(ce, buf);
+	}	
 }
 
 /*-------------------- Global Functions ----------------------------*/
@@ -1007,6 +1303,7 @@ NNet_Connect(LISTEN_DATA *src, const char *host, int port, CONNECT_DATA **result
 		else
 			_err = 0;
 
+		NEURO_TRACE("Checking availability of the Pipe", NULL);
 		_err = CheckPipeAvail(tmp->socket, 1, 4, 0);
 		if (_err == 0)
 			break;
@@ -1052,6 +1349,8 @@ NNet_Connect(LISTEN_DATA *src, const char *host, int port, CONNECT_DATA **result
 	tmp->connection_start_time = Neuro_GetTickCount();
 	tmp->idle_time = tmp->connection_start_time;
 	tmp->timeout = 500;
+
+	add_ufds(tmp->socket);
 
 	*result = tmp;
 
@@ -1171,6 +1470,8 @@ NNet_Listen(LISTEN_DATA *src, int port)
 		return 1;
 	}
 
+	add_ufds(src->socket);
+
 	return 0;
 }
 
@@ -1197,6 +1498,20 @@ NNet_ServerTogglePacketSize(LISTEN_DATA *server)
 int
 NNet_Poll()
 {
+
+	if (Neuro_EBufIsEmpty(_greatBuffer))
+		return 1;
+
+	if (!Neuro_EBufIsEmpty(cevents))
+	{
+		handle_events(cevents);
+
+		return 0;
+	}
+
+
+	return populate_cevents();
+/*
 	LISTEN_DATA *buf;
 	u32 total = 0;
 
@@ -1219,6 +1534,7 @@ NNet_Poll()
 	}
 
 	return 0;
+*/
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -1240,6 +1556,13 @@ NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 
 
 		Neuro_CreateEBuf(&_greatBuffer);
 		Neuro_SetcallbEBuf(_greatBuffer, clean_listen_context);
+	}
+
+	if (Neuro_EBufIsEmpty(cevents))
+	{
+		NEURO_TRACE("Creating the connect events buffer", NULL);
+
+		Neuro_CreateEBuf(&cevents);
 	}
 
 	Neuro_AllocEBuf(_greatBuffer, sizeof(LISTEN_DATA*), sizeof(LISTEN_DATA));
@@ -1281,6 +1604,8 @@ NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c)
 	{
 		NEURO_TRACE("Disconnected a client", NULL);
 		Neuro_SCleanEBuf(l->connections, c);
+
+		populate_ufds();
 	}
 }
 
@@ -1303,6 +1628,15 @@ void
 NNet_Clean(void)
 {
 	Neuro_CleanEBuf(&_greatBuffer);
+
+	Neuro_CleanEBuf(&cevents);
+
+	if (ufds)
+	{
+		free(ufds);
+		ufds = NULL;
+		nfds = 0;
+	}
 
 #ifdef WIN32
 	WSACleanup();
