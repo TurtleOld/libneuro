@@ -53,7 +53,8 @@ catch_server(CONNECT_DATA *c, const char *data, u32 len)
 			}
 		}
 
-		fprintf(stderr, "Test Successfully passed\n");
+		fprintf(stderr, "Test Successfully passed - %d bytes sent %d recieved\n",
+				DATA_SIZE, len);
 	}
 
 	return 0;
@@ -75,9 +76,16 @@ set_client(LISTEN_DATA **client, int port)
 	*client = NNet_Create(catch_client, TYPE_CLIENT);
 
 	if (NNet_Connect(*client, "localhost", port, &connection) == 1)
+	{
+		fprintf(stderr, "unable to connect to server\n");
 		return 1;
+	}
 
-	NNet_Send(connection, &databuf[0], DATA_SIZE);
+	if (NNet_Send(connection, &databuf[0], DATA_SIZE))
+	{
+		fprintf(stderr, "unable to send packet\n");
+		return 1;
+	}
 
 	return 0;
 }
@@ -104,6 +112,8 @@ int main()
 
 	NNet_Init();
 
+	NNet_SetDebugFilter("+all");
+
 	while (port_itr-- >= 0)
 	{
 		if ((_err = set_server(&server, port + port_itr)) == 0)
@@ -120,11 +130,10 @@ int main()
 
 	if (set_client(&client, port + port_itr) == 1)
 	{
-		fprintf(stderr, "unable to connect to server\n");
 		return 1;
 	}
 
-	while (NNet_Poll())
+	while (NNet_Poll() == 0)
 	{
 		Neuro_Sleep(5000);
 	}

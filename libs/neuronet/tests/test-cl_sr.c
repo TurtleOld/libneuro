@@ -75,7 +75,7 @@ int main()
 		return 1;
 	}
 
-	while (NNet_Poll())
+	while (NNet_Poll() == 0)
 	{
 		Neuro_Sleep(5000);
 	}
