@@ -1284,7 +1284,7 @@ NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c)
 }
 
 int
-NNet_Init()
+NNet_Init(void)
 {
 #if WIN32
 	int _err = 0;
@@ -1299,7 +1299,7 @@ NNet_Init()
 }
 
 void
-NNet_Clean()
+NNet_Clean(void)
 {
 	Neuro_CleanEBuf(&_greatBuffer);
 
