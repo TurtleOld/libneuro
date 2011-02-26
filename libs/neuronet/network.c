@@ -215,7 +215,7 @@ static int Client_Recv(int connection, char **output);
 
 static int CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
 
-static void add_ufds(int socket);
+static void add_ufds(int socket, LISTEN_DATA *l, CONNECT_DATA *c);
 
 static void populate_ufds();
 
@@ -344,7 +344,7 @@ Handle_Connections(LISTEN_DATA *parent)
 			(parent->callback)(tmp, NULL, 0);
 		}
 
-		add_ufds(tmp->socket);
+		add_ufds(tmp->socket, parent, tmp);
 	}
 }
 
@@ -930,7 +930,7 @@ populate_ufds()
 
 		buf = Neuro_GiveEBuf(_greatBuffer, total);
 
-		add_ufds(buf->socket);
+		add_ufds(buf->socket, buf, NULL);
 
 		if (Neuro_EBufIsEmpty(buf->connections))
 			continue;
@@ -941,13 +941,13 @@ populate_ufds()
 		{
 			buf2 = Neuro_GiveEBuf(buf->connections, total2);
 
-			add_ufds(buf2->socket);
+			add_ufds(buf2->socket, buf, buf2);
 		}
 	}
 }
 
 static void
-add_ufds(int socket)
+add_ufds(int socket, LISTEN_DATA *l, CONNECT_DATA *c)
 {
 	if (!ufds)
 		ufds = calloc(1, sizeof(struct pollfd));
@@ -1350,7 +1350,7 @@ NNet_Connect(LISTEN_DATA *src, const char *host, int port, CONNECT_DATA **result
 	tmp->idle_time = tmp->connection_start_time;
 	tmp->timeout = 500;
 
-	add_ufds(tmp->socket);
+	add_ufds(tmp->socket, src, tmp);
 
 	*result = tmp;
 
@@ -1470,7 +1470,7 @@ NNet_Listen(LISTEN_DATA *src, int port)
 		return 1;
 	}
 
-	add_ufds(src->socket);
+	add_ufds(src->socket, src, NULL);
 
 	return 0;
 }
