@@ -289,8 +289,8 @@ clean_connection_context(void *src)
 	}
 }
 
-static void
-Handle_Connections(LISTEN_DATA *parent)
+static int
+Handle_Connections(LISTEN_DATA *parent, int sigmask)
 {
 	struct sockaddr_in connect_addr; /* server address */
 #ifndef WIN32
@@ -299,6 +299,12 @@ Handle_Connections(LISTEN_DATA *parent)
 	i32 addrlen = 0;
 #endif /* WIN32 */
 	i32 _err = 0;
+
+	/* only read events are handled for now */
+	if ((sigmask & 1) != 1)
+	{
+		return 0;
+	}
 
 
 	addrlen = sizeof(struct sockaddr_in);
@@ -346,6 +352,8 @@ Handle_Connections(LISTEN_DATA *parent)
 
 		add_ufds(tmp->socket, parent, tmp);
 	}
+
+	return (sigmask ^ 1);
 }
 
 /* we delete the first element and reorder the elements back to their 
@@ -755,7 +763,7 @@ Handle_Listening(LISTEN_DATA *src)
 	 * if theres any.
 	 */
 	if (src->type == TYPE_SERVER)
-		Handle_Connections(src);
+		Handle_Connections(src, 0);
 
 	if (Neuro_EBufIsEmpty(src->connections))
 		return;
@@ -1141,7 +1149,7 @@ handle_events(EBUF *ce)
 	{
 		NEURO_TRACE("Handling Master Socket Event -- event's mask : %x", buf->sigmask);
 
-		Handle_Connections(buf->ldata);
+		buf->sigmask = Handle_Connections(buf->ldata, buf->sigmask);
 
 		Neuro_SCleanEBuf(ce, buf);
 	}	
