@@ -987,6 +987,29 @@ add_ufds(int socket, LISTEN_DATA *l, CONNECT_DATA *c)
 	ufds[nfds].fd = socket;
 	ufds[nfds].events = POLLIN | POLLOUT | POLLERR;
 
+	{
+		CONNECT_EVENTS *tmp;
+
+
+		Neuro_AllocEBuf(cevents, sizeof(CONNECT_EVENTS*), sizeof(CONNECT_EVENTS));
+
+		tmp = Neuro_GiveCurEBuf(cevents);
+
+		if (!c)
+		{
+			tmp->master_socket = 1;
+			tmp->sigmask = 0;
+			tmp->ldata = l;
+		}
+		else
+		{
+			tmp->master_socket = 0;
+			tmp->sigmask = 0;
+			tmp->ldata = l;
+			tmp->cdata = c;
+		}
+	}
+
 	nfds++;
 }
 
@@ -1023,81 +1046,73 @@ static int
 populate_cevents()
 {
 	int _err = 0;
+	int total = 0;
+	CONNECT_EVENTS *buf;
 
 	_err = poll(ufds, nfds, 4000);
 
-	if (_err < 0)
+	if (_err <= 0)
 	{
 		return 0;
 	}
 
 	/* NEURO_TRACE("%s", Neuro_s("Got a new event from select (cevents elem count : %d) -- last_connection value : %d", Neuro_GiveEBufCount(cevents), last_connection)); */
 
-	/* we check what events happened by looping all the file descriptors */
+	total = Neuro_GiveEBufCount(cevents) + 1;
+
+	while (total-- > 0)
 	{
-		int total = 0;
-		LISTEN_DATA *buf;
 		int sigmask = 0;
 
-		if (Neuro_EBufIsEmpty(_greatBuffer))
-			return 0;
+		buf = Neuro_GiveEBuf(cevents, total);
 
-		total = Neuro_GiveEBufCount(_greatBuffer) + 1;
-
-		while (total-- > 0)
+		if (buf->ldata->type == TYPE_CLIENT && Neuro_EBufIsEmpty(buf->ldata->connections))
 		{
-			int total2 = 0;
-			CONNECT_DATA *buf2;
+			NEURO_ERROR("The client lost all it's connections", NULL);
+			return 1;
+		}
 
-			buf = Neuro_GiveEBuf(_greatBuffer, total);
+		if (buf->master_socket == 1)
+			sigmask = poll_ufds(buf->ldata->socket);
+		else
+			sigmask = poll_ufds(buf->cdata->socket);
 
-			sigmask = poll_ufds(buf->socket);
-
-			if (sigmask > 0)
+		if ((sigmask & 1) == 1)
+		{
+			if ((buf->sigmask & 1) == 0)
 			{
-				CONNECT_EVENTS *tmp;
+				buf->sigmask |= 1;
 
-				NEURO_TRACE("New Master Socket Event -- sigmask %x", sigmask);
-
-				Neuro_AllocEBuf(cevents, sizeof(CONNECT_EVENTS*), sizeof(CONNECT_EVENTS));
-				tmp = Neuro_GiveCurEBuf(cevents);
-
-				if (buf->type == TYPE_SERVER)
-					tmp->master_socket = 1;
-				else
-					tmp->master_socket = 0;
-				tmp->sigmask = sigmask;
-				tmp->ldata = buf;
 			}
+		}
 
-
-			if (Neuro_EBufIsEmpty(buf->connections))
-				continue;
-
-			total2 = Neuro_GiveEBufCount(buf->connections) + 1;
-
-			while (total2-- > 0)
+		if ((sigmask & 2) == 2)
+		{
+			if ((buf->sigmask & 2) == 0)
 			{
-				buf2 = Neuro_GiveEBuf(buf->connections, total2);
-
-				sigmask = poll_ufds(buf2->socket);
-
-				/* NEURO_TRACE("Looping Slave connections -- sigmask %d", sigmask); */
-
-				if (sigmask > 0)
+				if (buf->master_socket == 1)
 				{
-					CONNECT_EVENTS *tmp;
-
-					/* NEURO_TRACE("New Slave Socket Event -- sigmask %x", sigmask); */
-
-					Neuro_AllocEBuf(cevents, sizeof(CONNECT_EVENTS*), sizeof(CONNECT_EVENTS));
-					tmp = Neuro_GiveCurEBuf(cevents);
-
-					tmp->master_socket = 0;
-					tmp->sigmask = sigmask;
-					tmp->ldata = buf;
-					tmp->cdata = buf2;
+					buf->sigmask |= 2;
+				
 				}
+				else
+				{
+
+					if (!Neuro_EBufIsEmpty(buf->cdata->output))
+					{
+						buf->sigmask |= 2;
+				
+					}
+				}
+			}
+		}
+
+		if ((sigmask & 4) == 4)
+		{
+			if ((buf->sigmask & 4) == 0)
+			{
+				buf->sigmask |= 4;
+
 			}
 		}
 	}
