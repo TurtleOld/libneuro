@@ -948,6 +948,9 @@ populate_ufds()
 		nfds = 0;
 	}
 
+	Neuro_CleanEBuf(&cevents);
+	Neuro_CreateEBuf(&cevents);
+
 	total = Neuro_GiveEBufCount(_greatBuffer) + 1;
 
 	while (total-- > 0)
