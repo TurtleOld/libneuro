@@ -645,6 +645,18 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 		}
 	}	
 
+	if ((sigmask & 4) == 4)
+	{
+
+		NEURO_WARN("Connection lost", NULL);
+
+		Neuro_SCleanEBuf(parent->connections, client);
+
+		populate_ufds();
+
+		return 0;
+	}
+
 	if ((sigmask & 1) == 1)
 	{
 		/* we attempt to recieve data from the connection */
@@ -675,6 +687,8 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 				return 0;
 		}
 
+		if ((sigmask & 1) == 1)
+			sigmask = sigmask ^ 1;
 		/* return; */
 	}
 
@@ -731,6 +745,9 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 				}
 			}
 		}
+
+		if ((sigmask & 2) == 2)
+			sigmask = sigmask ^ 2;
 
 		/* return; */
 	}
