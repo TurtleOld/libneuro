@@ -623,14 +623,14 @@ Buffer_Recv_Data(LISTEN_DATA *parent, CONNECT_DATA *client, char *rbuffer, u32 l
 }
 
 /* sigmask is the events that happened on the socket */
-static void
+static int
 Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 {
 	char *rbuffer = NULL;
 	ssize_t rbuflen = 0;
 
 	if (!client)
-		return;
+		return 0;
 
 	if(client->timeout != 0)
 	{
@@ -641,7 +641,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 
 			populate_ufds();
 
-			return;
+			return 0;
 		}
 	}	
 
@@ -661,18 +661,18 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 
 			populate_ufds();
 
-			return;
+			return 0;
 		}
 
 		/* we process packets in our input buffer */
 		if (Packet_Processing(parent, client) == 1)
-			return; /* the client buffer might have been freed so we bail out */
+			return 0; /* the client buffer might have been freed so we bail out */
 
 		/* we recieved something */
 		if (rbuflen > 0)
 		{
 			if (Buffer_Recv_Data(parent, client, rbuffer, rbuflen) == 1)
-				return;
+				return 0;
 		}
 
 		/* return; */
@@ -713,7 +713,7 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 
 					populate_ufds();
 
-					return;
+					return 0;
 				}
 				else
 				{
@@ -734,6 +734,8 @@ Handle_Clients(LISTEN_DATA *parent, CONNECT_DATA *client, int sigmask)
 
 		/* return; */
 	}
+
+	return sigmask;
 }
 
 static void
