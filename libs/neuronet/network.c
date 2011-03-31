@@ -1541,8 +1541,6 @@ NNet_Poll()
 	if (!Neuro_EBufIsEmpty(cevents))
 	{
 		handle_events(cevents);
-
-		return 0;
 	}
 
 
