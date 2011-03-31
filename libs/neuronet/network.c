@@ -985,7 +985,7 @@ add_ufds(int socket, LISTEN_DATA *l, CONNECT_DATA *c)
 		ufds = realloc(ufds, (nfds + 1) * sizeof(struct pollfd));
 
 	ufds[nfds].fd = socket;
-	ufds[nfds].events = POLLIN | POLLOUT | POLLERR;
+	ufds[nfds].events = POLLIN | POLLOUT | POLLERR | POLLPRI;
 
 	{
 		CONNECT_EVENTS *tmp;
@@ -1024,7 +1024,7 @@ poll_ufds(int socket)
 	{
 		if (ufds[i].fd == socket)
 		{
-			if ((ufds[i].revents & POLLIN) == POLLIN)
+			if ((ufds[i].revents & POLLIN) == POLLIN || (ufds[i].revents & POLLPRI) == POLLPRI)
 				sigmask += 1;
 			if ((ufds[i].revents & POLLOUT) == POLLOUT)
 				sigmask += 2;
