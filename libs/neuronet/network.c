@@ -1120,6 +1120,7 @@ populate_cevents()
 	return 0;
 }
 
+/* gives the first master event it encounters which has an event */
 static CONNECT_EVENTS *
 giveFirstMasterEvent(EBUF *ce)
 {
@@ -1132,13 +1133,14 @@ giveFirstMasterEvent(EBUF *ce)
 	{
 		buf = Neuro_GiveEBuf(ce, total);
 
-		if (buf->master_socket == 1)
+		if (buf->master_socket == 1 && buf->sigmask > 0)
 			return buf;
 	}
 
 	return NULL;
 }
 
+/* gives the first slave event it encounters which has an event */
 static CONNECT_EVENTS *
 giveFirstSlaveEvent(EBUF *ce)
 {
@@ -1151,7 +1153,7 @@ giveFirstSlaveEvent(EBUF *ce)
 	{
 		buf = Neuro_GiveEBuf(ce, total);
 
-		if (buf->master_socket == 0)
+		if (buf->master_socket == 0 && buf->sigmask > 0)
 			return buf;
 	}
 
