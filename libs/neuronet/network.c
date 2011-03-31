@@ -1165,33 +1165,22 @@ handle_events(EBUF *ce)
 {
 	CONNECT_EVENTS *buf;
 
-	buf = giveFirstMasterEvent(ce);
-
-	if (buf == NULL)
+	while ((buf = giveFirstMasterEvent(ce)) != NULL)
 	{
-		buf = giveFirstSlaveEvent(ce);
 
-		if (buf == NULL)
-		{
-			return;
-		}
+		if (buf->ldata->type == TYPE_SERVER)
+			buf->sigmask = Handle_Connections(buf->ldata, buf->sigmask);
 		else
-		{
-			/* NEURO_TRACE("Handling Slave Socket Event -- event's mask : %x", buf->sigmask); */
+			buf->sigmask = Handle_Clients(buf->ldata, buf->cdata, buf->sigmask);
 
-			Handle_Clients(buf->ldata, buf->cdata, buf->sigmask);
-
-			Neuro_SCleanEBuf(ce, buf);
-		}
 	}
-	else
+	
+	while ((buf = giveFirstSlaveEvent(ce)) != NULL)
 	{
-		NEURO_TRACE("Handling Master Socket Event -- event's mask : %x", buf->sigmask);
 
-		buf->sigmask = Handle_Connections(buf->ldata, buf->sigmask);
+		buf->sigmask = Handle_Clients(buf->ldata, buf->cdata, buf->sigmask);
 
-		Neuro_SCleanEBuf(ce, buf);
-	}	
+	}
 }
 
 /*-------------------- Global Functions ----------------------------*/
