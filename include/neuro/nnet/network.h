@@ -11,82 +11,73 @@ enum CONNECT_TYPE
 	TYPE_CLIENT
 };
 
-typedef struct LISTEN_DATA LISTEN_DATA;
-typedef struct CONNECT_DATA CONNECT_DATA;
+typedef struct Master NNET_MASTER;
 
-/* Create an instance of a client or server context (both needs this). 
- *
- * the callback is called for every packets recieved by the connection.
- * make the callback return 1 to disconnect the current connection.
- * Return 0 for normal continuous behavior.
- *
- * connection_type : put one of the CONNECT_TYPE values 
- * 	example : TYPE_CLIENT
- *
- * NOTE NOTE NOTE ******* For ease of use, on a listening server, 
- * EVERY NEW CLIENT CONNECTIONS ARE INTRODUCED TO THE CALLBACK WITH
- * AN EMPTY DATA AND 0 LEN PACKET!!!
+typedef struct Slave NNET_SLAVE;
+
+/* Status types :
+ * NoData - No data is available to read
+ * DataAvail - data is available to read
+ * NewClient - for a server only
+ * ClientDisconnect - for a server only
  */
-extern LISTEN_DATA *NNet_Create(int (*callback)(CONNECT_DATA *conn, const char *data, u32 len), u32 connection_type);
+enum
+{
+	State_Start = 0,
 
-/* destroy/clean a context created using NNet_Create(3) */
-extern void NNet_Destroy(LISTEN_DATA *src);
+	State_NoData,
+	State_DataAvail,
+	State_Disconnect,
+	State_NewClient,
+	State_ClientDisconnect,
+	
+	State_End
+};
 
+typedef struct Status NNET_STATUS;
 
-/* establish connection with a server */
-extern int NNet_Connect(LISTEN_DATA *src, const char *host, int port, CONNECT_DATA **result);
+extern void NNet_Destroy(NNET_MASTER *msr);
 
-/* output the IP of a client/server connected */
-extern char *NNet_GetIP(CONNECT_DATA *src);
+extern NNET_MASTER *NNet_Create(u32 connection_type);
 
-/* send a packet(message) to a client/server connected */
-extern int NNet_Send(CONNECT_DATA *src, const char *message, u32 len);
-
-/* listen to incomming connections on a certain port. 
- * This is the function to start a server.
- */
-extern int NNet_Listen(LISTEN_DATA *src, int port);
-
-extern int NNet_ClientExist(CONNECT_DATA *c);
-
-extern int NNet_ClientExist2(LISTEN_DATA *l, CONNECT_DATA *c);
-
-/* set timeout for an active connection */
-extern int NNet_SetTimeout(CONNECT_DATA *src, t_tick ts);
-
-extern void NNet_DisconnectClient(LISTEN_DATA *l, CONNECT_DATA *c);
-
-/* to set the debugging filter for this library */
-extern void NNet_SetDebugFilter(const char *filter);
-
-/* this function actually toggles if the connection include a 32 bit
+/* special feature 
+ *
+ * this function actually toggles if the connection include a 32 bit
  * packet header for each of the packets sent containing the
  * size of the packet for parity check. This can be toggled
- * on or off with the appropriate function.
+ * on or off and the return value returns 0 or 1 if it's off and on
+ * accordingly.
  *
  * NOTE - This is only to be used when libneuronet is used 
  * as a client AND server!!
  * never activate this for when libneuronet is used for other
  * kind of connections.
- *
- * This is for client connections, see NNet_ServerTogglePacketSize
- * for the listening server toggle.
  */
-extern void NNet_ClientTogglePacketSize(CONNECT_DATA *client);
+extern int NNet_SetSendPacketSize(NNET_MASTER *msr);
 
-/* Exactly like NNet_ClientTogglePacketSize but for a listening 
- * server this time.
- */
-extern void NNet_ServerTogglePacketSize(LISTEN_DATA *server);
+extern NNET_STATUS *NNet_Poll(NNET_MASTER *msr);
 
-/* for each loops, the value returned by this poll is significant 
- * a value of 1 means that the main loop has to be stopped as an
- * error or disconnection occured.
- *
- * value 0 is all is ok.
- */
-extern int NNet_Poll();
-extern int NNet_Init();
-extern void NNet_Clean();
+/* a client */
+extern NNET_SLAVE *NNet_Connect(NNET_MASTER *msr, const char *host, int port);
+
+/* a server */
+extern NNET_SLAVE *NNet_Listen(NNET_MASTER *msr, int port);
+
+extern void NNet_DisconnectClient(NNET_SLAVE *client);
+
+extern int NNet_Send(NNET_SLAVE *src, const char *message, u32 len);
+extern char *NNet_GetIP(NNET_SLAVE *slv);
+
+extern u32 NNet_GetStatus(const NNET_STATUS *sta);
+extern char *NNet_GetPacket(const NNET_STATUS *sta);
+extern int NNet_GetPacketLen(const NNET_STATUS *sta);
+extern NNET_SLAVE *NNet_GetSlave(const NNET_STATUS *sta);
+
+/* set user defined data set with a NNET_SLAVE element */
+extern void NNet_SetData(NNET_SLAVE *slv, const void *ptr);
+extern void *NNet_GetData(const NNET_SLAVE *slv);
+
+/* to set the debugging filter for this library */
+extern void NNet_SetDebugFilter(const char *filter);
 
 #endif /* NOT __SVCORE_H */

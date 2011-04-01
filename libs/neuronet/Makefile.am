@@ -8,8 +8,15 @@ lib_LTLIBRARIES = libneuronet.la
 
 
 libneuronet_la_SOURCES = \
-		     netabs.c \
-		     network.c
+			 util.c \
+			 slave.c \
+			 status.c \
+			 epoll.c \
+			 master.c \
+			 client.c \
+			 server.c \
+			 interface.c \
+			 packet.c
 	     
 libneuronet_la_LDFLAGS = \
 		@NEUROLDFLAGS@ \
