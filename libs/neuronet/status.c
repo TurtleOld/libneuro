@@ -5,8 +5,6 @@
 /*-------------------- Extern Headers Including --------------------*/
 #include <neuro/NEURO.h>
 
-#include <string.h>
-
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
 #include "common.h"

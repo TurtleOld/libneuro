@@ -13,16 +13,16 @@
 #ifndef WIN32
 
 #if alt
-#include <sys/select.h> /* select() */
+#include <sys/select.h> /* select */
 #else /* not alt */
-#include <sys/epoll.h>
+#include <sys/epoll.h> /* epoll_ctl epoll_wait epoll_create */
 #endif /* not alt */
 
-#include <unistd.h> /* close() */
+#include <unistd.h> /* close */
 
 #else /* WIN32 */
 
-#include <windows.h> /* winsock only supports select() !!! */
+#include <windows.h> /* winsock (only supports select !!!) */
 #define MSG_DONTWAIT 0
 
 #endif /* WIN32 */

@@ -4,32 +4,31 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 #ifndef WIN32
-#include <sys/select.h> /* select() */
+#include <sys/select.h> /* select */
 
 #if use_epoll
 #include <sys/epoll.h>
 #endif /* use_epoll */
 
 #ifndef __USE_MISC
-#define __USE_MISC /* to make inet_aton() work */
+#define __USE_MISC /* to make inet_aton work */
 #endif /* NOT __USE_MISC */
-#include <arpa/inet.h> /* inet_aton() inet_ntoa() */
+#include <arpa/inet.h> /* inet_aton inet_ntoa */
 #include <sys/socket.h>
-#include <netinet/in.h> /* htons() */
-#include <netdb.h> /* gethostbyname() */
+#include <netinet/in.h> /* htons */
+#include <netdb.h> /* gethostbyname */
+#include <fcntl.h> /* fcntl (control of the sockets) */
 
 #else /* WIN32 */
 
-#include <windows.h>
+#include <windows.h> /* (winsock functions) */
 #define MSG_DONTWAIT 0
 
 #endif /* WIN32 */
 
-#include <unistd.h> /* close() */
-#include <fcntl.h> /* fcntl() (control of the sockets) */
-#include <string.h> /* memcpy() */
-#include <errno.h> /* errno */
-#include <stdio.h> /* sprintf() */
+#include <string.h> /* memcpy */
+#include <errno.h> /* errno (variable) */
+#include <stdio.h> /* sprintf perror */
 
 #include <neuro/NEURO.h>
 

@@ -5,20 +5,19 @@
 /*-------------------- Extern Headers Including --------------------*/
 #ifndef WIN32
 #include <sys/socket.h>
-#include <netinet/in.h> /* htons() */
+#include <netinet/in.h> /* htons */
+
+#include <fcntl.h> /* fcntl (control of the sockets) */
+#include <unistd.h> /* close */
 
 #else /* WIN32 */
 
-#include <windows.h>
+#include <windows.h> /* (winsock2 functions) */
 #define MSG_DONTWAIT 0
 
 #endif /* WIN32 */
 
-#include <unistd.h> /* close() */
-#include <fcntl.h> /* fcntl() (control of the sockets) */
-#include <string.h> /* memcpy() */
-#include <errno.h> /* errno */
-#include <stdio.h> /* sprintf() */
+#include <string.h> /* memcpy */
 
 #include <neuro/NEURO.h>
 

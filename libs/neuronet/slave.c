@@ -10,27 +10,14 @@
 #include <sys/epoll.h>
 #endif /* use_epoll */
 
-#include <unistd.h> /* close() */
-#include <fcntl.h> /* fcntl() (control of the sockets) */
-
-#ifndef __USE_MISC
-#define __USE_MISC /* to make inet_aton() work */
-#endif /* NOT __USE_MISC */
-#include <arpa/inet.h> /* inet_aton() inet_ntoa() */
-#include <sys/socket.h>
-#include <netinet/in.h> /* htons() */
-#include <netdb.h> /* gethostbyname() */
+#include <unistd.h> /* close */
 
 #else /* WIN32 */
 
-#include <windows.h>
+#include <windows.h> /* closesocket */
 #define MSG_DONTWAIT 0
 
 #endif /* WIN32 */
-
-#include <string.h> /* memcpy() */
-#include <errno.h> /* errno */
-#include <stdio.h> /* sprintf() */
 
 #include <neuro/NEURO.h>
 

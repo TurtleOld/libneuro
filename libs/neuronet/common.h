@@ -11,13 +11,7 @@
 #include <sys/epoll.h>
 #endif /* use_epoll */
 
-#ifndef __USE_MISC
-#define __USE_MISC /* to make inet_aton() work */
-#endif /* NOT __USE_MISC */
-#include <arpa/inet.h> /* inet_aton() inet_ntoa() */
-#include <sys/socket.h>
-#include <netinet/in.h> /* htons() */
-#include <netdb.h> /* gethostbyname() */
+#include <arpa/inet.h> /* (struct sockaddr_in)  */
 
 #else /* WIN32 */
 
