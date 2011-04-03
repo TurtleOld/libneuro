@@ -3,12 +3,21 @@
  */
 
 /*-------------------- Extern Headers Including --------------------*/
+#include <errno.h> /* errno (variable) */
+
+#ifndef WIN32
+#include <sys/epoll.h>
+#endif /* not WIN32 */
+
+#include <string.h> /* memset */
+
 #include <neuro/NEURO.h>
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
 
 #include "common.h"
+#include "epoll.h"
 
 /*-------------------- Main Module Header --------------------------*/
 #include "util.h"
@@ -81,3 +90,61 @@ Util_SCleanEBuf(EBUF *input, void *element)
 
 }
 
+/*
+ * returns 1 if pipe type [types]
+ * is available else 0
+ * types : 
+ * 0 -- read
+ * 1 -- write
+ * 2 -- exception
+ * 
+ */
+int
+Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
+{
+	EPOLL *fd;
+	EPOLL_EVENT ev;
+	int _err = 0;
+	EPOLL_EVENT *event;
+
+	memset(&ev, 0, sizeof(EPOLL_EVENT));
+
+	switch (type)
+	{
+		case 0:
+			ev.events = EPOLLIN;
+			break;
+
+		case 1:
+			ev.events = EPOLLOUT;
+			break;
+
+		case 2:
+			ev.events = EPOLLERR;
+			break;
+
+		default:
+			return -1;
+			break;
+	}
+
+	fd = Epoll_Create(1);
+
+	_err = Epoll_Ctl(fd, EPOLL_CTL_ADD, connection, &ev);
+
+	if (_err == -1)
+	{
+		NEURO_ERROR("Epoll_Ctl raised an error %d\n", errno);
+		return -1;
+	}
+
+	_err = 0;
+	event = Epoll_Wait(fd, timeout_usec, &_err);
+
+	Epoll_Destroy(fd);
+
+	if (_err > 0)
+		return 1;
+
+	return 0;
+}

@@ -13,4 +13,9 @@
  */
 extern void Util_SCleanEBuf(EBUF *input, void *element);
 
+/* reworked version of CheckPipeAvail that used to use select.
+ * this one uses the module epoll.
+ */
+extern int Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
+
 #endif /* NOT __UTIL_H */

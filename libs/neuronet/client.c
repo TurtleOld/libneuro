@@ -265,60 +265,6 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 	return 0;
 }
 
-/* Strictly used for the client's initial connection
- *
- * returns 1 if pipe type [types]
- * is available else 0
- * types : 
- * 0 -- read
- * 1 -- write
- * 2 -- exception
- * 
- */
-static int
-CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
-{
-	fd_set readfds, writefds, exceptfds;
-	struct timeval timeout_write;
-	int _err = 0;
-
-	/* set how long we retry to see if we connected or not(used with select) 
-	 * 
-	 * 4 seconds wait/retry time
-	 */
-	timeout_write.tv_sec = timeout_sec;
-	timeout_write.tv_usec = timeout_usec;
-
-	if (type == 0)
-	{
-		FD_ZERO(&readfds);
-		FD_SET(connection, &readfds);	
-		_err = select(connection + 1, &readfds, NULL, NULL, &timeout_write);
-
-		return (FD_ISSET(connection, &readfds) ? 1 : 0);
-	}
-
-	if (type == 1)
-	{
-		FD_ZERO(&writefds);
-		FD_SET(connection, &writefds);	
-		_err = select(connection + 1, NULL, &writefds, NULL, &timeout_write);
-
-		return (FD_ISSET(connection, &writefds) ? 1 : 0);
-	}
-
-	if (type == 2)
-	{
-		FD_ZERO(&exceptfds);
-		FD_SET(connection, &exceptfds);	
-		_err = select(connection + 1, NULL, NULL, &exceptfds, &timeout_write);
-
-		return (FD_ISSET(connection, &exceptfds) ? 1 : 0);
-	}
-
-	return 0;
-}
-
 static int
 Socket_Send(int connection, char *message, u32 len)
 {
@@ -846,7 +792,7 @@ Client_Connect(Master *msr, const char *host, int port)
 			_err = 0;
 
 		NEURO_TRACE("Checking availability of the Pipe", NULL);
-		_err = CheckPipeAvail(sock, 1, 4, 0);
+		_err = Util_CheckPipeAvail(sock, 1, 4, 0);
 		if (_err == 0)
 			break;
 	}
@@ -854,8 +800,8 @@ Client_Connect(Master *msr, const char *host, int port)
 
 	if (_err == -1)
 	{
-		NEURO_WARN("an error happened with select %d", errno);
-		perror("select()");
+		NEURO_WARN("an error happened with Util_CheckPipeAvail %d", errno);
+		perror("Util_CheckPipeAvail()");
 		return NULL;
 	}
 
