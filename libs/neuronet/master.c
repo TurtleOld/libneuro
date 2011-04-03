@@ -5,6 +5,8 @@
 /*-------------------- Extern Headers Including --------------------*/
 #ifndef WIN32
 
+#include <sys/epoll.h>
+
 #else /* WIN32 */
 
 #include <windows.h> /* WSAStartup WSACleanup */
@@ -412,12 +414,14 @@ Master_Create(u32 connection_type)
 	msr->type = connection_type;
 
 #if WIN32
-	int _err = 0;
+	{
+		int _err = 0;
 
-	_err = WSAStartup(MAKEWORD(1, 1), &msr->wsaData);
+		_err = WSAStartup(MAKEWORD(1, 1), &msr->wsaData);
 
-	if (_err < 0)
-		return 1;
+		if (_err < 0)
+			return 1;
+	}
 #endif /* WIN32 */
 
 	Neuro_CreateEBuf(&msr->statuses);

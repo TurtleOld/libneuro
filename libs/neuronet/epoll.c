@@ -8,15 +8,8 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 
-#define alt 1
-
 #ifndef WIN32
-
-#if alt
-#include <sys/select.h> /* select */
-#else /* not alt */
 #include <sys/epoll.h> /* epoll_ctl epoll_wait epoll_create */
-#endif /* not alt */
 
 #include <unistd.h> /* close */
 
@@ -46,13 +39,13 @@ NEURO_MODULE_CHANNEL("netepoll");
 
 struct EPOLL
 {
-#if alt
+#if WIN32
 	EBUF *audit; /* contains ep_event elements */
 
-#else /* not alt */
+#else /* not WIN32 */
 	int epoll_fd;
 	int nfds;
-#endif /* not alt */
+#endif /* not WIN32 */
 
 	EPOLL_EVENT *epEvents;
 };
@@ -79,7 +72,7 @@ struct EPOLL
 
 
 /*-------------------- Static Functions ----------------------------*/
-#if alt
+#if WIN32
 /*
  * returns 1 if pipe type [types]
  * is available else 0
@@ -219,7 +212,7 @@ handle_events(EPOLL *ep, int timeout)
 
 	return raised;
 }
-#endif /* alt */
+#endif /* WIN32 */
 
 /*-------------------- Global Functions ----------------------------*/
 
@@ -235,10 +228,10 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 		return -1;
 	}
 
-#if alt
+#if WIN32
 	_err = 0;
 
-#else /* not alt */
+#else /* not WIN32 */
 	_err = epoll_ctl(ep->epoll_fd, op, fd, event);
 
 	if (_err == -1)
@@ -248,13 +241,13 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 		return _err;
 	}
 
-#endif /* not alt */
+#endif /* not WIN32 */
 
 	switch (op)
 	{
 		case EPOLL_CTL_ADD:
 		{
-#if alt
+#if WIN32
 			struct ep_event *tmp;
 			if (!event)
 			{
@@ -280,15 +273,15 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 				ep->epEvents = realloc(ep->epEvents, total * sizeof(struct ep_event));			
 			}
 
-#else /* not alt */
+#else /* not WIN32 */
 			ep->nfds++;
-#endif /* not alt */
+#endif /* not WIN32 */
 		}
 		break;
 
 		case EPOLL_CTL_DEL:
 		{
-#if alt
+#if WIN32
 			struct ep_event *tmp = NULL;
 
 			tmp = lookupFD(ep, fd);
@@ -315,15 +308,15 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 				ep->epEvents = realloc(ep->epEvents, total * sizeof(struct ep_event));
 			}
 
-#else /* not alt */
+#else /* not WIN32 */
 			ep->nfds--;
-#endif /* not alt */
+#endif /* not WIN32 */
 		}
 		break;
 
 		case EPOLL_CTL_MOD:
 		{
-#if alt
+#if WIN32
 			struct ep_event *tmp = NULL;
 			if (!event)
 			{
@@ -342,7 +335,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 			tmp->events = event->events;
 			tmp->data = event->data;
-#endif /* alt */
+#endif /* WIN32 */
 		}
 		break;
 	}
@@ -358,14 +351,14 @@ Epoll_Wait(EPOLL *ep, int timeout, int *nfds)
 {
 	int _err = 0;
 
-#if alt
+#if WIN32
 
 	_err = handle_events(ep, timeout);
 
 	*nfds = _err;
 
 	return ep->epEvents;
-#else /* not alt */
+#else /* not WIN32 */
 	_err = epoll_wait(ep->epoll_fd, ep->epEvents, ep->nfds, timeout);
 
 	if (_err == -1)
@@ -384,7 +377,7 @@ Epoll_Wait(EPOLL *ep, int timeout, int *nfds)
 
 	*nfds = _err;
 	return ep->epEvents;
-#endif /* not alt */
+#endif /* not WIN32 */
 }
 
 /*-------------------- Constructor Destructor ----------------------*/
@@ -397,20 +390,20 @@ Epoll_Create(int size)
 
 	output = calloc(1, sizeof(EPOLL));
 
-#if alt
+#if WIN32
 
 	_err = 0;
 
 	Neuro_CreateEBuf(&output->audit);
 
-#else /* not alt */
+#else /* not WIN32 */
 	_err = epoll_create(size);
 
 	if (_err == -1)
 	{
 		NEURO_ERROR("epoll_create raised the error %d", errno);
 	}
-#endif /* not alt */
+#endif /* not WIN32 */
 
 	return output;
 }
@@ -421,11 +414,11 @@ Epoll_Destroy(EPOLL *ep)
 	if (!ep)
 		return;
 
-#if alt
+#if WIN32
 	Neuro_CleanEBuf(&ep->audit);
-#else /* not alt */
+#else /* not WIN32 */
 	close(ep->epoll_fd);
-#endif /* not alt */
+#endif /* not WIN32 */
 
 	free(ep);
 }

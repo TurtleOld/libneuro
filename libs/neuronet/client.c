@@ -537,7 +537,11 @@ int
 Client_PollRead(Slave *slv)
 {
 	char *rbuffer = NULL;
+#ifndef WIN32
 	ssize_t rbuflen = 0;
+#else /* WIN32 */
+	int rbuflen = 0;
+#endif /* WIN32 */
 	Client *client;
 
 	if (!slv)

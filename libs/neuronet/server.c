@@ -284,7 +284,12 @@ Server_Create(Master *msr, int port)
 		NEURO_ERROR("binding failed", NULL);
 
 		free(svr);
+
+#ifndef WIN32
 		close(sock);
+#else /* WIN32 */
+		closesocket(sock);
+#endif /* WIN32 */
 		return NULL;
 	}
 
@@ -294,7 +299,12 @@ Server_Create(Master *msr, int port)
 	if (_err == -1)
 	{
 		NEURO_ERROR("flagging the master socket as listening failed", NULL);
+#ifndef WIN32
 		close(sock);
+#else /* WIN32 */
+		closesocket(sock);
+#endif /* WIN32 */
+
 		return NULL;
 	}
 

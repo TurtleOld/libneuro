@@ -5,13 +5,9 @@
 
 #include "common.h"
 
-#ifndef alt
-#define alt 1
-#endif /* not alt */
-
 typedef struct EPOLL EPOLL;
 
-#if alt
+#if WIN32
 /* 
  * EPOLL_CTL_ADD
  * EPOLL_CTL_DEL
@@ -27,7 +23,6 @@ typedef struct EPOLL EPOLL;
 
 typedef struct ep_event EPOLL_EVENT;
 
-#if alt
 struct ep_event
 {
 	unsigned int events;
@@ -38,7 +33,6 @@ struct ep_event
 		void *ptr;
 	}data;
 };
-#endif /* alt */
 
 enum
 {
@@ -56,10 +50,10 @@ enum
 	EPOLLHUP,
 	EPOLLET
 };	
-#else /* not alt */
+#else /* not WIN32 */
 typedef struct epoll_event EPOLL_EVENT;
 
-#endif /* not alt */
+#endif /* not WIN32 */
 
 extern int Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event);
 
