@@ -141,15 +141,6 @@ Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
 	}
 	else
 	{
-		/*
-		if (sta->packet == NULL)
-			sta->packet = malloc(len);
-		else
-			sta->packet = realloc(sta->packet, len);
-
-		memcpy(sta->packet, data, len);
-		*/
-
 		if (sta->packet)
 		{
 			NEURO_TRACE("freeing packet %x", sta->packet);

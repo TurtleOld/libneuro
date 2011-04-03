@@ -3,14 +3,8 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 
-#define use_epoll 0
 
 #ifndef WIN32
-
-#if use_epoll
-#include <sys/epoll.h>
-#endif /* use_epoll */
-
 #include <arpa/inet.h> /* (struct sockaddr_in)  */
 
 #else /* WIN32 */
@@ -89,17 +83,6 @@ struct Master
 
 	EPOLL *ep;
 
-#if tmp
-#if use_epoll
-	int epoll_fd;
-	struct epoll_event *epEvent;
-#else /* not use_epoll */
-	/* poll -- specific file descriptor buffers */
-	struct pollfd *ufds;
-	int nfds;
-#endif /* not use_epoll */
-#endif /* tmp */
-
 	EBUF *cevents; /* contains Event elements */
 
 #ifdef WIN32
@@ -137,42 +120,12 @@ struct Slave
 /* old LISTEN_DATA */
 struct Server
 {
-#if tmp
-	u32 socket; /* server's socket */
-
-	u32 port;
-
-	int sigmask; 	/* event mask
-			 * 0 : no event
-			 * 1 : read event 
-			 * 2 : write event
-			 * 4 : exception event
-			 */
-
-	struct sockaddr_in saddress; /* server address */
-	u32 addrlen;
-#endif /* tmp */
-
 	EBUF *connections; /* contains Slave elements -- it's those clients which are connected */
 };
 
 /* old CONNECT_DATA */
 struct Client
 {
-#if tmp
-	/* connection core settings */
-	u32 socket; /* specific socket for this connection */
-	struct sockaddr_in c_address; /* client address */
-	u32 addrlen;
-
-	int sigmask; 	/* event mask
-			 * 0 : no event
-			 * 1 : read event 
-			 * 2 : write event
-			 * 4 : exception event
-			 */
-#endif /* tmp */
-
 	/* connection statistics */
 	t_tick connection_start_time;
 	t_tick idle_time; /* idle time... actually its the exact time we last received activity from the connection */

@@ -6,10 +6,6 @@
 #ifndef WIN32
 #include <sys/select.h> /* select */
 
-#if use_epoll
-#include <sys/epoll.h>
-#endif /* use_epoll */
-
 #ifndef __USE_MISC
 #define __USE_MISC /* to make inet_aton work */
 #endif /* NOT __USE_MISC */
@@ -414,9 +410,6 @@ Client_Send(Slave *slv, const char *message, u32 len)
 	tmp->arrow = tmp->data;
 	tmp->remaining = tmp->len;
 
-#if tmp
-	if ((src->sigmask & 2) == 2)
-#endif /* tmp */
 	{
 		int _err = 0;
 
@@ -424,16 +417,6 @@ Client_Send(Slave *slv, const char *message, u32 len)
 
 		if (_err == 1)
 		{
-#if tmp
-			src->sigmask ^= 2;
-
-#if use_epoll	
-			slv->epollctx->events |= EPOLLOUT;
-			epoll_ctl(slv->master->epoll_fd, EPOLL_CTL_MOD, src->socket, slv->epollctx);
-#endif /* use_epoll */
-#endif /* tmp */
-
-
 			return 0;
 		}
 

@@ -6,10 +6,6 @@
 
 #ifndef WIN32
 
-#if use_epoll
-#include <sys/epoll.h>
-#endif /* use_epoll */
-
 #include <unistd.h> /* close */
 
 #else /* WIN32 */
