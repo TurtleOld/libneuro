@@ -3,6 +3,8 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 
+#define MAX_PACKET_SIZE 5120
+#define INPUT_PACKET_BUFFERING 10
 
 #ifndef WIN32
 #include <arpa/inet.h> /* (struct sockaddr_in)  */
@@ -165,9 +167,6 @@ struct Event
 			 * 4 : exception event
 			 */
 };
-
-#define MAX_PACKET_SIZE 5120
-#define INPUT_PACKET_BUFFERING 10
 
 typedef struct PACKET_BUFFER PACKET_BUFFER;
 
