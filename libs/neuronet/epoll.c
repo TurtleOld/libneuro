@@ -410,6 +410,9 @@ Epoll_Create(int size)
 	{
 		NEURO_ERROR("epoll_create raised the error %d", errno);
 	}
+
+	output->epoll_fd = _err;
+
 #endif /* not WIN32 */
 
 	return output;
