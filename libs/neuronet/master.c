@@ -14,6 +14,7 @@
 
 #endif /* WIN32 */
 
+#include <string.h> /* memset */
 #include <errno.h> /* errno */
 
 #include <neuro/NEURO.h>
@@ -232,6 +233,8 @@ void
 Master_AddUfds(Master *msr, Slave *slv)
 {
 	EPOLL_EVENT event;
+
+	memset(&event, 0, sizeof(EPOLL_EVENT));
 
 	event.events = EPOLLIN | EPOLLPRI | EPOLLERR;
 	event.data.ptr = slv;
