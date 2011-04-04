@@ -340,6 +340,13 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 		break;
 	}
 
+#ifndef WIN32
+	if (!ep->epEvents)
+		ep->epEvents = calloc(1, sizeof(EPOLL_EVENT));
+	else
+		ep->epEvents = realloc(ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT));
+#endif /* not WIN32 */
+
 	return _err;
 }
 
