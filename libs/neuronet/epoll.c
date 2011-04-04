@@ -427,5 +427,8 @@ Epoll_Destroy(EPOLL *ep)
 	close(ep->epoll_fd);
 #endif /* not WIN32 */
 
+	if (ep->epEvents)
+		free(ep->epEvents);
+
 	free(ep);
 }
