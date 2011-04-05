@@ -608,7 +608,7 @@ Client_PollSend(Slave *slv)
 			if (_err == -1)
 			{
 
-				NEURO_WARN("We weren't able to send any data... disconnecting client", NULL);
+				NEURO_WARN("Pipe error... disconnecting client", NULL);
 
 				return 2;
 			}
