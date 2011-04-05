@@ -642,13 +642,12 @@ Client_Poll(Client *client)
 	if (!client)
 		return 2;
 
-	/* if (parent->type == 0) */
 	if(client->timeout != 0)
 	{
 		if (client->idle_time + client->timeout < Neuro_GetTickCount())
 		{
-			NEURO_WARN("Connection dropped due to timeout", NULL);
-			return 0;
+			NEURO_TRACE("Connection dropped due to timeout", NULL);
+			return 1;
 		}
 	}
 
