@@ -43,7 +43,7 @@ boundStrlen(char *buffer, unsigned int len)
 	{
 		if (tmp[t] == '\0')
 		{
-			return t;
+			return (t + 1);
 		}
 
 		t++;
@@ -274,8 +274,11 @@ Packet_Set(char *buffer, unsigned int len)
 
 	new = malloc(sizeof(Packet));
 
+	new->buffer = malloc(len);
+
+	memcpy(new->buffer, buffer, len);
+
 	new->buffer_pos = 0;
-	new->buffer = buffer;
 	new->len = len;
 	new->mem = 0;
 
