@@ -138,8 +138,14 @@ Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 		return -1;
 	}
 
+	if (timeout_sec < 0)
+		timeout_sec = 0;
+
+	if (timeout_usec < 0)
+		timeout_usec = 0;
+
 	_err = 0;
-	event = Epoll_Wait(fd, timeout_usec, &_err);
+	event = Epoll_Wait(fd, (timeout_sec * 1000) + timeout_usec, &_err);
 
 	Epoll_Destroy(fd);
 
