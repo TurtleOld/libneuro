@@ -8,6 +8,7 @@
 #include <string.h> /* memcpy() */
 
 /*-------------------- Local Headers Including ---------------------*/
+#include <global.h>
 
 /*-------------------- Main Module Header --------------------------*/
 

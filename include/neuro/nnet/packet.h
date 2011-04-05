@@ -3,8 +3,6 @@
 #ifndef __PACKET_H
 #define __PACKET_H
 
-#include "global.h"
-
 typedef struct Packet Packet;
 
 extern int Packet_Push64(Packet *pkt, double num);
