@@ -167,7 +167,7 @@ Status_Create()
 }
 
 void
-Status_Destroy(Status *sta)
+Status_Clear(Status *sta)
 {
 	if (!sta)
 		return;
@@ -178,6 +178,15 @@ Status_Destroy(Status *sta)
 		NEURO_TRACE("freeing packet %x", sta->packet);
 		free(sta->packet);
 	}
+}
+
+void
+Status_Destroy(Status *sta)
+{
+	if (!sta)
+		return;
+
+	Status_Clear(sta);
 
 	free(sta);
 }

@@ -19,6 +19,7 @@ extern void Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 extern void Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn);
 
 extern Status *Status_Create();
+extern void Status_Clear(Status *sta);
 extern void Status_Destroy(Status *sta);
 
 #endif /* NOT __STATUS_H */

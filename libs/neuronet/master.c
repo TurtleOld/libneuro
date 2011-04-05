@@ -57,7 +57,7 @@ clean_statuses_elem(void *src)
 	if (!sta)
 		return;
 
-	Status_Destroy(sta);
+	Status_Clear(sta);
 }
 
 static int
