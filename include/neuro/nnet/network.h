@@ -67,6 +67,8 @@ extern NNET_SLAVE *NNet_Connect(NNET_MASTER *msr, const char *host, int port);
 /* a server */
 extern NNET_SLAVE *NNet_Listen(NNET_MASTER *msr, int port);
 
+extern void NNet_SetTimeOut(NNET_SLAVE *slv, t_tick ts);
+
 extern void NNet_DisconnectClient(NNET_SLAVE *client);
 
 extern int NNet_Send(NNET_SLAVE *src, const char *message, u32 len);
