@@ -273,7 +273,15 @@ Socket_Send(int connection, char *message, u32 len)
 	if (connection == 0 || message == NULL || len == 0)
 		return 0;
 
+#ifndef WIN32
+	/* MSG_NOSIGNAL avoids the server to be killed with the
+	 * signal SIGPIPE. With it, send returns -1 and this results
+	 * in a clean disconnection of the faulty client.
+	 */
+	return send(connection, message, len, MSG_NOSIGNAL);
+#else /* WIN32 */
 	return send(connection, message, len, 0);
+#endif /* WIN32 */
 }
 
 static int
