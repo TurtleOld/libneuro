@@ -154,7 +154,9 @@ Server_DisconnectClient(Slave *slv)
 
 			if (tmp->connection == slv)
 			{
-				Util_SCleanEBuf(slv->master->statuses, tmp);
+				/* we make sure the disconnection status is not deleted :D */
+				if (tmp->status != State_ClientDisconnect)
+					Util_SCleanEBuf(slv->master->statuses, tmp);
 			}
 		}
 	}
