@@ -446,8 +446,6 @@ Master_Destroy(Master *msr)
 #endif /* WIN32 */
 
 
-	Epoll_Destroy(msr->ep);
-
 	Neuro_CleanEBuf(&msr->cevents);
 
 	Neuro_CleanEBuf(&msr->statuses);
@@ -455,6 +453,8 @@ Master_Destroy(Master *msr)
 	Status_Destroy(msr->status);
 
 	Slave_Destroy(msr->slave);
+
+	Epoll_Destroy(msr->ep);
 
 	free(msr);
 }
