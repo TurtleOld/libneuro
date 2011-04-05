@@ -3,6 +3,10 @@
 #ifndef __SVCORE_H
 #define __SVCORE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <neuro/NEURO.h>
 
 enum CONNECT_TYPE
@@ -79,5 +83,9 @@ extern void *NNet_GetData(const NNET_SLAVE *slv);
 
 /* to set the debugging filter for this library */
 extern void NNet_SetDebugFilter(const char *filter);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NOT __SVCORE_H */

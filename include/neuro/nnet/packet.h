@@ -3,6 +3,10 @@
 #ifndef __PACKET_H
 #define __PACKET_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct Packet Packet;
 
 extern int Packet_Push64(Packet *pkt, double num);
@@ -27,5 +31,9 @@ extern void Packet_Reset(Packet *pkt);
 
 extern Packet *Packet_Create();
 extern void Packet_Destroy(Packet *pkt);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NOT __PACKET_H */
