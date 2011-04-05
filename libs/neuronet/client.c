@@ -516,11 +516,14 @@ Client_PollRead(Slave *slv)
 	NEURO_TRACE("Recieved a packet of len %d", rbuflen);
 
 	/* the connection with the client just ended, we close it up */
-	if (rbuflen == 0)
+	if (rbuflen == 0 || rbuflen == -1)
 	{
 		free(rbuffer);
 
-		NEURO_WARN("Connection lost", NULL);
+		if (rbuflen == 0)
+			NEURO_TRACE("Connection lost", NULL);
+		else
+			NEURO_TRACE("Pipe error", NULL);
 
 		return 1;
 	}
