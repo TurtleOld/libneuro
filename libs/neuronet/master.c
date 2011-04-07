@@ -115,10 +115,16 @@ handle_Events(Master *msr)
 					else
 					{
 						Status_Add(event->slave->master, State_ClientDisconnect, NULL, 0, event->slave);
-						Server_DisconnectClient(event->slave);
-					}
+						/* avoid any more packets coming from the client 
+						 * creating chaos in the event queue.
+						 */
+						Master_RmUfds(msr, event->slave);
 
-					return 0;
+						event->slave->sigmask ^= 8;
+						event->slave->sigmask ^= 4;
+
+						clean_elem = 1;
+					}
 				}
 				if ((event->sigmask & 1) == 1)
 				{

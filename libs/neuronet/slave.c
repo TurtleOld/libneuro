@@ -142,8 +142,6 @@ Slave_Clean(Slave *slv)
 		return;
 	}
 
-	Master_RmUfds(slv->master, slv);
-
 #ifdef WIN32
 	closesocket(slv->socket);
 #else /* NOT WIN32 */
