@@ -154,12 +154,7 @@ handle_Events(Master *msr)
 						case 1:
 						{
 							NEURO_TRACE("Client disconnection required by Client_PollRead", NULL);
-							Master_PushEvent(msr, event->slave, 8);
-
-
-							event->slave->sigmask = 8;
-
-							clean_elem = 1;
+							Master_EditEvent(event, event->slave, 8);
 						}
 						break;
 
@@ -196,8 +191,7 @@ handle_Events(Master *msr)
 						case 2:
 						{
 							NEURO_TRACE("Client disconnection required by Client_PollSend", NULL);
-							Master_PushEvent(msr, event->slave, 8);
-							clean_elem = 1;
+							Master_EditEvent(event, event->slave, 8);
 						}
 						break;
 
@@ -256,6 +250,13 @@ Master_RmUfds(Master *msr, Slave *slv)
 	memset(&event, 0, sizeof(EPOLL_EVENT));
 
 	Epoll_Ctl(msr->ep, EPOLL_CTL_DEL, slv->socket, &event);
+}
+
+void
+Master_EditEvent(Event *event, Slave *slave, int sigmask)
+{
+	event->slave = slave;
+	event->sigmask = sigmask;
 }
 
 void
