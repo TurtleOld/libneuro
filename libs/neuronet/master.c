@@ -251,7 +251,11 @@ Master_AddUfds(Master *msr, Slave *slv)
 void
 Master_RmUfds(Master *msr, Slave *slv)
 {
-	Epoll_Ctl(msr->ep, EPOLL_CTL_DEL, slv->socket, NULL);
+	EPOLL_EVENT event;
+
+	memset(&event, 0, sizeof(EPOLL_EVENT));
+
+	Epoll_Ctl(msr->ep, EPOLL_CTL_DEL, slv->socket, &event);
 }
 
 void
