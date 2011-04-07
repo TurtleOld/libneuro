@@ -104,13 +104,21 @@ handle_Events(Master *msr)
 
 				event->slave->sigmask = event->sigmask;
 
-				NEURO_TRACE("%s", Neuro_s("Client address %x current sigmask %d", event->slave->cType.client, event->slave->sigmask));
+				NEURO_TRACE("%s", Neuro_s("Client address %x current sigmask %d", event->slave, event->slave->sigmask));
 
+				if (event->sigmask & 16)
+				{
+					/* real disconnect */
+					Server_DisconnectClient(event->slave);
+
+					return 0;
+				}
 				if ((event->sigmask & 8) == 8 || ((event->sigmask & 4) == 4))
 				{
 					if (event->slave->master->type == TYPE_CLIENT)
 					{
 						Status_Add(event->slave->master, State_Disconnect, NULL, 0, NULL);
+						return 0;
 					}
 					else
 					{
@@ -385,7 +393,16 @@ Master_Poll(Master *msr)
 
 		Util_SCleanEBuf(msr->statuses, buf);
 
-		NEURO_TRACE("%s", Neuro_s("Will send Status type %d -- data address %x", msr->status->status, msr->status->packet));
+		if (msr->status->status == State_ClientDisconnect)
+		{
+			NEURO_TRACE("Sending the event to really disconnect the client", NULL);
+			/* real disconnect event */
+			Master_PushEvent(msr, msr->status->connection, 16);
+		}
+		else
+		{
+			NEURO_TRACE("%s", Neuro_s("Will send Status type %d -- data address %x", msr->status->status, msr->status->packet));
+		}
 
 		return (msr->status);
 	}
