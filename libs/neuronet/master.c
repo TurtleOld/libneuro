@@ -284,10 +284,16 @@ Master_PollEvent(Master *msr)
 	int sigmask = 0;
 	EPOLL_EVENT *events;
 
+	/* exhaust all the events */
+	while (!Neuro_EBufIsEmpty(msr->cevents))
+	{
+		handle_Events(msr);
+	}
+
 	events = Epoll_Wait(msr->ep, 100, &i);
 
 	if (i == 0)
-		return handle_Events(msr);
+		return 0;
 
 	if (i == -1)
 	{
