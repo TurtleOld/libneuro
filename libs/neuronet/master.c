@@ -140,18 +140,9 @@ handle_Events(Master *msr)
 					{
 						case 0:
 						{
-							/* Status *state; */
-
 							NEURO_TRACE("Data available for the server", NULL);
 
 							Client_PopData(event->slave);
-							/*state = Client_PopData(event->slave);
-							if (state)
-							{
-								if (state->status != State_NoData)
-									Status_Add(msr, state->status, state->packet, state->packet_len, state->connection);
-							}
-							*/
 
 							event->slave->sigmask ^= 1;
 
