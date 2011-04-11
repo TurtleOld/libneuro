@@ -286,6 +286,17 @@ Packet_Set(char *buffer, unsigned int len)
 	return new;
 }
 
+int
+Packet_Set2(Packet *pkt, char *buffer, unsigned int len)
+{
+	if (!pkt)
+		return 1;
+
+	Packet_Reset(pkt);
+
+	return push_data(pkt, len, buffer);
+}
+
 void
 Packet_Reset(Packet *pkt)
 {

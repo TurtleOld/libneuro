@@ -27,6 +27,7 @@ extern int Packet_GetLen(const Packet *pkt);
 extern char *Packet_GetBuffer(const Packet *pkt);
 
 extern Packet *Packet_Set(char *buffer, unsigned int len);
+extern int Packet_Set2(Packet *pkt, char *buffer, unsigned int len);
 extern void Packet_Reset(Packet *pkt);
 
 extern Packet *Packet_Create();
