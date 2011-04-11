@@ -265,6 +265,18 @@ Server_Create(Master *msr, int port)
 		return NULL;
 	}
 
+#ifndef WIN32
+	{
+		int set = 1;
+
+		/* this should fix an annoying issue happening between the execution 
+		 * of the server. Bind fails for a while until the address is available
+		 * again.
+		 */
+		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *)&set, sizeof(int));
+	}
+#endif /* not WIN32 */
+
 	saddress.sin_family = AF_INET;
 	saddress.sin_addr.s_addr = INADDR_ANY;
 	saddress.sin_port = htons(port);
