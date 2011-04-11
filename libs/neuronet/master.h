@@ -6,6 +6,7 @@
 #include "common.h"
 
 extern int Master_SetSendPacketSize(Master *msr);
+extern void Master_SetQuitFlag(Master *msr);
 
 extern void Master_AddUfds(Master *msr, Slave *slv);
 extern void Master_RmUfds(Master *msr, Slave *slv);

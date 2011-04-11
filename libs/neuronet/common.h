@@ -66,7 +66,8 @@ struct Master
 {
 	u32 type; /* Connection type
 		   * 0 : server
-		   * 1 : client 
+		   * 1 : client
+		   * 2 : to exit execution (special) 
 		   */
 
 	/* this flag actually toggles if the connection include a 32 bit 

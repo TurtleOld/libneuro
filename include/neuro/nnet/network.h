@@ -59,6 +59,8 @@ extern NNET_MASTER *NNet_Create(u32 connection_type);
  */
 extern int NNet_SetSendPacketSize(NNET_MASTER *msr);
 
+extern void NNet_SetQuitFlag(NNET_MASTER *msr);
+
 extern NNET_STATUS *NNet_Poll(NNET_MASTER *msr);
 
 /* a client */

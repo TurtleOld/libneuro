@@ -97,6 +97,12 @@ NNet_SetSendPacketSize(Master *msr)
 }
 
 void
+NNet_SetQuitFlag(Master *msr)
+{
+	Master_SetQuitFlag(msr);
+}
+
+void
 NNet_DisconnectClient(Slave *client)
 {
 	Client_Disconnect(client);

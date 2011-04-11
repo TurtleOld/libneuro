@@ -347,6 +347,15 @@ Master_SetSendPacketSize(Master *msr)
 	return 0;
 }
 
+void
+Master_SetQuitFlag(Master *msr)
+{
+	if (!msr)
+		return;
+
+	msr->type = 2;
+}
+
 /*-------------------- Poll ----------------------------------------*/
 
 Status *
@@ -354,6 +363,15 @@ Master_Poll(Master *msr)
 {
 	if (!msr)
 		return NULL;
+
+	if (msr->type == 2)
+	{
+		NEURO_TRACE("End user application flagged the Master as quit, exiting", NULL);
+
+		Status_Set(msr->status, State_Disconnect, NULL, 0, NULL);
+
+		return msr->status;
+	}
 
 	if (!msr->slave)
 	{
@@ -448,7 +466,7 @@ Master_Create(u32 connection_type)
 		_err = WSAStartup(MAKEWORD(1, 1), &msr->wsaData);
 
 		if (_err < 0)
-			return 1;
+			return NULL;
 	}
 #endif /* WIN32 */
 
