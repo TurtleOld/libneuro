@@ -389,7 +389,7 @@ Master_Poll(Master *msr)
 	}
 	else
 	{
-		if (!msr->slave->cType.server)
+		if (!msr->slave->cType.client)
 		{
 			NEURO_ERROR("Attempted to poll without a properly initialized client", NULL);
 			return NULL;
