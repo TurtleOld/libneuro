@@ -205,10 +205,6 @@ handle_Events(Master *msr)
 						break;
 					}
 				}
-				else
-				{
-					clean_elem = 1;
-				}
 
 				if (clean_elem == 1)
 					Util_SCleanEBuf(ce, event);
