@@ -178,7 +178,7 @@ handle_events(EPOLL *ep, int timeout)
 	int raised = 0; /* number of events raised */
 	int total = 0;
 
-	if (!Neuro_EBufIsEmpty(ep->audit))
+	if (Neuro_EBufIsEmpty(ep->audit))
 		return 0;
 
 	total = Neuro_GiveEBufCount(ep->audit) + 1;

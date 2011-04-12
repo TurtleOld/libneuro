@@ -56,19 +56,19 @@ struct ep_event
 
 enum
 {
-	EPOLL_CTL_ADD = 0,
-	EPOLL_CTL_DEL,
-	EPOLL_CTL_MOD
+	EPOLL_CTL_ADD = 1,
+	EPOLL_CTL_DEL = 2,
+	EPOLL_CTL_MOD = 3
 };
 
 enum
 {
-	EPOLLIN = 0,
-	EPOLLOUT,
-	EPOLLPRI,
-	EPOLLERR,
-	EPOLLHUP,
-	EPOLLET
+	EPOLLIN = 1,
+	EPOLLOUT = 2,
+	EPOLLPRI = 4,
+	EPOLLERR = 8,
+	EPOLLHUP = 16,
+	EPOLLET = 32
 };	
 #endif /* HAVE_SELECT */
 
