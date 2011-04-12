@@ -118,6 +118,7 @@ handle_Events(Master *msr)
 					if (event->slave->master->type == TYPE_CLIENT)
 					{
 						Status_Add(event->slave->master, State_Disconnect, NULL, 0, NULL);
+						Util_SCleanEBuf(ce, event);
 						return 0;
 					}
 					else
