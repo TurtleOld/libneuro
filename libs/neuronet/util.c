@@ -5,10 +5,6 @@
 /*-------------------- Extern Headers Including --------------------*/
 #include <errno.h> /* errno (variable) */
 
-#ifndef WIN32
-#include <sys/epoll.h>
-#endif /* not WIN32 */
-
 #include <string.h> /* memset */
 
 #include <neuro/NEURO.h>

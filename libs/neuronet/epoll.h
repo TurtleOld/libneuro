@@ -3,11 +3,31 @@
 #ifndef __EPOLL_H
 #define __EPOLL_H
 
-#include "common.h"
+#include <global.h>
 
 typedef struct EPOLL EPOLL;
 
-#if WIN32
+#ifndef WIN32
+
+/* please note that only one of epoll, 
+ * poll or select can be active at one time.
+ */
+
+#ifdef HAVE_EPOLL
+#include <sys/epoll.h> /* epoll_ctl epoll_wait epoll_create */
+#endif /* HAVE_EPOLL */
+
+#ifdef HAVE_POLL
+#include <sys/poll.h>
+#endif /* HAVE_POLL */
+
+#ifdef HAVE_SELECT
+#include <sys/select.h>
+#endif /* HAVE_SELECT */
+
+#endif /* not WIN32 */
+
+#ifdef HAVE_SELECT
 /* 
  * EPOLL_CTL_ADD
  * EPOLL_CTL_DEL
@@ -50,10 +70,12 @@ enum
 	EPOLLHUP,
 	EPOLLET
 };	
-#else /* not WIN32 */
+#endif /* HAVE_SELECT */
+
+#ifdef HAVE_EPOLL
 typedef struct epoll_event EPOLL_EVENT;
 
-#endif /* not WIN32 */
+#endif /* HAVE_EPOLL */
 
 extern int Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event);
 

@@ -5,8 +5,6 @@
 /*-------------------- Extern Headers Including --------------------*/
 #ifndef WIN32
 
-#include <sys/epoll.h>
-
 #else /* WIN32 */
 
 #include <windows.h> /* WSAStartup WSACleanup */
