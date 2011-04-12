@@ -128,8 +128,10 @@ handle_Events(Master *msr)
 						 */
 						Master_RmUfds(msr, event->slave);
 
-						event->slave->sigmask ^= 8;
-						event->slave->sigmask ^= 4;
+						if (event->slave->sigmask & 8)
+							event->slave->sigmask ^= 8;
+						if (event->slave->sigmask & 4)
+							event->slave->sigmask ^= 4;
 
 						clean_elem = 1;
 					}
