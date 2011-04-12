@@ -287,7 +287,7 @@ Master_PollEvent(Master *msr)
 		handle_Events(msr);
 	}
 
-	events = Epoll_Wait(msr->ep, 100, &i);
+	events = Epoll_Wait(msr->ep, 0, &i);
 
 	if (i == 0)
 		return 0;
