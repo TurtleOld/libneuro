@@ -389,13 +389,19 @@ Master_Poll(Master *msr)
 			return NULL;
 		}
 	}
-	else
+	else if (msr->type == TYPE_CLIENT)
 	{
 		if (!msr->slave->cType.client)
 		{
 			NEURO_ERROR("Attempted to poll without a properly initialized client", NULL);
 			return NULL;
 		}
+	}
+	else
+	{
+		NEURO_ERROR("Invalid Master type, bailing out", NULL);
+
+		return NULL;
 	}
 
 	if (Neuro_EBufIsEmpty(msr->statuses))
