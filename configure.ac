@@ -123,12 +123,22 @@ case $host in
 		if test x$lowlib = xnothing; then
 			lowlib=sdl
 		fi
+
+		if test x$pollType = xnothing; then
+			pollType="select"
+		fi
+
 		;;
 	*)
 #by default we now compile against X11 on POSIX machines
 		if test x$lowlib = xnothing; then
 			lowlib=X11
 		fi
+
+		if test x$pollType = xnothing; then
+			pollType="epoll"
+		fi
+
 		targ=unix
 		need_no_undefined=no
 		;;
@@ -330,7 +340,7 @@ if test x$pollType = xpoll; then
 fi
 
 if test x$pollType = xselect; then
-	if test x$targ == xw32; then
+	if test x$targ = xw32; then
 		# the headers under w32 are different, so we won't even bother
 		# checking for the availability.
 		AC_DEFINE(HAVE_SELECT, 1, The select function)
@@ -384,5 +394,9 @@ AC_OUTPUT
 
 echo " "
 echo "enable neuronet : $enable_Neuronet"
+if test x$enable_Neuronet = xyes; then
+	echo "	pollType : $pollType"
+fi
+echo " "
 echo "This is the low library Neuro will use : $SELECTED_LOWLIB"
 echo " "
