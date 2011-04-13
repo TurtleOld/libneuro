@@ -5,6 +5,8 @@ Neuro_AddReleasedKeyEvent
 Neuro_AddReleasedMouseEvent
 Neuro_AddReleasedMultiKeyEvent
 Neuro_AllocEBuf
+Neuro_AllocLBuf
+Neuro_AllocStartLBuf
 Neuro_ArgClean
 Neuro_ArgInit
 Neuro_ArgOption
@@ -15,6 +17,7 @@ Neuro_CalcOnlyPos
 Neuro_CleanDraw
 Neuro_CleanEBuf
 Neuro_CleanEBuf2
+Neuro_CleanLBuf
 Neuro_CleanFont
 Neuro_CleanKeyboard
 Neuro_CleanMouse
@@ -23,6 +26,7 @@ Neuro_CopyEBuf
 Neuro_CreateBMPCTX
 Neuro_CreateEBuf
 Neuro_CreateEBuf2
+Neuro_CreateLBuf
 Neuro_CreateVObject
 Neuro_DebugChannel
 Neuro_DestroyBMPCTX
@@ -41,13 +45,17 @@ Neuro_GetScreenSize
 Neuro_GetTickCount
 Neuro_GiveConvertRGB
 Neuro_GiveCurEBuf
+Neuro_GiveCurLBuf
 Neuro_GiveEBuf
+Neuro_GiveLBuf
 Neuro_GiveEBufAddr
 Neuro_GiveEBufCore
 Neuro_GiveEBufCount
 Neuro_GiveEBufElem
 Neuro_GiveFPS
 Neuro_GiveImageSize
+Neuro_GiveLBufCount
+Neuro_GiveNextLBuf
 Neuro_GiveRGB
 Neuro_GiveRGB16
 Neuro_GiveRGB24
@@ -57,6 +65,7 @@ Neuro_GiveRGBA_special
 Neuro_GradualLoadBMP
 Neuro_HorizontalBoundCrop
 Neuro_Init
+Neuro_LBufIsEmpty
 Neuro_LoadBMP
 Neuro_LoadFontFile
 Neuro_LockVObject
@@ -69,7 +78,9 @@ Neuro_PutPixel
 Neuro_Quit
 Neuro_RenderUnicode
 Neuro_ResetEBuf
+Neuro_ResetLBuf
 Neuro_SCleanEBuf
+Neuro_SCleanLBuf
 Neuro_SepChr
 Neuro_SepChr2
 Neuro_SepChr3
@@ -88,6 +99,7 @@ Neuro_SetImgSrcPos
 Neuro_SetNeuroDebugFilter
 Neuro_SetScreenSize
 Neuro_SetcallbEBuf
+Neuro_SetcallbLBuf
 Neuro_Sleep
 Neuro_SyncPixels
 Neuro_UnlockVObject

@@ -37,6 +37,7 @@
 #include "events.h"
 #include "other.h"
 #include "neuro_main.h"
+#include "lbuf.h"
 
 
 #endif /* __LIBNEURO_H */

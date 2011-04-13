@@ -3,7 +3,8 @@
 noinst_LTLIBRARIES = libmemory.la
 
 lib_sources = 	\
-		ebuf.c 
+		ebuf.c \
+		lbuf.c
 
 libmemory_la_SOURCES = $(lib_sources)
 

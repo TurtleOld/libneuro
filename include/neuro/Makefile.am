@@ -18,4 +18,5 @@ include_HEADERS = \
 		  other.h \
 		  typedef.h \
 		  bitmap.h \
-		  neuro_engine.h
+		  neuro_engine.h \
+		  lbuf.h
