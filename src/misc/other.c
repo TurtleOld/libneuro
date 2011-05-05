@@ -269,8 +269,8 @@ Neuro_SepChr3(const unsigned char chr, const char *source, u32 len)
 
 	if (source)
 	{
-		total = strlen(source);
-		if (total == 0 || len > total)
+		total = strlen(source) + 1;
+		if (total <= 1 || len > total)
 		{
 			NEURO_WARN("%s", Neuro_s("length %d is invalid -- debug - total %d", len, total));
 			return NULL;
