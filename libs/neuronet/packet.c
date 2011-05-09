@@ -130,6 +130,9 @@ push_data(Packet *pkt, unsigned int len, const char *data)
 		pkt->mem += (len - pkt->mem) + 100;
 	}
 
+	/*NEURO_TRACE("%s", Neuro_s("first byte %d - pkt->len %d, pkt->mem %d, data first byte %d, data len %d",
+				pkt->buffer[0], pkt->len, pkt->mem, data[0], len));*/
+
 	memcpy(&pkt->buffer[pkt->len], data, len);
 
 	pkt->mem -= len;
