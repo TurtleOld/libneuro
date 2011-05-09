@@ -38,6 +38,7 @@
 #include "status.h"
 #include "lbuf.h"
 #include "util.h"
+#include "server.h"
 
 /*-------------------- Main Module Header --------------------------*/
 #include "client.h"
@@ -465,9 +466,12 @@ Client_Disconnect(Slave *slv)
 	if (!slv)
 		return;
 
-	NEURO_TRACE("Soft disconnecting client %x", slv);
+	/*NEURO_TRACE("Soft disconnecting client %x", slv);
 
-	Master_PushEvent(slv->master, slv, 8);
+	Master_PushEvent(slv->master, slv, 8);*/
+
+	Master_RmUfds(slv->master, slv);
+	Server_DisconnectClient(slv);
 }
 
 char *
