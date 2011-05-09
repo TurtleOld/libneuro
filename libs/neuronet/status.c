@@ -106,6 +106,20 @@ Status_Move(Status *from, Status *to)
 /*-------------------- Constructor Destructor ----------------------*/
 
 void
+Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
+{
+	Status *tmp;
+
+	Neuro_AllocStartLBuf(msr->statuses, sizeof(Status));
+
+	NEURO_TRACE("Priority Status added for slave %x", conn);
+
+	tmp = Neuro_GiveLBuf(msr->statuses);
+
+	Status_Set(tmp, state, data, len, conn);
+}
+
+void
 Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 {
 	Status *tmp;

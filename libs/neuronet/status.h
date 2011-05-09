@@ -16,6 +16,7 @@ extern void Status_Move(Status *from, Status *to);
 
 /* add to an EBUF in master */
 extern void Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn);
+extern void Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn);
 extern void Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn);
 
 extern Status *Status_Create();
