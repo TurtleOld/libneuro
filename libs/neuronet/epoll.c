@@ -257,6 +257,8 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 #endif /* HAVE_SELECT */
 
+	NEURO_TRACE("%s", Neuro_s("Start -- Elems in buffer %d op : %d", ep->nfds, op));
+
 #ifdef HAVE_EPOLL
 	_err = epoll_ctl(ep->epoll_fd, op, fd, event);
 
@@ -369,6 +371,9 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 		}
 		break;
 	}
+
+
+	NEURO_TRACE("%s", Neuro_s("End -- Elems in buffer %d epEvents 0x%x -- allocate size : %d", ep->nfds, ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT)));
 
 #ifdef HAVE_EPOLL
 	if (!ep->epEvents)
