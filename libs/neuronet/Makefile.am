@@ -19,9 +19,9 @@ libneuronet_la_SOURCES = \
 			 packet.c
 	     
 libneuronet_la_LDFLAGS = \
-		@NEUROLDFLAGS@ \
+		@NNETLDFLAGS@ \
 		-version-info $(INTERFACE):$(REVISION):$(BINARY)
 
 libneuronet_la_LIBADD =
 
-AM_CFLAGS = @NEUROFLAGS@
+AM_CFLAGS = @NNETFLAGS@

@@ -79,6 +79,10 @@ NEUROFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
 NEUROLDFLAGS="-export-symbols \$(top_srcdir)/include/libneuro.sym"
 SDLFLAGS="`sdl-config --libs`" 
 
+# Neuronet flags
+NNETFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
+NNETLDFLAGS=""
+
 dnl ------ Configure Arguments ------
 
 AC_ARG_ENABLE(Debug, [  --enable-Debug	enable the debugging of this program [[default=no]]], , enable_Debug=no)
@@ -364,6 +368,9 @@ fi
 
 AC_SUBST(NEUROFLAGS)
 AC_SUBST(NEUROLDFLAGS)
+
+AC_SUBST(NNETFLAGS)
+AC_SUBST(NNETLDFLAGS)
 
 AM_CONDITIONAL(USE_NEURONET, test x$enable_Neuronet = xyes)
 
