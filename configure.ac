@@ -81,7 +81,7 @@ SDLFLAGS="`sdl-config --libs`"
 
 # Neuronet flags
 NNETFLAGS="-D__USE_GNU -I\${top_srcdir}/include -I\${top_srcdir}/include/neuro"
-NNETLDFLAGS=""
+NNETLDFLAGS="-export-symbols \$(top_srcdir)/include/neuro/nnet/libnnet.sym"
 
 dnl ------ Configure Arguments ------
 
