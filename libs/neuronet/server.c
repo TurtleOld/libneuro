@@ -197,7 +197,7 @@ Server_Poll(Slave *slv)
 
 		Status_Add(slv->master, State_NewClient, NULL, 0, buf);
 
-		NEURO_TRACE("%s", Neuro_s("New Client Connection %x on socket %d", tmp, slv->socket));
+		NEURO_TRACE("%s", Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
 	}
 
 	return 0;
