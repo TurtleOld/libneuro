@@ -149,11 +149,13 @@ Server_Poll(Slave *slv)
 	server = slv->cType.server;
 	sigmask = slv->sigmask;
 
+#if old
 	/* only read events are handled for now */
 	if ((sigmask & 1) != 1)
 	{
 		return 0;
 	}
+#endif /* old */
 
 	addrlen = sizeof(struct sockaddr_in);
 
