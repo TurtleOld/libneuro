@@ -19,6 +19,7 @@
 
 #include <neuro/NEURO.h>
 
+#include "lbuf.h"
 #include "epoll.h"
 
 enum CONNECT_TYPE
@@ -79,7 +80,7 @@ struct Master
 
 	Slave *slave;
 
-	EBUF *statuses; /* contains Status elements */
+	LBUF *statuses; /* contains Status elements */
 
 	/* used only for a client */
 	Status *status;
@@ -232,7 +233,7 @@ struct FRAGMENT_MASTER
 	/* the data buffer which could contain one or more actual packets. */
 	char *data;
 
-	EBUF *fragmented; /* contains the fragmented PACKET_BUFFER elements */
+	LBUF *fragmented; /* contains the fragmented PACKET_BUFFER elements */
 };
 
 typedef struct FRAGMENT_SLAVE FRAGMENT_SLAVE;

@@ -36,6 +36,7 @@
 #include "slave.h"
 #include "master.h"
 #include "status.h"
+#include "lbuf.h"
 #include "util.h"
 
 /*-------------------- Main Module Header --------------------------*/
@@ -68,7 +69,7 @@ clean_fragment_master(void *src)
 		if (tmp->data)
 			free(tmp->data);
 
-		Neuro_CleanEBuf(&tmp->fragmented);
+		Neuro_CleanLBuf(tmp->fragmented);
 	}
 }
 
@@ -95,7 +96,7 @@ pop_input_data(EBUF *input, u32 *len)
 
 	master = Neuro_GiveEBuf(input, 0);
 
-	if (Neuro_EBufIsEmpty(master->fragmented))
+	if (Neuro_LBufIsEmpty(master->fragmented))
 	{
 		/* the buffer contains no elements, this means that the 
 		 * packet is a whole, theres no chunks in it.
@@ -110,13 +111,13 @@ pop_input_data(EBUF *input, u32 *len)
 		return output;
 	}
 
-
-	slave = Neuro_GiveEBuf(master->fragmented, 0);
+	/* get the first element */
+	slave = Neuro_GiveLBuf(master->fragmented);
 
 	*len = *slave->len;
 	output = slave->data;
 
-	Util_SCleanEBuf(master->fragmented, slave);
+	Neuro_SCleanLBuf(master->fragmented, slave);
 
 	return output;
 }
@@ -234,14 +235,14 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 				else
 				{
 					if(amount == 1) /* Create EBuf for Fragments */
-						Neuro_CreateEBuf(&cur->fragmented);
+						cur->fragmented = Neuro_CreateLBuf();
 
 					NEURO_TRACE("%s", Neuro_s("Processing packet %d -> Packet size: %d | Buffer size: %d", 
 								amount, *plen - sizeof(u32), *plen));
 
-					Neuro_AllocEBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE*), sizeof(FRAGMENT_SLAVE));
+					Neuro_AllocLBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE));
 
-					bufa = Neuro_GiveCurEBuf(cur->fragmented);
+					bufa = Neuro_GiveCurLBuf(cur->fragmented);
 					
 					bufa->len = plen;
 					*bufa->len -= sizeof(u32);

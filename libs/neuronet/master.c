@@ -27,6 +27,7 @@
 #include "server.h"
 #include "status.h"
 #include "util.h"
+#include "lbuf.h"
 
 /*-------------------- Main Module Header --------------------------*/
 #include "master.h"
@@ -399,17 +400,18 @@ Master_Poll(Master *msr)
 		return NULL;
 	}
 
-	if (Neuro_EBufIsEmpty(msr->statuses))
+	if (Neuro_LBufIsEmpty(msr->statuses))
 		Status_Set(msr->status, State_NoData, NULL, 0, NULL);
 	else
 	{
 		Status *buf;
 
-		buf = Neuro_GiveEBuf(msr->statuses, 0);
+		/* fetch the first element */
+		buf = Neuro_GiveLBuf(msr->statuses);
 
 		Status_Move(buf, msr->status);
 
-		Util_SCleanEBuf(msr->statuses, buf);
+		Neuro_SCleanLBuf(msr->statuses, buf);
 
 		if (msr->status->status == State_ClientDisconnect)
 		{
@@ -473,8 +475,8 @@ Master_Create(u32 connection_type)
 	}
 #endif /* WIN32 */
 
-	Neuro_CreateEBuf(&msr->statuses);
-	Neuro_SetcallbEBuf(msr->statuses, clean_statuses_elem);
+	msr->statuses = Neuro_CreateLBuf();
+	Neuro_SetcallbLBuf(msr->statuses, clean_statuses_elem);
 
 	msr->status = Status_Create();
 
@@ -494,7 +496,7 @@ Master_Destroy(Master *msr)
 
 	Neuro_CleanEBuf(&msr->cevents);
 
-	Neuro_CleanEBuf(&msr->statuses);
+	Neuro_CleanLBuf(msr->statuses);
 
 	Status_Destroy(msr->status);
 

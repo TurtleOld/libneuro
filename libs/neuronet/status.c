@@ -9,6 +9,8 @@
 #include <global.h>
 #include "common.h"
 
+#include "lbuf.h"
+
 /*-------------------- Main Module Header --------------------------*/
 #include "status.h"
 
@@ -108,9 +110,9 @@ Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 {
 	Status *tmp;
 
-	Neuro_AllocEBuf(msr->statuses, sizeof(Status*), sizeof(Status));
+	Neuro_AllocLBuf(msr->statuses, sizeof(Status));
 
-	tmp = Neuro_GiveCurEBuf(msr->statuses);
+	tmp = Neuro_GiveCurLBuf(msr->statuses);
 
 	Status_Set(tmp, state, data, len, conn);
 }
