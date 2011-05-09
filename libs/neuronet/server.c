@@ -67,7 +67,9 @@ void
 Server_DisconnectClient(Slave *slv)
 {
 	EBUF *connections;
+#if old
 	EBUF *ce;
+#endif /* old */
 
 	if (!slv)
 		return;
@@ -77,6 +79,7 @@ Server_DisconnectClient(Slave *slv)
 	if (Neuro_EBufIsEmpty(connections))
 		return;
 
+#if old
 	ce = slv->master->cevents;
 
 	/* delete all the remaining events for the slave client, if any */
@@ -116,6 +119,7 @@ Server_DisconnectClient(Slave *slv)
 			}
 		}
 	}
+#endif /* old */
 
 	NEURO_TRACE("Disconnected client %x", slv);
 
