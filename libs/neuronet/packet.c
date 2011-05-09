@@ -309,7 +309,7 @@ Packet_Reset(Packet *pkt)
 	memset(pkt->buffer, 0, pkt->len);
 
 	pkt->mem += pkt->len;
-
+	pkt->buffer_pos = 0;
 	pkt->len = 0;
 
 }
