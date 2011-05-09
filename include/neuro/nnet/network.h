@@ -67,7 +67,7 @@ extern NNET_STATUS *NNet_Poll(NNET_MASTER *msr);
 extern NNET_SLAVE *NNet_Connect(NNET_MASTER *msr, const char *host, int port);
 
 /* a server */
-extern NNET_SLAVE *NNet_Listen(NNET_MASTER *msr, int port);
+extern NNET_SLAVE *NNet_Listen(NNET_MASTER *msr, char *listen_ip, int port);
 
 extern void NNet_SetTimeOut(NNET_SLAVE *slv, t_tick ts);
 

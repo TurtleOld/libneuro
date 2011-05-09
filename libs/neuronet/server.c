@@ -206,7 +206,7 @@ Server_Poll(Slave *slv)
 /*-------------------- Constructor Destructor ----------------------*/
 
 Slave *
-Server_Create(Master *msr, int port)
+Server_Create(Master *msr, const char *listen_ip, int port)
 {
 	Slave *output;
 	struct sockaddr_in saddress; /* server address */
@@ -240,7 +240,7 @@ Server_Create(Master *msr, int port)
 #endif /* not WIN32 */
 
 	saddress.sin_family = AF_INET;
-	saddress.sin_addr.s_addr = INADDR_ANY;
+	saddress.sin_addr.s_addr = inet_addr(listen_ip);
 	saddress.sin_port = htons(port);
 
 	_err = bind(sock, (struct sockaddr*)&saddress, sizeof(saddress));

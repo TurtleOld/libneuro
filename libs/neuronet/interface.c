@@ -109,9 +109,9 @@ NNet_DisconnectClient(Slave *client)
 }
 
 Slave *
-NNet_Listen(Master *msr, int port)
+NNet_Listen(Master *msr, const char *listen_ip, int port)
 {
-	return Server_Create(msr, port);
+	return Server_Create(msr, listen_ip, port);
 }
 
 Slave *
