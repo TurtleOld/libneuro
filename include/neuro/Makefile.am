@@ -7,6 +7,7 @@ noinst_HEADERS = \
 
 
 include_HEADERS = \
+		  config.h \
 		  NEURO.h \
 		  debug.h \
 		  ebuf.h \
