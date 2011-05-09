@@ -125,8 +125,9 @@ push_data(Packet *pkt, unsigned int len, const char *data)
 
 	if (len > pkt->mem)
 	{
-		pkt->buffer = realloc(pkt->buffer, pkt->len + pkt->mem + (len - pkt->mem));
-		pkt->mem += (len - pkt->mem);
+		/* overhead is set to 100 */
+		pkt->buffer = realloc(pkt->buffer, pkt->len + pkt->mem + (len - pkt->mem) + 100);
+		pkt->mem += (len - pkt->mem) + 100;
 	}
 
 	memcpy(&pkt->buffer[pkt->len], data, len);
@@ -322,10 +323,10 @@ Packet_Create()
 	output = calloc(1, sizeof(Packet));
 
 
-	/* we allocate 20 bytes of overhead to accelerate the process */
-	output->buffer = calloc(1, 20);
+	/* we allocate 50 bytes of overhead to accelerate the process */
+	output->buffer = calloc(1, 50);
 	/* we keep that amount of available memory in this variable */
-	output->mem = 20;
+	output->mem = 50;
 
 
 	return output;
