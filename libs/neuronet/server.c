@@ -192,8 +192,8 @@ Server_Poll(Slave *slv)
 
 		Slave_Init(buf, slv->master, _err, 1, tmp, NULL);
 
-		memcpy(&slv->c_address, &connect_addr, sizeof(struct sockaddr_in));
-		slv->addrlen = addrlen;
+		memcpy(&buf->c_address, &connect_addr, sizeof(struct sockaddr_in));
+		buf->addrlen = addrlen;
 
 		Status_Add(slv->master, State_NewClient, NULL, 0, buf);
 
