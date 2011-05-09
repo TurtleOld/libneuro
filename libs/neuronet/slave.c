@@ -123,7 +123,7 @@ Slave_Create(Master *msr, int socket, int type, Client *client, Server *server)
 {
 	Slave *output;
 
-	output = malloc(sizeof(Slave));
+	output = calloc(1, sizeof(Slave));
 
 	if (Slave_Init(output, msr, socket, type, client, server))
 	{
