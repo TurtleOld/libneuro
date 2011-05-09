@@ -58,7 +58,7 @@ Slave_GetData(const Slave *slv)
 }
 
 void
-Slave_SetData(Slave *slv, const void *ptr)
+Slave_SetData(Slave *slv, void *ptr)
 {
 	if (!slv)
 	{

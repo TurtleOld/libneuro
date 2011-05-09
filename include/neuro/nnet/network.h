@@ -82,7 +82,7 @@ extern int NNet_GetPacketLen(const NNET_STATUS *sta);
 extern NNET_SLAVE *NNet_GetSlave(const NNET_STATUS *sta);
 
 /* set user defined data set with a NNET_SLAVE element */
-extern void NNet_SetData(NNET_SLAVE *slv, const void *ptr);
+extern void NNet_SetData(NNET_SLAVE *slv, void *ptr);
 extern void *NNet_GetData(const NNET_SLAVE *slv);
 
 /* to set the debugging filter for this library */

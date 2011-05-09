@@ -55,7 +55,7 @@ NNet_GetSlave(const Status *sta)
 }
 
 void
-NNet_SetData(Slave *slv, const void *ptr)
+NNet_SetData(Slave *slv, void *ptr)
 {
 	Slave_SetData(slv, ptr);
 }

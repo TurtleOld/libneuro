@@ -116,7 +116,7 @@ struct Slave
 			 */
 
 	/* pointer for a user defined data attached with the slave */
-	const void *ptr;
+	void *ptr;
 
 	union
 	{
