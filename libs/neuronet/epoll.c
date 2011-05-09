@@ -66,6 +66,8 @@ struct EPOLL
 	int nfds;
 #endif /* HAVE_EPOLL */
 
+	int mem;
+
 	EPOLL_EVENT *epEvents;
 };
 
@@ -81,6 +83,9 @@ struct EPOLL
  * EPOLLHUP
  * EPOLLET -- specific to epoll
  */
+
+#define MEM_OVERHEAD 20
+#define MEM_REALLOC_OVERHEAD 50
 
 /*-------------------- Global Variables ----------------------------*/
 
@@ -367,9 +372,22 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 #ifdef HAVE_EPOLL
 	if (!ep->epEvents)
-		ep->epEvents = calloc(1, sizeof(EPOLL_EVENT));
+	{
+		ep->epEvents = calloc(MEM_OVERHEAD, sizeof(EPOLL_EVENT));
+		ep->mem = MEM_OVERHEAD - 1;
+	}
 	else
-		ep->epEvents = realloc(ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT));
+	{
+		if (ep->mem > 0)
+		{
+			ep->mem--;
+		}
+		else
+		{
+			ep->epEvents = realloc(ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT) * MEM_REALLOC_OVERHEAD);
+			ep->mem = MEM_REALLOC_OVERHEAD - 1;
+		}
+	}
 #endif /* HAVE_EPOLL */
 
 	return _err;
