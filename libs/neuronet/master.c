@@ -59,169 +59,61 @@ clean_statuses_elem(void *src)
 	Status_Clear(sta);
 }
 
-static int
-handle_Events(Master *msr)
+static void
+poll_disconnect_clients(Master *msr)
 {
-	int total = 0;
-	EBUF *ce;
-	Event *event;
+	Slave **tmp = NULL;
 
-	if (Neuro_EBufIsEmpty(msr->cevents))
-		return 0;
+	if (Neuro_LBufIsEmpty(msr->disco_clients))
+		return;
 
-	/* NEURO_TRACE("Handling events", NULL); */
+	Neuro_ResetLBuf(msr->disco_clients);
 
-	ce = msr->cevents;
-
-	total = Neuro_GiveEBufCount(ce) + 1;
-
-	while (total-- > 0)
+	while ((tmp = Neuro_GiveNextLBuf(msr->disco_clients)))
 	{
-		event = Neuro_GiveEBuf(ce, total);
+		NEURO_TRACE("%s", Neuro_s("Disconnecting client %x from the buffer %x count %d", *tmp, tmp, Neuro_GiveLBufCount(msr->disco_clients)));
 
-		NEURO_TRACE("%s", Neuro_s("type %d wanted sigmask %d", event->slave->type, event->sigmask));
+		Server_DisconnectClient(*tmp);
 
-		switch (event->slave->type)
+		Neuro_SCleanLBuf(msr->disco_clients, tmp);
+	}
+}
+
+/* add a client to disconnect */
+static void
+add_client_disconnect(Slave *slv)
+{
+	Slave **tmp = NULL;
+
+	if (!Neuro_LBufIsEmpty(slv->master->disco_clients))
+	{
+		NEURO_TRACE("Checking the disconnection buffer for duplicate entries", NULL);
+
+		Neuro_ResetLBuf(slv->master->disco_clients);
+
+		while ((tmp = Neuro_GiveNextLBuf(slv->master->disco_clients)))
 		{
-			/* Server type */
-			case 0:
+			NEURO_TRACE("%s", Neuro_s("is %x the same as %x -- %s", *tmp, slv, *tmp == slv ? "yes" : "no"));
+
+			if (*tmp == slv)
 			{
-				event->slave->sigmask = event->sigmask;
+				NEURO_ERROR("Slave %x already in the disconnection buffer!", slv);
 
-				Server_Poll(event->slave);
-
-				event->slave->sigmask = 0;
-
-				Util_SCleanEBuf(ce, event);
+				return;
 			}
-			break;
-
-			/* Client type */
-			case 1:
-			{
-				int clean_elem = 0;
-
-				event->slave->sigmask = event->sigmask;
-
-				NEURO_TRACE("%s", Neuro_s("Client address %x current sigmask %d", event->slave, event->slave->sigmask));
-
-				if (event->sigmask & 16)
-				{
-					/* real disconnect */
-					Server_DisconnectClient(event->slave);
-
-					return 0;
-				}
-				if ((event->sigmask & 8) == 8 || ((event->sigmask & 4) == 4))
-				{
-					if (event->slave->master->type == TYPE_CLIENT)
-					{
-						Status_Add(event->slave->master, State_Disconnect, NULL, 0, NULL);
-						Util_SCleanEBuf(ce, event);
-						return 0;
-					}
-					else
-					{
-						Status_Add(event->slave->master, State_ClientDisconnect, NULL, 0, event->slave);
-						/* avoid any more packets coming from the client 
-						 * creating chaos in the event queue.
-						 */
-						Master_RmUfds(msr, event->slave);
-
-						if (event->slave->sigmask & 8)
-							event->slave->sigmask ^= 8;
-						if (event->slave->sigmask & 4)
-							event->slave->sigmask ^= 4;
-
-						clean_elem = 1;
-					}
-				}
-				if ((event->sigmask & 1) == 1)
-				{
-					switch (Client_PollRead(event->slave))
-					{
-						case 0:
-						{
-							NEURO_TRACE("Data available for the server", NULL);
-
-							Client_PopData(event->slave);
-
-							event->slave->sigmask ^= 1;
-
-							clean_elem = 1;
-						}
-						break;
-
-						case 1:
-						{
-							NEURO_TRACE("Client disconnection required by Client_PollRead", NULL);
-							Master_EditEvent(event, event->slave, 8);
-						}
-						break;
-
-						case 2:
-						{
-							NEURO_ERROR("Error raised by Client_PollRead", NULL);
-
-							return 1;
-						}
-						break;
-					}
-				}
-				if((event->sigmask & 2) == 2)
-				{
-					/* the buffer is not yet ready for writing */
-					if ((event->slave->sigmask & 2) != 2)
-						continue;
-
-					switch (Client_PollSend(event->slave))
-					{
-						case 0:
-						{
-							clean_elem = 1;
-						}
-						break;
-
-						case 1:
-						{
-							event->slave->sigmask ^= 2;
-							clean_elem = 1;
-						}
-						break;
-
-						case 2:
-						{
-							NEURO_TRACE("Client disconnection required by Client_PollSend", NULL);
-							Master_EditEvent(event, event->slave, 8);
-						}
-						break;
-
-						case 3:
-						{
-							NEURO_ERROR("Error raised by Client_PollSend", NULL);
-
-							return 1;
-						}
-						break;
-					}
-				}
-
-				if (clean_elem == 1)
-					Util_SCleanEBuf(ce, event);
-			}
-			break;
-
-			default:
-			{
-				NEURO_ERROR("Unhandled Event type %d", event->slave->type);
-
-				return 1;
-			}
-			break;
 		}
 	}
 
-	return 0;
+	Neuro_AllocLBuf(slv->master->disco_clients, sizeof(Slave**));
+
+	tmp = Neuro_GiveCurLBuf(slv->master->disco_clients);
+
+	*tmp = slv;
+
+	NEURO_TRACE("%s", Neuro_s("Adding client %x for disconnection buffer %x -- buffer total %d", slv, tmp, Neuro_GiveLBufCount(slv->master->disco_clients)));
+
+	/* so we no longer get any events for this client */
+	Master_RmUfds(slv->master, slv);
 }
 
 /*-------------------- Global Functions ----------------------------*/
@@ -279,14 +171,7 @@ int
 Master_PollEvent(Master *msr)
 {
 	int i = 0;
-	int sigmask = 0;
 	EPOLL_EVENT *events;
-
-	/* exhaust all the events */
-	while (!Neuro_EBufIsEmpty(msr->cevents))
-	{
-		handle_Events(msr);
-	}
 
 	events = Epoll_Wait(msr->ep, 0, &i);
 
@@ -302,29 +187,59 @@ Master_PollEvent(Master *msr)
 
 	while (i-- > 0)
 	{
-		sigmask = 0;
-
 		if ((events[i].events & EPOLLIN) == EPOLLIN || (events[i].events & EPOLLPRI) == EPOLLPRI)
 		{
-			/* NEURO_TRACE("Input Event Catched -- revents %d", msr->ufds[i].revents); */
-			sigmask += 1;
-		}
-		if ((events[i].events & EPOLLOUT) == EPOLLOUT)
-		{
-				sigmask += 2;
-		}
-		if ((events[i].events & EPOLLERR) == EPOLLERR || (events[i].events & EPOLLHUP) == EPOLLHUP)
-		{
-			/* NEURO_TRACE("Error Event Catched -- revents %d", msr->ufds[i].revents); */
-			sigmask += 4;
-		}
+			Slave *slave = events[i].data.ptr;
+			/* NEURO_TRACE("Input Event Catched", NULL); */
 
+			if (slave->type == 0)
+			{
+				Server_Poll(slave);
 
-		if (sigmask > 0)
-			Master_PushEvent(msr, (Slave*)events[i].data.ptr, sigmask);
+				return 0;
+			}
+			else
+			{
+				int _err = 0;
+				/* Status_Add(msr, State_DataAvail, NULL, 0, slave); */
+
+				_err = Client_PollRead(slave);
+
+				switch (_err)
+				{
+					case 0:
+					{
+						Client_PopData(slave);
+					}
+					break;
+
+					case 1:
+					{
+						/* NEURO_WARN("TODO : Disconnect client -- Client_PollRead requested it", NULL); */
+						Status_AddPriority(msr, State_ClientDisconnect, NULL, 0, slave);						
+					}
+					break;
+
+					case 2:
+					{
+						return 1;
+					}
+					break;
+				}
+			}
+		}
+		else if ((events[i].events & EPOLLOUT) == EPOLLOUT)
+		{
+			/* NEURO_TRACE("Output event catched", NULL); */
+		}
+		else if ((events[i].events & EPOLLERR) == EPOLLERR || (events[i].events & EPOLLHUP) == EPOLLHUP)
+		{
+			/* NEURO_TRACE("Error Event Catched", NULL); */
+
+			Status_Add(msr, State_ClientDisconnect, NULL, 0, events[i].data.ptr);
+		}
 	}
-
-	return handle_Events(msr);
+	return 0;
 }
 
 int
@@ -400,6 +315,17 @@ Master_Poll(Master *msr)
 		return NULL;
 	}
 
+	if (!Neuro_LBufIsEmpty(msr->statuses))
+	{
+		/* delete the first entry of msr->statuses as it was used up */
+	}
+
+
+	/* disconnect all clients that are required to be */
+	poll_disconnect_clients(msr);
+
+	Master_PollEvent(msr);
+
 	if (Neuro_LBufIsEmpty(msr->statuses))
 		Status_Set(msr->status, State_NoData, NULL, 0, NULL);
 	else
@@ -417,16 +343,16 @@ Master_Poll(Master *msr)
 		{
 			NEURO_TRACE("Sending the event to really disconnect the client", NULL);
 			/* real disconnect event */
-			Master_PushEvent(msr, msr->status->connection, 16);
+			/* Master_PushEvent(msr, msr->status->connection, 16); */
+			add_client_disconnect(msr->status->connection);
 		}
 		else
 		{
 			NEURO_TRACE("%s", Neuro_s("Will send Status type %d -- data address %x", msr->status->status, msr->status->packet));
 		}
-
-		return (msr->status);
 	}
 
+	/*
 	if (Master_PollEvent(msr) > 0)
 	{
 		NEURO_WARN("Master_PollEvent raised an error", NULL);
@@ -435,6 +361,7 @@ Master_Poll(Master *msr)
 
 		return msr->status;
 	}
+	*/
 
 	return msr->status;
 }
@@ -475,6 +402,8 @@ Master_Create(u32 connection_type)
 	}
 #endif /* WIN32 */
 
+	msr->disco_clients = Neuro_CreateLBuf();
+
 	msr->statuses = Neuro_CreateLBuf();
 	Neuro_SetcallbLBuf(msr->statuses, clean_statuses_elem);
 
@@ -495,6 +424,10 @@ Master_Destroy(Master *msr)
 
 
 	Neuro_CleanEBuf(&msr->cevents);
+
+
+	Neuro_CleanLBuf(msr->disco_clients);
+
 
 	Neuro_CleanLBuf(msr->statuses);
 

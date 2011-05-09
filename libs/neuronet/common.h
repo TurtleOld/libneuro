@@ -89,6 +89,10 @@ struct Master
 
 	EBUF *cevents; /* contains Event elements */
 
+	LBUF *disco_clients; /* contains Slave elements of 
+			      * clients that require a disconnection
+			      */
+
 #ifdef WIN32
 	WSADATA wsaData;
 #endif /* WIN32 */
@@ -153,7 +157,7 @@ struct Status
 	char *packet;
 	u32 packet_len;
 
-	u32 moreStatus; /* if there's more Status ready in the buffer to be processed */
+	u32 to_destroy; /* set to 1 if the status has been used and needs to be destroyed */
 };
 
 typedef struct Event Event;
