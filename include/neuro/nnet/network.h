@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+#include <neuro/config.h>
 #include <neuro/NEURO.h>
 
 enum CONNECT_TYPE
