@@ -61,48 +61,6 @@ clean_connection(void *src)
 	Slave_Clean(tmp);
 }
 
-#if old
-static int
-client_exist(LISTEN_DATA *src, CONNECT_DATA *c)
-{
-	CONNECT_DATA *buf;
-	u32 total = 0;
-
-	if (!src || !c)
-	{
-		NEURO_ERROR("Invalid argument", NULL);
-		return -1;
-	}
-
-	if (!src->connections)
-	{
-		NEURO_ERROR("src->connections is NULL", NULL);
-		return -1;
-	}
-
-	if (Neuro_EBufIsEmpty(src->connections))
-	{
-		NEURO_WARN("src->connections is empty", NULL);
-
-		/* we return that the client don't exist */
-		return 0;
-	}
-
-	total = Neuro_GiveEBufCount(src->connections) + 1;
-
-	while (total-- > 0)
-	{
-		buf = Neuro_GiveEBuf(src->connections, total);
-
-		if (buf == c)
-			return 1;
-	}
-
-	NEURO_TRACE("No Active connection found for this connection on total %d", Neuro_GiveEBufCount(src->connections) + 1);
-	return 0;
-}
-#endif /* old */
-
 /*-------------------- Global Functions ----------------------------*/
 
 void
