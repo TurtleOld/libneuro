@@ -331,6 +331,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 		return 2;
 	}
 
+#if old
 	/*if (len >= MAX_PACKET_SIZE)
 	{
 		NEURO_WARN("too big packet input into the buffer (%d)", len);
@@ -400,6 +401,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 	}
 
 	Master_PushEvent(slv->master, slv, 2);
+#endif /* old */
 
 	return 0;
 }
