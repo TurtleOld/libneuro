@@ -307,6 +307,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 {
 	Client *src;
 	PACKET_BUFFER *tmp;
+	int _err = 0;
 
 	if (!slv || !message || len == 0)
 	{
@@ -318,6 +319,17 @@ Client_Send(Slave *slv, const char *message, u32 len)
 		return 1;
 
 	src = slv->cType.client;
+
+
+	_err = Socket_Send(slv->socket, (char*)message, len);
+
+	if (_err == -1)
+	{
+		Master_RmUfds(slv->master, slv);
+		Master_PushEvent(slv->master, slv, 8);
+		NEURO_WARN("Pipe error... disconnecting client", NULL);
+		return 2;
+	}
 
 	/*if (len >= MAX_PACKET_SIZE)
 	{
