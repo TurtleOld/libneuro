@@ -392,10 +392,10 @@ src/events/Makefile
 src/extlib/Makefile
 src/misc/Makefile
 src/misc/bitmap/Makefile
-docs/Makefile
 libs/Makefile
 libs/neuronet/Makefile
 ])
+#docs/Makefile
 
 AC_OUTPUT
 
