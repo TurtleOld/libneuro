@@ -1,5 +1,15 @@
 #!/bin/bash
 
+noinst_HEADERS = \
+		client.h \
+		common.h \
+		epoll.h \
+		master.h \
+		server.h \
+		slave.h \
+		status.h \
+		util.h
+
 SUBDIRS = 
 
 include version.mk
