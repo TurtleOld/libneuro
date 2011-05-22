@@ -9,7 +9,7 @@ AC_INIT(README)
 # NEURO_MAJOR_VERSION += 1	when set goals for the whole projects are met, example when neuro will be done, we will raise that by 1. After it is 1, it only raise when most(like more than half) of the code was changes.
 #
 
-. version.mk
+. ./version.mk
 
 NEURO_MAJOR_VERSION=$MAJOR
 NEURO_MINOR_VERSION=$MINOR
