@@ -223,7 +223,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	if (sock <= 0)
 	{
-		NEURO_ERROR(0, "socket creation failed\n");
+		NEURO_ERROR("socket creation failed\n", NULL);
 		return NULL;
 	}
 
