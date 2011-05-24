@@ -171,7 +171,7 @@ Handle_Option_Argument(LOPTIONS *option, u32 i, char *input_string)
 	
 	if (_err == 1)
 	{
-		NEURO_WARN("Missing a DATA argument to the option %s", option->string);
+		WARN(Neuro_s("Missing a DATA argument to the option %s", option->string));
 	}
 	/*else
 	{
@@ -188,7 +188,7 @@ Handle_Options_nest(BUFINPUT *input, LOPTIONS *option, char *input_string,
 	int _err = 0;
 	
 	
-	NEURO_TRACE("%s", Neuro_s(" N %s -%c", sep_string, input_string[0]));
+	TRACE(Neuro_s(" N %s -%c", sep_string, input_string[0]));
 
 	/* we drop any checks with long options (--) */
 	if (strlen(sep_string) > 2)
@@ -198,7 +198,7 @@ Handle_Options_nest(BUFINPUT *input, LOPTIONS *option, char *input_string,
 	{
 		option->present++;
 		
-		NEURO_TRACE(" <- found %c ", input->used);
+		TRACE(Neuro_s(" <- found %c ", input->used));
 	
 		if (option->options & OPTION_NESTED)
 		{
@@ -212,7 +212,7 @@ Handle_Options_nest(BUFINPUT *input, LOPTIONS *option, char *input_string,
 		else
 		{
 			_err = 1;
-			NEURO_WARN("Invalid option in a nest of options %d", input->used);
+			WARN(Neuro_s("Invalid option in a nest of options %d", input->used));
 		}
 		
 	}
@@ -263,7 +263,7 @@ Handle_Options(BUFINPUT *input, LOPTIONS *option, char *sep_string, u32 current)
 		*/
 	}
 	
-	NEURO_TRACE("%s", Neuro_s("%s %s", sep, input->string));
+	TRACE(Neuro_s("%s %s", sep, input->string));
 
 	/*
 	tmp = strchr(input->string, '=');
@@ -283,7 +283,7 @@ Handle_Options(BUFINPUT *input, LOPTIONS *option, char *sep_string, u32 current)
 		int i = 1;
 		int ilen = strlen(input->string);
 	
-		NEURO_TRACE(" <- nested options", NULL);
+		TRACE(" <- nested options");
 		
 		/* input->used = 0; */
 
@@ -292,7 +292,7 @@ Handle_Options(BUFINPUT *input, LOPTIONS *option, char *sep_string, u32 current)
 		
 			_err = Handle_Options_nest(input, option, &input->string[i], sep, current);
 			if (i + 1 < ilen)
-				NEURO_TRACE("\n", NULL);
+				TRACE("\n");
 			i++;
 		}
 		
@@ -303,7 +303,7 @@ Handle_Options(BUFINPUT *input, LOPTIONS *option, char *sep_string, u32 current)
 		{
 			option->present++;
 			
-			NEURO_TRACE(" <- found ", NULL);
+			TRACE(" <- found ");
 
 			input->used = 1;
 		
@@ -320,7 +320,7 @@ Handle_Options(BUFINPUT *input, LOPTIONS *option, char *sep_string, u32 current)
 		*/
 	}
 
-	NEURO_TRACE("\n", NULL);
+	TRACE("\n");
 	free(sep);
 
 	return _err;
@@ -364,7 +364,7 @@ Neuro_ArgInit(int argc, char **argv)
 	while (i-- > 0)
 	{
 		buf = Neuro_GiveEBuf(bufinput, i);
-		NEURO_TRACE("arg output %s", buf->string);
+		TRACE(Neuro_s("arg output %s", buf->string));
 	}
 #endif /* init_test */
 	
@@ -462,7 +462,7 @@ Neuro_ArgProcess(void)
 	itotal = Neuro_GiveEBufCount(bufinput) + 1;
 
 	/* printf("TOTAL %d\n", itotal); */
-	NEURO_TRACE("TOTAL %d", itotal);
+	TRACE(Neuro_s("TOTAL %d", itotal));
 
 
 	i = 0;
@@ -471,7 +471,7 @@ Neuro_ArgProcess(void)
 	{
 		input = Neuro_GiveEBuf(bufinput, i);
 		
-		NEURO_TRACE("input %s", input->string);
+		TRACE(Neuro_s("input %s", input->string));
 
 		if (input->string[0] == '-')
 		{
@@ -480,27 +480,27 @@ Neuro_ArgProcess(void)
 				if (strchr(input->string, '='))
 				{
 					_err = 2;
-					NEURO_WARN("Invalid use of the option character \'-\', it may only be used alone or with other options, \nto pass an argument to it, please use either the long version of the option (ie --foo=bar)\nor have a space between the option and the argument (ie -f bar).", NULL);
+					WARN("Invalid use of the option character \'-\', it may only be used alone or with other options, \nto pass an argument to it, please use either the long version of the option (ie --foo=bar)\nor have a space between the option and the argument (ie -f bar).");
 				}
 				else
 				{
 					input->type = TYPE_NEST;
 
-					NEURO_TRACE(" nest", NULL);
+					TRACE(" nest");
 				}
 			}
 			else
 			{
 				input->type = TYPE_OPTION;
 
-				NEURO_TRACE(" option", NULL);
+				TRACE(" option");
 			}
 		}
 		else
 		{
 			input->type = TYPE_DATA;
 
-			NEURO_TRACE(" data", NULL);
+			TRACE(" data");
 		}
 		i++;
 	}
@@ -559,7 +559,7 @@ Neuro_ArgProcess(void)
 			else
 			{
 
-				NEURO_TRACE("DATA %s", input->string);
+				TRACE(Neuro_s("DATA %s", input->string));
 
 				if (input->type == TYPE_DATA && input->used == 0)
 				{
@@ -568,9 +568,9 @@ Neuro_ArgProcess(void)
 					/* option->data = input->string; */
 					Push_Data(option, input->string);
 
-					NEURO_TRACE(" <- found ", NULL);
+					TRACE(" <- found ");
 				}
-				NEURO_TRACE("\n", NULL);
+				TRACE("\n");
 			}
 
 			i2++;
@@ -593,9 +593,9 @@ Neuro_ArgProcess(void)
 			if (option->options & OPTION_REQUIRED && option->present == 0)
 			{
 				if (option->string)
-					NEURO_WARN("Required option %s is not present.\n", option->string);
+					WARN(Neuro_s("Required option %s is not present.\n", option->string));
 				else
-					NEURO_WARN("Required option DATA is not present.\n", NULL);
+					WARN("Required option DATA is not present.\n");
 			
 				_err = 2;
 			}
@@ -603,9 +603,9 @@ Neuro_ArgProcess(void)
 			if (!(option->options & OPTION_MULTI) && option->present > 1)
 			{
 				if (option->string)
-					NEURO_WARN("Invalid use of more than one iteration of the option %s.\n", option->string);
+					WARN(Neuro_s("Invalid use of more than one iteration of the option %s.\n", option->string));
 				else
-					NEURO_WARN("Invalid use of more than one iteration of the option DATA.\n", NULL);
+					WARN("Invalid use of more than one iteration of the option DATA.\n");
 				
 				_err = 2;
 	
@@ -626,7 +626,7 @@ Neuro_ArgProcess(void)
 
 			if (input->used == 0)
 			{
-				NEURO_WARN("Invalid option used %s\n", input->string);
+				WARN(Neuro_s("Invalid option used %s\n", input->string));
 				_err = 2;
 			}
 			else
@@ -635,7 +635,7 @@ Neuro_ArgProcess(void)
 				{
 					if (input->used < strlen(input->string) - 1)
 					{
-						NEURO_WARN("One or more options in the option nest \"%s\" is invalid\n", input->string);
+						WARN(Neuro_s("One or more options in the option nest \"%s\" is invalid\n", input->string));
 						_err = 2;
 					}
 				}

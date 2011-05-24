@@ -247,7 +247,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 	if (!ep)
 	{
-		NEURO_ERROR("Invalid empty EPOLL argument", NULL);
+		ERROR("Invalid empty EPOLL argument");
 
 		return -1;
 	}
@@ -260,13 +260,13 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 #ifdef HAVE_EPOLL
 
-	NEURO_TRACE("%s", Neuro_s("Start -- Elems in buffer %d op : %d", ep->nfds, op));
+	TRACE(Neuro_s("Start -- Elems in buffer %d op : %d", ep->nfds, op));
 
 	_err = epoll_ctl(ep->epoll_fd, op, fd, event);
 
 	if (_err == -1)
 	{
-		NEURO_ERROR("epoll_ctl Raised the error %d", errno);
+		ERROR(Neuro_s("epoll_ctl Raised the error %d", errno));
 
 		return _err;
 	}
@@ -281,7 +281,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 			struct ep_event *tmp;
 			if (!event)
 			{
-				NEURO_ERROR("EPOLL_EVENT is empty", NULL);
+				ERROR("EPOLL_EVENT is empty");
 				return -1;
 			}
 
@@ -320,7 +320,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 			if (!tmp)
 			{
-				NEURO_WARN("Couldn't find the fd to delete", NULL);
+				WARN("Couldn't find the fd to delete");
 				return 0;
 			}
 
@@ -354,7 +354,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 			struct ep_event *tmp = NULL;
 			if (!event)
 			{
-				NEURO_ERROR("EPOLL_EVENT is empty", NULL);
+				ERROR("EPOLL_EVENT is empty");
 				return -1;
 			}
 
@@ -363,7 +363,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 			if (!tmp)
 			{
-				NEURO_WARN("Couldn't find the elem to modify", NULL);
+				WARN("Couldn't find the elem to modify");
 				return 0;
 			}
 
@@ -377,7 +377,7 @@ Epoll_Ctl(EPOLL *ep, int op, int fd, EPOLL_EVENT *event)
 
 
 #ifdef HAVE_EPOLL
-	NEURO_TRACE("%s", Neuro_s("End -- Elems in buffer %d epEvents 0x%x -- allocate size : %d", ep->nfds, ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT)));
+	TRACE(Neuro_s("End -- Elems in buffer %d epEvents 0x%x -- allocate size : %d", ep->nfds, ep->epEvents, ep->nfds * sizeof(EPOLL_EVENT)));
 
 	if (!ep->epEvents)
 	{
@@ -423,7 +423,7 @@ Epoll_Wait(EPOLL *ep, int timeout, int *nfds)
 
 	if (_err == -1)
 	{
-		NEURO_ERROR("epoll_wait Raised the error %d", errno);
+		ERROR(Neuro_s("epoll_wait Raised the error %d", errno));
 
 		*nfds = -1;
 		return NULL;
@@ -463,7 +463,7 @@ Epoll_Create(int size)
 
 	if (_err == -1)
 	{
-		NEURO_ERROR("epoll_create raised the error %d", errno);
+		ERROR(Neuro_s("epoll_create raised the error %d", errno));
 	}
 
 	output->epoll_fd = _err;

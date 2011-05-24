@@ -180,7 +180,7 @@ filter_handleElem(const char *namespace, char *elem)
 
 	if (strlen(elem) <= 1 || memchr(elem, ' ', strlen(elem)))
 	{
-		NEURO_WARN("too small filter element found", NULL);
+		WARN("too small filter element found");
 		return NULL;
 	}
 
@@ -196,7 +196,7 @@ filter_handleElem(const char *namespace, char *elem)
 		*toggle = '\0';
 	else
 	{
-		NEURO_WARN("the character + or - is required before the channel name", NULL);
+		WARN("the character + or - is required before the channel name");
 		return NULL;
 	}
 	
@@ -211,7 +211,7 @@ filter_handleElem(const char *namespace, char *elem)
 
 	if (class_type < 0)
 	{
-		NEURO_ERROR("Invalid class used \"%s\", Valid classes: all warn error trace", elem);
+		ERROR(Neuro_s("Invalid class used \"%s\", Valid classes: all warn error trace", elem));
 		return NULL;
 	}
 	/* prior to creating a new element, we need to check the buffer for 
@@ -221,7 +221,7 @@ filter_handleElem(const char *namespace, char *elem)
 
 	if ((buf = filter_elem_exist(namespace, &toggle[1])))
 	{
-		NEURO_TRACE("%s", Neuro_s("elem exists: %s class %d type %d class_type %d", buf->channel, buf->class, type, class_type));
+		TRACE(Neuro_s("elem exists: %s class %d type %d class_type %d", buf->channel, buf->class, type, class_type));
 
 		if ((buf->class & class_type) == 0)
 			buf->class ^= class_type;
@@ -229,7 +229,7 @@ filter_handleElem(const char *namespace, char *elem)
 		if (type == 0)
 			buf->class ^= Debug_ClassMasks[4];
 
-		NEURO_TRACE("new class %d", buf->class);
+		TRACE(Neuro_s("new class %d", buf->class));
 
 		return buf;
 	}
@@ -252,11 +252,11 @@ filter_handleElem(const char *namespace, char *elem)
 			buf->class ^= Debug_ClassMasks[4];
 
 		/* fprintf(stdout, "Added elem with class %d -- witness no show flag %d\n", buf->class, Debug_ClassMasks[4]); */
-		NEURO_TRACE("%s", Neuro_s("(%s) Element -> %s %s", namespace, elem, buf->channel));
+		TRACE(Neuro_s("(%s) Element -> %s %s", namespace, elem, buf->channel));
 	}
 	else
 	{
-		NEURO_ERROR("Out of Memory", NULL);
+		ERROR("Out of Memory");
 		return NULL;
 	}
 
@@ -319,7 +319,7 @@ Neuro_SetCoreDebugFilter(const char *project_name, const char *filter)
 
 	if (!project_name || !filter)
 	{
-		NEURO_ERROR("Invalid argument used", NULL);
+		ERROR("Invalid argument used");
 		return;
 	}
 
@@ -339,7 +339,7 @@ Neuro_SetCoreDebugFilter(const char *project_name, const char *filter)
 
 		if (Neuro_EBufIsEmpty(sep))
 		{
-			NEURO_WARN("No valid filter elements to parse", NULL);
+			WARN("No valid filter elements to parse");
 			return;
 		}
 
@@ -359,11 +359,11 @@ Neuro_SetCoreDebugFilter(const char *project_name, const char *filter)
 
 			if (!tmp)
 			{
-				NEURO_WARN("Failed to create/modify element", NULL);
+				WARN("Failed to create/modify element");
 				continue;
 			}
 
-			NEURO_TRACE("created: %s", tmp->channel);
+			TRACE(Neuro_s("created: %s", tmp->channel));
 		}
 
 		Neuro_CleanEBuf(&sep);
@@ -372,14 +372,13 @@ Neuro_SetCoreDebugFilter(const char *project_name, const char *filter)
 
 void
 Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, 
-		const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...)
+		const char *funcName, u32 lineNum, u8 output_detailed, const char *message)
 {
-	va_list args;
 	DEBUG_CHANNEL *buf;
 	u32 total = 0;
 	u32 print_message = 0; /* toggle */
 
-	if (!project_name || !channel || !type || !filename || !funcName || !control)
+	if (!project_name || !channel || !type || !filename || !funcName || !message)
 	{
 		const char *output = NULL;
 
@@ -387,9 +386,9 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 			output = funcName;
 
 		if (output)
-			NEURO_ERROR("Invalid argument used -- caller name \"%s\"", output);
+			ERROR(Neuro_s("Invalid argument used -- caller name \"%s\"", output));
 		else
-			NEURO_ERROR("Invalid argument used -- unknown caller", NULL);
+			ERROR("Invalid argument used -- unknown caller");
 
 		return;
 	}
@@ -402,9 +401,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 			fprintf(stderr, "- : (%s:%s) %s:%s:%d type %s -- ", project_name, channel, filename, funcName, lineNum, type);
 
 		fprintf(stderr, "debug --> ");
-		va_start(args, control);
-		vfprintf(stderr, control, args);
-		va_end(args);
+		fprintf(stderr, message);
 		fprintf(stderr, "\n");
 
 		/* return; */
@@ -435,7 +432,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 
 			if (class_type < 0)
 			{
-				NEURO_ERROR("Invalid class used", NULL);
+				ERROR("Invalid class used");
 				return;
 			}
 
@@ -473,7 +470,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 
 		if (len >= 10)
 		{
-			NEURO_ERROR("Type class default size of 10 is too low for present use, please raise it and recompile", NULL);
+			ERROR("Type class default size of 10 is too low for present use, please raise it and recompile");
 			return;
 		}
 
@@ -490,9 +487,7 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 		if (output_detailed == 1)
 			fprintf(stderr, "%s : (%s:%s) %s:%s:%d -- ", output_type, project_name, channel, filename, funcName, lineNum);
 
-		va_start(args, control);
-		vfprintf(stderr, control, args);
-		va_end(args);
+		fprintf(stderr, message);
 
 		fprintf(stderr, "\n"); /* we do a line feed */
 	}

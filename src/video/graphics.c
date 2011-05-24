@@ -212,7 +212,7 @@ void
 Graphics_Poll(void)
 {	
 	if (debug_instruction_buffer || dynamic_debug)
-		NEURO_TRACE("cycle", NULL);
+		TRACE("cycle");
 
 	if (ltime + 1 <= time(NULL))
 	{
@@ -248,9 +248,9 @@ Graphics_Poll(void)
 	
 	if (debug_instruction_buffer)
 	{
-		NEURO_TRACE("--BEGIN debug print", NULL);
+		TRACE("--BEGIN debug print");
 		Graphics_DebugPrintQueue();
-		NEURO_TRACE("--END debug print", NULL);
+		TRACE("--END debug print");
 	}
 
 	/* construct the instruction buffer */
@@ -279,9 +279,9 @@ Graphics_Poll(void)
 		
 		if (debug_instruction_buffer)
 		{
-			NEURO_TRACE("*BEGIN debug print", NULL);
+			TRACE("*BEGIN debug print");
 			Graphics_DebugPrintQueue();
-			NEURO_TRACE("*END debug print", NULL);
+			TRACE("*END debug print");
 		}
 
 		/* we check to see if the first element 
@@ -338,14 +338,14 @@ Graphics_Init(void)
 
 	ltime = time(NULL);
 	
-	NEURO_TRACE("Initialising main video", NULL);
+	TRACE("Initialising main video");
 	if (screen_buffer)
 	{
 		_err_ = Lib_VideoInit(&screen, &sclScreen);
 
 		if (_err_ == 1)
 		{
-			NEURO_ERROR("Lib_VideoInit failed", NULL);
+			ERROR("Lib_VideoInit failed");
 			return 1;
 		}
 	}
@@ -355,7 +355,7 @@ Graphics_Init(void)
 		
 		if (_err_ == 1)
 		{
-			NEURO_ERROR("Lib_VideoInit failed", NULL);
+			ERROR("Lib_VideoInit failed");
 			return 1;
 		}
 		
@@ -374,7 +374,7 @@ Graphics_Init(void)
 
 		if (sclScreen2 == NULL)
 		{
-			NEURO_ERROR("Couldn't create a v object : sclScreen2", NULL);
+			ERROR("Couldn't create a v object : sclScreen2");
 			return 1;
 		}
 		

@@ -71,7 +71,7 @@ poll_disconnect_clients(Master *msr)
 
 	while ((tmp = Neuro_GiveNextLBuf(msr->disco_clients)))
 	{
-		NEURO_TRACE("%s", Neuro_s("Disconnecting client %x from the buffer %x count %d", *tmp, tmp, Neuro_GiveLBufCount(msr->disco_clients)));
+		TRACE(Neuro_s("Disconnecting client %x from the buffer %x count %d", *tmp, tmp, Neuro_GiveLBufCount(msr->disco_clients)));
 
 		Server_DisconnectClient(*tmp);
 
@@ -87,17 +87,17 @@ add_client_disconnect(Slave *slv)
 
 	if (!Neuro_LBufIsEmpty(slv->master->disco_clients))
 	{
-		NEURO_TRACE("Checking the disconnection buffer for duplicate entries", NULL);
+		TRACE("Checking the disconnection buffer for duplicate entries");
 
 		Neuro_ResetLBuf(slv->master->disco_clients);
 
 		while ((tmp = Neuro_GiveNextLBuf(slv->master->disco_clients)))
 		{
-			NEURO_TRACE("%s", Neuro_s("is %x the same as %x -- %s", *tmp, slv, *tmp == slv ? "yes" : "no"));
+			TRACE(Neuro_s("is %x the same as %x -- %s", *tmp, slv, *tmp == slv ? "yes" : "no"));
 
 			if (*tmp == slv)
 			{
-				NEURO_ERROR("Slave %x already in the disconnection buffer!", slv);
+				ERROR(Neuro_s("Slave %x already in the disconnection buffer!", slv));
 
 				return;
 			}
@@ -110,7 +110,7 @@ add_client_disconnect(Slave *slv)
 
 	*tmp = slv;
 
-	NEURO_TRACE("%s", Neuro_s("Adding client %x for disconnection buffer %x -- buffer total %d", slv, tmp, Neuro_GiveLBufCount(slv->master->disco_clients)));
+	TRACE(Neuro_s("Adding client %x for disconnection buffer %x -- buffer total %d", slv, tmp, Neuro_GiveLBufCount(slv->master->disco_clients)));
 
 	/* so we no longer get any events for this client */
 	Master_RmUfds(slv->master, slv);
@@ -180,7 +180,7 @@ Master_PollEvent(Master *msr)
 
 	if (i == -1)
 	{
-		NEURO_ERROR("%s", Neuro_s("Error raised by Epoll_Wait : returned the value %d", errno));
+		ERROR(Neuro_s("Error raised by Epoll_Wait : returned the value %d", errno));
 
 		return 1;
 	}
@@ -279,7 +279,7 @@ Master_Poll(Master *msr)
 
 	if (msr->type == 2)
 	{
-		NEURO_TRACE("End user application flagged the Master as quit, exiting", NULL);
+		TRACE("End user application flagged the Master as quit, exiting");
 
 		Status_Set(msr->status, State_Disconnect, NULL, 0, NULL);
 
@@ -288,7 +288,7 @@ Master_Poll(Master *msr)
 
 	if (!msr->slave)
 	{
-		NEURO_ERROR("Attempted to poll without a properly initialized slave", NULL);
+		ERROR("Attempted to poll without a properly initialized slave");
 		return NULL;
 	}
 
@@ -296,7 +296,7 @@ Master_Poll(Master *msr)
 	{
 		if (!msr->slave->cType.server)
 		{
-			NEURO_ERROR("Attempted to poll without a properly initialized server", NULL);
+			ERROR("Attempted to poll without a properly initialized server");
 			return NULL;
 		}
 	}
@@ -304,13 +304,13 @@ Master_Poll(Master *msr)
 	{
 		if (!msr->slave->cType.client)
 		{
-			NEURO_ERROR("Attempted to poll without a properly initialized client", NULL);
+			ERROR("Attempted to poll without a properly initialized client");
 			return NULL;
 		}
 	}
 	else
 	{
-		NEURO_ERROR("Invalid Master type, bailing out", NULL);
+		ERROR("Invalid Master type, bailing out");
 
 		return NULL;
 	}
@@ -341,14 +341,14 @@ Master_Poll(Master *msr)
 
 		if (msr->status->status == State_ClientDisconnect)
 		{
-			NEURO_TRACE("Sending the event to really disconnect the client", NULL);
+			TRACE("Sending the event to really disconnect the client");
 			/* real disconnect event */
 			/* Master_PushEvent(msr, msr->status->connection, 16); */
 			add_client_disconnect(msr->status->connection);
 		}
 		else
 		{
-			NEURO_TRACE("%s", Neuro_s("Will send Status type %d -- data address %x", msr->status->status, msr->status->packet));
+			TRACE(Neuro_s("Will send Status type %d -- data address %x", msr->status->status, msr->status->packet));
 		}
 	}
 

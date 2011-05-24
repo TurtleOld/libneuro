@@ -94,45 +94,44 @@ clean_Vobjects(void *src)
 	/* if (!buf)
 		return; */
 
-	NEURO_TRACE("cleaning process ... elem 0x%x", buf);
+	TRACE(Neuro_s("cleaning process ... elem 0x%x", buf));
 
 	/*if (dmain->display == buf->display)
 		Debug_Val(10, "This element is the main display --\n");*/
 	
 	if (buf->data)
 	{
-		NEURO_TRACE("Freeing pixmap data", NULL);
+		TRACE("Freeing pixmap data");
 		XFreePixmap(dmain->display, buf->data);
 	}
 
 	if (buf->shapemask)
 	{
-		NEURO_TRACE("Freeing pixmap mask", NULL);
+		TRACE("Freeing pixmap mask");
 		XFreePixmap(dmain->display, buf->shapemask);
 	}
 
 	if (buf->raw_data)
 	{
-		NEURO_TRACE("destroying XImage raw data", NULL);
+		TRACE("destroying XImage raw data");
 		(buf->raw_data->f.destroy_image)(buf->raw_data);
 	}
 	
 	if (buf->GC)
 	{
-		NEURO_TRACE("Freeing Graphic Context", NULL);
+		TRACE("Freeing Graphic Context");
 		XFreeGC(buf->display, buf->GC);
 	}
 	
 	if (buf->win)
 	{
-		NEURO_TRACE("Destroying Window", NULL);
+		TRACE("Destroying Window");
 		XDestroyWindow(buf->display, buf->win);
 	}
 	
 	if (buf->display)
 	{
-		NEURO_TRACE("%s", 
-			Neuro_s("Closing display elem 0x%x display 0x%x", buf, buf->display));
+		TRACE(Neuro_s("Closing display elem 0x%x display 0x%x", buf, buf->display));
 		XCloseDisplay(buf->display);
 	}
 	/* Debug_Val(10, "cleaning process done ...\n"); */
@@ -256,7 +255,7 @@ CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
 	
 	if (_err != 0)
 	{
-		NEURO_ERROR("error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+		ERROR(Neuro_s("error number %d couldn't put pixels in the shapemask pixmap.\n", _err));
 
 		if (*pix)
 			XFreePixmap(dmain->display, *pix);
@@ -286,7 +285,7 @@ CreateMask(v_object *vobj, i32 width, i32 height)
 
 	if (mask->height != height)
 	{
-		NEURO_ERROR("%s", Neuro_s("Incorrect mask height %d need to be %d", mask->height, height));
+		ERROR(Neuro_s("Incorrect mask height %d need to be %d", mask->height, height));
 		
 		return NULL;
 	}
@@ -408,7 +407,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 		if (tmp2 == NULL)
 		{
-			NEURO_ERROR("loading the default surface failed", NULL);
+			ERROR("loading the default surface failed");
 			return 1;
 		}
 
@@ -484,7 +483,7 @@ Lib_MapRGB(v_object *vobj, u8 r, u8 g, u8 b)
 
 		default:
 		{
-			NEURO_ERROR("INVALID Depth! we only support 32, 24, 16 or 8 bits screen depth", NULL);
+			ERROR("INVALID Depth! we only support 32, 24, 16 or 8 bits screen depth");
 			return 0;
 		}
 		break;
@@ -523,15 +522,14 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 
 	if (!mask_data)
 	{
-		NEURO_ERROR("the variable mask_data is empty", NULL);
+		ERROR("the variable mask_data is empty");
 		return;
 	}
 
 	/* consistency check */
 	if (mask_data->width != width)
 	{
-		NEURO_ERROR("mask_data has a different width than the image! %s", 
-			Neuro_s("mask_data width %d image width %d", mask_data->width, width));
+		ERROR(Neuro_s("mask_data has a different width than the image! mask_data width %d image width %d", mask_data->width, width));
 
 		(mask_data->f.destroy_image)(mask_data);
 
@@ -540,8 +538,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 
 	if (mask_data->height != height)
 	{
-		NEURO_ERROR("mask_data has a different height than the image! %s", 
-			Neuro_s("mask_data height %d image height %d", mask_data->height, height));
+		ERROR(Neuro_s("mask_data has a different height than the image! mask_data height %d image height %d", mask_data->height, height));
 
 		(mask_data->f.destroy_image)(mask_data);
 
@@ -590,7 +587,7 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	
 		if (_err != 0)
 		{
-			NEURO_ERROR("error number %d couldn't put pixels in the shapemask pixmap.\n", _err);
+			ERROR(Neuro_s("error number %d couldn't put pixels in the shapemask pixmap.\n", _err));
 		}
 
 		if (gc)
@@ -659,7 +656,7 @@ Lib_GetPixel(v_object *srf, int x, int y)
 
 	if (tmp->raw_data == NULL)
 	{
-		NEURO_ERROR("the XImage raw_data is empty", NULL);
+		ERROR("the XImage raw_data is empty");
 		return 1;
 	}
 	
@@ -900,7 +897,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	chrono = Neuro_GetTickCount();
 	*img = Bitmap_LoadBMP(path);
 
-	NEURO_TRACE("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
+	TRACE(Neuro_s("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono));
 	
 	return; /* int needed */
 }
@@ -930,7 +927,7 @@ Lib_LoadBMPBuffer(void *data, v_object **img)
 	setBitmapColorKey(color_key);
 	readBitmapFileToPixmap(data, &temp);
 	
-	NEURO_TRACE("Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono);
+	TRACE(Neuro_s("Converting Bitmap to pixmap %d\n", Neuro_GetTickCount() - chrono));
 	
 	if (!temp)
 	{
@@ -1000,7 +997,7 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 
 	if (!dmain)
 	{
-		NEURO_ERROR("Main screen buffer dmain is NULL", NULL);
+		ERROR("Main screen buffer dmain is NULL");
 		return NULL;
 	}
 	/* Debug_Val(0, "width %d height %d asked depth %d  default_depth %d\n", 
@@ -1014,7 +1011,7 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 
 	if (tmp2->raw_data == NULL)
 	{
-		NEURO_ERROR("XCreateImage -- input height %d", errno);
+		ERROR(Neuro_s("XCreateImage -- input height %d", errno));
 
 
 		return NULL;
@@ -1393,7 +1390,7 @@ Lib_PollEvent(void *event_input)
 		/* Debug_Val(0, "Button event %d\n", event.xbutton.button); */
 		mouse_wheel = event.xbutton.button;
 
-		NEURO_TRACE("got an X button event press", NULL);
+		TRACE("got an X button event press");
 		Events_TriggerButton(event.xbutton.button, event.xbutton.x, event.xbutton.y, 0);
 	}
 
@@ -1402,7 +1399,7 @@ Lib_PollEvent(void *event_input)
 		/* Debug_Val(0, "Button event %d\n", event.xbutton.button); */
 		mouse_wheel = event.xbutton.button;
 
-		NEURO_TRACE("got an X button event release", NULL);
+		TRACE("got an X button event release");
 		Events_TriggerButton(event.xbutton.button, event.xbutton.x, event.xbutton.y, 1);
 	}
 
@@ -1416,14 +1413,14 @@ Lib_PollEvent(void *event_input)
 	{
 		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 0);
 		/* XQueryKeymap(dmain->display, current_keymap); */
-		NEURO_TRACE("got an X key event release", NULL);
+		TRACE("got an X key event release");
 	}
 
 	if (XCheckTypedWindowEvent(dmain->display, *dmain->cwin, KeyPress, &event) == True)
 	{
 		/* XQueryKeymap(dmain->display, current_keymap); */
 		Events_TriggerKey(XKeycodeToKeysym(dmain->display, event.xkey.keycode, 0), 1);
-		NEURO_TRACE("got an X key event press", NULL);
+		TRACE("got an X key event press");
 	}	
 
 	return 0;

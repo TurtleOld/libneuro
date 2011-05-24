@@ -172,7 +172,7 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 
 	if (!buf)
 	{
-		NEURO_ERROR("Tried to allocate in a NULL buffer", NULL);
+		ERROR("Tried to allocate in a NULL buffer");
 		return;
 	}
 	
@@ -198,7 +198,7 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 		if (*buf == NULL)
 		{
 			/* theres a big problem */
-			NEURO_ERROR("Memory buffer unknown error", NULL);
+			ERROR("Memory buffer unknown error");
 			return;
 		}
 
@@ -287,7 +287,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 
 	if (!eng || !object)
 	{
-		NEURO_WARN("Element eng or object is NULL", NULL);
+		WARN("Element eng or object is NULL");
 		return;
 	}
 	
@@ -302,7 +302,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	 */
 	if (Neuro_GiveEBufElem(eng, object, &elem))
 	{
-		NEURO_WARN("Element wasn't found in the buffer", NULL);
+		WARN("Element wasn't found in the buffer");
 		return;
 	}
 	
@@ -313,7 +313,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	if (eng->callback != NULL)
 		eng->callback(object);
 	else
-		NEURO_TRACE("There's no cleaning callback for this buffer (this could be normal)", NULL);
+		TRACE("There's no cleaning callback for this buffer (this could be normal)");
 	
 	free(object);
 

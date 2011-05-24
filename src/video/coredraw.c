@@ -118,7 +118,7 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 	{
 		if (cur->current->layer >= 99999)
 		{
-			NEURO_TRACE("Destroying font - &0x%x", cur);
+			TRACE(Neuro_s("Destroying font - &0x%x", cur));
 		}
 	}
 
@@ -155,8 +155,8 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 
 	if (debug_clean_instruction_buffer)
 	{
-		NEURO_TRACE("*initial values - Amount of elems %d", 
-				Neuro_GiveEBufCount(verify_m) - 1);
+		TRACE(Neuro_s("*initial values - Amount of elems %d", 
+				Neuro_GiveEBufCount(verify_m) - 1));
 		Graphics_DebugPrintMissing(verify_m);
 	}
 
@@ -194,7 +194,7 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 
 	if (debug_clean_instruction_buffer)
 	{
-		NEURO_TRACE("*before real destroy", NULL);
+		TRACE("*before real destroy");
 		Graphics_DebugPrintMissing(verify_m);
 	}
 		
@@ -225,11 +225,11 @@ Core_clean_object(INSTRUCTION_ENGINE *cur, int dont_redraw_section, u8 del_mask)
 
 	if (debug_clean_instruction_buffer)
 	{
-		NEURO_TRACE("**After the destroy", NULL);
+		TRACE("**After the destroy");
 		/*Debug_Val(0, "Amount of elems in verify %d in queue %d\n", 
 				Neuro_GiveEBufCount(verify_m) - 1, 
 				Neuro_GiveEBufCount(_Queue) - 1);*/
-		NEURO_TRACE("**Full output", NULL);
+		TRACE("**Full output");
 
 		Graphics_DebugPrintQueue();
 
@@ -295,7 +295,7 @@ Graphics_CoreDrawAll(void)
 
 		if (safety <= 0)
 		{
-			NEURO_ERROR("To avoid a death loop, had to bail out of the instruction loop after 1000 loops", NULL);
+			ERROR("To avoid a death loop, had to bail out of the instruction loop after 1000 loops");
 			break; /* safety break */
 		}
 		else
@@ -303,7 +303,7 @@ Graphics_CoreDrawAll(void)
 
 		if (check_integrity_on_draw)
 		{
-			NEURO_TRACE("Data integrity check before drawing", NULL);
+			TRACE("Data integrity check before drawing");
 			Graphics_DebugQueueIntegrityCheck();
 		}
 
@@ -313,7 +313,7 @@ Graphics_CoreDrawAll(void)
 		idst.y = cur->current->dy;
 
 		if (debug_instruction_buffer)
-			NEURO_TRACE("%s", Neuro_s("%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer));
+			TRACE(Neuro_s("%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer));
 		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)
@@ -341,7 +341,7 @@ Graphics_CoreDrawAll(void)
 				{
 					if (cur->current->layer >= 99999)
 					{
-						NEURO_TRACE("%s", Neuro_s("Drawing font - Coord (%d,%d) &0x%x\n", 
+						TRACE(Neuro_s("Drawing font - Coord (%d,%d) &0x%x\n", 
 								cur->current->dx,
 								cur->current->dy, cur));
 					}
@@ -375,7 +375,7 @@ Graphics_CoreDrawAll(void)
 				 *
 				 * broken for some reason
 				 */
-				NEURO_TRACE("Pushed a SRedraw and flagged for redrawing", NULL);
+				TRACE("Pushed a SRedraw and flagged for redrawing");
 				Graphics_RedrawSection(cur);
 
 				/* Debug_Val(0, "Redrawn a static element\n"); */
@@ -414,7 +414,7 @@ Graphics_CoreDrawAll(void)
 				cur->current->type = TDRAW_DYNAMIC_CLEAN;
 				
 				if (dynamic_debug)
-					NEURO_TRACE("Dynamic : Tagging addr %x to clean", cur);
+					TRACE(Neuro_s("Dynamic : Tagging addr %x to clean", cur));
 				/* Debug_Val(0, "drawn dynamic\n"); */
 			}
 			break;
@@ -487,7 +487,7 @@ Graphics_CoreDrawAll(void)
 			
 			default:
 			{
-				NEURO_ERROR("Draw unknown type %d\n", cur->current->type);
+				ERROR(Neuro_s("Draw unknown type %d\n", cur->current->type));
 			}
 			break;
 		}
@@ -497,7 +497,7 @@ Graphics_CoreDrawAll(void)
 			last = cur;
 			if (cur->next == NULL && cur != Graphics_GetLastElem())
 			{
-				NEURO_ERROR("cur->next is NULL AND it isn't the last element, bad, very bad...", NULL);
+				ERROR("cur->next is NULL AND it isn't the last element, bad, very bad...");
 			}
 			cur = cur->next;
 		}
@@ -529,7 +529,7 @@ Graphics_SetAllToRedraw(void)
 	}
 
 	if (debug_instruction_buffer)
-		NEURO_TRACE("Just Set all the instructions to be redrawn", NULL);
+		TRACE("Just Set all the instructions to be redrawn");
 }
 
 /* Graphics_CoreCleanAll might have cleaned objects
@@ -545,7 +545,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 	int bounds_ret = 0;
 	int output = 0;
 
-	NEURO_TRACE("Redrawing Section", NULL);
+	TRACE("Redrawing Section");
 
 	indep_body.x = indep->current->dx;
 	indep_body.y = indep->current->dy;
@@ -568,7 +568,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 		
 		if (!cur->current)
 		{
-			NEURO_ERROR("%s", Neuro_s("BAD : the instruction 0x%x has an empty content! indep 0x%x its next element 0x%x", 
+			ERROR(Neuro_s("BAD : the instruction 0x%x has an empty content! indep 0x%x its next element 0x%x", 
 					cur, indep, indep->next));
 			/* odd error, this ain't supposed to happen :L */
 			return 0;
@@ -578,7 +578,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 		{
 			if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
 			{
-				NEURO_TRACE("%s", Neuro_s("INITIAL Redrawing font -- Font type %d (%d,%d) &0x%x\n", cur->current->type, 
+				TRACE(Neuro_s("INITIAL Redrawing font -- Font type %d (%d,%d) &0x%x\n", cur->current->type, 
 						buf.x, buf.y, cur));
 			}
 		}
@@ -598,7 +598,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 			{
 				if (cur->current->layer >= 99999 && indep->current->layer >= 99999)
 				{
-					NEURO_TRACE("%s", Neuro_s("INITIAL 2 Redrawing font -- bounds_ret %d current (%d,%d) indep (%d,%d)\n", 
+					TRACE(Neuro_s("INITIAL 2 Redrawing font -- bounds_ret %d current (%d,%d) indep (%d,%d)\n", 
 							bounds_ret, 
 							buf.x, buf.y,
 							indep_body.x, indep_body.y));
@@ -622,7 +622,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				if (debug_track_fonts)
 				{
 					if (cur->current->layer >= 99999)
-						NEURO_TRACE("Redrawing font #0", NULL);
+						TRACE("Redrawing font #0");
 				}
 
 				output = 1;
@@ -648,7 +648,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				if (debug_track_fonts)
 				{
 					if (cur->current->layer >= 99999)
-						NEURO_TRACE("Redrawing font #2", NULL);
+						TRACE("Redrawing font #2");
 				}
 				
 				output = 1;
@@ -712,7 +712,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				if (debug_track_fonts)
 				{
 					if (cur->current->layer >= 99999)
-						NEURO_TRACE("Redrawing font #3", NULL);
+						TRACE("Redrawing font #3");
 				}
 				
 				output = 1;
@@ -752,7 +752,7 @@ Graphics_RedrawSection(INSTRUCTION_ENGINE *indep)
 				if (debug_track_fonts)
 				{
 					if (cur->current->layer >= 99999)
-						NEURO_TRACE("Redrawing font #4", NULL);
+						TRACE("Redrawing font #4");
 				}
 
 				output = 1;

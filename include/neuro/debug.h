@@ -87,22 +87,19 @@ extern void Neuro_SetCoreDebugFilter(const char *project_name, const char *filte
 #define Neuro_SetDebugFilter(x) Neuro_SetCoreDebugFilter(NEURO_PROJECT_NAMESPACE,  x)
 
 /** TODO */
-extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *control, ...);
+extern void Neuro_DebugChannel(const char *project_name, const char *channel, const char *type, const char *filename, const char *funcName, u32 lineNum, u8 output_detailed, const char *message);
 
-/** TODO */
-#define NEURO_ERROR(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+#define ERROR(x) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-	       	"error", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+	       	"error", __FILE__, __FUNCTION__, __LINE__, 1, x)
 
-/** TODO */
-#define NEURO_WARN(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+#define WARN(x) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-		"warn", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+		"warn", __FILE__, __FUNCTION__, __LINE__, 1, x)
 
-/** TODO */
-#define NEURO_TRACE(x, y) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
+#define TRACE(x) Neuro_DebugChannel(NEURO_PROJECT_NAMESPACE, \
 		NEURO_CURRENT_CHANNEL, \
-	       	"trace", __FILE__, __FUNCTION__, __LINE__, 1, x, y)
+	       	"trace", __FILE__, __FUNCTION__, __LINE__, 1, x)
 
 /** TODO */
 #define NEURO_PROJECT_NAME(x) char *NEURO_PROJECT_NAMESPACE=x

@@ -178,7 +178,7 @@ get_default_mask(u32 *rmask, u32 *gmask, u32 *bmask, u32 *amask)
 {
 	if (!rmask || !gmask || !bmask || !amask)
 	{
-		NEURO_ERROR("wrong mask pointer inputed", NULL);
+		ERROR("wrong mask pointer inputed");
 		return;
 	}
 
@@ -283,14 +283,14 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 	if (_err_)
 	{
-		NEURO_ERROR("SDL_Init failure", NULL);
+		ERROR("SDL_Init failure");
 		return _err_;
 	}
 
 	temp1 = SDL_SetVideoMode(options.Xsize, options.Ysize, options.bpp, options.Primary_screen_flags);
 	if (temp1 == NULL)
 	{
-		NEURO_ERROR("SDL_SetVideoMode failure", NULL);
+		ERROR("SDL_SetVideoMode failure");
 		return 1;
 	}
 	
@@ -302,7 +302,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 		
 		temp2 = SDL_CreateRGBSurface(options.Secondary_screen_flags, options.Xsize, options.Ysize, options.bpp, Rmask, Gmask, Bmask, Amask);
 		
-		NEURO_TRACE("%s", Neuro_s("MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
+		TRACE(Neuro_s("MASKS 0x%x 0x%x 0x%x 0x%x  witness 0x%x 0x%x 0x%x 0x%x \n",
 				Rmask, Gmask, Bmask, Amask,
 				temp1->format->Rmask,
 				temp1->format->Gmask,
@@ -313,7 +313,7 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 
 		if (temp2 == NULL)
 		{
-			NEURO_ERROR("Lib_CreateVObject failure", NULL);
+			ERROR("Lib_CreateVObject failure");
 			return 1;
 		}
 	}
@@ -348,7 +348,7 @@ Lib_LoadBMP(const char *path, v_object **img)
 	chrono = Neuro_GetTickCount();
 	*img = Bitmap_LoadBMP(path);
 
-	NEURO_TRACE("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono);
+	TRACE(Neuro_s("Loading a bitmap took %d\n", Neuro_GetTickCount() - chrono));
 #else /* NOT NATIVE_BMP */
 
 	*img = SDL_LoadBMP(path);

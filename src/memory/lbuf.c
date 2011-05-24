@@ -91,13 +91,13 @@ Neuro_AllocLBuf(LBUF *eng, size_t sobj)
 
 	if (!eng)
 	{
-		NEURO_WARN("LBUF argument is empty", NULL);
+		WARN("LBUF argument is empty");
 		return;
 	}
 
 	cur = eng->end;
 
-	NEURO_TRACE("Allocating new elem where ending elem is 0x%x", cur);
+	TRACE(Neuro_s("Allocating new elem where ending elem is 0x%x", cur));
 	if (!cur)
 	{
 		Neuro_AllocEBuf(eng->buffer, sizeof(linked_elem*), sizeof(linked_elem));

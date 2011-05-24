@@ -36,7 +36,7 @@ Status_GetStatus(const Status *sta)
 {
 	if (!sta)
 	{
-		NEURO_ERROR("Status missing", NULL);
+		ERROR("Status missing");
 		return 0;
 	}
 
@@ -48,7 +48,7 @@ Status_GetPacket(const Status *sta)
 {
 	if (!sta)
 	{
-		NEURO_ERROR("Status missing", NULL);
+		ERROR("Status missing");
 		return NULL;
 	}
 
@@ -60,7 +60,7 @@ Status_GetPacketLen(const Status *sta)
 {
 	if (!sta)
 	{
-		NEURO_ERROR("Status missing", NULL);
+		ERROR("Status missing");
 		return 0;
 	}
 
@@ -72,7 +72,7 @@ Status_GetSlave(const Status *sta)
 {
 	if (!sta)
 	{
-		NEURO_ERROR("Status missing", NULL);
+		ERROR("Status missing");
 		return 0;
 	}
 
@@ -84,14 +84,14 @@ Status_Move(Status *from, Status *to)
 {
 	if (!from || !to)
 	{
-		NEURO_ERROR("Invalid arguments are empty", NULL);
+		ERROR("Invalid arguments are empty");
 
 		return;
 	}
 
 	if (to->packet)
 	{
-		NEURO_TRACE("freeing packet %x", to->packet);
+		TRACE(Neuro_s("freeing packet %x", to->packet));
 		free(to->packet);
 	}
 
@@ -112,7 +112,7 @@ Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
 
 	Neuro_AllocStartLBuf(msr->statuses, sizeof(Status));
 
-	NEURO_TRACE("Priority Status added for slave %x", conn);
+	TRACE(Neuro_s("Priority Status added for slave %x", conn));
 
 	tmp = Neuro_GiveLBuf(msr->statuses);
 
@@ -136,7 +136,7 @@ Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
 {
 	if (!sta)
 	{
-		NEURO_ERROR("Empty Status argument", NULL);
+		ERROR("Empty Status argument");
 		return;
 	}
 
@@ -146,11 +146,11 @@ Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
 	{
 		if (sta->packet != NULL)
 		{
-			NEURO_TRACE("neuting packet %x", sta->packet);
+			TRACE(Neuro_s("neuting packet %x", sta->packet));
 
 			sta->packet[0] = '\0';
 			
-			NEURO_TRACE("address after neuted packet %x", sta->packet);
+			TRACE(Neuro_s("address after neuted packet %x", sta->packet));
 
 			sta->packet_len = len;
 		}
@@ -159,11 +159,11 @@ Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
 	{
 		if (sta->packet)
 		{
-			NEURO_TRACE("freeing packet %x", sta->packet);
+			TRACE(Neuro_s("freeing packet %x", sta->packet));
 			free(sta->packet);
 		}
 
-		NEURO_TRACE("%s", Neuro_s("Status adding packet address %x previous address %x", data, sta->packet));
+		TRACE(Neuro_s("Status adding packet address %x previous address %x", data, sta->packet));
 		sta->packet = data;
 
 		sta->packet_len = len;
@@ -191,7 +191,7 @@ Status_Clear(Status *sta)
 	if (sta->packet)
 	{
 
-		NEURO_TRACE("freeing packet %x", sta->packet);
+		TRACE(Neuro_s("freeing packet %x", sta->packet));
 		free(sta->packet);
 	}
 }

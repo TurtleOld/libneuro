@@ -63,25 +63,25 @@ pop_data(Packet *pkt, unsigned int len, unsigned int stringType)
 
 	if (!pkt)
 	{
-		NEURO_WARN("Packet type is NULL", NULL);
+		WARN("Packet type is NULL");
 		return NULL;
 	}
 
 	if (!pkt->buffer)
 	{
-		NEURO_WARN("buffer pointer is NULL", NULL);
+		WARN("buffer pointer is NULL");
 		return NULL;
 	}
 
 	if (pkt->len <= 0)
 	{
-		NEURO_WARN("buffer is empty", NULL);
+		WARN("buffer is empty");
 		return NULL;
 	}
 
 	if (len <= 0 && stringType == 0)
 	{
-		NEURO_WARN("input lenght is invalid", NULL);
+		WARN("input lenght is invalid");
 		return NULL;
 	}
 
@@ -107,19 +107,19 @@ push_data(Packet *pkt, unsigned int len, const char *data)
 {
 	if (!pkt)
 	{
-		NEURO_WARN("Packet type is NULL", NULL);
+		WARN("Packet type is NULL");
 		return 1;
 	}
 
 	if (!data)
 	{
-		NEURO_WARN("Input data pointer is NULL", NULL);
+		WARN("Input data pointer is NULL");
 		return 1;
 	}
 
 	if (len == 0)
 	{
-		NEURO_WARN("data lenght is 0", NULL);
+		WARN("data lenght is 0");
 		return 1;
 	}
 
@@ -248,7 +248,7 @@ Packet_GetLen(const Packet *pkt)
 {
 	if (!pkt)
 	{
-		NEURO_WARN("Packet type is NULL", NULL);
+		WARN("Packet type is NULL");
 		return -1;
 	}
 
@@ -260,7 +260,7 @@ Packet_GetBuffer(const Packet *pkt)
 {
 	if (!pkt)
 	{
-		NEURO_WARN("Packet type is NULL", NULL);
+		WARN("Packet type is NULL");
 		return NULL;
 	}
 
@@ -306,7 +306,7 @@ Packet_Reset(Packet *pkt)
 {
 	if (!pkt)
 	{
-		NEURO_WARN("Packet type is NULL", NULL);
+		WARN("Packet type is NULL");
 		return;
 	}
 	

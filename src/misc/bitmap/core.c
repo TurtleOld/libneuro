@@ -66,7 +66,7 @@ Bitmap_LoadBMP(const char *bitmap)
 
 	if (ctx == NULL)
 	{
-		NEURO_WARN("Context creation failed", NULL);
+		WARN("Context creation failed");
 		return NULL;
 	}
 	
@@ -79,7 +79,7 @@ Bitmap_LoadBMP(const char *bitmap)
 
 		if (_err < 0)
 		{
-			NEURO_WARN("Poll failed...", NULL);
+			WARN("Poll failed...");
 			return NULL;
 		}
 

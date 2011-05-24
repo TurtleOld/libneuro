@@ -98,14 +98,14 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 	_err = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
 	if (_err)
 	{
-		NEURO_ERROR("Couldn't select the encoding unicode", NULL);
+		ERROR("Couldn't select the encoding unicode");
 		return NULL;
 	}
 	
 	_err = FT_Set_Char_Size(face, size * 64, size * 64, 72, 72);
 	if (_err)
 	{
-		NEURO_ERROR("Couldn't set face character size", NULL);
+		ERROR("Couldn't set face character size");
 		return NULL;
 	}
 
@@ -152,7 +152,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 
 	if (_err)
 	{
-		NEURO_ERROR("Couldn't load character", NULL);
+		ERROR("Couldn't load character");
 		return NULL;
 	}
 
@@ -166,11 +166,11 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 		
 		if (face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
 		{
-			NEURO_TRACE("Unknown non bitmap format", NULL);
+			TRACE("Unknown non bitmap format");
 			return NULL;
 		}
 		
-		NEURO_TRACE("%s", Neuro_s("font size %dx%d\n", face->glyph->bitmap.width,
+		TRACE(Neuro_s("font size %dx%d\n", face->glyph->bitmap.width,
 				face->glyph->bitmap.rows));
 
 		if (!space_char)
@@ -213,7 +213,7 @@ Lib_RenderUnicode(font_object *ttf, u32 size, u32 character, i16 *x, i16 *y, u32
 						tx = (*x + pixel) + face->glyph->metrics.horiBearingX / 64;
 						ty = (*y + row) - face->glyph->metrics.horiBearingY / 64;
 
-						NEURO_TRACE("%s", Neuro_s("tcolor %d rcolor %d alpha %d\n", 
+						TRACE(Neuro_s("tcolor %d rcolor %d alpha %d\n", 
 							tcolor, rcolor, gray));
 						tcolor = Lib_GetPixel(screen, tx, ty);
 						rcolor = AlphaPixels(color, tcolor, (double)(256 - gray));

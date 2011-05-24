@@ -66,12 +66,12 @@ Ngetc(nFILE *input)
 		if (gzeof(input) == 0)
 		{
 			error = gzerror(input, &errnum);
-			NEURO_ERROR("ZLIB returned an error -- %s", Neuro_s("%s - errnum %d (returned value %d)", error, errnum, ret));
+			ERROR(Neuro_s("ZLIB returned an error -- %s - errnum %d (returned value %d)", error, errnum, ret));
 			return 0;
 		}
 		else
 		{
-			NEURO_TRACE("file is eof", ret);
+			TRACE(Neuro_s("file is eof", ret));
 			return -1;
 		}
 	}
@@ -105,7 +105,7 @@ fpdata8(nFILE *input, u8 *output)
 
 	if (input == NULL || output == NULL)
 	{
-		NEURO_WARN("Arguments are NULL", NULL);
+		WARN("Arguments are NULL");
 		return 1;
 	}
 
@@ -132,7 +132,7 @@ fpdata16(nFILE *input, u16 *output)
 
 	if (input == NULL || output == NULL)
 	{
-		NEURO_WARN("Arguments are NULL", NULL);
+		WARN("Arguments are NULL");
 		return 1;
 	}
 
@@ -175,7 +175,7 @@ fpdata32(nFILE *input, u32 *output)
 	
 	if (input == NULL || output == NULL)
 	{
-		NEURO_WARN("Arguments are NULL", NULL);
+		WARN("Arguments are NULL");
 		return 1;
 	}
 

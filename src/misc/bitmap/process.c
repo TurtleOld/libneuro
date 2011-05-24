@@ -242,33 +242,32 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 					break;
 				
 				temp = *data & values[i];
-				NEURO_TRACE("%s", Neuro_s("Temp value set to 0x%x -- whole val 0x%x", temp, *data));
+				TRACE(Neuro_s("Temp value set to 0x%x -- whole val 0x%x", temp, *data));
 				if (i == 0)
 				{
 					if (IsLittleEndian())
 					{
 						temp >>= 4;
-						NEURO_TRACE("Little endian fixed to 0x%x", temp);
+						TRACE(Neuro_s("Little endian fixed to 0x%x", temp));
 					}
 					else
 					{
 						temp <<= 4;
-						NEURO_TRACE("Big endian fixed to 0x%x", temp);
+						TRACE(Neuro_s("Big endian fixed to 0x%x", temp));
 					}
 				}
 
-				NEURO_TRACE("%s", Neuro_s("status 3-3 temp val %d total %d", temp, Neuro_GiveEBufCount(bcolors)));
+				TRACE(Neuro_s("status 3-3 temp val %d total %d", temp, Neuro_GiveEBufCount(bcolors)));
 				cbuf = Neuro_GiveEBuf(bcolors, temp);
 
 				if (!cbuf)
 				{
-					NEURO_ERROR("%s", Neuro_s("Cbuf fetched at [%d] is NULL -- data is \"%x\" witness %d", temp, *data, *data & values[i] >> 4));
+					ERROR(Neuro_s("Cbuf fetched at [%d] is NULL -- data is \"%x\" witness %d", temp, *data, *data & values[i] >> 4));
 				}
 
 				if (cbuf)
 				{
-					NEURO_TRACE("B1 -- %s", 
-						Neuro_s("img %d coord (%d,%d) (%d,%d,%d)",
+					TRACE(Neuro_s("B1 -- img %d coord (%d,%d) (%d,%d,%d)",
 					       		image, *x, 
 							(bmap->infoheader.height + SIZE_OFFSET) - *y, 
 							cbuf->r, cbuf->g, cbuf->b));
@@ -276,7 +275,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 						(bmap->infoheader.height + SIZE_OFFSET) - *y, 
 						Neuro_MapRGB(cbuf->r, cbuf->g, cbuf->b));
 				}
-				/* NEURO_TRACE("B1 done", NULL); */
+				/* TRACE("B1 done"); */
 		
 				*x = *x + 1;
 				i++;
@@ -286,11 +285,11 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 			{
 				*x = 0;
 				
-				NEURO_TRACE("Changing row", NULL);
+				TRACE("Changing row");
 				*y = *y + 1;
 			}
 
-			NEURO_TRACE("done", NULL);
+			TRACE("done");
 		}
 		break;
 
@@ -388,7 +387,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 
 				if (*y >= bmap->infoheader.height)
 				{
-					NEURO_ERROR("attempted to draw an invalid location", NULL);
+					ERROR("attempted to draw an invalid location");
 					return;
 				}
 
@@ -520,13 +519,13 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 {
 	if (ctx == NULL)
 	{
-		NEURO_WARN("argument ctx is NULL", NULL);
+		WARN("argument ctx is NULL");
 		return -1;
 	}
 
 	if (ctx->f_bitmap == NULL)
 	{
-		NEURO_WARN("bitmap file descriptor is NULL", NULL);
+		WARN("bitmap file descriptor is NULL");
 		return -1;
 	}
 
@@ -546,7 +545,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 	
  		if (ctx->bmap == NULL)
  		{
- 			NEURO_WARN("Unable to parse the bitmap header", NULL);
+ 			WARN("Unable to parse the bitmap header");
  			return -1;
  		}
  
@@ -558,7 +557,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 			
 			if (ctx->bmap->header.type != 0x4d42)
 			{
- 				NEURO_WARN("Invalid bitmap file magic 0x%x", ctx->bmap->header.type);
+ 				WARN(Neuro_s("Invalid bitmap file magic 0x%x", ctx->bmap->header.type));
 				return -1;
 			}
 		}
@@ -580,7 +579,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		ctx->psize = ctx->bmap->header.size - (sizeof(BITMAP_HEADER) + sizeof(BITMAP_INFOHEADER));
 		ctx->psize = ctx->psize - (ctx->bmap->infoheader.ncolors * 4);
 		
-		NEURO_TRACE("data %s", Neuro_s("size %d offset %d", ctx->psize, ctx->bmap->header.offset));
+		TRACE(Neuro_s("data size %d offset %d", ctx->psize, ctx->bmap->header.offset));
 
 		/* we load the palette, if any */
 		if (ctx->bmap->infoheader.ncolors > 0)
@@ -599,7 +598,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 
 			if (ctx->output == NULL)
 			{
-				NEURO_WARN("Created output v_object is NULL", NULL);
+				WARN("Created output v_object is NULL");
 				return -1;
 			}
 		}
@@ -625,7 +624,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		fseek(ctx->f_bitmap, ctx->bmap->header.offset, SEEK_SET);
 #endif /* NOT USE_ZLIB */
 
-		NEURO_TRACE("%s", Neuro_s("Bitmap size(psize) %d Width size(wmult) %d bitmap bpp %d", ctx->psize, ctx->wmult, ctx->bmap->infoheader.bits));
+		TRACE(Neuro_s("Bitmap size(psize) %d Width size(wmult) %d bitmap bpp %d", ctx->psize, ctx->wmult, ctx->bmap->infoheader.bits));
 
 		/* we calculate the chunk of data that will be loaded for each 
 		 * cycles or polls.
@@ -714,7 +713,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 					continue;
 
 				
-				NEURO_TRACE("skipped %d bytes", sizeof(int) - ctx->advance);
+				TRACE(Neuro_s("skipped %d bytes", sizeof(int) - ctx->advance));
 				/* we flush the remaining bytes if any */
 				ctx->advance = 1;
 			}
@@ -759,7 +758,7 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 	}
 
 	/* this never happens unless the image was already loaded */
-	NEURO_WARN("Useless call of the function #%d", ctx->i);
+	WARN(Neuro_s("Useless call of the function #%d", ctx->i));
 	return -1;
 }
 

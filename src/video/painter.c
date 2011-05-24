@@ -211,13 +211,13 @@ computeRawEngine(RAW_ENGINE *toadd)
 	}
 
 	if (debug_instruction_buffer)
-		NEURO_TRACE("%s", Neuro_s("Push --> layer %d type %d", toadd->layer, toadd->type));
+		TRACE(Neuro_s("Push --> layer %d type %d", toadd->layer, toadd->type));
 	
 	if (last_element != NULL)
 	{
 		if (last_element->current == NULL)
 		{
-			NEURO_ERROR("%s", Neuro_s("dropping this call -- last_element current == %d - debug %d", 
+			ERROR(Neuro_s("dropping this call -- last_element current == %d - debug %d", 
 				current, 
 				(int)last_element->current));
 			return NULL;
@@ -307,9 +307,9 @@ computeRawEngine(RAW_ENGINE *toadd)
 	
 	if (debug_instruction_buffer)
 	{
-		NEURO_TRACE("BEGIN inside computeRawEngine debug print", NULL);
+		TRACE("BEGIN inside computeRawEngine debug print");
 		Graphics_DebugPrintQueue();
-		NEURO_TRACE("END inside computeRawEngine debug print", NULL);
+		TRACE("END inside computeRawEngine debug print");
 	}
 
 	return buf;
@@ -476,8 +476,8 @@ Graphics_PainterReset(void)
 void
 Graphics_PainterClean(void)
 {
-	NEURO_TRACE("Raw total %d", Neuro_GiveEBufCount(Raw));
-	NEURO_TRACE("Queue total %d", Neuro_GiveEBufCount(Queue));
+	TRACE(Neuro_s("Raw total %d", Neuro_GiveEBufCount(Raw)));
+	TRACE(Neuro_s("Queue total %d", Neuro_GiveEBufCount(Queue)));
 
 	Neuro_CleanEBuf(&Raw);	
 	Neuro_CleanEBuf(&Queue);

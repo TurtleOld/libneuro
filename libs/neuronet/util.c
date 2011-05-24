@@ -53,7 +53,7 @@ Util_SCleanEBuf(EBUF *input, void *element)
 
 	if (!input || !element)
 	{
-		NEURO_ERROR("Empty Argument detected", NULL);
+		ERROR("Empty Argument detected");
 		return;
 	}
 
@@ -130,7 +130,7 @@ Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 
 	if (_err == -1)
 	{
-		NEURO_ERROR("Epoll_Ctl raised an error %d\n", errno);
+		ERROR(Neuro_s("Epoll_Ctl raised an error %d\n", errno));
 		return -1;
 	}
 

@@ -75,12 +75,12 @@ Graphics_DebugPrintQueue(void)
 			continue;
 		}*/
 		
-		NEURO_TRACE("%s", Neuro_s("layer #%d address &%x type %d", cur->current->layer, cur, 
+		TRACE(Neuro_s("layer #%d address &%x type %d", cur->current->layer, cur, 
 				cur->current->type));
 		
 		if (cur->next == Graphics_GetFirstElem())
 		{
-			NEURO_ERROR("this element points to the beginning element", NULL);
+			ERROR("this element points to the beginning element");
 			break;
 		}
 		else
@@ -100,7 +100,7 @@ Graphics_DebugBufferQueue(EBUF *src)
 	
 	if (verbose_missing_output == 1)
 	{
-		NEURO_TRACE("Outputting initial queue for missing data", NULL);
+		TRACE("Outputting initial queue for missing data");
 	}
 
 	while (cur != NULL)
@@ -115,13 +115,13 @@ Graphics_DebugBufferQueue(EBUF *src)
 
 		if (verbose_missing_output == 1)
 		{
-			NEURO_TRACE("%s", Neuro_s("layer #%d address &%x (%x) type %d\n", cur->current->layer, cur, 
+			TRACE(Neuro_s("layer #%d address &%x (%x) type %d\n", cur->current->layer, cur, 
 					tmp->missing, cur->current->type));
 		}
 		
 		if (cur->next == Graphics_GetFirstElem())
 		{
-			NEURO_ERROR("this element points to the beginning element", NULL);
+			ERROR("this element points to the beginning element");
 			break;
 		}
 		else
@@ -192,7 +192,7 @@ Graphics_DebugPrintMissing(EBUF *src)
 		
 		if (cur->next == Graphics_GetFirstElem())
 		{
-			NEURO_ERROR("This element points to the beginning element", NULL);
+			ERROR("This element points to the beginning element");
 			break;
 		}
 		else
@@ -203,17 +203,17 @@ Graphics_DebugPrintMissing(EBUF *src)
 	 * its data. 
 	 */
 
-	NEURO_TRACE("Debug queue status report", NULL);
+	TRACE("Debug queue status report");
 
 	if (!Neuro_EBufIsEmpty(missing_list))
 	{
 		total = Neuro_GiveEBufCount(missing_list);
-		NEURO_TRACE("%s", Neuro_s("We found %d missing/destroyed/duplicate addresses on %d\n", total, 
+		TRACE(Neuro_s("We found %d missing/destroyed/duplicate addresses on %d\n", total, 
 			Neuro_GiveEBufCount(Graphics_GetQueueBuffer())));
 	}
 	else
 	{
-		NEURO_TRACE("NO missing/destroyed/duplicate addresses!", NULL);
+		TRACE("NO missing/destroyed/duplicate addresses!");
 		total = 0;
 		Neuro_CleanEBuf(&missing_list);
 		return;
@@ -231,9 +231,9 @@ Graphics_DebugPrintMissing(EBUF *src)
 			continue;
 
 		if (dstmp->duplicates == 0)
-			NEURO_TRACE("the address 0x%x is missing", dstmp->missing);
+			TRACE(Neuro_s("the address 0x%x is missing", dstmp->missing));
 		else
-			NEURO_TRACE("%s", Neuro_s("the address 0x%x is present %d times\n", dstmp->missing,
+			TRACE(Neuro_s("the address 0x%x is present %d times\n", dstmp->missing,
 					dstmp->duplicates));
 	}
 
@@ -296,7 +296,7 @@ Graphics_DebugQueueIntegrityCheck(void)
 
 	if (Graphics_GetFirstElem == NULL)
 	{
-		NEURO_ERROR("failed, first_element is NULL", NULL);
+		ERROR("failed, first_element is NULL");
 		return;
 	}
 
@@ -412,12 +412,12 @@ Graphics_DebugQueueIntegrityCheck(void)
 	}
 
 	/* now we output our report */
-	NEURO_TRACE("Data Integrity Check Report", NULL);
+	TRACE("Data Integrity Check Report");
 
-	NEURO_TRACE("Queue integrity : %d", correct_queue_integ);
-	NEURO_TRACE("Correct last element : %d", correct_last_elem);
-	NEURO_TRACE("Queue and its buffer : %d", correct_queue_and_buffer);
-	NEURO_TRACE("Raw and Queue buffer presence : %d", correct_raw_and_queue);
-	NEURO_TRACE("Order of the queue : %d", correct_order_queue);
+	TRACE(Neuro_s("Queue integrity : %d", correct_queue_integ));
+	TRACE(Neuro_s("Correct last element : %d", correct_last_elem));
+	TRACE(Neuro_s("Queue and its buffer : %d", correct_queue_and_buffer));
+	TRACE(Neuro_s("Raw and Queue buffer presence : %d", correct_raw_and_queue));
+	TRACE(Neuro_s("Order of the queue : %d", correct_order_queue));
 }
 

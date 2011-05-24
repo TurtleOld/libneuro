@@ -272,7 +272,7 @@ Neuro_SepChr3(const unsigned char chr, const char *source, u32 len)
 		total = strlen(source) + 1;
 		if (total <= 1 || len > total)
 		{
-			NEURO_WARN("%s", Neuro_s("length %d is invalid -- debug - total %d", len, total));
+			WARN(Neuro_s("length %d is invalid -- debug - total %d", len, total));
 			return NULL;
 		}
 		
@@ -771,7 +771,7 @@ Neuro_PrintFPS(void)
 
 	if (fps >= 0)
 	{
-		printf("current fps : %d\n", fps);
+		printf(Neuro_s("current fps : %d\n", fps));
 	}
 #endif /* USE_VIDEO */
 }

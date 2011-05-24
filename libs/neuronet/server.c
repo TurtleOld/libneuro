@@ -121,7 +121,7 @@ Server_DisconnectClient(Slave *slv)
 	}
 #endif /* old */
 
-	NEURO_TRACE("Disconnected client %x", slv);
+	TRACE(Neuro_s("Disconnected client %x", slv));
 
 	Neuro_SCleanEBuf(connections, slv);
 }
@@ -197,7 +197,7 @@ Server_Poll(Slave *slv)
 
 		Status_Add(slv->master, State_NewClient, NULL, 0, buf);
 
-		NEURO_TRACE("%s", Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
+		TRACE(Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
 	}
 
 	return 0;
@@ -223,7 +223,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	if (sock <= 0)
 	{
-		NEURO_ERROR("socket creation failed\n", NULL);
+		ERROR("socket creation failed\n");
 		return NULL;
 	}
 
@@ -257,7 +257,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	if (_err == -1)
 	{
-		NEURO_ERROR("binding failed", NULL);
+		ERROR("binding failed");
 
 		free(svr);
 
@@ -274,7 +274,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 	_err = listen(sock, 2);
 	if (_err == -1)
 	{
-		NEURO_ERROR("flagging the master socket as listening failed", NULL);
+		ERROR("flagging the master socket as listening failed");
 #ifndef WIN32
 		close(sock);
 #else /* WIN32 */
@@ -291,7 +291,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	msr->slave = output;
 
-	NEURO_TRACE("Server is accepting connections on port %d", port);
+	TRACE(Neuro_s("Server is accepting connections on port %d", port));
 
 	return output;
 }

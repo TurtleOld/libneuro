@@ -50,7 +50,7 @@ Slave_GetData(const Slave *slv)
 {
 	if (!slv)
 	{
-		NEURO_ERROR("Status missing", NULL);
+		ERROR("Status missing");
 		return NULL;
 	}
 
@@ -62,7 +62,7 @@ Slave_SetData(Slave *slv, void *ptr)
 {
 	if (!slv)
 	{
-		NEURO_ERROR("Slave missing", NULL);
+		ERROR("Slave missing");
 		return;
 	}
 
@@ -76,7 +76,7 @@ Slave_Init(Slave *slv, Master *master, int socket, int type, Client *client, Ser
 {
 	if (!slv)
 	{
-		NEURO_ERROR("Empty argument", NULL);
+		ERROR("Empty argument");
 		return 1;
 	}
 
@@ -86,7 +86,7 @@ Slave_Init(Slave *slv, Master *master, int socket, int type, Client *client, Ser
 	{
 		if (!server)
 		{
-			NEURO_ERROR("Empty server pointer", NULL);
+			ERROR("Empty server pointer");
 			return 1;
 		}
 		slv->type = type;
@@ -96,7 +96,7 @@ Slave_Init(Slave *slv, Master *master, int socket, int type, Client *client, Ser
 	{
 		if (!client)
 		{
-			NEURO_ERROR("Empty client pointer", NULL);
+			ERROR("Empty client pointer");
 			return 1;
 		}
 		slv->type = type;
@@ -104,7 +104,7 @@ Slave_Init(Slave *slv, Master *master, int socket, int type, Client *client, Ser
 	}
 	else
 	{
-		NEURO_ERROR("Invalid type given %d", type);
+		ERROR(Neuro_s("Invalid type given %d", type));
 
 		return 1;
 	}
@@ -138,7 +138,7 @@ Slave_Clean(Slave *slv)
 {
 	if (!slv)
 	{
-		NEURO_ERROR("Empty argument", NULL);
+		ERROR("Empty argument");
 		return;
 	}
 
@@ -163,7 +163,7 @@ Slave_Destroy(Slave *slv)
 {
 	if (!slv)
 	{
-		NEURO_ERROR("Empty argument", NULL);
+		ERROR("Empty argument");
 		return;
 	}
 

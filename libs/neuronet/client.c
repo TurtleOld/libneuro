@@ -137,7 +137,7 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 	if (!rbuffer)
 	{
 		/* the packet is not valid */
-		NEURO_WARN("Invalid Packet was received. Suspected corrupt or not using the correct format for packets.", NULL);
+		WARN("Invalid Packet was received. Suspected corrupt or not using the correct format for packets.");
 		return 0;
 	}
 	else
@@ -157,12 +157,12 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 			u32 *plen = NULL;
 			int amount = 0;
 			
-			NEURO_TRACE("Size header enabled, checking buffer for multiple packets", len);
+			TRACE(Neuro_s("Size header enabled, checking buffer for multiple packets", len));
 
 			if (client->incomplete_data != NULL)
 			{
 				int oldlen = len;
-				NEURO_TRACE("%s", Neuro_s("Found old incomplete packet -> len %d bytes of %d bytes", 
+				TRACE(Neuro_s("Found old incomplete packet -> len %d bytes of %d bytes", 
 							client->incomplete_len, ((u32*)client->incomplete_data)[0]));
 
 				/* reallocate memory of incomplte packet
@@ -176,7 +176,7 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 				/* Cleaning the unused buffer */
 				free(rbuffer);
 
-				NEURO_TRACE("%s", Neuro_s("New buffer size %d bytes was %d bytes", len, oldlen));
+				TRACE(Neuro_s("New buffer size %d bytes was %d bytes", len, oldlen));
 
 				/* Let rbuffer point to the new buffer */
 				rbuffer = client->incomplete_data;
@@ -193,7 +193,7 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 				 * we just return to give the chance for the application to
 				 * recieve it all.
 				 */
-				NEURO_WARN("Invalid packet received of wrong length", NULL);
+				WARN("Invalid packet received of wrong length");
 				return 0;
 			}
 
@@ -202,8 +202,8 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 			 */
 			if(*plen <= len)
 			{
-				NEURO_TRACE("Stream contains one or more full packets... processing... ", NULL);
-				NEURO_TRACE("%s", Neuro_s("Buffer size: %d bytes | Packet size: %d bytes", len, *plen));
+				TRACE("Stream contains one or more full packets... processing... ");
+				TRACE(Neuro_s("Buffer size: %d bytes | Packet size: %d bytes", len, *plen));
 
 				Neuro_AllocEBuf(client->input, sizeof(FRAGMENT_MASTER*), sizeof(FRAGMENT_MASTER));
 
@@ -213,8 +213,8 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 			}
 			else
 			{	/* No full packet in the buffer */
-				NEURO_TRACE("Stream contains no full packets... processing incomplete packet...", NULL);
-				NEURO_TRACE("%s", Neuro_s("Buffer size: %d bytes | Packet size: %d bytes", len, *plen));
+				TRACE("Stream contains no full packets... processing incomplete packet...");
+				TRACE(Neuro_s("Buffer size: %d bytes | Packet size: %d bytes", len, *plen));
 			}
 			/* Splitting the buffer to get the single packets */
 			while (i < len)
@@ -231,14 +231,14 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 					client->incomplete_data = (char*)calloc(1, sizeof(char) * client->incomplete_len);
 					memcpy(client->incomplete_data, plen, client->incomplete_len);
 
-					NEURO_TRACE("%s", Neuro_s("Detected incomplete Packet!! (%d bytes of %d bytes)", client->incomplete_len, *plen));
+					TRACE(Neuro_s("Detected incomplete Packet!! (%d bytes of %d bytes)", client->incomplete_len, *plen));
 				}
 				else
 				{
 					if(amount == 1) /* Create EBuf for Fragments */
 						cur->fragmented = Neuro_CreateLBuf();
 
-					NEURO_TRACE("%s", Neuro_s("Processing packet %d -> Packet size: %d | Buffer size: %d", 
+					TRACE(Neuro_s("Processing packet %d -> Packet size: %d | Buffer size: %d", 
 								amount, *plen - sizeof(u32), *plen));
 
 					Neuro_AllocLBuf(cur->fragmented, sizeof(FRAGMENT_SLAVE));
@@ -259,9 +259,9 @@ Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len)
 				}
 			}
 			if(client->incomplete_data == NULL)
-				NEURO_TRACE("Buffer had %d full packets in it", amount);
+				TRACE(Neuro_s("Buffer had %d full packets in it", amount));
 			else
-				NEURO_TRACE("Buffer had %d full packets and 1 incomplete packet in it", amount - 1);
+				TRACE(Neuro_s("Buffer had %d full packets and 1 incomplete packet in it", amount - 1));
 		}
 	}
 	return 0;
@@ -312,7 +312,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 
 	if (!slv || !message || len == 0)
 	{
-		NEURO_WARN("Invalid argument values", NULL);
+		WARN("Invalid argument values");
 		return 1;
 	}
 
@@ -328,7 +328,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 	{
 		Master_RmUfds(slv->master, slv);
 		Master_PushEvent(slv->master, slv, 8);
-		NEURO_WARN("Pipe error... disconnecting client", NULL);
+		WARN("Pipe error... disconnecting client");
 		return 2;
 	}
 
@@ -345,7 +345,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 
 	if (!tmp)
 	{
-		NEURO_ERROR("Memory allocation error", NULL);
+		ERROR("Memory allocation error");
 		return 1;
 	}
 
@@ -396,7 +396,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 
 		if (_err == 3)
 		{
-			NEURO_ERROR("Client_PollSend raised an error", NULL);
+			ERROR("Client_PollSend raised an error");
 			return 1;
 		}
 	}
@@ -426,7 +426,7 @@ Client_PopData(Slave *slv)
 
 		if (!packet_received)
 		{
-			NEURO_ERROR("packet_received is NULL len %d", plen);
+			ERROR(Neuro_s("packet_received is NULL len %d", plen));
 
 			/* Status_Set(slv->master->status, State_NoData, NULL, 0, NULL); */
 			/* return (slv->master->status); */
@@ -442,7 +442,7 @@ Client_PopData(Slave *slv)
 			packet_received = &packet_received[sizeof(u32)];
 		}
 
-		NEURO_TRACE("Packet wrapped and ready for the server", NULL);
+		TRACE("Packet wrapped and ready for the server");
 		Status_Add(slv->master, State_DataAvail, packet_received, plen, slv);
 
 		Util_SCleanEBuf(client->input, Neuro_GiveEBuf(client->input, 0));
@@ -540,7 +540,7 @@ Client_PollRead(Slave *slv)
 	/* we attempt to recieve data from the connection */
 	rbuflen = Socket_Recv(slv->socket, &rbuffer);
 
-	NEURO_TRACE("Recieved a packet of len %d", rbuflen);
+	TRACE(Neuro_s("Recieved a packet of len %d", rbuflen));
 
 	/* the connection with the client just ended, we close it up */
 	if (rbuflen == 0 || rbuflen == -1)
@@ -548,9 +548,9 @@ Client_PollRead(Slave *slv)
 		free(rbuffer);
 
 		if (rbuflen == 0)
-			NEURO_TRACE("Connection lost", NULL);
+			TRACE("Connection lost");
 		else
-			NEURO_TRACE("Pipe error", NULL);
+			TRACE("Pipe error");
 
 		return 1;
 	}
@@ -617,13 +617,13 @@ Client_PollSend(Slave *slv)
 
 		if (buf->len >= MAX_PACKET_SIZE)
 		{
-			NEURO_WARN("Trying to send a packet bigger than the limit! %d bytes", 
-					buf->len);
+			WARN(Neuro_s("Trying to send a packet bigger than the limit! %d bytes", 
+					buf->len));
 
 			return 3;
 		}
 
-		/* NEURO_TRACE("Packet sent size %d", buf->remaining); */
+		/* TRACE(Neuro_s("Packet sent size %d", buf->remaining)); */
 		/* FIFO : First in first out method */
 		if ((_err = Socket_Send(slv->socket, buf->arrow, buf->remaining)) == buf->remaining)
 		{
@@ -635,7 +635,7 @@ Client_PollSend(Slave *slv)
 			if (_err == -1)
 			{
 
-				NEURO_WARN("Pipe error... disconnecting client", NULL);
+				WARN("Pipe error... disconnecting client");
 
 				return 2;
 			}
@@ -676,7 +676,7 @@ Client_Poll(Client *client)
 	{
 		if (client->idle_time + client->timeout < Neuro_GetTickCount())
 		{
-			NEURO_TRACE("Connection dropped due to timeout", NULL);
+			TRACE("Connection dropped due to timeout");
 			return 1;
 		}
 	}
@@ -732,7 +732,7 @@ Client_Connect(Master *msr, const char *host, int port)
 
 	if (!msr)
 	{
-		NEURO_ERROR("Invalid NNET_MASTER given as input", NULL);
+		ERROR("Invalid NNET_MASTER given as input");
 		return NULL;
 	}
 
@@ -778,7 +778,7 @@ Client_Connect(Master *msr, const char *host, int port)
 
 	if (sock <= 0)
 	{
-		NEURO_WARN("socket creation failed", NULL);
+		WARN("socket creation failed");
 		return NULL;
 	}
 
@@ -791,7 +791,7 @@ Client_Connect(Master *msr, const char *host, int port)
 		if (ioctlsocket(sock, FIONBIO, &nb) == SOCKET_ERROR)
 			return NULL;
 
-		NEURO_TRACE("NON BLOCKED == %d", nb);
+		TRACE(Neuro_s("NON BLOCKED == %d", nb));
 	}
 #endif /* WIN32 */
 
@@ -813,14 +813,14 @@ Client_Connect(Master *msr, const char *host, int port)
 #endif /* WIN32 */
 		   )
 		{
-			NEURO_WARN("could not connect to host with error %d", errno);
+			WARN(Neuro_s("could not connect to host with error %d", errno));
 
 			return NULL;
 		}
 		else
 			_err = 0;
 
-		NEURO_TRACE("Checking availability of the Pipe", NULL);
+		TRACE("Checking availability of the Pipe");
 		_err = Util_CheckPipeAvail(sock, 1, 4, 0);
 		if (_err == 0)
 			break;
@@ -829,14 +829,14 @@ Client_Connect(Master *msr, const char *host, int port)
 
 	if (_err == -1)
 	{
-		NEURO_WARN("an error happened with Util_CheckPipeAvail %d", errno);
+		WARN(Neuro_s("an error happened with Util_CheckPipeAvail %d", errno));
 		perror("Util_CheckPipeAvail()");
 		return NULL;
 	}
 
 	if (_err == 0)
 	{
-		NEURO_WARN("connection timed out", NULL);
+		WARN("connection timed out");
 		return NULL;
 	}
 
@@ -861,7 +861,7 @@ Client_Connect(Master *msr, const char *host, int port)
 		return NULL;
 	}
 
-	NEURO_TRACE("Connection established successfully", NULL);
+	TRACE("Connection established successfully");
 
 	client->connection_start_time = Neuro_GetTickCount();
 	client->idle_time = client->connection_start_time;
@@ -879,7 +879,7 @@ Client_Destroy(Client *clt)
 {
 	if (!clt)
 	{
-		NEURO_ERROR("Invalid arguments", NULL);
+		ERROR("Invalid arguments");
 		return;
 	}
 

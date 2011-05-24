@@ -18,7 +18,7 @@ printCore(char *buf, u32 len)
 
 	while (len-- > 0)
 	{
-		printf("%c", buf[0]);
+		printf(Neuro_s("%c", buf[0]));
 
 		buf++;
 	}
@@ -57,28 +57,28 @@ int test_pop()
 
 	if ((a = Packet_Pop64(pkt)) != 800.20)
 	{
-		printf("Double gave %f instead of 800.20\n", a);
+		printf(Neuro_s("Double gave %f instead of 800.20\n", a));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt), Packet_GetLen(pkt));
 
 	if ((b = Packet_Pop32(pkt)) != 45)
 	{
-		printf("i32 gave %d instead of 45\n", b);
+		printf(Neuro_s("i32 gave %d instead of 45\n", b));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt), Packet_GetLen(pkt));
 
 	if ((c = Packet_Pop16(pkt)) != 99)
 	{
-		printf("i16 gave %d instead of 99\n", c);
+		printf(Neuro_s("i16 gave %d instead of 99\n", c));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt), Packet_GetLen(pkt));
 
 	if ((d = Packet_Pop8(pkt)) != 3)
 	{
-		printf("i8 gave %d instead of 3\n", d);
+		printf(Neuro_s("i8 gave %d instead of 3\n", d));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt), Packet_GetLen(pkt));
@@ -89,13 +89,13 @@ int test_pop()
 	{
 		if (strcmp(message, data))
 		{
-			printf("message is \"%s\" instead of \"%s\"", data, message);
+			printf(Neuro_s("message is \"%s\" instead of \"%s\"", data, message));
 			_err = 1;
 		}
 	}
 	else
 	{
-		printf("message is NULL instead of \"%s\"\n", message);
+		printf(Neuro_s("message is NULL instead of \"%s\"\n", message));
 		_err = 1;
 	}
 
@@ -143,28 +143,28 @@ test_pop2()
 
 	if ((b = Packet_Pop32(pkt2)) != 55)
 	{
-		printf("i32 gave %d instead of 55\n", b);
+		printf(Neuro_s("i32 gave %d instead of 55\n", b));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt2), Packet_GetLen(pkt2));
 
 	if ((a = Packet_Pop64(pkt2)) != 5971.1234)
 	{
-		printf("Double gave %f instead of 5971.1234\n", a);
+		printf(Neuro_s("Double gave %f instead of 5971.1234\n", a));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt2), Packet_GetLen(pkt2));
 
 	if ((c = Packet_Pop16(pkt2)) != 6200)
 	{
-		printf("i16 gave %d instead of 6200\n", c);
+		printf(Neuro_s("i16 gave %d instead of 6200\n", c));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt2), Packet_GetLen(pkt2));
 
 	if ((d = Packet_Pop8(pkt2)) != 13)
 	{
-		printf("i8 gave %d instead of 13\n", d);
+		printf(Neuro_s("i8 gave %d instead of 13\n", d));
 		_err = 1;
 	}
 	printCore(Packet_GetBuffer(pkt2), Packet_GetLen(pkt2));
