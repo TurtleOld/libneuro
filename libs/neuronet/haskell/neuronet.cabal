@@ -1,0 +1,28 @@
+name:		neuronet
+version:	2.1.0
+license:	LGPL-2.1
+license-file:	COPYING
+author:		Nicholas Niro
+maintainer:	nicholasniro@neuroponic.com
+category:	Network
+synopsis:	Simple yet powerful network library.
+description:
+	A networking library, made to be solid and efficient
+	while still promoting a simple and easy interface.
+build-type:	Simple
+ghc-options:	-Wall
+CC-options:	-I../../../include -I../../../include/neuro -I../../../include/neuro/nnet -I..
+exposed-modules:
+	Network.Neuronet
+	Network.Neuronet.Core
+	Network.Neuronet.Flags
+	Network.Neuronet.Packet
+	Network.Neuronet.State
+	Network.Neuronet.Slave
+	Network.Neuronet.Master
+	Network.Neuronet.Epoll
+build-depends:	base, mtl
+include-dirs:	. .. ../../../include ../../../include/neuro ../../../include/neuro/nnet
+extra-libraries:
+	neuro
+	neuronet
