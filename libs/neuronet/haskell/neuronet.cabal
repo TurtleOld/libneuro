@@ -21,7 +21,7 @@ exposed-modules:
 	Network.Neuronet.Slave
 	Network.Neuronet.Master
 	Network.Neuronet.Epoll
-build-depends:	base, mtl
+build-depends:	base, mtl, bytestring
 include-dirs:	. .. ../../../include ../../../include/neuro ../../../include/neuro/nnet
 extra-libraries:
 	neuro

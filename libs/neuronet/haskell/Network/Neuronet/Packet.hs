@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, MultiParamTypeClasses, FlexibleInstances #-}
 
 module Network.Neuronet.Packet
 where
@@ -6,9 +6,56 @@ where
 import Foreign.C
 import Foreign.Ptr
 
+import qualified Data.ByteString as A
+import qualified Data.ByteString.Lazy as B
+--import qualified Data.ByteString.Lazy.Char8 as C
+
+import Data.Word
+import Foreign.Marshal.Array
+
 import Control.Monad
 
 type Packet a = Ptr a
+
+class Pkt a b where
+	packetPush :: Packet a -> b -> IO Int
+	packetPop :: Packet a -> IO b
+
+instance Pkt a Double where -- 64 bits
+	packetPush pkt num = liftM fromIntegral (pkt_Push64 pkt ((fromRational . toRational) num))
+	packetPop pkt = liftM (fromRational . toRational) (pkt_Pop64 pkt)
+
+instance Pkt a Int where -- 32 bits
+	packetPush pkt num = liftM fromIntegral (pkt_Push32 pkt (fromIntegral num))
+	packetPop pkt = liftM (fromIntegral) (pkt_Pop32 pkt)
+
+instance Pkt a CShort where -- 16 bits
+	packetPush pkt num = liftM fromIntegral (pkt_Push16 pkt (fromIntegral num))
+	packetPop pkt = liftM (fromIntegral) (pkt_Pop16 pkt)
+
+instance Pkt a CChar where -- 8 bits
+	packetPush pkt num = liftM fromIntegral (pkt_Push8 pkt (fromIntegral num))
+	packetPop pkt = liftM (fromIntegral) (pkt_Pop8 pkt)
+
+instance Pkt a [Char] where
+	packetPush pkt str = liftM fromIntegral $ withCString str $ pkt_PushString pkt $ fromIntegral $ length str
+	packetPop pkt = pkt_PopString pkt >>= peekCString
+
+instance Pkt a A.ByteString where
+	packetPush pkt str = liftM fromIntegral $ A.useAsCString str $ pkt_PushString pkt $ fromIntegral $ A.length str
+	packetPop pkt = pkt_PopString pkt >>= A.packCString
+
+instance Pkt a B.ByteString where
+	packetPush pkt str = liftM fromIntegral $ withCStringE (B.unpack str) $ pkt_PushString pkt $ fromIntegral $ B.length str
+	packetPop pkt = pkt_PopString pkt >>= peekCStringToByteString
+
+withCStringE :: Integral a => [a] -> (Ptr CChar -> IO b) -> IO b
+withCStringE = withArray0 (0 :: CChar) . map (fromInteger . fromIntegral)
+
+peekCStringToByteString :: CString -> IO B.ByteString
+peekCStringToByteString cs = peekArray0 (0 :: CChar) cs >>= return . B.pack . castCCharToWord8
+	where	castCCharToWord8 :: [CChar] -> [Word8]
+		castCCharToWord8 = map (toEnum . fromEnum)
 
 packet_Push64 :: Packet a -> Double -> IO Int
 packet_Push64 pkt num = 
