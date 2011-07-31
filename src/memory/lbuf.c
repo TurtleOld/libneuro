@@ -231,7 +231,7 @@ Neuro_SCleanLBuf(LBUF *eng, void *object)
 			if (cur == eng->current)
 			{
 				if (cur->child)
-					eng->current = cur->child->parent;
+					eng->current = cur->parent;
 				else
 					eng->current = NULL;
 			}
