@@ -123,6 +123,8 @@ Server_DisconnectClient(Slave *slv)
 
 	TRACE(Neuro_s("Disconnected client %x", slv));
 
+	Status_PurgeSlave(slv->master, slv);
+
 	Neuro_SCleanEBuf(connections, slv);
 }
 

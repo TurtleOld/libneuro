@@ -103,6 +103,29 @@ Status_Move(Status *from, Status *to)
 	from->packet = NULL;
 }
 
+/* purge all instances of the slave conn from the buffer msr */
+void
+Status_PurgeSlave(Master *msr, Slave *conn)
+{
+	Status *tmp;
+
+	if (!msr || !conn)
+	{
+		ERROR("Invalid arguments are empty");
+
+		return;
+	}
+
+	Neuro_ResetLBuf(msr->statuses);
+	while  ((tmp = Neuro_GiveNextLBuf(msr->statuses)))
+	{
+		if (tmp->connection == conn)
+		{
+			Neuro_SCleanLBuf(msr->statuses, tmp);
+		}
+	}
+}
+
 /*-------------------- Constructor Destructor ----------------------*/
 
 void
