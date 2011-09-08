@@ -316,7 +316,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 		return 1;
 	}
 
-	if (slv->type == 0)
+	if (slv->type == TYPE_SERVER)
 		return 1;
 
 	src = slv->cType.client;
@@ -414,7 +414,7 @@ Client_PopData(Slave *slv)
 	u32 plen = 0;
 	Client *client;
 
-	if (!slv || slv->type == 0)
+	if (!slv || slv->type == TYPE_SERVER)
 		return;
 		/* return NULL; */
 
@@ -480,7 +480,7 @@ Client_GetIP(Slave *slv)
 	if (!slv)
 		return NULL;
 
-	if (slv->type == 0)
+	if (slv->type == TYPE_SERVER)
 		return NULL;
 
 	return inet_ntoa(slv->c_address.sin_addr);
@@ -492,7 +492,7 @@ Client_SetTimeOut(Slave *slv, t_tick ts)
 	if (!slv)
 		return;
 
-	if (slv->type == 0)
+	if (slv->type == TYPE_SERVER)
 		return;
 
        slv->cType.client->timeout = ts;
