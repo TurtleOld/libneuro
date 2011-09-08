@@ -8,3 +8,6 @@ SUBDIRS = \
 	  src \
 	  libs
 #	  docs
+
+srcdir = @srcdir@
+VPATH = @srcdir@

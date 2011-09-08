@@ -15,3 +15,6 @@ AM_CFLAGS= @NEUROFLAGS@
 
 #include_HEADERS= \
 #		     events.h
+
+srcdir = @srcdir@
+VPATH = @srcdir@

@@ -6,6 +6,11 @@ SUBDIRS = \
 	  extlib \
 	  events
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+AM_CFLAGS= @NEUROFLAGS@
+
 if USE_VIDEO
 SUBDIRS += video
 endif

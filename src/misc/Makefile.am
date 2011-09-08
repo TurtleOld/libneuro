@@ -14,6 +14,9 @@ libmisc_la_SOURCES = \
 		other.c \
 		arg.c 
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 if USE_VIDEO
 libmisc_la_LIBADD = \
 		    bitmap/libbitmap.la

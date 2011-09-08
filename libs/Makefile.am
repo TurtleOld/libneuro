@@ -5,3 +5,6 @@ SUBDIRS =
 if USE_NEURONET
 SUBDIRS += neuronet
 endif
+
+srcdir = @srcdir@
+VPATH = @srcdir@

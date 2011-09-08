@@ -5,6 +5,9 @@ noinst_HEADERS = \
 		 config.h.in \
 		 global.h
 
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 
 include_HEADERS = \
 		  config.h \

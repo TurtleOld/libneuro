@@ -37,3 +37,6 @@ lib_sources += fonts-none.c
 endif
 
 libextlib_la_SOURCES = $(lib_sources) 
+
+srcdir = @srcdir@
+VPATH = @srcdir@

@@ -18,3 +18,6 @@ AM_CFLAGS= @NEUROFLAGS@
 
 #include_HEADERS= \
 #		     graphics.h
+
+srcdir = @srcdir@
+VPATH = @srcdir@

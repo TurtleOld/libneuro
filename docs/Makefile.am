@@ -16,3 +16,6 @@ $(manuals): neuroman.tcl make_man.sh
 
 clean-local:
 	-rm -f $(manuals) $(htmls)
+
+srcdir = @srcdir@
+VPATH = @srcdir@

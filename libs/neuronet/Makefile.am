@@ -28,6 +28,9 @@ libneuronet_la_SOURCES = \
 			 interface.c \
 			 packet.c
 	     
+
+srcdir = @srcdir@
+VPATH = @srcdir@
 libneuronet_la_LDFLAGS = \
 		@NNETLDFLAGS@ \
 		-version-info $(INTERFACE):$(REVISION):$(BINARY)

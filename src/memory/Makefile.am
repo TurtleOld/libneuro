@@ -13,3 +13,6 @@ AM_CFLAGS= @NEUROFLAGS@
 
 #include_HEADERS= \
 #		     ebuf.h
+
+srcdir = @srcdir@
+VPATH = @srcdir@

@@ -4,3 +4,6 @@ noinst_HEADERS = \
 include_HEADERS = \
 		  network.h \
 		  packet.h
+
+srcdir = @srcdir@
+VPATH = @srcdir@

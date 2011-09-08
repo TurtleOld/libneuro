@@ -10,3 +10,6 @@ libbitmap_la_SOURCES = \
 		core.c \
 		io.c \
 		process.c
+
+srcdir = @srcdir@
+VPATH = @srcdir@
