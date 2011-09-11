@@ -132,7 +132,7 @@ case $host in
 			pollType="select"
 		fi
 
-		;;
+	;;
 	*)
 #by default we now compile against X11 on POSIX machines
 		if test x$lowlib = xnothing; then
@@ -145,7 +145,7 @@ case $host in
 
 		targ=unix
 		need_no_undefined=no
-		;;
+	;;
 esac
 AC_MSG_RESULT($need_no_undefined)
 AM_CONDITIONAL(NO_UNDEFINED, test x$need_no_undefined = xyes)
