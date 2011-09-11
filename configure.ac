@@ -303,24 +303,15 @@ if test x$pollType = xepoll; then
 
 	AC_MSG_CHECKING([epoll functions implemented and useable])
 	if test x$epoll_header = xyes; then
-		AC_RUN_IFELSE(
+		AC_COMPILE_IFELSE(
 			[AC_LANG_SOURCE([[
-		#include <stdlib.h> /* exit */
-		#include <unistd.h> /* close */
 		#include <sys/epoll.h>
 
 		int main()
 		{
-			int _err = 0;
-
-			_err = epoll_create(1);
-
-			if (_err == -1)
-				exit(1);
-
-			close(_err);
-
-			exit(0);
+			epoll_create(1);
+			epoll_ctl(0,0,0,0);
+			epoll_wait(0,0,0,0);
 		}
 			]])], [epoll_success=yes] , [epoll_success=no])
 
