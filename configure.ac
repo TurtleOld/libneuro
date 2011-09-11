@@ -133,6 +133,10 @@ case $host in
 		fi
 
 	;;
+	x86_64-*-*)
+		targ=x86_64
+		pollType="epoll"
+	;;
 	*)
 #by default we now compile against X11 on POSIX machines
 		if test x$lowlib = xnothing; then
@@ -156,6 +160,9 @@ case $targ in
 		#AC_CHECK_FUNCS([GetTickCount], , [AC_MSG_ERROR([a required function is missing.])])
 	
 
+	;;
+
+	x86_64)
 	;;
 
 	unix)
