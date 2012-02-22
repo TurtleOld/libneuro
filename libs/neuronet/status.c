@@ -73,7 +73,7 @@ Status_GetSlave(const Status *sta)
 	if (!sta)
 	{
 		ERROR("Status missing");
-		return 0;
+		return NULL;
 	}
 
 	return sta->connection;
