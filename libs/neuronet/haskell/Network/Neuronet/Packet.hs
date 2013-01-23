@@ -148,6 +148,10 @@ packet_PopData :: Packet a -> Int -> IO String
 packet_PopData pkt len =
 	pkt_PopData pkt (fromIntegral len) >>= \str -> peekCStringLen (str, len)
 
+packet_PopData2 :: Packet a -> Int -> IO B.ByteString
+packet_PopData2 pkt len =
+	pkt_PopData pkt (fromIntegral len) >>= \str -> A.packCStringLen (str, len) >>= return . B.fromChunks . (: [])
+
 foreign import ccall unsafe "neuro/nnet/packet.h Packet_PopData" pkt_PopData :: Ptr a -> CUInt -> IO CString
 
 packet_Reset :: Packet a -> IO ()
@@ -164,5 +168,10 @@ foreign import ccall unsafe "neuro/nnet/packet.h Packet_Set" pkt_Set :: CString 
 packet_Set2 :: Packet a -> String -> Int -> IO (Int)
 packet_Set2 pkt string len =
 	liftM fromIntegral (withCString string (\str -> pkt_Set2 pkt str (fromIntegral len)))
+
+packet_Set3 :: Packet a -> B.ByteString -> Int -> IO (Int)
+packet_Set3 pkt string len = do
+	let string' = foldl (\a b -> a `A.append` b ) A.empty $ B.toChunks string
+	liftM fromIntegral (A.useAsCString string' (\str -> pkt_Set2 pkt str (fromIntegral len)))
 
 foreign import ccall unsafe "neuro/nnet/packet.h Packet_Set2" pkt_Set2 :: Ptr a -> CString -> CUInt -> IO CInt
