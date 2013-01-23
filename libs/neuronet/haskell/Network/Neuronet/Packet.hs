@@ -46,8 +46,10 @@ instance Pkt a A.ByteString where
 	packetPop pkt = pkt_PopString pkt >>= A.packCString
 
 instance Pkt a B.ByteString where
-	packetPush pkt str = liftM fromIntegral $ withCStringE (B.unpack str) $ pkt_PushString pkt $ fromIntegral $ B.length str
-	packetPop pkt = pkt_PopString pkt >>= peekCStringToByteString
+	packetPush pkt str = 
+		packetPush pkt $ foldl (\a b -> a `A.append` b ) A.empty $ B.toChunks str
+	packetPop pkt = 
+		packetPop pkt >>= return . B.fromChunks . (: [])
 
 withCStringE :: Integral a => [a] -> (Ptr CChar -> IO b) -> IO b
 withCStringE = withArray0 (0 :: CChar) . map (fromInteger . fromIntegral)
