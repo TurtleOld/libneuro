@@ -48,7 +48,7 @@
 #include "common.h"
 
 /*-------------------- Main Module Header --------------------------*/
-#include "epoll.h"
+#include <neuro/nnet/epoll.h>
 
 
 /*--------------------      Other       ----------------------------*/

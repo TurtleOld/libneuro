@@ -3,6 +3,7 @@ noinst_HEADERS = \
 
 include_HEADERS = \
 		  network.h \
+		  epoll.h \
 		  packet.h
 
 srcdir = @srcdir@

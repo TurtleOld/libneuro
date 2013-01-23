@@ -3,12 +3,12 @@
 noinst_HEADERS = \
 		client.h \
 		common.h \
-		epoll.h \
 		master.h \
 		server.h \
 		slave.h \
 		status.h \
 		util.h
+#		epoll.h
 
 SUBDIRS = 
 

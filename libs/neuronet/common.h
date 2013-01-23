@@ -20,7 +20,7 @@
 #include <neuro/NEURO.h>
 
 #include "lbuf.h"
-#include "epoll.h"
+#include <neuro/nnet/epoll.h>
 
 enum CONNECT_TYPE
 {

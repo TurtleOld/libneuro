@@ -1,3 +1,7 @@
+Epoll_Create
+Epoll_Ctl
+Epoll_Destroy
+Epoll_Wait
 NNet_Connect
 NNet_Create
 NNet_Destroy

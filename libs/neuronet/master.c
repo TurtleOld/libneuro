@@ -21,7 +21,7 @@
 #include <global.h>
 #include "common.h"
 
-#include "epoll.h"
+#include <neuro/nnet/epoll.h>
 #include "slave.h"
 #include "client.h"
 #include "server.h"

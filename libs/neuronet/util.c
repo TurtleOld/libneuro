@@ -13,7 +13,7 @@
 #include <global.h>
 
 #include "common.h"
-#include "epoll.h"
+#include <neuro/nnet/epoll.h>
 
 /*-------------------- Main Module Header --------------------------*/
 #include "util.h"
