@@ -224,7 +224,7 @@ Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
 }
 
 Status *
-Status_Create()
+Status_Create(void)
 {
 	Status *output;
 

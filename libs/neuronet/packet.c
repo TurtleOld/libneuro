@@ -319,7 +319,7 @@ Packet_Reset(Packet *pkt)
 }
 
 Packet *
-Packet_Create()
+Packet_Create(void)
 {
 	Packet *output;
 
