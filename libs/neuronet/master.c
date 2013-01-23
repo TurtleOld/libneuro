@@ -409,6 +409,8 @@ Master_Create(u32 connection_type)
 
 	msr->status = Status_Create();
 
+	msr->callback = NULL;
+
 	return msr;
 }
 

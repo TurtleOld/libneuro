@@ -132,14 +132,28 @@ void
 Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
 {
 	Status *tmp;
+	
+	if (!msr->callback)
+	{
+		Neuro_AllocStartLBuf(msr->statuses, sizeof(Status));
 
-	Neuro_AllocStartLBuf(msr->statuses, sizeof(Status));
+		TRACE(Neuro_s("Priority Status added for slave %x", conn));
 
-	TRACE(Neuro_s("Priority Status added for slave %x", conn));
+		tmp = Neuro_GiveLBuf(msr->statuses);
 
-	tmp = Neuro_GiveLBuf(msr->statuses);
+		Status_Set(tmp, state, data, len, conn);
+	}
+	else
+	{
+		int _err = 0;
 
-	Status_Set(tmp, state, data, len, conn);
+		Status_Set(msr->status, state, data, len, conn);
+
+		_err = (msr->callback)(msr->status);
+
+		if (_err >= 1)
+			Master_SetQuitFlag(msr);
+	}
 }
 
 void
@@ -147,11 +161,25 @@ Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 {
 	Status *tmp;
 
-	Neuro_AllocLBuf(msr->statuses, sizeof(Status));
+	if (!msr->callback)
+	{
+		Neuro_AllocLBuf(msr->statuses, sizeof(Status));
 
-	tmp = Neuro_GiveCurLBuf(msr->statuses);
+		tmp = Neuro_GiveCurLBuf(msr->statuses);
 
-	Status_Set(tmp, state, data, len, conn);
+		Status_Set(tmp, state, data, len, conn);
+	}
+	else
+	{ 
+		int _err = 0;
+
+		Status_Set(msr->status, state, data, len, conn);
+
+		_err = (msr->callback)(msr->status);
+
+		if (_err >= 1)
+			Master_SetQuitFlag(msr);
+	}
 }
 
 void

@@ -93,6 +93,9 @@ struct Master
 			      * clients that require a disconnection
 			      */
 
+	/* callback function */
+	int (*callback)(Status *status);
+
 #ifdef WIN32
 	WSADATA wsaData;
 #endif /* WIN32 */

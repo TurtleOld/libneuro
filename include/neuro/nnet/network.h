@@ -62,6 +62,14 @@ extern int NNet_SetSendPacketSize(NNET_MASTER *msr);
 
 extern void NNet_SetQuitFlag(NNET_MASTER *msr);
 
+/* Sets a callback which will recieve all Status events;
+ * If set using this function, the callback function will
+ * receive all statuses voiding the NNet_Poll return of
+ * statuses (it is not possible to use both at once. Anyway,
+ * this would break the whole point).
+ */
+extern void NNet_SetResponderCB(NNET_MASTER *msr, int (*callback)(NNET_STATUS *sta));
+
 extern NNET_STATUS *NNet_Poll(NNET_MASTER *msr);
 
 /* a client */

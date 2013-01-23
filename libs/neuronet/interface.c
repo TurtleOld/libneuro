@@ -108,6 +108,15 @@ NNet_DisconnectClient(Slave *client)
 	Client_Disconnect(client);
 }
 
+void
+NNet_SetResponderCB(Master *msr, int (*cb)(Status *status))
+{
+	if (msr && cb)
+	{
+		msr->callback = cb;
+	}
+}
+
 Slave *
 NNet_Listen(Master *msr, const char *listen_ip, int port)
 {
