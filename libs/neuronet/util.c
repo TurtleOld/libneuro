@@ -145,7 +145,7 @@ Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec)
 
 	Epoll_Destroy(fd);
 
-	if (_err > 0)
+	if (_err >= 0)
 		return 1;
 
 	return 0;
