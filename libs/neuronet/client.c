@@ -472,7 +472,7 @@ Client_Disconnect(Slave *slv)
 	 * this flags the client to disconnect immediately 
 	 * see master.c the function Master_Poll
 	 */
-	slv->master->type = 2;
+	Master_SetQuitFlag(slv->master);
 }
 
 char *
