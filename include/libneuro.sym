@@ -14,6 +14,7 @@ Neuro_ArgProcess
 Neuro_BlitObject
 Neuro_BoundsCheck
 Neuro_CalcOnlyPos
+Neuro_CleanDebug
 Neuro_CleanDraw
 Neuro_CleanEBuf
 Neuro_CleanEBuf2

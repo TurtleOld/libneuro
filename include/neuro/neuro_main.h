@@ -140,6 +140,13 @@ extern "C" {
  */
 extern void Neuro_SetNeuroDebugFilter(const char *filter);
 
+/**
+ * @sdescri
+ * An alternate way to clean just the debug part of neuro
+ * without having to call Neuro_Quit();
+ */
+extern void Neuro_CleanDebug(void);
+
 /** */
 extern int Neuro_Poll();
 

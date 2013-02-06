@@ -443,4 +443,6 @@ Master_Destroy(Master *msr)
 	Epoll_Destroy(msr->ep);
 
 	free(msr);
+
+	Neuro_CleanDebug();
 }

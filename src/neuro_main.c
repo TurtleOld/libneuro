@@ -113,6 +113,12 @@ Neuro_Init(void)
 }
 
 void
+Neuro_CleanDebug(void)
+{
+	Debug_Clean();
+}
+
+void
 Neuro_Quit(void)
 {
 	Lib_FontsExit();
