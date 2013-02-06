@@ -20,6 +20,19 @@ nnet_Create TypeServer = nnet_create 0
 
 foreign import ccall unsafe "neuro/network.h NNet_Create" nnet_create :: CInt -> IO (Ptr a)
 
+
+type ResponderCB a = NNET_SLAVE a -> IO Int
+
+nnet_SetResponderCB :: NNET_MASTER a -> ResponderCB a -> IO (FunPtr (ResponderCB a))
+nnet_SetResponderCB msr f = do
+	rCB <- mkResponderCB f
+	nnet_setrespondercb msr rCB
+	return rCB
+
+foreign import ccall "wrapper" mkResponderCB :: ResponderCB a -> IO (FunPtr (ResponderCB a))
+
+foreign import ccall safe "neuro/network.h NNet_SetResponderCB" nnet_setrespondercb :: Ptr a -> FunPtr (ResponderCB a) -> IO ()
+
 nnet_Destroy :: NNET_MASTER a -> IO ()
 nnet_Destroy = nnet_destroy
 
@@ -28,7 +41,7 @@ foreign import ccall unsafe "neuro/network.h NNet_Destroy" nnet_destroy :: Ptr a
 nnet_Poll :: NNET_MASTER a -> IO (NNET_STATUS b)
 nnet_Poll = nnet_poll
 
-foreign import ccall unsafe "neuro/network.h NNet_Poll" nnet_poll :: Ptr a -> IO (Ptr b)
+foreign import ccall safe "neuro/network.h NNet_Poll" nnet_poll :: Ptr a -> IO (Ptr b)
 
 nnet_SetDebugFilter :: String -> IO ()
 nnet_SetDebugFilter input = 
