@@ -804,7 +804,7 @@ Client_Connect(Master *msr, const char *host, int port)
 		   WSAGetLastError(), WSAIsBlocking()); */
 #endif /* WIN32 */
 
-		if (_err == 0
+		if ( _err == 1
 #ifndef WIN32
 				&& errno != EINPROGRESS && errno != EALREADY
 #else /* WIN32 */
@@ -822,6 +822,9 @@ Client_Connect(Master *msr, const char *host, int port)
 		TRACE("Checking availability of the Pipe");
 		_err = Util_CheckPipeAvail(sock, 1, 4, 0);
 		if (_err == 0)
+			continue;
+
+		if (_err < 0)
 			break;
 	}
 
@@ -843,7 +846,7 @@ Client_Connect(Master *msr, const char *host, int port)
 	 * we are using non blocking.
 	 */
 	optlen = sizeof(optval);
-	_err = getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *)&optval, &optlen);
+	_err = getsockopt(sock, SOL_SOCKET, SO_ERROR, (int *)&optval, &optlen);
 	if (_err == -1)
 	{
 		/* printf("problem with getsockopt detected\n"); */
