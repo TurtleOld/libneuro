@@ -736,7 +736,6 @@ Client_Connect(Master *msr, const char *host, int port)
 		return NULL;
 	}
 
-	client = Client_Create(msr);
 
 	if (host == NULL)
 		return NULL;
@@ -862,6 +861,8 @@ Client_Connect(Master *msr, const char *host, int port)
 	}
 
 	TRACE("Connection established successfully");
+
+	client = Client_Create(msr);
 
 	client->connection_start_time = Neuro_GetTickCount();
 	client->idle_time = client->connection_start_time;
