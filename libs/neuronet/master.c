@@ -219,7 +219,10 @@ Master_PollEvent(Master *msr)
 					case 1:
 					{
 						/* NEURO_WARN("TODO : Disconnect client -- Client_PollRead requested it", NULL); */
-						Status_AddPriority(msr, State_ClientDisconnect, NULL, 0, slave);						
+						if (msr->type == TYPE_SERVER)
+							Status_AddPriority(msr, State_ClientDisconnect, NULL, 0, slave);						
+						else /* TYPE_CLIENT */
+							Status_AddPriority(msr, State_Disconnect, NULL, 0, slave);						
 					}
 					break;
 
@@ -239,7 +242,10 @@ Master_PollEvent(Master *msr)
 		{
 			/* NEURO_TRACE("Error Event Catched", NULL); */
 
-			Status_Add(msr, State_ClientDisconnect, NULL, 0, events[i].data.ptr);
+			if (msr->type == TYPE_SERVER)
+				Status_Add(msr, State_ClientDisconnect, NULL, 0, events[i].data.ptr);
+			else /* TYPE_CLIENT */
+				Status_AddPriority(msr, State_Disconnect, NULL, 0, events[i].data.ptr);						
 		}
 	}
 	return 0;
