@@ -438,7 +438,8 @@ Master_Destroy(Master *msr)
 
 	Status_Destroy(msr->status);
 
-	Slave_Destroy(msr->slave);
+	if (msr->slave)
+		Slave_Destroy(msr->slave);
 
 	Epoll_Destroy(msr->ep);
 
