@@ -466,12 +466,13 @@ Client_Disconnect(Slave *slv)
 	if (!slv)
 		return;
 
-	/*NEURO_TRACE("Soft disconnecting client %x", slv);
-
-	Master_PushEvent(slv->master, slv, 8);*/
-
-	Master_RmUfds(slv->master, slv);
-	Server_DisconnectClient(slv);
+	TRACE(Neuro_s("Disconnecting"));
+		
+	/* 
+	 * this flags the client to disconnect immediately 
+	 * see master.c the function Master_Poll
+	 */
+	slv->master->type = 2;
 }
 
 char *

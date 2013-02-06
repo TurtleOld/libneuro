@@ -73,7 +73,10 @@ poll_disconnect_clients(Master *msr)
 	{
 		TRACE(Neuro_s("Disconnecting client %x from the buffer %x count %d", *tmp, tmp, Neuro_GiveLBufCount(msr->disco_clients)));
 
-		Server_DisconnectClient(*tmp);
+		if (msr->type == TYPE_SERVER)
+			Server_DisconnectClient(*tmp);
+		else
+			Client_Disconnect(*tmp);
 
 		Neuro_SCleanLBuf(msr->disco_clients, tmp);
 	}
