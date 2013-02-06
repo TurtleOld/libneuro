@@ -419,11 +419,12 @@ Epoll_Wait(EPOLL *ep, int timeout, int *nfds)
 #endif /* HAVE_SELECT */
 
 #ifdef HAVE_EPOLL
+	TRACE(Neuro_s("timeout %d", timeout));
 	_err = epoll_wait(ep->epoll_fd, ep->epEvents, ep->nfds, timeout);
 
 	if (_err == -1)
 	{
-		ERROR(Neuro_s("epoll_wait Raised the error %d", errno));
+		ERROR(Neuro_s("epoll_wait Raised the error %d -- %s", errno, strerror(errno)));
 
 		*nfds = -1;
 		return NULL;

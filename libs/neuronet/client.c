@@ -737,6 +737,8 @@ Client_Connect(Master *msr, const char *host, int port)
 		return NULL;
 	}
 
+	TRACE(Neuro_s("Attempting to connect to host %s on port %d", host, port));
+	TRACE(Neuro_s("host len : %d", strlen(host)));
 
 	if (host == NULL)
 		return NULL;
@@ -760,6 +762,8 @@ Client_Connect(Master *msr, const char *host, int port)
 			(u8)hent->h_addr_list[0][1],
 			(u8)hent->h_addr_list[0][2],
 			(u8)hent->h_addr_list[0][3]);
+
+	TRACE(Neuro_s("Connection attempt on IP : %s", rIP));
 
 	/* feed address with the vital connection
 	 * informations like IP, port and type of
@@ -827,8 +831,9 @@ Client_Connect(Master *msr, const char *host, int port)
 
 		if (_err < 0)
 			break;
-	}
 
+		TRACE(Neuro_s("Epoll gave the _err : %d", _err));
+	}
 
 	if (_err == -1)
 	{
@@ -851,6 +856,7 @@ Client_Connect(Master *msr, const char *host, int port)
 	if (_err == -1)
 	{
 		/* printf("problem with getsockopt detected\n"); */
+		ERROR("Could not set the socket with getsockopt");
 		return NULL;
 	}
 	/*else
@@ -861,6 +867,7 @@ Client_Connect(Master *msr, const char *host, int port)
 	if (optval > 0)
 	{
 		/* printf("could not connect to \"%s\"\n", host); */
+		ERROR(Neuro_s("getsockopt gave us the optval %d -- optlen %d", optval, optlen));
 		return NULL;
 	}
 
