@@ -176,6 +176,9 @@ extern void Neuro_PutPixel(v_object *srf, int x, int y, u32 pixel);
 /* blit one surface to another one with this function */
 extern void Neuro_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst);
 
+/* flip for double buffered contexts */
+extern void Neuro_Flip(v_object *source);
+
 /* free a v_object after its use is no longer needed. */
 extern void Neuro_FreeVObject(v_object *source);
 

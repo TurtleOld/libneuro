@@ -92,7 +92,7 @@ AC_ARG_WITH(lowlib,
 [ 			   only a single value is valid here;]
 [			   Default is "sdl";]
 [ 			   Possible low libraries are :]
-[			     dummy, X11, sdl ],
+[			     dummy, X11, sdl, glx ],
 lowlib="$withval", lowlib="nothing")
 
 AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities of this library [[default=no]]], enable_Video=no, enable_Video=yes)
@@ -254,6 +254,28 @@ if test $SELECTED_LOWLIB = X11; then
 
 	freetype_enable=yes
 	zlib_enable=yes
+fi
+
+# bear in mind : this is an alpha rough implementation
+dnl ----------------
+dnl OpenGL check
+dnl ----------------
+AM_CONDITIONAL(USE_GL, test x$SELECTED_LOWLIB = xglx)
+if test $SELECTED_LOWLIB = glx; then
+	AC_PATH_X
+	AC_PATH_XTRA
+	LDFLAGS="$CFLAGS $X_LIBS"
+	CFLAGS="$CFLAGS $X_CFLAGS"
+	AC_CHECK_LIB(X11, XCreateGC, 
+		     [LIBS="$LIBS -lX11 $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"], 
+		     [AC_MSG_ERROR(You don't have libX11)])
+
+	freetype_enable=yes
+	zlib_enable=yes
+
+	AC_CHECK_LIB(GL, glMatrixMode, 
+	     [AC_DEFINE(USE_GL, 1, ["GL main flag"])] LIBS="$LIBS -lGL", 
+	     [AC_MSG_ERROR(You need openGL to compile this library)])
 fi
 
 dnl ----------------

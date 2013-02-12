@@ -25,10 +25,16 @@ else
 if USE_X11
 lib_sources = x11.c
 else
-lib_sources = none.c
-endif
 
-endif
+if USE_GL
+lib_sources = x11.c
+else
+
+lib_sources = none.c
+endif # NOT USE_GL
+endif # NOT USE_X11
+endif # NOT USE_SDL
+
 
 if USE_FREETYPE2
 lib_sources += fonts.c

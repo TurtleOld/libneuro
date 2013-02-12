@@ -44,6 +44,10 @@ NEURO_MODULE_CHANNEL("x11");
 /* hardcoded generated alpha results */
 #include "alpha.inc"
 
+#if USE_GL
+#include <GL/glx.h>
+#endif /* USE_GL */
+
 typedef struct V_OBJECT
 {
 	Display *display;
@@ -61,6 +65,11 @@ typedef struct V_OBJECT
 	Pixmap shapemask; /*The bitmask for transparency*/
 	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
 	to flush the pixels with the actual image on the server*/
+
+#if USE_GL
+	GLXContext ctx;
+	u8 dblbuffer;
+#endif /* USE_GL */
 
 	u8 alpha; /* the alpha to be applied to the image */
 }V_OBJECT;
@@ -98,7 +107,15 @@ clean_Vobjects(void *src)
 
 	/*if (dmain->display == buf->display)
 		Debug_Val(10, "This element is the main display --\n");*/
-	
+
+#if USE_GL
+	if (buf->ctx)
+	{
+		TRACE("Freeing GLX context");
+		glXDestroyContext(dmain->display, buf->ctx);
+	}
+#endif /* USE_GL */
+
 	if (buf->data)
 	{
 		TRACE("Freeing pixmap data");
@@ -338,6 +355,9 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	V_OBJECT *tmp;
 	XSetWindowAttributes wattrib;
 	/* XGCValues wValue; */
+#if USE_GL
+	XVisualInfo *vi;
+#endif /* USE_GL */
 
 	
 	Neuro_CreateEBuf(&vobjs);
@@ -350,7 +370,52 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	tmp->display = XOpenDisplay(NULL);
 	tmp->screen = XDefaultScreen(tmp->display);
 
+#if USE_GL
+	{
+		int attrListSgl[] = {
+			GLX_RGBA, GLX_RED_SIZE, 4,
+			GLX_GREEN_SIZE, 4,
+			GLX_BLUE_SIZE, 4,
+			GLX_DEPTH_SIZE, 16,
+			None
+		};
+
+		int attrListDbl[] = {
+			GLX_RGBA, GLX_DOUBLEBUFFER,
+			GLX_RED_SIZE, 4,
+			GLX_GREEN_SIZE, 4,
+			GLX_BLUE_SIZE, 4,
+			GLX_DEPTH_SIZE, 16,
+			None
+		};
+
+		vi = glXChooseVisual(tmp->display, tmp->screen, attrListDbl);
+		tmp->dblbuffer = 1;
+		if (vi == NULL)
+		{
+			tmp->dblbuffer = 0;
+			vi = glXChooseVisual(tmp->display, tmp->screen, attrListSgl);
+
+			if (vi == NULL)
+			{
+				ERROR("loading GLX failed");
+				return 1;
+			}
+
+			TRACE("Single buffered screen");
+		}
+		else
+			TRACE("Double buffered screen");
+
+		tmp->rwin = XRootWindow(tmp->display, vi->screen);
+
+		wattrib.colormap = XCreateColormap(tmp->display, tmp->rwin, vi->visual, AllocNone);
+		wattrib.border_pixel = 0;
+	}
+
+#else /* NOT USE_GL */
 	tmp->rwin = XRootWindow(tmp->display, tmp->screen);
+#endif /* NOT USE_GL */
 
 	/* uncomment this if u want it all to be on the root window 
 	 * and comment this if u want a window.
@@ -359,8 +424,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	
 	if (tmp->cwin == NULL)
 	{
-		wattrib.backing_store = WhenMapped;
-		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
 		wattrib.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | 
 					ButtonReleaseMask | EnterWindowMask |
 					LeaveWindowMask | PointerMotionMask |
@@ -372,12 +435,23 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 					SubstructureNotifyMask | SubstructureRedirectMask |
 					FocusChangeMask | PropertyChangeMask |
 					ColormapChangeMask | OwnerGrabButtonMask;
-	
+#if USE_GL
+		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
+			0, 0, swidth, sheight, 0, vi->depth,
+			InputOutput, vi->visual, CWBorderPixel | CWColormap | CWEventMask, &wattrib);
+
+		tmp->cwin = &tmp->win;
+#else /* NOT USE_GL */
+		wattrib.backing_store = WhenMapped;
+		wattrib.background_pixel = BlackPixel(tmp->display, tmp->screen);
+
 		tmp->win = XCreateWindow(tmp->display, tmp->rwin,
 			200, 200, swidth, sheight, 1, CopyFromParent,
 			CopyFromParent, NULL, CWBackingStore | CWBackPixel | CWEventMask, &wattrib);
-		
+
 		tmp->cwin = &tmp->win;
+	
+#endif /* NOT USE_GL */
 	
 		XMapWindow(tmp->display, tmp->win);
 	}
@@ -424,6 +498,19 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 	tpixel.blue = 0;
 	tpixel.flags = DoRed | DoGreen | DoBlue;
 	XAllocColor(dmain->display, DefaultColormap(dmain->display, dmain->screen), &tpixel);
+
+#if USE_GL
+	{
+		dmain->ctx = glXCreateContext(dmain->display, vi, 0, GL_TRUE);
+
+		glXMakeCurrent(dmain->display, *dmain->cwin, dmain->ctx);
+
+		if (glXIsDirect(dmain->display, dmain->ctx))
+			TRACE("Direct rendering on");
+		else
+			TRACE("Direct rendering off");
+	}
+#endif /* USE_GL */
 
 	/* Debug_Val(0, "Screen addr %d buffer addr %d\n", dmain, scldmain); */
 	return 0;
@@ -791,6 +878,8 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 void
 Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst)
 {
+#if USE_GL
+#else /* NOT USE_GL */
 	V_OBJECT *vsrc, *vdst;
 	Rectan Rsrc, Rdst;
 	i32 h, w;
@@ -885,7 +974,8 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 		}
 	}
 #endif /* USE_ALPHA */
-	
+
+#endif /* NOT USE_GL */	
 }
 
 void
@@ -1080,7 +1170,10 @@ Lib_FillRect(v_object *source, Rectan *src, u32 color)
 void
 Lib_Flip(v_object *source)
 {
-
+#ifdef USE_GL
+	if (dmain->dblbuffer)
+		glXSwapBuffers(dmain->display, *dmain->cwin);
+#endif /* USE_GL */
 }
 
 void
@@ -1366,7 +1459,6 @@ Lib_PollEvent(void *event_input)
 	 * own window and we need to redraw.
 	 */
 	if ( XCheckTypedWindowEvent(dmain->display, *dmain->cwin, Expose, &event) == True)  
-
 	{
 		Toggle_Exposed = 1;
 		/* Debug_Print("Redrawing from expose"); */

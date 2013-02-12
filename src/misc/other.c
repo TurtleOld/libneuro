@@ -968,6 +968,12 @@ Neuro_FreeVObject(v_object *source)
 }
 
 void
+Neuro_Flip(v_object *source)
+{
+	Lib_Flip(source);
+}
+
+void
 Neuro_LoadBMP(const char *path, v_object **img)
 {
 	Lib_LoadBMP(path, img);

@@ -35,6 +35,7 @@ Neuro_DestroyDraw
 Neuro_DumbBoundsCheck
 Neuro_EBufIsEmpty
 Neuro_FetchDraw
+Neuro_Flip
 Neuro_FlushDraw
 Neuro_FreeVObject
 Neuro_GetImageSize
