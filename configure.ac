@@ -99,7 +99,11 @@ AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities o
 
 enable_Neuronet=no
 
-AC_ARG_ENABLE(neuronet, [  --disable-neuronet disables the neuronet library from being built [[default=no]]], enable_Neuronet=no, enable_Neuronet=yes)
+AC_ARG_ENABLE(neuronet, [  --disable-neuronet	disables the neuronet library from being built [[default=no]]], enable_Neuronet=no, enable_Neuronet=yes)
+
+zlib_enable=no
+
+AC_ARG_ENABLE(zlib, [  --disable-zlib	disables zlib usage when loading bitmaps. [[default=no]]], zlib_enable=no, zlib_enable=yes)
 
 AC_ARG_WITH(pollType, 
 [  --with-pollType=<pollType>	which of select, poll or epoll]
@@ -111,7 +115,6 @@ AC_ARG_WITH(pollType,
 pollType="$withval", pollType="nothing")
 
 freetype_enable=no
-zlib_enable=no
 
 # host related checkings
 AC_MSG_CHECKING([if we need -no-undefined])
@@ -234,7 +237,6 @@ if test $SELECTED_LOWLIB = sdl; then
 	fi
 
 	freetype_enable=yes
-	zlib_enable=yes
 fi
 
 dnl ----------------
@@ -253,7 +255,6 @@ if test $SELECTED_LOWLIB = X11; then
 #	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
 
 	freetype_enable=yes
-	zlib_enable=yes
 fi
 
 # bear in mind : this is an alpha rough implementation
@@ -271,7 +272,6 @@ if test $SELECTED_LOWLIB = glx; then
 		     [AC_MSG_ERROR(You don't have libX11)])
 
 	freetype_enable=yes
-	zlib_enable=yes
 
 	AC_CHECK_LIB(GL, glMatrixMode, 
 	     [AC_DEFINE(USE_GL, 1, ["GL main flag"])] LIBS="$LIBS -lGL", 
