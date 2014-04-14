@@ -424,7 +424,7 @@ process_bitmap(BITMAP_HDATA *bmap, v_object *image, u8 *data, EBUF *bcolors, u32
 }
 
 static BITMAP_HDATA *
-parse_bitmap_header(nFILE *input)
+parse_bitmap_header(nFILE input)
 {
 	BITMAP_HDATA *buf;
 	BITMAP_INFOHEADER *tmp;
@@ -479,7 +479,7 @@ error:
 }
 
 static void
-process_palette(nFILE *input, BITMAP_HDATA *bmap, EBUF *bcolors)
+process_palette(nFILE input, BITMAP_HDATA *bmap, EBUF *bcolors)
 {
 	u32 i = 0;
 	BITMAP_COLOR *buf;

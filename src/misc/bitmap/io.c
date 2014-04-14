@@ -48,7 +48,7 @@ NEURO_MODULE_CHANNEL("bitmap");
 /*-------------------- Static Functions ----------------------------*/
 
 static int
-Ngetc(nFILE *input)
+Ngetc(nFILE input)
 {
 #ifdef USE_ZLIB
 	i32 ret = 0;
@@ -99,7 +99,7 @@ Ngetc(nFILE *input)
  * when 1 on error don't touch output
  */
 int
-fpdata8(nFILE *input, u8 *output)
+fpdata8(nFILE input, u8 *output)
 {
 	int ret = 0;
 
@@ -124,7 +124,7 @@ fpdata8(nFILE *input, u8 *output)
  * when 1 on error don't touch output
  */
 int
-fpdata16(nFILE *input, u16 *output)
+fpdata16(nFILE input, u16 *output)
 {
 	u8 feed[2];
 	u16 *buf;
@@ -165,7 +165,7 @@ fpdata16(nFILE *input, u16 *output)
  * when 1 on error don't touch output
  */
 int
-fpdata32(nFILE *input, u32 *output)
+fpdata32(nFILE input, u32 *output)
 {
 	/* register int feed; */
 	u8 feed[4];

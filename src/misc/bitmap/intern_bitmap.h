@@ -20,7 +20,7 @@
 #include <zlib.h>
 typedef gzFile nFILE;
 #else /* NOT USE_ZLIB */
-typedef FILE nFILE;
+typedef FILE *nFILE;
 #endif /* USE_ZLIB */
 
 typedef struct BITMAP_HEADER
@@ -52,7 +52,7 @@ typedef struct BITMAP_HDATA
 
 struct BMP_CTX
 {
-	nFILE *f_bitmap;
+	nFILE f_bitmap;
 
 	/* major (buffers) */
 	EBUF *bmap_colors; /* the colors */
@@ -86,9 +86,9 @@ typedef struct BITMAP_MAP
 
 /* io.c */
 
-extern int fpdata8(nFILE *input, u8 *output);
-extern int fpdata16(nFILE *input, u16 *output);
-extern int fpdata32(nFILE *input, u32 *output);
+extern int fpdata8(nFILE input, u8 *output);
+extern int fpdata16(nFILE input, u16 *output);
+extern int fpdata32(nFILE input, u32 *output);
 
 
 /* process.c */
