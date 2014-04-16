@@ -105,7 +105,7 @@ NNet_SetQuitFlag(Master *msr)
 void
 NNet_DisconnectClient(Slave *client)
 {
-	Client_Disconnect(client);
+	Server_DisconnectClient(client);
 }
 
 void
