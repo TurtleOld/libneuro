@@ -42,7 +42,8 @@ typedef struct LOPTIONS
 {
 	char *string;
 	int options;
-	void (*action)(char *data);
+	void *customData;
+	void (*action)(void *customData, char *data);
 	u32 present;
 	char *data;
 	EBUF *datas;
@@ -372,7 +373,7 @@ Neuro_ArgInit(int argc, char **argv)
 }
 
 void
-Neuro_ArgOption(char *string, int options, void (*action)(char *data))
+Neuro_ArgOption(char *string, int options, void *customData, void (*action)(void *customData, char *data))
 {
 	LOPTIONS *buf;
 	
@@ -394,7 +395,10 @@ Neuro_ArgOption(char *string, int options, void (*action)(char *data))
 	buf->options = options;
 
 	if (action)
+	{
+		buf->customData = customData;
 		buf->action = action;	
+	}
 }
 
 int
@@ -450,7 +454,7 @@ Neuro_ArgProcess(void)
 			if (option->options & OPTION_VOID)
 			{
 				if (option->action)
-					(option->action)(NULL);
+					(option->action)(option->customData, NULL);
 				return 1;
 			}
 			i++;
@@ -670,11 +674,11 @@ Neuro_ArgProcess(void)
 						while (dtotal-- > 0)
 						{
 							dta = Neuro_GiveEBuf(option->datas, dtotal);
-							(option->action)(dta->data);
+							(option->action)(option->customData, dta->data);
 						}
 					}
 					else
-						(option->action)(NULL);
+						(option->action)(option->customData, NULL);
 
 					if (option->options & OPTION_QUIT)
 					{

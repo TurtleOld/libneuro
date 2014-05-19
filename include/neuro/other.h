@@ -159,7 +159,7 @@ extern void Neuro_ArgClean();
  * an example : "h,help"   this will handle the -h and --help
  * arguments.
  */
-extern void Neuro_ArgOption(char *string, int options, void (*action)(char *data));
+extern void Neuro_ArgOption(char *string, int options, void *customData, void (*action)(void *customData, char *data));
 
 /* return 2 on error, 1 on normal exit requested and 0 on execution continue */
 extern int Neuro_ArgProcess();
