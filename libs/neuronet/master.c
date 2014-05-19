@@ -336,7 +336,20 @@ Master_Poll(Master *msr)
 	Master_PollEvent(msr);
 
 	if (Neuro_LBufIsEmpty(msr->statuses))
+	{
+		if (msr->callback)
+		{
+			if (msr->status->status == State_ClientDisconnect)
+			{
+				TRACE("Sending the event to really disconnect the client");
+				/* real disconnect event */
+				/* Master_PushEvent(msr, msr->status->connection, 16); */
+				add_client_disconnect(msr->status->connection);
+			}
+		}
+
 		Status_Set(msr->status, State_NoData, NULL, 0, NULL);
+	}
 	else
 	{
 		Status *buf;
