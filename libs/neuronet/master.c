@@ -195,7 +195,7 @@ Master_PollEvent(Master *msr)
 			Slave *slave = events[i].data.ptr;
 			/* NEURO_TRACE("Input Event Catched", NULL); */
 
-			if (slave->type == 0)
+			if (slave->type == TYPE_SERVER)
 			{
 				Server_Poll(slave);
 
