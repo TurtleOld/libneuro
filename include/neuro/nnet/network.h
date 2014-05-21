@@ -67,8 +67,12 @@ extern void NNet_SetQuitFlag(NNET_MASTER *msr);
  * receive all statuses voiding the NNet_Poll return of
  * statuses (it is not possible to use both at once. Anyway,
  * this would break the whole point).
+ *
+ * customData is simply a pointer which is sent to the callback.
+ * The end program can use it as their main struct or variable
+ * for keeping a state.
  */
-extern void NNet_SetResponderCB(NNET_MASTER *msr, int (*callback)(NNET_STATUS *sta));
+extern void NNet_SetResponderCB(NNET_MASTER *msr, void *customData, int (*callback)(void *customData, NNET_STATUS *sta));
 
 extern NNET_STATUS *NNet_Poll(NNET_MASTER *msr);
 

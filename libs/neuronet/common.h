@@ -94,7 +94,9 @@ struct Master
 			      */
 
 	/* callback function */
-	int (*callback)(Status *status);
+	int (*callback)(void *customData, Status *status);
+	/* end program custom data sent to every callbacks */
+	void *customData;
 
 #ifdef WIN32
 	WSADATA wsaData;

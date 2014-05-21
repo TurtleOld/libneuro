@@ -109,11 +109,12 @@ NNet_DisconnectClient(Slave *client)
 }
 
 void
-NNet_SetResponderCB(Master *msr, int (*cb)(Status *status))
+NNet_SetResponderCB(Master *msr, void *customData, int (*cb)(void *customData, Status *status))
 {
 	if (msr && cb)
 	{
 		msr->callback = cb;
+		msr->customData = customData;
 	}
 }
 

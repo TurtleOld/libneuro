@@ -149,7 +149,7 @@ Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
 
 		Status_Set(msr->status, state, data, len, conn);
 
-		_err = (msr->callback)(msr->status);
+		_err = (msr->callback)(msr->customData, msr->status);
 
 		if (_err >= 1)
 			Master_SetQuitFlag(msr);
@@ -175,7 +175,7 @@ Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 
 		Status_Set(msr->status, state, data, len, conn);
 
-		_err = (msr->callback)(msr->status);
+		_err = (msr->callback)(msr->customData, msr->status);
 
 		if (_err >= 1)
 			Master_SetQuitFlag(msr);
