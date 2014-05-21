@@ -678,7 +678,16 @@ Neuro_ArgProcess(void)
 						}
 					}
 					else
-						(option->action)(option->customData, NULL);
+					{
+						int dtotal = 1;
+
+						while (dtotal <= option->present)
+						{
+							(option->action)(option->customData, NULL);
+
+							dtotal++;
+						}
+					}
 
 					if (option->options & OPTION_QUIT)
 					{
