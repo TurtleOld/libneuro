@@ -199,7 +199,7 @@ Handle_Options_nest(BUFINPUT *input, LOPTIONS *option, char *input_string,
 	{
 		option->present++;
 		
-		TRACE(Neuro_s(" <- found %c ", input->used));
+		TRACE(Neuro_s(" <- found %c ", input_string[0]));
 	
 		if (option->options & OPTION_NESTED)
 		{
