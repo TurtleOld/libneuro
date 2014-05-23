@@ -79,6 +79,18 @@ Status_GetSlave(const Status *sta)
 	return sta->connection;
 }
 
+Master *
+Status_GetMaster(const Status *sta)
+{
+	if (!sta)
+	{
+		ERROR("Status missing");
+		return NULL;
+	}
+
+	return sta->connection->master;
+}
+
 void
 Status_Move(Status *from, Status *to)
 {

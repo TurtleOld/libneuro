@@ -93,6 +93,7 @@ extern u32 NNet_GetStatus(const NNET_STATUS *sta);
 extern char *NNet_GetPacket(const NNET_STATUS *sta);
 extern int NNet_GetPacketLen(const NNET_STATUS *sta);
 extern NNET_SLAVE *NNet_GetSlave(const NNET_STATUS *sta);
+extern NNET_MASTER *NNet_GetMaster(const NNET_STATUS *sta);
 
 /* set user defined data set with a NNET_SLAVE element */
 extern void NNet_SetData(NNET_SLAVE *slv, void *ptr);

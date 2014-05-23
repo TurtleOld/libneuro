@@ -54,6 +54,12 @@ NNet_GetSlave(const Status *sta)
 	return Status_GetSlave(sta);
 }
 
+Master *
+NNet_GetMaster(const Status *sta)
+{
+	return Status_GetMaster(sta);
+}
+
 void
 NNet_SetData(Slave *slv, void *ptr)
 {

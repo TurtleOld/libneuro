@@ -10,6 +10,7 @@ NNet_GetData
 NNet_GetIP
 NNet_GetPacket
 NNet_GetPacketLen
+NNet_GetMaster
 NNet_GetSlave
 NNet_GetStatus
 NNet_Listen

@@ -11,6 +11,7 @@ extern u32 Status_GetStatus(const Status *sta);
 extern char *Status_GetPacket(const Status *sta);
 extern int Status_GetPacketLen(const Status *sta);
 extern Slave *Status_GetSlave(const Status *sta);
+extern Master *Status_GetMaster(const Status *sta);
 /* purge all instances of the slave conn from the buffer msr */
 extern void Status_PurgeSlave(Master *msr, Slave *conn);
 
