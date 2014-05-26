@@ -1,5 +1,15 @@
 Things to do in the neuro library.
 
+neuronet -- It is possible to connect more than once with a single master.
+	 - Currently, there is no check upon several NNet_Connect to
+	   see if the master already has a running connection. It is very
+	   important to make sure not to allow this!
+
+neuronet -- New feature possibility of changing the PROTOCOL.
+	 - TCP and UDP should be readily available.
+	 - Multicast support would also be a very important feature
+	   especially for devwatcher.
+
 man -- the function Neuro_EBufIsEmpty:
 	 - the documentation of the return 2 isn't
 	   present in the man page. It is the value
