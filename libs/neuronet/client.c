@@ -309,6 +309,8 @@ Client_Send(Slave *slv, const char *message, u32 len)
 	Client *src;
 	PACKET_BUFFER *tmp;
 	int _err = 0;
+	char *msg;
+	int lenLoop = len;
 
 	if (!slv || !message || len == 0)
 	{
@@ -321,15 +323,57 @@ Client_Send(Slave *slv, const char *message, u32 len)
 
 	src = slv->cType.client;
 
-
-	_err = Socket_Send(slv->socket, (char*)message, len);
-
-	if (_err == -1)
+	msg = (char*)message;
+	while (lenLoop > 0)
 	{
-		Master_RmUfds(slv->master, slv);
-		Master_PushEvent(slv->master, slv, 8);
-		WARN("Pipe error... disconnecting client");
-		return 2;
+		switch (Util_CheckPipeAvail(slv->socket, 1, 0, 5))
+		{
+			case 1:
+			{
+				_err = Socket_Send(slv->socket, msg, lenLoop);
+
+				if (_err == -1)
+				{
+					if (errno == EAGAIN)
+						continue;
+
+					Master_RmUfds(slv->master, slv);
+					Master_PushEvent(slv->master, slv, 8);
+					WARN(Neuro_s("Pipe error... disconnecting client, errno = %d", errno));
+					return 2;
+				}
+				else
+				{
+					if (_err < lenLoop)
+					{
+						TRACE(Neuro_s("sent a packet of size %d/%d errno = %d", _err, len, errno));
+						/* Client_Send(slv, &message[_err], len - _err); */
+						msg = &msg[_err];
+						lenLoop -= _err;
+						continue;
+					}
+					else
+					{
+						TRACE(Neuro_s("sent a full packet of size %d", _err));
+						lenLoop = 0;
+						break;
+					}
+				}
+			}
+			break;
+
+			case -1:
+			{
+				return 1;
+			}
+			break;
+
+			default:
+			{
+				continue;
+			}
+			break;
+		}
 	}
 
 #if old
