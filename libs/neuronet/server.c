@@ -71,7 +71,7 @@ Server_DisconnectClient(Slave *slv)
 	EBUF *ce;
 #endif /* old */
 
-	if (!slv)
+	if (!slv || !slv->master || !slv->master->slave)
 		return;
 
 	connections = slv->master->slave->cType.server->connections;
