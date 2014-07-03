@@ -133,7 +133,7 @@ Server_DisconnectClient(Slave *slv)
 int
 Server_Poll(Slave *slv)
 {
-	struct sockaddr_in connect_addr; /* server address */
+	struct sockaddr_in connect_addr; /* new connection's address */
 #ifndef WIN32
 	u32 addrlen = 0;
 #else /* WIN32 */

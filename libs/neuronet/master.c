@@ -204,7 +204,6 @@ Master_PollEvent(Master *msr)
 			else
 			{
 				int _err = 0;
-				/* Status_Add(msr, State_DataAvail, NULL, 0, slave); */
 
 				_err = Client_PollRead(slave);
 

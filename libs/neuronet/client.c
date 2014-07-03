@@ -316,7 +316,6 @@ Client_PopData(Slave *slv)
 
 	if (!slv || slv->type == TYPE_SERVER)
 		return;
-		/* return NULL; */
 
 	client = slv->cType.client;
 
