@@ -18,4 +18,10 @@ extern void Util_SCleanEBuf(EBUF *input, void *element);
  */
 extern int Util_CheckPipeAvail(int connection, int type, int timeout_sec, int timeout_usec);
 
+
+/* this function processes the data that was received in the input (read) buffer 
+ * and calls the parent's callback with the first packet that was received.
+ */
+extern int Util_Buffer_Recv_Data(Slave *slv, char *rbuffer, u32 len);
+
 #endif /* NOT __UTIL_H */
