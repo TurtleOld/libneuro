@@ -28,6 +28,11 @@ enum CONNECT_TYPE
 	TYPE_CLIENT
 };
 
+enum PROTOCOL_TYPE
+{
+	PROTO_TCP,
+	PROTO_UDP
+};
 
 /* Status types :
  * NoData - No data is available to read
@@ -77,6 +82,11 @@ struct Master
 	 * on or off with the appropriate function.
 	 */
 	u32 inclpacket_size; /* includes the packet size before each of the packets */
+
+	/* this contains a socket_type value like SOCK_STREAM, SOCK_DGRAM 
+	 * default is SOCK_STREAM
+	 */
+	u32 protocolType;
 
 	Slave *slave;
 

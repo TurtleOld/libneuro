@@ -61,6 +61,52 @@ clean_connection(void *src)
 	Slave_Clean(tmp);
 }
 
+/* 0 is the same, 1 is different */
+static int
+sockaddrCompare(struct sockaddr_in *a, struct sockaddr_in *b)
+{
+	int i = 0;
+	int size = sizeof(struct sockaddr_in);
+	char *bA, *bB;
+
+	bA = (char *)a;
+	bB = (char *)b;
+
+	while( i < size)
+	{
+		if (bA[i] == bB[i])
+		{
+			i++;
+			continue;
+		}
+
+		return 1;
+	}
+	return 0;
+}
+
+static Slave *
+getSlaveByConnectAddr(EBUF *connections, struct sockaddr_in *connect_addr)
+{
+	int total = 0;
+	Slave *buf = NULL;
+
+	if (Neuro_EBufIsEmpty(connections))
+		return NULL;
+
+	total = Neuro_GiveEBufCount(connections) + 1;
+
+	while (total-- > 0)
+	{
+		buf = Neuro_GiveEBuf(connections, total);
+
+		if (!sockaddrCompare(connect_addr, &buf->c_address))
+			return buf;
+	}
+
+	return NULL;
+}
+
 /*-------------------- Global Functions ----------------------------*/
 
 void
@@ -161,45 +207,105 @@ Server_Poll(Slave *slv)
 
 	addrlen = sizeof(struct sockaddr_in);
 
-	/* we check to see if theres new clients who want to join the party. */
-	_err = accept(slv->socket, (struct sockaddr*)&connect_addr, &addrlen);
-
-	/* if theres a new connection, we will add it to our buffer */
-	if (_err != -1)
+	switch (slv->master->protocolType)
 	{
-		Slave *buf;
-		Client *tmp;
-
-		/* we have a new client that wishes to connect so we let it connect */
-	
-		Neuro_AllocEBuf(server->connections, sizeof(Slave*), sizeof(Slave));
-
-		buf = Neuro_GiveCurEBuf(server->connections);
-
-		tmp = Client_Create(slv->master);
-
-		tmp->connection_start_time = Neuro_GetTickCount();
-		tmp->idle_time = tmp->connection_start_time;
-		tmp->timeout = 0;
-
-#if old
-		if (parent->type == TYPE_SERVER)
+		case SOCK_STREAM:
 		{
-			/* this sends a NULL packet to the server for a new client 
-			 * connection.
-			 */
-			(parent->callback)(tmp, NULL, 0);
+			/* we check to see if theres new clients who want to join the party. */
+			_err = accept(slv->socket, (struct sockaddr*)&connect_addr, &addrlen);
+
+
+			/* if theres a new connection, we will add it to our buffer */
+			if (_err != -1)
+			{
+				Slave *buf;
+				Client *tmp;
+
+				/* we have a new client that wishes to connect so we let it connect */
+			
+				Neuro_AllocEBuf(server->connections, sizeof(Slave*), sizeof(Slave));
+
+				buf = Neuro_GiveCurEBuf(server->connections);
+
+				tmp = Client_Create(slv->master);
+
+				tmp->connection_start_time = Neuro_GetTickCount();
+				tmp->idle_time = tmp->connection_start_time;
+				tmp->timeout = 0;
+
+				Slave_Init(buf, slv->master, _err, 1, tmp, NULL);
+
+				memcpy(&buf->c_address, &connect_addr, sizeof(struct sockaddr_in));
+				buf->addrlen = addrlen;
+
+				Status_Add(slv->master, State_NewClient, NULL, 0, buf);
+
+				TRACE(Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
+			}
 		}
-#endif /* old */
+		break;
 
-		Slave_Init(buf, slv->master, _err, 1, tmp, NULL);
+		case SOCK_DGRAM:
+		{
+			char *rbuffer = NULL;
+#ifndef WIN32
+			ssize_t rbuflen = 0;
+#else /* WIN32 */
+			int rbuflen = 0;
+#endif /* WIN32 */
+			int sock;
+			Slave *clientSlv;
 
-		memcpy(&buf->c_address, &connect_addr, sizeof(struct sockaddr_in));
-		buf->addrlen = addrlen;
+			rbuffer = calloc(1, MAX_PACKET_SIZE * INPUT_PACKET_BUFFERING);
 
-		Status_Add(slv->master, State_NewClient, NULL, 0, buf);
+			rbuflen = recvfrom(slv->socket, rbuffer, MAX_PACKET_SIZE * INPUT_PACKET_BUFFERING, 0, (struct sockaddr*)&connect_addr, &addrlen);
 
-		TRACE(Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
+			TRACE(Neuro_s("Packet from IP %s", inet_ntoa(connect_addr.sin_addr)));
+
+			clientSlv = getSlaveByConnectAddr(server->connections, &connect_addr);
+
+			if (!clientSlv)
+			{
+				/* this is a new client connection, we create a new slave for this. */
+
+				Slave *buf;
+				Client *tmp;
+
+				/* we have a new client that wishes to connect so we let it connect */
+			
+				Neuro_AllocEBuf(server->connections, sizeof(Slave*), sizeof(Slave));
+
+				buf = Neuro_GiveCurEBuf(server->connections);
+
+				tmp = Client_Create(slv->master);
+
+				tmp->connection_start_time = Neuro_GetTickCount();
+				tmp->idle_time = tmp->connection_start_time;
+				tmp->timeout = 0;
+
+				Slave_Init(buf, slv->master, slv->socket, 1, tmp, NULL);
+
+				memcpy(&buf->c_address, &connect_addr, sizeof(struct sockaddr_in));
+				buf->addrlen = addrlen;
+
+				Status_Add(slv->master, State_NewClient, NULL, 0, buf);
+
+				TRACE(Neuro_s("UDP-> New Client Connection %x on socket %d", buf, slv->socket));
+
+				clientSlv = buf;
+			}
+			else
+			{
+				/* we are already connected to this slave, so we just handle its packet */
+			}
+
+			TRACE(Neuro_s("UDP-> Got a new packet of size %d", rbuflen));
+
+			Util_Buffer_Recv_Data(clientSlv, rbuffer, rbuflen);
+
+			Client_PopData(clientSlv);
+		}
+		break;
 	}
 
 	return 0;
@@ -221,7 +327,7 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	addrlen = sizeof(struct sockaddr_in);
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = socket(AF_INET, msr->protocolType, 0);
 
 	if (sock <= 0)
 	{
@@ -273,17 +379,20 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 
 	_err = 0;
 
-	_err = listen(sock, 2);
-	if (_err == -1)
+	if (msr->protocolType == SOCK_STREAM)
 	{
-		ERROR("flagging the master socket as listening failed");
+		_err = listen(sock, 2);
+		if (_err == -1)
+		{
+			ERROR("flagging the master socket as listening failed");
 #ifndef WIN32
-		close(sock);
+			close(sock);
 #else /* WIN32 */
-		closesocket(sock);
+			closesocket(sock);
 #endif /* WIN32 */
 
-		return NULL;
+			return NULL;
+		}
 	}
 
 	Neuro_CreateEBuf(&svr->connections);
@@ -292,6 +401,8 @@ Server_Create(Master *msr, const char *listen_ip, int port)
 	output = Slave_Create(msr, sock, 0, NULL, svr);
 
 	msr->slave = output;
+	msr->slave->c_address = saddress;
+	msr->slave->addrlen = sizeof(saddress);
 
 	TRACE(Neuro_s("Server is accepting connections on port %d", port));
 

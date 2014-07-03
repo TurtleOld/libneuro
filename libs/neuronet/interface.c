@@ -103,6 +103,38 @@ NNet_SetSendPacketSize(Master *msr)
 }
 
 void
+NNet_SetProtocolType(Master *msr, u32 protocolType)
+{
+	if (!msr)
+		return;
+
+	/* We don't allow the protocol type to be changed when master is connected */
+	if (msr->slave)
+		return;
+
+	switch (protocolType)
+	{
+		case PROTO_TCP:
+		{
+			msr->protocolType = SOCK_STREAM;
+		}
+		break;
+
+		case PROTO_UDP:
+		{
+			msr->protocolType = SOCK_DGRAM;
+		}
+		break;
+
+		default:
+		{
+			msr->protocolType = SOCK_STREAM;
+		}
+		break;
+	}
+}
+
+void
 NNet_SetQuitFlag(Master *msr)
 {
 	Master_SetQuitFlag(msr);

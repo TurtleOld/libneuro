@@ -205,6 +205,9 @@ Master_PollEvent(Master *msr)
 			{
 				int _err = 0;
 
+				if (msr->protocolType == SOCK_DGRAM && slave->type == TYPE_SERVER)
+					return 0;
+
 				_err = Client_PollRead(slave);
 
 				switch (_err)
@@ -401,6 +404,8 @@ Master_Create(u32 connection_type)
 	slv = NULL;
 
 	msr->inclpacket_size = 0;
+
+	msr->protocolType = SOCK_STREAM;
 
 	msr->ep = Epoll_Create(sizeof(Slave));
 

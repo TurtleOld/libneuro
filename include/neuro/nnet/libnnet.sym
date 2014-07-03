@@ -18,6 +18,7 @@ NNet_Poll
 NNet_Send
 NNet_SetData
 NNet_SetDebugFilter
+NNet_SetProtocolType
 NNet_SetResponderCB
 NNet_SetQuitFlag
 NNet_SetSendPacketSize

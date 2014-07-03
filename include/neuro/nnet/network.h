@@ -16,6 +16,12 @@ enum CONNECT_TYPE
 	TYPE_CLIENT
 };
 
+enum PROTOCOL_TYPE
+{
+	PROTO_TCP,
+	PROTO_UDP
+};
+
 typedef struct Master NNET_MASTER;
 
 typedef struct Slave NNET_SLAVE;
@@ -59,6 +65,12 @@ extern NNET_MASTER *NNet_Create(u32 connection_type);
  * kind of connections.
  */
 extern int NNet_SetSendPacketSize(NNET_MASTER *msr);
+
+/* see the enum PROTOCOL_TYPE for valid values for Protocol_Type.
+ * This function sets which protocol to create a client or server.
+ * By default, the protocol is TCP.
+ */
+extern void NNet_SetProtocolType(NNET_MASTER *msr, u32 Protocol_Type);
 
 extern void NNet_SetQuitFlag(NNET_MASTER *msr);
 

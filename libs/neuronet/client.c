@@ -124,22 +124,31 @@ pop_input_data(EBUF *input, u32 *len)
 }
 
 static int
-Socket_Send(int connection, char *message, u32 len)
+Socket_Send(int connection, Slave *slv, char *message, u32 len)
 {
 	/* int _err = 0; */
 
 	if (connection == 0 || message == NULL || len == 0)
 		return 0;
 
+	if (slv->master->protocolType == SOCK_STREAM || slv->master->type == TYPE_CLIENT)
+	{
 #ifndef WIN32
-	/* MSG_NOSIGNAL avoids the server to be killed with the
-	 * signal SIGPIPE. With it, send returns -1 and this results
-	 * in a clean disconnection of the faulty client.
-	 */
-	return send(connection, message, len, MSG_NOSIGNAL);
+		/* MSG_NOSIGNAL avoids the server to be killed with the
+		 * signal SIGPIPE. With it, send returns -1 and this results
+		 * in a clean disconnection of the faulty client.
+		 */
+		return send(connection, message, len, MSG_NOSIGNAL);
 #else /* WIN32 */
-	return send(connection, message, len, 0);
+		return send(connection, message, len, 0);
 #endif /* WIN32 */
+	}
+	else if (slv->master->protocolType == SOCK_DGRAM && slv->master->type == TYPE_SERVER)
+	{
+		return sendto(connection, message, len, 0, (struct sockaddr*)&slv->c_address, slv->addrlen);
+	}
+
+	return 0;
 }
 
 static int
@@ -186,7 +195,7 @@ Client_Send(Slave *slv, const char *message, u32 len)
 		{
 			case 1:
 			{
-				_err = Socket_Send(slv->socket, msg, lenLoop);
+				_err = Socket_Send(slv->socket, slv, msg, lenLoop);
 
 				if (_err == -1)
 				{
@@ -525,7 +534,7 @@ Client_PollSend(Slave *slv)
 
 		/* TRACE(Neuro_s("Packet sent size %d", buf->remaining)); */
 		/* FIFO : First in first out method */
-		if ((_err = Socket_Send(slv->socket, buf->arrow, buf->remaining)) == buf->remaining)
+		if ((_err = Socket_Send(slv->socket, slv, buf->arrow, buf->remaining)) == buf->remaining)
 		{
 			Util_SCleanEBuf(client->output, buf);			
 		}
@@ -677,7 +686,7 @@ Client_Connect(Master *msr, const char *host, int port)
 	/* memcpy(&address.sin_addr, &hent->h_addr, sizeof(address.sin_addr)); */
 	address.sin_port = htons(port);
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = socket(AF_INET, msr->protocolType, 0);
 
 	if (sock <= 0)
 	{
