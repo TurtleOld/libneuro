@@ -280,6 +280,29 @@ Master_SetQuitFlag(Master *msr)
 	msr->type = 2;
 }
 
+void
+Master_PurgeSlaveFromDiscoBuffer(LBUF *disco_clients, Slave *slv)
+{
+	Slave **tmp;
+
+	if (!disco_clients || !slv)
+	{
+		ERROR("Invalid arguments are empty");
+
+		return;
+	}
+
+	Neuro_ResetLBuf(disco_clients);
+	while  ((tmp = Neuro_GiveNextLBuf(disco_clients)))
+	{
+		if (*tmp == slv)
+		{
+			TRACE(Neuro_s("Removed the slave %x from the disconnection buffer %x", slv, tmp));
+			Neuro_SCleanLBuf(disco_clients, tmp);
+		}
+	}
+}
+
 /*-------------------- Poll ----------------------------------------*/
 
 Status *

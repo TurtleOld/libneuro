@@ -183,6 +183,9 @@ Server_DisconnectClient(Slave *slv)
 
 	Status_PurgeSlave(slv->master, slv);
 
+	/* make sure that the client is not in the big disconnection buffer. */
+	Master_PurgeSlaveFromDiscoBuffer(slv->master->disco_clients, slv);
+
 	Neuro_SCleanEBuf(connections, slv);
 }
 

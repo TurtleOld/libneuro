@@ -14,6 +14,9 @@ extern void Master_RmUfds(Master *msr, Slave *slv);
 extern void Master_PushEvent(Master *msr, Slave *slave, int sigmask);
 extern void Master_EditEvent(Event *event, Slave *slave, int sigmask);
 
+
+extern void Master_PurgeSlaveFromDiscoBuffer(LBUF *disco_clients, Slave *slv);
+
 extern Status *Master_Poll(Master *msr);
 extern Master *Master_Create(u32 connection_type);
 extern void Master_Destroy(Master *src);
