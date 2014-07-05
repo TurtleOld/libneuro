@@ -409,6 +409,8 @@ Neuro_DebugChannel(const char *project_name, const char *channel, const char *ty
 
 	if (Neuro_EBufIsEmpty(debug_l))
 	{
+		if (DETAILED_DEBUG)
+			fprintf(stderr, "The buffer debug_l is empty, no debugging will be output\n");
 		return;
 	}
 
@@ -557,6 +559,8 @@ Debug_Init(void)
 void
 Debug_Clean(void)
 {
+	if (DETAILED_DEBUG)
+		fprintf(stderr, "Cleaning The debug buffer.\n");
 	Neuro_CleanEBuf(&debug_l);
 
 	if (string_maker)
