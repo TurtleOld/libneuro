@@ -117,8 +117,20 @@ Server_DisconnectClient(Slave *slv)
 	EBUF *ce;
 #endif /* old */
 
+	if (slv)
+		TRACE(Neuro_s("Attempting to disconnect the slave %x", (int)slv));
+
 	if (!slv || !slv->master || !slv->master->slave)
+	{
+		ERROR("Invalid slave trying to be disconnected");
 		return;
+	}
+
+	if (slv->master->slave->cType.server == NULL || slv->master->slave->cType.client == NULL)
+	{
+		ERROR("The client attempted to disconnect a client that was already disconnected!");
+		return;
+	}
 
 	connections = slv->master->slave->cType.server->connections;
 	
@@ -240,7 +252,7 @@ Server_Poll(Slave *slv)
 
 				Status_Add(slv->master, State_NewClient, NULL, 0, buf);
 
-				TRACE(Neuro_s("New Client Connection %x on socket %d", buf, slv->socket));
+				TRACE(Neuro_s("New Client Connection %x on socket %d (master %x slave %x)", buf, slv->socket, (int)buf->master, (int)buf));
 			}
 		}
 		break;

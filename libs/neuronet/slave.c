@@ -156,6 +156,8 @@ Slave_Clean(Slave *slv)
 	{
 		Client_Destroy(slv->cType.client);
 	}
+
+	TRACE(Neuro_s("Slave %x was cleaned", (int)slv));
 }
 
 void
@@ -170,4 +172,6 @@ Slave_Destroy(Slave *slv)
 	Slave_Clean(slv);
 
 	free(slv);
+
+	TRACE(Neuro_s("Slave %x was destroyed", (int)slv));
 }
