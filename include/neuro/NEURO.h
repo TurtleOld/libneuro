@@ -38,6 +38,7 @@
 #include "other.h"
 #include "neuro_main.h"
 #include "lbuf.h"
+#include "parseConf.h"
 
 
 #endif /* __LIBNEURO_H */

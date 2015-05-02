@@ -14,6 +14,7 @@ Neuro_ArgProcess
 Neuro_BlitObject
 Neuro_BoundsCheck
 Neuro_CalcOnlyPos
+Neuro_CleanConfigDatas
 Neuro_CleanDebug
 Neuro_CleanDraw
 Neuro_CleanEBuf
@@ -23,6 +24,7 @@ Neuro_CleanFont
 Neuro_CleanKeyboard
 Neuro_CleanMouse
 Neuro_CleanPixels
+Neuro_ConfigSearchValueByName
 Neuro_CopyEBuf
 Neuro_CreateBMPCTX
 Neuro_CreateEBuf
@@ -57,6 +59,7 @@ Neuro_GiveEBufElem
 Neuro_GiveFPS
 Neuro_GiveImageSize
 Neuro_GiveLBufCount
+Neuro_GiveNextConfig
 Neuro_GiveNextLBuf
 Neuro_GiveRGB
 Neuro_GiveRGB16
@@ -73,12 +76,14 @@ Neuro_LoadFontFile
 Neuro_LockVObject
 Neuro_MapRGB
 Neuro_MultiAllocEBuf
+Neuro_ParseConf
 Neuro_Poll
 Neuro_PrintFPS
 Neuro_PushDraw
 Neuro_PutPixel
 Neuro_Quit
 Neuro_RenderUnicode
+Neuro_ResetConfig
 Neuro_ResetEBuf
 Neuro_ResetLBuf
 Neuro_SCleanEBuf

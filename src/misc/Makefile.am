@@ -12,7 +12,8 @@ AM_CFLAGS= @NEUROFLAGS@
 
 libmisc_la_SOURCES = \
 		other.c \
-		arg.c 
+		arg.c \
+		parseConf.c
 
 srcdir = @srcdir@
 VPATH = @srcdir@

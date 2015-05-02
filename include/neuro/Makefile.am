@@ -23,4 +23,5 @@ include_HEADERS = \
 		  typedef.h \
 		  bitmap.h \
 		  neuro_engine.h \
-		  lbuf.h
+		  lbuf.h \
+		  parseConf.h
