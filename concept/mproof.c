@@ -111,7 +111,7 @@ fillData(DBBUFFER *eng, unsigned int number, char *message)
 	tmp = (Pdata***)&eng->buffer;
 	
 	(*tmp)[num]->number = number;
-	(*tmp)[num]->message = (char*)calloc(1, strlen(message));
+	(*tmp)[num]->message = (char*)calloc(1, strlen(message) + 1);
 	strncpy((*tmp)[num]->message, message, strlen(message));
 }
 
@@ -125,7 +125,7 @@ fillList(DBBUFFER *eng, unsigned int number, char *name, unsigned short age, uns
 	num = eng->total - 1;
 	tmp = (Plist***)&eng->buffer;
 	
-	(*tmp)[num]->name = (char*)calloc(1, strlen(name));
+	(*tmp)[num]->name = (char*)calloc(1, strlen(name) + 1);
 	strncpy((*tmp)[num]->name, name, strlen(name));
 	/* printf("added the elem %s to the List\n", (*tmp)[num]->name); */
 	(*tmp)[num]->number = number;
