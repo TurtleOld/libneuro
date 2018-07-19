@@ -29,6 +29,7 @@
 
 /*-------------------- Extern Headers Including --------------------*/
 #include <stdlib.h>
+#include <string.h> /* memset */
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
@@ -64,6 +65,10 @@ struct EBUF
 
 	/* the current total number of elements inside **buffer */
 	u32 total;
+
+	/* initial sizes as we now support only the first size used only */
+	size_t initial_sptp;
+	size_t initial_sobj;
 
 	/* callback that is not necessarily needed. This callback 
 	 * is used if the input structure itself has allocated elements
@@ -150,6 +155,10 @@ Neuro_SetcallbEBuf(EBUF *eng, void (*callback)(void *src))
  * sobj stands for : size of the actual structure the external
  * program will pass to EBUF. example : sizeof(struct foo)
  * or sizeof(foo)
+ *
+ * TODO This function should have had a return value to support
+ * error events... How are we supposed to know if there is 
+ * not enough memory available like this?
  */
 void
 Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
@@ -157,6 +166,7 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	void ***buf;
 	u32 *total;
 	u32 *mem;
+	u32 i = 0;
 
 	if (!eng)
 		return;
@@ -192,9 +202,25 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 		 * times we could add data without the need to reallocate.
 		 */
 		*mem = MEMORY_ALLOC_OVERH - 1;
+
+		i = MEMORY_ALLOC_OVERH;
+
+		eng->initial_sptp = sptp;
+		eng->initial_sobj = sobj;
+
+		while(i-- > 0)
+		{
+			(*buf)[i] = calloc(1, sobj);
+		}
 	}
 	else if ((*mem * sptp) < sptp)
 	{
+		if (sptp != eng->initial_sptp || sobj != eng->initial_sobj)
+		{
+			ERROR("We no longer support multiple size of objects. Each object need to be exactly the size of the first one inserted into the buffer.");
+			return;
+		}
+
 		if (*buf == NULL)
 		{
 			/* theres a big problem */
@@ -207,14 +233,28 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 
 		/* keep track of how many times we don't need to reallocate */
 		*mem = MEMORY_ALLOC_OVERH - 1;
+
+		i = *total + MEMORY_ALLOC_OVERH;
+
+		while(i-- > *total)
+		{
+			(*buf)[i] = calloc(1, sobj);
+		}
 	}
 	else
 	{
+		if (sptp != eng->initial_sptp || sobj != eng->initial_sobj)
+		{
+			ERROR("We no longer support multiple size of objects. Each object need to be exactly the size of the first one inserted into the buffer.");
+			return;
+		}
 		/* We now will use an emplacement that was allocated in advance.
 		 * Since we will use an element, we decrement the overhead EBUF
 		 * mem variable value.
 		 */
 		*mem -= 1;
+
+		memset((*buf)[*total], 0, sobj);
 	}
 	
 	/* Debug_Val(0, "EBUF -- after mem %d\n", *mem); */
@@ -224,8 +264,9 @@ Neuro_AllocEBuf(EBUF *eng, size_t sptp, size_t sobj)
 	 *
 	 * in technical terms, we now allocate the * .
 	 */
-	(*buf)[*total] = calloc(1, sobj);
-	
+
+	/* this is now being allocated with the overhead */
+	/* (*buf)[*total] = calloc(1, sobj); */
 	
 	*total = *total + 1;
 }
@@ -315,7 +356,8 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	else
 		TRACE("There's no cleaning callback for this buffer (this could be normal)");
 	
-	free(object);
+	/* now this is problematic, for performance reasons, it's better *not* to free the object. */
+	/*free(object);*/
 
 
 	/* now that the object is freed, we will attempt to fill its 
@@ -333,7 +375,10 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	}
 	
 	/* make the last element point to NULL so it can be reused*/
-	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL);
+	/* Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), NULL); */
+
+	/* make the last element point to our unused address */
+	Neuro_SetEBuf(eng, Neuro_GiveEBufAddr(eng, total), object);
 
 	eng->mem++; /* add an extra mem because we now have an extra slot free */
 	
@@ -350,7 +395,7 @@ Neuro_CleanEBuf2(EBUF *eng)
 		return;
 		
 	buf = &eng->buffer;
-	i = eng->total;
+	i = eng->total + eng->mem;
 	
 	/* loop all the elements in the EBUF **, call the
 	 * callback(if theres one!) with the actual element 
@@ -361,7 +406,8 @@ Neuro_CleanEBuf2(EBUF *eng)
 	while (i-- > 0)
 	{
 		
-		buf = Neuro_GiveEBuf(eng, i);
+		/* buf = Neuro_GiveEBuf(eng, i); */
+		buf = eng->buffer[i];
 		
 		if (buf)
 		{
