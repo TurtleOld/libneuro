@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <stdio.h> /* printf() vfprintf() vasprintf()*/
 #include <stdarg.h> /* va_start() va_end() */
-#include <string.h> /* strcmp()  strlen()*/
+#include <string.h> /* strcmp()  strlen() memset() */
 
 /*-------------------- Local Headers Including ---------------------*/
 #include <global.h>
@@ -524,19 +524,14 @@ Neuro_s(const char *control, ...)
 	va_list args;
 
 	va_start(args, control);
-
 	if (string_maker)
 	{
-		free(string_maker);
-		string_maker = NULL;
+		memset(string_maker, 0, 2048);
+	} else {
+		string_maker = calloc(1, 2048);
 	}
 
-#if HAVE_VASPRINTF
-	len = vasprintf(&string_maker, control, args);
-#else /* NOT HAVE_VASPRINTF */
-	string_maker = calloc(1, 512);
-	len = vsnprintf(string_maker, 512, control, args);
-#endif /* NOT HAVE_VASPRINTF*/
+	len = vsnprintf(string_maker, 2048, control, args);
 	va_end(args);
 
 	return string_maker;
