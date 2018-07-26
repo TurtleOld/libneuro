@@ -70,6 +70,7 @@ clean_linked_elem(void *src)
 			(tmp->callback)(tmp->content);
 
 		free(tmp->content);
+		tmp->content = NULL;
 	}
 }
 
