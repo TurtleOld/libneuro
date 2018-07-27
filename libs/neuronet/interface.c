@@ -30,7 +30,7 @@
 
 /*-------------------- Global Functions ----------------------------*/
 
-u32
+Status_State
 NNet_GetStatus(const Status *sta)
 {
 	return Status_GetStatus(sta);
@@ -103,7 +103,7 @@ NNet_SetSendPacketSize(Master *msr)
 }
 
 void
-NNet_SetProtocolType(Master *msr, u32 protocolType)
+NNet_SetProtocolType(Master *msr, PROTOCOL_TYPE protocolType)
 {
 	if (!msr)
 		return;
@@ -178,7 +178,7 @@ NNet_Poll(Master *msr)
 /*-------------------- Constructor Destructor ----------------------*/
 
 Master *
-NNet_Create(u32 connection_type)
+NNet_Create(CONNECT_TYPE connection_type)
 {
 	return Master_Create(connection_type);
 }

@@ -34,13 +34,16 @@ enum PROTOCOL_TYPE
 	PROTO_UDP
 };
 
+typedef enum CONNECT_TYPE CONNECT_TYPE;
+typedef enum PROTOCOL_TYPE PROTOCOL_TYPE;
+
 /* Status types :
  * NoData - No data is available to read
  * DataAvail - data is available to read
  * NewClient - for a server only
  * ClientDisconnect - for a server only
  */
-enum
+enum Status_State
 {
 	State_Start = 0,
 
@@ -52,6 +55,8 @@ enum
 	
 	State_End
 };
+
+typedef enum Status_State Status_State;
 
 /* private version of the public NNET_MASTER */
 typedef struct Master Master;

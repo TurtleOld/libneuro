@@ -22,6 +22,9 @@ enum PROTOCOL_TYPE
 	PROTO_UDP
 };
 
+typedef enum CONNECT_TYPE CONNECT_TYPE;
+typedef enum PROTOCOL_TYPE PROTOCOL_TYPE;
+
 typedef struct Master NNET_MASTER;
 
 typedef struct Slave NNET_SLAVE;
@@ -32,7 +35,7 @@ typedef struct Slave NNET_SLAVE;
  * NewClient - for a server only
  * ClientDisconnect - for a server only
  */
-enum
+enum Status_State
 {
 	State_Start = 0,
 
@@ -45,11 +48,13 @@ enum
 	State_End
 };
 
+typedef enum Status_State Status_State;
+
 typedef struct Status NNET_STATUS;
 
 extern void NNet_Destroy(NNET_MASTER *msr);
 
-extern NNET_MASTER *NNet_Create(u32 connection_type);
+extern NNET_MASTER *NNet_Create(CONNECT_TYPE connection_type);
 
 /* special feature 
  *
@@ -70,7 +75,7 @@ extern int NNet_SetSendPacketSize(NNET_MASTER *msr);
  * This function sets which protocol to create a client or server.
  * By default, the protocol is TCP.
  */
-extern void NNet_SetProtocolType(NNET_MASTER *msr, u32 Protocol_Type);
+extern void NNet_SetProtocolType(NNET_MASTER *msr, PROTOCOL_TYPE Protocol_Type);
 
 extern void NNet_SetQuitFlag(NNET_MASTER *msr);
 
@@ -101,7 +106,7 @@ extern void NNet_DisconnectClient(NNET_SLAVE *client);
 extern int NNet_Send(NNET_SLAVE *src, const char *message, u32 len);
 extern char *NNet_GetIP(NNET_SLAVE *slv);
 
-extern u32 NNet_GetStatus(const NNET_STATUS *sta);
+extern Status_State NNet_GetStatus(const NNET_STATUS *sta);
 extern char *NNet_GetPacket(const NNET_STATUS *sta);
 extern int NNet_GetPacketLen(const NNET_STATUS *sta);
 extern NNET_SLAVE *NNet_GetSlave(const NNET_STATUS *sta);
@@ -111,7 +116,11 @@ extern NNET_MASTER *NNet_GetMaster(const NNET_STATUS *sta);
 extern void NNet_SetData(NNET_SLAVE *slv, void *ptr);
 extern void *NNet_GetData(const NNET_SLAVE *slv);
 
-/* to set the debugging filter for this library */
+/* to set the debugging filter for this library 
+ *
+ * Please note that this does do some heap allocation and
+ * a call to Neuro_Quit is necessary to free it all.
+ */
 extern void NNet_SetDebugFilter(const char *filter);
 
 #ifdef __cplusplus

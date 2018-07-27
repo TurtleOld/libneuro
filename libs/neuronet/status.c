@@ -141,7 +141,7 @@ Status_PurgeSlave(Master *msr, Slave *conn)
 /*-------------------- Constructor Destructor ----------------------*/
 
 void
-Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
+Status_AddPriority(Master *msr, Status_State state, char *data, int len, Slave *conn)
 {
 	Status *tmp;
 	
@@ -169,7 +169,7 @@ Status_AddPriority(Master *msr, u32 state, char *data, int len, Slave *conn)
 }
 
 void
-Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
+Status_Add(Master *msr, Status_State state, char *data, int len, Slave *conn)
 {
 	Status *tmp;
 
@@ -195,7 +195,7 @@ Status_Add(Master *msr, u32 state, char *data, int len, Slave *conn)
 }
 
 void
-Status_Set(Status *sta, u32 state, char *data, int len, Slave *conn)
+Status_Set(Status *sta, Status_State state, char *data, int len, Slave *conn)
 {
 	if (!sta)
 	{
