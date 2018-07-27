@@ -113,6 +113,7 @@ Neuro_AllocLBuf(LBUF *eng, size_t sobj)
 
 		cur->content = calloc(1, sobj);
 
+		cur->callback = NULL;
 		if (eng->callback)
 			cur->callback = eng->callback;
 
