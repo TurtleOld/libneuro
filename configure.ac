@@ -1,7 +1,7 @@
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.69)
 
-AC_INIT(README)
+AC_INIT([libneuro], [m4_esyscmd_s([. ./version.mk; echo $MAJOR.$MINOR.$MICRO])])
 
 #
 # NEURO_MICRO_VERSION += 1	when bug fixes were done or small changes
@@ -42,7 +42,7 @@ AC_CONFIG_SRCDIR([src/neuro_main.c])
 AC_CONFIG_HEADERS([include/neuro/config.h])
 
 # init automake
-AM_INIT_AUTOMAKE(neuro, $NEURO_VERSION)
+AM_INIT_AUTOMAKE
 
 # call canonical host to get valuable informations about the current system
 AC_CANONICAL_HOST
