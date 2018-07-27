@@ -196,6 +196,9 @@ extern int Neuro_SetImgLayer(v_elem *eng, u32 layer);
  */
 extern int Neuro_FlushDraw(v_elem *eng);
 
+/* All elements in the buffer are redrawn at the next cycle */
+extern void Neuro_FlushAllElements(void);
+
 /* destroys the element */
 extern int Neuro_DestroyDraw(v_elem *eng);
 

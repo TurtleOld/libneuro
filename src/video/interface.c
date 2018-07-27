@@ -247,6 +247,14 @@ Neuro_FlushDraw(v_elem *eng)
 	return 0;
 }
 
+/* this flags all SDRAWN elements to be redrawn */
+void
+Neuro_FlushAllElements(void)
+{
+	Graphics_SetAllToRedraw();
+	Graphics_RedrawScreen();
+}
+
 int
 Neuro_DestroyDraw(v_elem *eng)
 {
