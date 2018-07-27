@@ -1,5 +1,10 @@
 Things to do in the neuro library.
 
+graphics -- Implement a more efficient coredraw.
+	- Right now, every sprite redraws sections of the background.
+	  This is unfortunately inefficient. Instead, we need to marshall a dynamic dirty
+	  rectangle that will be redrawn only once.
+
 neuronet -- It is possible to connect more than once with a single master.
 	 - Currently, there is no check upon several NNet_Connect to
 	   see if the master already has a running connection. It is very
