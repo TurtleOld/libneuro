@@ -5,9 +5,13 @@ where
 
 import Foreign.C
 import Foreign.Ptr
+import Foreign.Storable
+import Foreign.Marshal.Alloc
 
 import qualified Data.ByteString as A
 import qualified Data.ByteString.Lazy as B
+import qualified Data.ByteString.Unsafe as UB
+import qualified Data.Text as T
 --import qualified Data.ByteString.Lazy.Char8 as C
 
 import Data.Word
@@ -19,7 +23,14 @@ type Packet a = Ptr a
 
 class Pkt a b where
 	packetPush :: Packet a -> b -> IO Int
+	packetPushStream :: Packet a -> Int -> b -> IO Int -- Supports Unicode
+	packetPushAStream :: Packet a -> Int -> b -> IO Int -- Raw Version of stream
 	packetPop :: Packet a -> IO b
+	packetAPop :: Packet a -> IO b
+
+	packetPushStream _ _ _ = return 0
+	packetPushAStream _ _ _ = return 0
+	packetAPop _ = return undefined
 
 instance Pkt a Double where -- 64 bits
 	packetPush pkt num = liftM fromIntegral (pkt_Push64 pkt ((fromRational . toRational) num))
@@ -38,26 +49,59 @@ instance Pkt a CChar where -- 8 bits
 	packetPop pkt = liftM (fromIntegral) (pkt_Pop8 pkt)
 
 instance Pkt a [Char] where
-	packetPush pkt str = liftM fromIntegral $ withCString str $ pkt_PushString pkt $ fromIntegral $ length str
+	packetPush pkt str = liftM fromIntegral $ withStringToC2 str $ \str' -> pkt_PushString pkt (fromIntegral $ (length str) + 1) str'
+	packetPushStream pkt len str = liftM fromIntegral $ withStringToC2 str $ pkt_PushString pkt (fromIntegral len)
+	--packetPushAStream pkt len str = liftM fromIntegral $ withCAString str $ pkt_PushString pkt (fromIntegral len)
+	packetPushAStream pkt len str = liftM fromIntegral $ withStringToC str $ pkt_PushString pkt (fromIntegral len)
 	packetPop pkt = pkt_PopString pkt >>= peekCString
+	packetAPop pkt = pkt_PopString pkt >>= peekCAString
 
 instance Pkt a A.ByteString where
-	packetPush pkt str = liftM fromIntegral $ A.useAsCString str $ pkt_PushString pkt $ fromIntegral $ A.length str
+	packetPush pkt str = liftM fromIntegral $ withCUStringFromB str $ \str' -> pkt_PushString pkt (fromIntegral (A.length str)) str'
+	--packetPush pkt str = liftM fromIntegral $ A.useAsCStringLen str $ \(str', len) -> pkt_PushString pkt (fromIntegral len) str'
+	packetPushStream pkt len str = liftM fromIntegral $ withCUStringFromB str $ \str' -> pkt_PushString pkt (fromIntegral len) str'
+	packetPushAStream pkt len str = liftM fromIntegral $ withCUStringFromB str $ \str' -> pkt_PushString pkt (fromIntegral len) str'
+	--packetPushStream pkt len str = liftM fromIntegral $ A.useAsCString str $ pkt_PushString pkt $ fromIntegral len
+	--packetPushAStream pkt len str = liftM fromIntegral $ UB.unsafeUseAsCString str $ pkt_PushString pkt $ fromIntegral len
 	packetPop pkt = pkt_PopString pkt >>= A.packCString
 
 instance Pkt a B.ByteString where
 	packetPush pkt str = 
 		packetPush pkt $ foldl (\a b -> a `A.append` b ) A.empty $ B.toChunks str
+		--liftM fromIntegral $ withCStringE (B.unpack str) $ pkt_PushString pkt $ fromIntegral $ B.length str
+	packetPushStream pkt len str = 
+		packetPushStream pkt len $ foldl (\a b -> a `A.append` b ) A.empty $ B.toChunks str
+	packetPushAStream pkt len str = 
+		packetPushAStream pkt len $ foldl (\a b -> a `A.append` b ) A.empty $ B.toChunks str
 	packetPop pkt = 
 		packetPop pkt >>= return . B.fromChunks . (: [])
+		--pkt_PopString pkt >>= peekCStringToByteString
 
 withCStringE :: Integral a => [a] -> (Ptr CChar -> IO b) -> IO b
 withCStringE = withArray0 (0 :: CChar) . map (fromInteger . fromIntegral)
+
+withStringToC :: String -> (Ptr CUChar -> IO b) -> IO b
+withStringToC str f = allocaBytes (length str) $ \ptr ->
+	cpStr str ptr >> f ptr
+	where	cpStr [] _ = return ()
+		cpStr (x:xs) ptr = do
+			poke ptr $ castCharToCUChar x
+			cpStr xs $ ptr `plusPtr` 1
+
+withStringToC2 :: String -> (Ptr CUChar -> IO b) -> IO b
+withStringToC2 = withArray . map castCharToCUChar
+
+withCUStringFromB :: A.ByteString -> (Ptr CUChar -> IO b) -> IO b
+withCUStringFromB = withArray . map (castCharToCUChar . toEnum . fromEnum) . A.unpack
 
 peekCStringToByteString :: CString -> IO B.ByteString
 peekCStringToByteString cs = peekArray0 (0 :: CChar) cs >>= return . B.pack . castCCharToWord8
 	where	castCCharToWord8 :: [CChar] -> [Word8]
 		castCCharToWord8 = map (toEnum . fromEnum)
+
+instance Pkt a T.Text where
+	packetPush pkt str = undefined
+	packetPop pkt = pkt_PopString pkt >>= undefined
 
 packet_Push64 :: Packet a -> Double -> IO Int
 packet_Push64 pkt num = 
@@ -84,10 +128,10 @@ packet_Push8 pkt num =
 foreign import ccall unsafe "neuro/nnet/packet.h Packet_Push8" pkt_Push8 :: Ptr a -> CChar -> IO CInt
 
 packet_PushString :: Packet a -> String -> IO Int
-packet_PushString pkt string =
-	liftM fromIntegral (withCString (string) (\str -> pkt_PushString pkt (fromIntegral ((length string))) str))
+packet_PushString pkt string = undefined
+	--liftM fromIntegral (withCString (string) (\str -> pkt_PushString pkt (fromIntegral ((length string + 1))) str))
 
-foreign import ccall unsafe "neuro/nnet/packet.h Packet_PushString" pkt_PushString :: Ptr a -> CUInt -> CString -> IO CInt
+foreign import ccall unsafe "neuro/nnet/packet.h Packet_PushString" pkt_PushString :: Ptr a -> CUInt -> Ptr CUChar -> IO CInt
 
 packet_Create :: IO (Packet a)
 packet_Create =
@@ -110,9 +154,17 @@ packet_GetBuffer :: Packet a -> IO String
 packet_GetBuffer pkt =
 	(pkt_GetBuffer pkt) >>= \str ->
 	pkt_GetLen pkt >>= \len ->
-	peekCStringLen (str, fromIntegral len)
+	--peekCStringLen (str, fromIntegral len)
+	liftM (map castCUCharToChar) $ peekArray (fromIntegral len) str 
 
-foreign import ccall unsafe "neuro/nnet/packet.h Packet_GetBuffer" pkt_GetBuffer :: Ptr a -> IO CString
+packet_GetBufferA :: Packet a -> IO String
+packet_GetBufferA pkt =
+	(pkt_GetBuffer pkt) >>= \str ->
+	pkt_GetLen pkt >>= \len ->
+	--peekCAStringLen (str, fromIntegral len)
+	liftM (map castCUCharToChar) $ peekArray (fromIntegral len) str
+
+foreign import ccall unsafe "neuro/nnet/packet.h Packet_GetBuffer" pkt_GetBuffer :: Ptr a -> IO (Ptr CUChar)
 
 packet_Pop64 :: Packet a -> IO Double
 packet_Pop64 pkt =

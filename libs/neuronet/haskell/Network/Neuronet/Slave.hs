@@ -8,6 +8,8 @@ import Foreign.Ptr
 
 import Control.Monad
 
+import qualified Data.ByteString as B
+
 import Network.Neuronet.Core
 import Network.Neuronet.Packet
 
@@ -29,6 +31,11 @@ nnet_Send slave packet =
 	pkt_GetBuffer packet >>= \raw_pkt ->
 	pkt_GetLen packet >>= \len ->
 	liftM fromIntegral (nnet_send slave raw_pkt len)
+
+nnet_Send2 :: NNET_SLAVE a -> B.ByteString -> IO Int
+nnet_Send2 slave bs =
+	let len = fromIntegral (B.length bs) :: CInt in
+	B.useAsCString bs (\cstr -> liftM fromIntegral (nnet_send slave cstr len))
 
 foreign import ccall unsafe "neuro/network.h NNet_Send" nnet_send :: Ptr a -> Ptr b -> CInt -> IO CInt
 

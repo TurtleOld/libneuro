@@ -11,6 +11,7 @@ description:
 	while still promoting a simple and easy interface.
 build-type:	Simple
 ghc-options:	-Wall
+--CC-options:	-I../../../include -I../../../include/neuro -I../../../include/neuro/nnet -I..
 exposed-modules:
 	Network.Neuronet
 	Network.Neuronet.Core
@@ -20,7 +21,7 @@ exposed-modules:
 	Network.Neuronet.Slave
 	Network.Neuronet.Master
 	Network.Neuronet.Epoll
-build-depends:	base, mtl, bytestring
+build-depends:	base, mtl, bytestring, text
 include-dirs:	. .. ../../../include ../../../include/neuro ../../../include/neuro/nnet
 extra-libraries:
 	neuro
