@@ -26,13 +26,12 @@
 
 
 /*-------------------- Main Module Header --------------------------*/
-/* #include <parseConf.h> */
-#include "parseConf.h"
+#include <parseConf.h>
 
 
 /*--------------------      Other       ----------------------------*/
 
-NEURO_MODULE_CHANNEL("other");
+NEURO_MODULE_CHANNEL("parseConf");
 
 #define INPUT_BUFFER 4096
 
