@@ -481,6 +481,7 @@ Graphics_CoreDrawAll(void)
 					temp = cur;
 					cur = cur->next;
 
+					TRACE(Neuro_s("Destroyed : Raw Buffer elem #%x and Queue buffer elem #%x", temp->current, temp));
 					Neuro_SCleanEBuf(Graphics_GetRawBuffer(), temp->current);
 					Neuro_SCleanEBuf(Graphics_GetQueueBuffer(), temp);
 					
