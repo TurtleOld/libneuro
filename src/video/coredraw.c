@@ -313,7 +313,13 @@ Graphics_CoreDrawAll(void)
 		idst.y = cur->current->dy;
 
 		if (debug_instruction_buffer)
-			TRACE(Neuro_s("%s Flushing type %d layer %d\n", __FUNCTION__, cur->current->type, cur->current->layer));
+		{
+			char *typeStr;
+
+			typeStr = showDrawingType(cur->current->type);
+			TRACE(Neuro_s("Flushing type %s layer %d\n", typeStr, cur->current->layer));
+			free(typeStr);
+		}
 		
 		/* draw the surface_ptr to the screen buffer. */
 		switch (cur->current->type)

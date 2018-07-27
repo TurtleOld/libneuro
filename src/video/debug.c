@@ -53,7 +53,64 @@ NEURO_MODULE_CHANNEL("video/debug");
 
 /*-------------------- Static Functions ----------------------------*/
 
+/* very simple function to create a string memory segment */
+static char *
+s(char *str)
+{
+	char *result = NULL;
+	result = malloc(strlen(str) + 1);
+	strncpy(result, str, strlen(str) + 1);
+	return result;
+}
+
 /*-------------------- Global Functions ----------------------------*/
+
+char *
+showDrawingType(int drawing_type)
+{
+	switch (drawing_type)
+	{
+		case TDRAW_STATIC:
+		{
+			return s("TDRAW_STATIC");
+		}
+		break;
+		case TDRAW_DYNAMIC:
+		{
+			return s("TDRAW_DYNAMIC");
+		}
+		break;
+		case TDRAW_DYNAMIC_CLEAN:
+		{
+			return s("TDRAW_DYNAMIC_CLEAN");
+		}
+		break;
+		case TDRAW_SDRAWN:
+		{
+			return s("TDRAW_SDRAWN");
+		}
+		break;
+
+		case TDRAW_SREDRAW:
+		{
+			return s("TDRAW_SREDRAW");
+		}
+		break;
+		case TDRAW_VOLATILE:
+		{
+			return s("TDRAW_VOLATILE");
+		}
+		break;
+		case TDRAW_SDESTROY:
+		{
+			return s("TDRAW_SDESTROY");
+		}
+		break;
+
+		default:
+			return NULL;
+	}
+}
 
 /* debug function */
 void
@@ -69,14 +126,16 @@ Graphics_DebugPrintQueue(void)
 	
 	while (cur != NULL)
 	{
+		char *typeStr = showDrawingType(cur->current->type);
 		/*if (cur->current->type == TDRAW_SDRAWN)
 		{
 			cur = cur->next;
 			continue;
 		}*/
 		
-		TRACE(Neuro_s("layer #%d address &%x type %d", cur->current->layer, cur, 
-				cur->current->type));
+		TRACE(Neuro_s("layer #%d address &%x type %s", cur->current->layer, cur, 
+				typeStr));
+		free(typeStr);
 		
 		if (cur->next == Graphics_GetFirstElem())
 		{
@@ -115,8 +174,10 @@ Graphics_DebugBufferQueue(EBUF *src)
 
 		if (verbose_missing_output == 1)
 		{
-			TRACE(Neuro_s("layer #%d address &%x (%x) type %d\n", cur->current->layer, cur, 
-					tmp->missing, cur->current->type));
+			char *typeStr = showDrawingType(cur->current->type);
+			TRACE(Neuro_s("layer #%d address &%x (%x) type %s", cur->current->layer, cur, 
+					tmp->missing, typeStr));
+			free(typeStr);
 		}
 		
 		if (cur->next == Graphics_GetFirstElem())
@@ -219,11 +280,17 @@ Graphics_DebugPrintMissing(EBUF *src)
 		return;
 	}
 	
-	total--;
+	if (total > 0)
+		total--; 
+	else
+		total = 1; /* this ensures one loop to be done in the next section */
 
 	while (total-- > 0)
 	{
 		struct debug_status *dstmp = NULL;
+
+		if (Neuro_EBufIsEmpty(missing_list))
+			break;
 
 		dstmp = Neuro_GiveEBuf(missing_list, total);
 

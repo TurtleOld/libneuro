@@ -138,6 +138,9 @@ extern void Graphics_DebugPrintMissing(EBUF *src); /* new for print_missing */
 
 extern void Graphics_DebugQueueIntegrityCheck(); /* new for Queue_Integrity_Check */
 
+/* the returned pointer has to be freed after use */
+extern char *showDrawingType(int drawing_type);
+
 
 /* inside pixels.c *obsolete* don't use just yet */
 extern void Graphics_PutPixel(v_object *vobj, u32 x, u32 y, u32 pixel);
