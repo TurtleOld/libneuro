@@ -52,13 +52,15 @@ Neuro_GiveConvertRGB
 Neuro_GiveCurEBuf
 Neuro_GiveCurLBuf
 Neuro_GiveEBuf
-Neuro_GiveLBuf
 Neuro_GiveEBufAddr
 Neuro_GiveEBufCore
 Neuro_GiveEBufCount
 Neuro_GiveEBufElem
+Neuro_GiveFirstLBuf
 Neuro_GiveFPS
 Neuro_GiveImageSize
+Neuro_GiveLastLBuf
+Neuro_GiveLBuf
 Neuro_GiveLBufCount
 Neuro_GiveNextConfig
 Neuro_GiveNextLBuf

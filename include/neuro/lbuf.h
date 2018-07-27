@@ -13,8 +13,11 @@ extern void Neuro_AllocLBuf(LBUF *eng, size_t sobj);
 /* places a new element at the beginning of the buffer instead of at the end */
 extern void Neuro_AllocStartLBuf(LBUF *eng, size_t sobj);
 
-/* This always gives the last element */
+/* gives the last LBuf element */
 extern void *Neuro_GiveCurLBuf(LBUF *eng);
+
+extern void *Neuro_GiveFirstLBuf(LBUF *eng);
+extern void *Neuro_GiveLastLBuf(LBUF *eng);
 
 extern u32 Neuro_GiveLBufCount(LBUF *eng);
 
@@ -25,6 +28,7 @@ extern void Neuro_SCleanLBuf(LBUF *eng, void *object);
  */
 extern void *Neuro_GiveLBuf(LBUF *eng);
 
+/* sets the current LBuf to the next and returns the result */
 extern void *Neuro_GiveNextLBuf(LBUF *eng);
 
 extern void Neuro_ResetLBuf(LBUF *eng);

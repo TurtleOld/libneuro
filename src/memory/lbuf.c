@@ -189,6 +189,24 @@ Neuro_GiveCurLBuf(LBUF *eng)
 	return NULL;
 }
 
+void *
+Neuro_GiveFirstLBuf(LBUF *eng)
+{
+	if (!eng)
+		return NULL;
+
+	return eng->start;
+}
+
+void *
+Neuro_GiveLastLBuf(LBUF *eng)
+{
+	if (!eng)
+		return NULL;
+
+	return eng->end;
+}
+
 u32
 Neuro_GiveLBufCount(LBUF *eng)
 {
