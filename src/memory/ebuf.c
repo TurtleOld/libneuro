@@ -349,7 +349,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	
 	/* we call the callback that will clean 
 	 * allocated pointers in the structure if 
-	 * theres one.
+	 * there's one.
 	 */
 	if (eng->callback != NULL)
 		eng->callback(object);
@@ -358,7 +358,6 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 	
 	/* now this is problematic, for performance reasons, it's better *not* to free the object. */
 	/*free(object);*/
-
 
 	/* now that the object is freed, we will attempt to fill its 
 	 * emplacement with the last one.
@@ -388,7 +387,7 @@ Neuro_SCleanEBuf(EBUF *eng, void *object)
 void
 Neuro_CleanEBuf2(EBUF *eng)
 {
-	void *buf;
+	void *buf, *oldEnd;
 	u32 i;	
 	
 	if (!eng)
@@ -411,11 +410,26 @@ Neuro_CleanEBuf2(EBUF *eng)
 		
 		if (buf)
 		{
+			oldEnd = Neuro_GiveCurEBuf(eng);
 			if (eng->callback)
 			{
 				eng->callback(buf);
 			}
 			free(buf);
+
+			/* we check if the callback actually created a new element inside the buffer
+			 * If it did, we would be confronted with a death loop because any deleted
+			 * element will create a new one constantly, so we have no other choice than
+			 * to bail out.
+			 */
+			if (oldEnd != Neuro_GiveCurEBuf(eng))
+			{
+				/* We have this issue, there is nothing we can do anymore 
+				 * we will create an error and bail out.
+				 */
+				ERROR("EBUF does not support having an element added to an ebuf inside the cleaning callback. This in effect causes a death loop where cleaning the element creates a new one in a never ending loop. FIX YOUR CODE! BAILING OUT.");
+				return;
+			}
 		}
 		/* Debug_Val(0, "#%d -- cleaned\n", i); */
 	}
