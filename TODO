@@ -15,6 +15,15 @@ neuronet -- New feature possibility of changing the PROTOCOL.
 	 - Multicast support would also be a very important feature
 	   especially for devwatcher.
 
+neuronet -- Create an elaborate testing program.
+	The testing program would contain a semi-complex server and a very simple client.
+	The client would simply recieve a certain amount of data, checksum it and send the
+	checksum to the server. If the checksum is right, then it passes the test.
+	This test has to be made over at least half an hour (or longer if necessary), under valgrind
+	and also implement both methods of events : polling and callbacks.
+	As much of the library has to be tested sinc this would ensure a quality assurance of the code
+	in place.
+
 man -- the function Neuro_EBufIsEmpty:
 	 - the documentation of the return 2 isn't
 	   present in the man page. It is the value
