@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "../include/network.h"
-#include "../include/packet.h"
+#include "../nnet/network.h"
+#include "../nnet/packet.h"
 
 static Packet *pkt;
 static char *message = "This seems to work";
@@ -136,10 +136,29 @@ test_pop2()
 	dta.c = 6200;
 	dta.d = 13;
 
+	printf("Struct size : %d\n", (int)sizeof(dta));
+
+	{
+		int len = sizeof(dta);
+		char *buf = (char*)&dta;
+		printf("Printing buffer core : \"");
+
+		while (len-- > 0)
+		{
+			printf(Neuro_s("%x", buf[0]));
+
+			buf++;
+		}
+	}
+
+	printf("\"\n");
+
+
 	marshall = malloc(sizeof(dta));
 
 	memcpy(marshall, &dta, sizeof(dta));
 	pkt2 = Packet_Set(marshall, sizeof(dta));
+
 
 	if ((b = Packet_Pop32(pkt2)) != 55)
 	{
