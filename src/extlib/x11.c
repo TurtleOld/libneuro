@@ -27,6 +27,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>
+#if USE_XSHM
+#include <sys/shm.h>
+#include <sys/stat.h> /* S_IRUSR S_IWUSR */
+#include <X11/extensions/XShm.h>
+#endif /* USE_XSHM */
 
 #include <events.h> /* to send input trigger events */
 #include <extlib.h>
@@ -61,6 +66,7 @@ typedef struct V_OBJECT
 	XGCValues wValue;
 	
 	XImage *raw_data;
+	XImage *mask_data; /* this is used for transparent color key */
 	Pixmap data; /*The set of pixels for the image*/
 	Pixmap shapemask; /*The bitmask for transparency*/
 	u8 pixel_data_changed; /* if this is set to 1, next blit will do a XPutImage 
@@ -70,6 +76,17 @@ typedef struct V_OBJECT
 	GLXContext ctx;
 	u8 dblbuffer;
 #endif /* USE_GL */
+
+#if USE_XSHM
+	XShmSegmentInfo shminfo; /* for the main XImage */
+	XShmSegmentInfo pixmapShminfo; /* for the main Pixmap */
+	XShmSegmentInfo shapemaskShminfo; /* for the shapemask */
+	XShmSegmentInfo maskShminfo; /* for the transparent color key mask */
+
+	char *shmData; /* will point to the image's BGRA packed pixels */
+	char *pixmapShmData;
+	char *shapemaskShmData;
+#endif /* USE_XSHM */
 
 	u8 alpha; /* the alpha to be applied to the image */
 }V_OBJECT;
@@ -118,20 +135,47 @@ clean_Vobjects(void *src)
 
 	if (buf->data)
 	{
+
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->pixmapShminfo);
+		shmdt(buf->pixmapShminfo.shmaddr);
+		shmctl(buf->pixmapShminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
 		TRACE("Freeing pixmap data");
 		XFreePixmap(dmain->display, buf->data);
 	}
 
 	if (buf->shapemask)
 	{
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->shapemaskShminfo);
+		shmdt(buf->shapemaskShminfo.shmaddr);
+		shmctl(buf->shapemaskShminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
 		TRACE("Freeing pixmap mask");
 		XFreePixmap(dmain->display, buf->shapemask);
 	}
 
 	if (buf->raw_data)
 	{
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->shminfo);
+		shmdt(buf->shminfo.shmaddr);
+		shmctl(buf->shminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
 		TRACE("destroying XImage raw data");
 		(buf->raw_data->f.destroy_image)(buf->raw_data);
+	}
+
+	if (buf->mask_data)
+	{
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->maskShminfo);
+		shmdt(buf->maskShminfo.shmaddr);
+		shmctl(buf->maskShminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
+		TRACE("destroying XImage raw data");
+		(buf->mask_data->f.destroy_image)(buf->mask_data);
 	}
 	
 	if (buf->GC)
@@ -212,7 +256,11 @@ static int ab_XPutImage(Display *display, Drawable d, GC gc, XImage *image,
 		int src_x, int src_y, int dest_x, int dest_y, unsigned int width,
 		unsigned int height)
 {
+#if USE_XSHM
+	return XShmPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height, 0);
+#else /* NOT USE_XSHM */
 	return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
+#endif /* NOT USE_XSHM */
 }
 
 /* our own abstraction of the function XGetImage to support 
@@ -221,67 +269,141 @@ static int ab_XPutImage(Display *display, Drawable d, GC gc, XImage *image,
 static XImage *ab_XGetImage(Display *display, Drawable d, int x, int y, unsigned int width,
 		unsigned int height, unsigned long plane_mask, int format)
 {
+#if USE_XSHM
+	/*
+	XImage result;
+
+	XShmGetImage(display, d, &result, x, y, plane_mask);
+
+	return &result;
+	*/
+	return NULL;
+#else /* NOT USE_XSHM */
 	return XGetImage(display, d, x, y, width, height, plane_mask, format);
+#endif /* NOT USE_XSHM */
 }
+
+#if USE_XSHM
+static int
+createShm(XShmSegmentInfo *shminfo, u32 shmSize, char **shmData) {
+	/* Create a shared memory area */
+	shminfo->shmid = shmget(IPC_PRIVATE, shmSize,
+			IPC_CREAT | 0777);
+			/*IPC_CREAT | S_IRUSR | S_IWUSR); */
+	if(shminfo->shmid == -1)
+	{
+		ERROR(Neuro_s("Could not create a new shm buffer of size %d - errno %d", shmSize, errno));
+		return 1;
+	}
+
+	/* Map the shared memory segment into the address space of this process */
+	shminfo->shmaddr = shmat(shminfo->shmid, 0, 0);
+	if(shminfo->shmaddr == (char *) -1)
+	{
+		ERROR("Could not map the memory segment");
+		return 1;
+	}
+
+	*shmData = shminfo->shmaddr;
+	shminfo->readOnly = 0;
+
+	/* Mark the shared memory segment for removal
+	 * It will be removed even if this program crashes
+	 */
+	shmctl(shminfo->shmid, IPC_RMID, 0);
+
+	return 0;
+}
+#endif /* USE_XSHM */
 
 static void 
 sync_pixels(V_OBJECT *src)
 {
 	i32 h, w;
+
+	/* This is no longer necessary */
+	return;
 	
 	if (src->pixel_data_changed == 1)
 	{
 		Neuro_GiveImageSize(src, &w, &h);
 
-		if (src->raw_data)
-			(src->raw_data->f.destroy_image)(src->raw_data);
+
+		/*if (src->raw_data)
+			(src->raw_data->f.destroy_image)(src->raw_data);*/
 		/* Debug_Val(0, "cwin %d size %dx%d\n", *src->cwin, w, h); */
+
+		/*
 		src->raw_data = ab_XGetImage(dmain->display, *src->cwin, 
 			0, 0, w, h, 
 			AllPlanes, ZPixmap);
+		*/
+
+		ab_XPutImage(dmain->display, src->data, dmain->GC, src->raw_data, 0, 0, 
+			0, 0, w, h);
+
 		src->pixel_data_changed = 0;
-	}	
+	}
 }
 
 /*  */
 static void
-CreatePixmap(XImage *image, Pixmap master, Pixmap *pix)
+CreateShapemask(XImage *image, Pixmap master, V_OBJECT *obj)
 {
 	GC gc = NULL;
 	XGCValues values;
 	int _err = 0;
-
-	*pix = 0;
+	Pixmap pix = 0;
 
 	if (!image)
 		return;
 
 	/* Debug_Val(0, "%dx%d bpp %d\n", image->width, image->height, image->depth); */
 	
-	*pix = XCreatePixmap(dmain->display, master, image->width, image->height, image->depth);
-
-	/* in case we have a XYBitmap */
-	values.foreground = 1;
-	values.background = 0;
-
-	gc = XCreateGC(dmain->display, *pix, GCForeground | GCBackground, &values);
-	
-	_err = ab_XPutImage(dmain->display, *pix, gc, image, 0, 0, 
-		 0, 0, image->width, image->height);
-	
-	
-	if (_err != 0)
-	{
-		ERROR(Neuro_s("error number %d couldn't put pixels in the shapemask pixmap.\n", _err));
-
-		if (*pix)
-			XFreePixmap(dmain->display, *pix);
+#if USE_XSHM
+	if (createShm(&obj->shapemaskShminfo, obj->raw_data->bytes_per_line * image->height, &obj->shapemaskShmData)) {
+		ERROR("Allocating surface's shapemask pixmap shared memory failed");
+		return;
 	}
 
-	if (gc)
-		XFreeGC(dmain->display, gc);
+	XShmAttach(dmain->display, &obj->shapemaskShminfo);
+	pix = obj->shapemask = XShmCreatePixmap(dmain->display, master, obj->shapemaskShmData, &obj->shapemaskShminfo, image->width, image->height, image->depth);
+#else /* NOT USE_XSHM */
+	pix = XCreatePixmap(dmain->display, master, image->width, image->height, image->depth);
+#endif /* NOT USE_XSHM */
 }
 
+#if USE_XSHM
+static XImage *
+CreateMask(v_object *vobj, i32 width, i32 height, XShmSegmentInfo *shminfo)
+{
+	XImage *mask = NULL;
+	V_OBJECT *obj;
+
+	obj = (V_OBJECT*)vobj;
+	
+	if (!obj)
+		return NULL;
+
+	 /* XPBitmaps always have a depth of 1 
+	  * As all we want is a mask for which pixels are to be drawn.
+	  */
+	mask = XShmCreateImage(dmain->display, XDefaultVisual(dmain->display, dmain->screen), 
+			1, XYBitmap, NULL, shminfo, width, height);
+
+	if (!mask)
+		return NULL;
+
+	if (mask->height != height)
+	{
+		ERROR(Neuro_s("Incorrect mask height %d need to be %d", mask->height, height));
+		
+		return NULL;
+	}
+	
+	return mask;
+}
+#else /* NOT USE_XSHM */
 /* creates a mask */
 static XImage *
 CreateMask(v_object *vobj, i32 width, i32 height)
@@ -294,6 +416,9 @@ CreateMask(v_object *vobj, i32 width, i32 height)
 	if (!obj)
 		return NULL;
 	
+	 /* XPBitmaps always have a depth of 1 
+	  * As all we want is a mask for which pixels are to be drawn.
+	  */
 	mask = XCreateImage(dmain->display, XDefaultVisual(dmain->display, dmain->screen), 
 			1, XYBitmap, 0, NULL, width, height, 8, 0);
 
@@ -313,10 +438,13 @@ CreateMask(v_object *vobj, i32 width, i32 height)
 	
 	return mask;
 }
+#endif /* NOT USE_XSHM */
 
 void
 Lib_SyncPixels(v_object *src)
 {
+#if USE_XSHM
+#else /* NOT USE_XSHM */
 	V_OBJECT *tmp;
 	i32 h, w;
 
@@ -332,6 +460,7 @@ Lib_SyncPixels(v_object *src)
 	tmp->raw_data = ab_XGetImage(dmain->display, *tmp->cwin, 
 		0, 0, w, h, 
 		AllPlanes, ZPixmap);
+#endif /* NOT USE_XSHM */
 }
 
 void
@@ -358,7 +487,6 @@ Lib_VideoInit(v_object **screen, v_object **screen_buf)
 #if USE_GL
 	XVisualInfo *vi;
 #endif /* USE_GL */
-
 	
 	Neuro_CreateEBuf(&vobjs);
 	Neuro_SetcallbEBuf(vobjs, clean_Vobjects);
@@ -603,8 +731,21 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 	}
 	else
 	{
+#if USE_XSHM
+		mask_data = CreateMask(vobj, width, height, &buf->maskShminfo);
+
+		if (createShm(&buf->maskShminfo, mask_data->bytes_per_line * height, &mask_data->data)) {
+			ERROR("Allocating mask_data surface");
+			return;
+		}
+
+		buf->mask_data = mask_data;
+
+		XShmAttach(dmain->display, &buf->maskShminfo);
+#else /* NOT USE_XSHM */
 		/* we create a new mask pixel data for the image */
 		mask_data = CreateMask(vobj, width, height);
+#endif /* NOT USE_XSHM */
 	}
 
 	if (!mask_data)
@@ -619,6 +760,11 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		ERROR(Neuro_s("mask_data has a different width than the image! mask_data width %d image width %d", mask_data->width, width));
 
 		(mask_data->f.destroy_image)(mask_data);
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->maskShminfo);
+		shmdt(buf->maskShminfo.shmaddr);
+		shmctl(buf->maskShminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
 
 		return;
 	}
@@ -628,6 +774,11 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		ERROR(Neuro_s("mask_data has a different height than the image! mask_data height %d image height %d", mask_data->height, height));
 
 		(mask_data->f.destroy_image)(mask_data);
+#if USE_XSHM
+		XShmDetach(dmain->display, &buf->maskShminfo);
+		shmdt(buf->maskShminfo.shmaddr);
+		shmctl(buf->maskShminfo.shmid, IPC_RMID, 0);
+#endif /* USE_XSHM */
 
 		return;
 	}
@@ -640,24 +791,17 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 		x = width;
 		while (x-- > 0)
 		{
-			if(Lib_GetPixel(vobj, x, y) == key)
-			{
+			if (Lib_GetPixel(vobj, x, y) == key)
 				(mask_data->f.put_pixel)(mask_data, x, y, 0);
-			}
 			else
-			{
 				(mask_data->f.put_pixel)(mask_data, x, y, 1);
-			}
 		}
 	}
 	
-	
 	if(!buf->shapemask)
+		CreateShapemask(mask_data, *buf->cwin, buf);
+
 	{
-		CreatePixmap(mask_data, *buf->cwin, &buf->shapemask);
-	}
-	else
-	{ /*If the mask already exists*/
 		GC gc = NULL;
 		XGCValues values;
 		int _err = 0;
@@ -673,16 +817,24 @@ Lib_SetColorKey(v_object *vobj, u32 key)
 
 	
 		if (_err != 0)
-		{
 			ERROR(Neuro_s("error number %d couldn't put pixels in the shapemask pixmap.\n", _err));
-		}
 
 		if (gc)
 			XFreeGC(dmain->display, gc);
 	}
-
-	if (mask_data)
+ 
+#if USE_XSHM
+		/*
+		XShmDetach(dmain->display, &tempShminfo);
+		shmdt(tempShminfo.shmaddr);
+		shmctl(tempShminfo.shmid, IPC_RMID, 0);
+		*/
+#else /* NOT USE_XSHM */
+	if (mask_data) {
 		(mask_data->f.destroy_image)(mask_data);
+	}
+#endif /* NOT USE_XSHM */
+	/* } */
 }
 
 void
@@ -816,7 +968,6 @@ DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
 			conv_color = AlphaPixels(screen_color, color, alpha);
 
 			Lib_PutPixel(screen, rectangle->x + tmp.w, rectangle->y + tmp.h, conv_color);
-			
 		}
 	}
 
@@ -867,7 +1018,6 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 
 
 			Lib_PutPixel(destination, rdst.x + rsrc.w, rdst.y + rsrc.h, color);
-			
 		}
 	}
 	
@@ -1094,6 +1244,61 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 			width, height, depth,
 			DefaultDepth(dmain->display, dmain->screen));*/
 
+	TRACE("Allocating a new Vobject");
+
+#if USE_XSHM
+	if (depth == 0)
+		depth = DefaultDepth(dmain->display, dmain->screen);
+
+	tmp2->raw_data = XShmCreateImage(dmain->display, 
+			XDefaultVisual(dmain->display, dmain->screen),
+			depth, 
+			ZPixmap, NULL, &tmp2->shminfo, width, height);
+	if(!tmp2->raw_data)
+	{
+		Neuro_SCleanEBuf(vobjs, tmp2);
+		ERROR("Could not allocate an Shm XImage structure");
+		return NULL;
+	}
+
+	/*
+	printf("XImage bytes per line : %d\n", tmp2->raw_data->bytes_per_line);
+	*/
+
+	/* Allocate the memory needed for the XImage structure */
+	if (createShm(&tmp2->shminfo, tmp2->raw_data->bytes_per_line * height, &tmp2->shmData)) {
+		ERROR("Allocating main surface's Shared memory failed");
+		return NULL;
+	}
+
+	tmp2->raw_data->data = (char *)tmp2->shmData;
+	tmp2->raw_data->width = width;
+	tmp2->raw_data->height = height;
+
+	/* Ask the X server to attach the shared memory segment and sync */
+	XShmAttach(dmain->display, &tmp2->shminfo);
+
+	if (createShm(&tmp2->pixmapShminfo, tmp2->raw_data->bytes_per_line * height, &tmp2->pixmapShmData)) {
+	/* if (createShm(&tmp2->pixmapShminfo, width * height * depth, &tmp2->pixmapShmData)) { */
+		ERROR("Allocating surface's pixmap Shared memory failed");
+		Neuro_SCleanEBuf(vobjs, tmp2);
+		return NULL;
+	}
+
+	XShmAttach(dmain->display, &tmp2->pixmapShminfo);
+	tmp2->data = XShmCreatePixmap(dmain->display, *dmain->cwin, tmp2->pixmapShmData, &tmp2->pixmapShminfo, width, height, depth);
+
+	/*
+	tmp2->data = XCreatePixmap(dmain->display, *dmain->cwin, width, height, 
+			DefaultDepth(dmain->display, dmain->screen));
+	*/
+
+	XSync(dmain->display, 0);
+
+	ab_XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
+			0, 0, width, height);
+
+#else /* NOT USE_XSHM */
 	tmp2->raw_data = XCreateImage(dmain->display, 
 			XDefaultVisual(dmain->display, dmain->screen), 
 			DefaultDepth(dmain->display, dmain->screen), 
@@ -1115,6 +1320,7 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 		
 	ab_XPutImage(dmain->display, tmp2->data, dmain->GC, tmp2->raw_data, 0, 0, 
 			0, 0, width, height);
+#endif /* NOT USE_XSHM */
 	
 	tmp2->alpha = 255;
 
@@ -1122,6 +1328,7 @@ Lib_CreateVObject(u32 flags, i32 width, i32 height, i32 depth, u32 Rmask, u32 Gm
 
 	tmp2->cwin = &tmp2->data;
 	
+	TRACE("Done allocating a new Vobject");
 	
 	return (v_object*)tmp2;
 }
@@ -1196,7 +1403,24 @@ Lib_FreeVobject(v_object *source)
 void 
 Lib_LockVObject(v_object *vobj)
 {
+#if USE_XSHM
+#else /* NOT USE_XSHM */
+	V_OBJECT *src;
+	i32 h, w;
+
+	src = (V_OBJECT*)vobj;
 	
+	Neuro_GiveImageSize(src, &w, &h);
+
+
+	if (src->raw_data)
+		(src->raw_data->f.destroy_image)(src->raw_data);
+	/* Debug_Val(0, "cwin %d size %dx%d\n", *src->cwin, w, h); */
+
+	src->raw_data = ab_XGetImage(dmain->display, *src->cwin, 
+		0, 0, w, h, 
+		AllPlanes, ZPixmap);
+#endif /* NOT USE_XSHM */
 }
 
 void 

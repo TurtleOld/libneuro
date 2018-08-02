@@ -93,9 +93,10 @@ AC_ARG_WITH(lowlib,
 [			   Default is "sdl";]
 [ 			   Possible low libraries are :]
 [			     dummy, X11, sdl, glx ],
-lowlib="$withval", lowlib="nothing")
+lowlib="$withval", lowlib="X11")
 
 AC_ARG_ENABLE(video, [  --disable-video	disables all the video particularities of this library [[default=no]]], enable_Video=no, enable_Video=yes)
+AC_ARG_ENABLE(xshm, [  --disable-xshm disables xshm support with X11 [[default=no]]], enable_xshm=no, enable_xshm=yes)
 
 enable_Neuronet=no
 
@@ -253,6 +254,13 @@ if test $SELECTED_LOWLIB = X11; then
 		     [AC_MSG_ERROR(You don't have libX11)])
 #	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
 #	NEUROFLAGS="$NEUROFLAGS $X_CFLAGS"
+
+	if test x$enable_xshm = xyes; then
+		AC_CHECK_LIB(Xext, XShmCreateImage, 
+			     [AC_DEFINE(USE_XSHM, 1, ["XShm main flag"]) LIBS="$LIBS $(pkg-config --libs xext)"
+			     NEUROFLAGS="$NEUROFLAGS $(pkg-config --cflags xext)"],
+			     [AC_MSG_ERROR(You don't have X11's extension modules, please disable them with --disable-xshm)])
+	fi
 
 	freetype_enable=yes
 fi

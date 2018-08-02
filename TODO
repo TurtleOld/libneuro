@@ -82,6 +82,9 @@ extlib (X11) (passed) -- Lib_SetColorKey has a memory leak:
 	  Xorg from 6.8.2 to 6.9.0 and that's what I'm
 	  getting now... A huge amount of memory leaks.
 
+	* With the new MIT-Shm implementation there are no
+	  more memory leaks so it's a win-win situation.
+
 extlib (SDL) -- Needs a buffer to hold the v_objects:
 	 - I just noticed that the SDL doesn't have a
 	   v_object cleaner like the X11 driver, we
@@ -220,7 +223,7 @@ extlib X11 -- implement gfx shared memory :
 	- in order to get far faster performances with
 	  pretty much any graphical operations, the
 	  addition of MIT shared memory for every images
-	  will be used.
+	  will be used. DONE - drastic performance increase
 
 implement subprojects :
 	libneuronet : done
