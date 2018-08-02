@@ -59,7 +59,7 @@ typedef struct V_OBJECT
 	i32 screen;
 	GC GC;
 
-	Window *cwin; /* pointer to the current window in use or pixmap */
+	Window *cwin; /* pointer to the current window in use or pixmap (data) */
 	Window rwin; /* the root window */
 	Window win;
 
@@ -859,11 +859,12 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 
 	if (tmp == NULL)
 		return;	
+	
+	/* XSetForeground(dmain->display, dmain->GC, pixel); */
+	/* XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y); */
+	(tmp->raw_data->f.put_pixel)(tmp->raw_data, x, y, pixel);
 
-	
-	XSetForeground(dmain->display, dmain->GC, pixel);
-	XDrawPoint(dmain->display, *tmp->cwin, dmain->GC, x, y);
-	
+	/* XPutPixel(tmp->raw_data, x, y, pixel); */
 
 	/*
 	if (tmp->raw_data == NULL)
@@ -873,10 +874,6 @@ Lib_PutPixel(v_object *srf, int x, int y, u32 pixel)
 	}
 
 	(tmp->raw_data->f.put_pixel)(tmp->raw_data, x, y, pixel);*/
-
-
-
-	/* tmp->pixel_data_changed = 1; */
 }
 
 u32 
@@ -951,9 +948,6 @@ DirectDrawAlphaRect(Rectan *rectangle, u32 color, u32 alpha)
 	tmp.h = rectangle->h;
 	
 	screen = Neuro_GetScreenBuffer();
-	
-	/* sync the screen pixel map */
-	Lib_SyncPixels(screen);
 		
 	Lib_LockVObject(screen);
 
@@ -993,10 +987,6 @@ DirectDrawAlphaImage(Rectan *src, Rectan *dst, u32 alpha, void *image, void *des
 	/*Debug_Val(0, "rsrc coord (%d,%d) size (%dx%d)\n", 
 			rsrc.x, rsrc.y, 
 			rsrc.w, rsrc.h);*/
-	
-	/* sync the screen pixel map */
-	Lib_SyncPixels(destination);
-	
 	
 	Lib_LockVObject(destination);
 	
@@ -1042,9 +1032,10 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 	/* if there was pixel manipulations 
 	 * we need to sync client server pixel data.
 	 */
+	/*
 	sync_pixels(vsrc);
 	sync_pixels(vdst);
-
+	*/
 
 	if (src == NULL)
 	{
@@ -1102,7 +1093,7 @@ Lib_BlitObject(v_object *source, Rectan *src, v_object *destination, Rectan *dst
 			XSetForeground(dmain->display, dmain->GC, tpixel.pixel);
 		}
 		
-		_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC, 
+		_err = XCopyArea(dmain->display, *vsrc->cwin, *vdst->cwin, dmain->GC,
 				Rsrc.x, Rsrc.y, Rsrc.w, Rsrc.h,
 				Rdst.x, Rdst.y);
 
@@ -1427,17 +1418,17 @@ void
 Lib_UnlockVObject(v_object *vobj)
 {
 	V_OBJECT *tmp;
-
+	i32 h, w;
 	
 	tmp = (V_OBJECT*)vobj;
 
 	if (tmp == NULL)
 		return;
 	
+	Neuro_GiveImageSize(tmp, &w, &h);
 
-	tmp->pixel_data_changed = 1;
-	
-	sync_pixels(tmp);
+	ab_XPutImage(dmain->display, tmp->data, dmain->GC, tmp->raw_data, 0, 0, 
+		0, 0, w, h);
 }
 
 void
