@@ -593,7 +593,8 @@ Bitmap_ProcessGradual(BMP_CTX *ctx, u32 loops)
 		{
 			ctx->output = Neuro_CreateVObject(0, ctx->bmap->infoheader.width, 
 					ctx->bmap->infoheader.height, 
-					ctx->bmap->infoheader.bits, 0, 0, 0, 0);
+					0, 0, 0, 0, 0);
+					/* ctx->bmap->infoheader.bits, 0, 0, 0, 0); */
 
 
 			if (ctx->output == NULL)
