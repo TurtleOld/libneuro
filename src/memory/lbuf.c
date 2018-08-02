@@ -195,7 +195,7 @@ Neuro_GiveFirstLBuf(LBUF *eng)
 	if (!eng)
 		return NULL;
 
-	return eng->start;
+	return eng->start->content;
 }
 
 void *
@@ -204,7 +204,7 @@ Neuro_GiveLastLBuf(LBUF *eng)
 	if (!eng)
 		return NULL;
 
-	return eng->end;
+	return eng->end->content;
 }
 
 u32
