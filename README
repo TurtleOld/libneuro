@@ -1,0 +1,8 @@
+libneuro is a toolkit.
+
+It includes a painter's algorithm. A direct to X11 graphics driver.
+X11 MIT-SHM support, SDL support, a basic OpenGL support, a networking
+library, memory buffers and linked lists, bitmap file loader, among others.
+
+It is possible to configure the toolkit with only the network library, just
+use the flag "--disable-video" with the configure script.
